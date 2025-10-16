@@ -1,0 +1,161 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  NODE_VERSION: '18.x'
+
+jobs:
+  # Job 1: Lint and Type Check
+  lint-and-type-check:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./apps/web
+        run: npm ci      
+      - name: Run ESLint
+        working-directory: ./apps/web
+        run: npm run lint
+      
+      - name: Run TypeScript check
+        working-directory: ./apps/web
+        run: npm run type-check
+
+  # Job 2: Run Tests
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: lint-and-type-check
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./apps/web
+        run: npm ci      
+      - name: Run tests
+        working-directory: ./apps/web
+        run: npm test -- --run
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      
+      - name: Generate coverage report
+        working-directory: ./apps/web
+        run: npm run test:coverage -- --run
+        continue-on-error: true
+
+  # Job 3: Build
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json      
+      - name: Install dependencies
+        working-directory: ./apps/web
+        run: npm ci
+      
+      - name: Build application
+        working-directory: ./apps/web
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: apps/web/.next
+          retention-days: 7
+
+  # Job 4: Security Scan
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4      
+      - name: Run npm audit
+        working-directory: ./apps/web
+        run: npm audit --audit-level=high
+        continue-on-error: true
+      
+      - name: Run security headers check
+        run: |
+          echo "Security headers will be checked post-deployment"
+
+  # Job 5: Deploy to Staging (on develop branch)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, security]
+    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    
+    steps:
+      - name: Deploy to Vercel Staging
+        run: |
+          echo "Deploy to staging environment"
+          # Add Vercel deployment commands here
+    
+  # Job 6: Deploy to Production (on main branch)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, security]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'    
+    environment:
+      name: production
+      url: https://routehub.geosafety.ge
+    
+    steps:
+      - name: Deploy to Vercel Production
+        run: |
+          echo "Deploy to production environment"
+          # Add Vercel deployment commands here
+      
+      - name: Run smoke tests
+        run: |
+          echo "Running production smoke tests"
+          # Add smoke test commands here
+      
+      - name: Notify deployment
+        run: |
+          echo "Deployment successful!"
+          # Add notification (Slack, Discord, etc.) here
