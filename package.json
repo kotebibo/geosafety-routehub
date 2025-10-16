@@ -1,0 +1,47 @@
+{
+  "name": "geosafety-routehub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Intelligent Route Optimization & Field Management System for GeoSafety",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=web",
+    "dev:mobile": "turbo dev --filter=mobile",
+    "build": "turbo build",
+    "build:web": "turbo build --filter=web",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "clean": "turbo clean && rimraf node_modules",
+    "db:push": "cd supabase && npx supabase db push",
+    "db:migrate": "cd supabase && npx supabase migration new",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "import-data": "ts-node scripts/import-real-data.ts",
+    "seed:db": "ts-node scripts/seed-database.ts",
+    "setup:data": "npm run import-data && npm run seed:db",
+    "geocode": "ts-node scripts/geocode-companies.ts",
+    "re-geocode": "cd apps/web && tsx ../../scripts/re-geocode.ts",
+    "seed:services": "cd apps/web && tsx ../../scripts/seed-service-types.ts",
+    "migrate:services": "cd apps/web && tsx ../../scripts/migrate-to-services.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.19",
+    "dotenv": "^17.2.3",
+    "eslint": "^8.56.0",
+    "prettier": "^3.2.4",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
+    "turbo": "^1.11.3",
+    "typescript": "^5.3.3",
+    "xlsx": "^0.18.5"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "packageManager": "npm@9.0.0"
+}

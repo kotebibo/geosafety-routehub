@@ -1,0 +1,44 @@
+name: Test Suite
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: apps/web/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: ./apps/web
+        run: npm ci
+      
+      - name: Run unit tests
+        working-directory: ./apps/web
+        run: npm test -- --run
+      
+      - name: Generate coverage
+        working-directory: ./apps/web
+        run: npm run test:coverage -- --run
+      
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./apps/web/coverage
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
