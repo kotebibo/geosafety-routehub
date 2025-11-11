@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import dynamic from 'next/dynamic';
 
@@ -35,7 +35,8 @@ interface Company {
   contact_phone?: string;
 }
 
-interface CompanyService {  company_id: string;
+interface CompanyService {
+  company_id: string;
   service_type_id: string;
   service_type_name: string;
   service_type_name_ka: string;
@@ -138,6 +139,48 @@ export default function LocationsMapPage() {
     }
   }
 
+  // Calculate counts for each filter option
+  const filterCounts = useMemo(() => {
+    // Count companies by inspector
+    const inspectorCounts: Record<string, number> = {};
+    
+    // Count companies by service type
+    const serviceTypeCounts: Record<string, number> = {};
+    
+    companies.forEach(company => {
+      const companyServicesList = companyServices.filter(s => s.company_id === company.id);
+      
+      if (companyServicesList.length === 0) return;
+      
+      // Apply search filter
+      if (searchQuery && 
+          !company.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+          !company.address.toLowerCase().includes(searchQuery.toLowerCase())) {
+        return;
+      }
+      
+      // Count for inspectors (respecting service type filter)
+      companyServicesList.forEach(service => {
+        // If service type filter is active, only count services matching that type
+        if (selectedServiceType === 'all' || service.service_type_id === selectedServiceType) {
+          if (service.assigned_inspector_id) {
+            inspectorCounts[service.assigned_inspector_id] = (inspectorCounts[service.assigned_inspector_id] || 0) + 1;
+          }
+        }
+      });
+      
+      // Count for service types (respecting inspector filter)
+      companyServicesList.forEach(service => {
+        // If inspector filter is active, only count services assigned to that inspector
+        if (selectedInspector === 'all' || service.assigned_inspector_id === selectedInspector) {
+          serviceTypeCounts[service.service_type_id] = (serviceTypeCounts[service.service_type_id] || 0) + 1;
+        }
+      });
+    });
+    
+    return { inspectorCounts, serviceTypeCounts };
+  }, [companies, companyServices, searchQuery, selectedInspector, selectedServiceType]);
+
   // Filter companies based on selected filters
   const filteredCompanies = companies.filter(company => {
     // Search filter
@@ -227,12 +270,15 @@ export default function LocationsMapPage() {
               onChange={(e) => setSelectedInspector(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">ყველა ინსპექტორი</option>
-              {inspectors.map(inspector => (
-                <option key={inspector.id} value={inspector.id}>
-                  {inspector.full_name}
-                </option>
-              ))}
+              <option value="all">ყველა ინსპექტორი ({companies.filter(c => companyServices.some(s => s.company_id === c.id)).length})</option>
+              {inspectors.map(inspector => {
+                const count = filterCounts.inspectorCounts[inspector.id] || 0;
+                return (
+                  <option key={inspector.id} value={inspector.id}>
+                    {inspector.full_name} ({count})
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -246,12 +292,15 @@ export default function LocationsMapPage() {
               onChange={(e) => setSelectedServiceType(e.target.value)}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="all">ყველა სერვისი</option>
-              {serviceTypes.map(serviceType => (
-                <option key={serviceType.id} value={serviceType.id}>
-                  {serviceType.name_ka} ({serviceType.name})
-                </option>
-              ))}
+              <option value="all">ყველა სერვისი ({companies.filter(c => companyServices.some(s => s.company_id === c.id)).length})</option>
+              {serviceTypes.map(serviceType => {
+                const count = filterCounts.serviceTypeCounts[serviceType.id] || 0;
+                return (
+                  <option key={serviceType.id} value={serviceType.id}>
+                    {serviceType.name_ka} ({count})
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>
