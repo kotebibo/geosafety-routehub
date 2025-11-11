@@ -11,7 +11,8 @@ import {
   MapIcon, 
   LogOut, 
   Shield,
-  UserCog
+  UserCog,
+  MapPin
 } from 'lucide-react';
 
 export default function Navigation() {
@@ -33,6 +34,7 @@ export default function Navigation() {
     { href: '/', label: 'მთავარი', icon: Home, roles: ['admin', 'dispatcher', 'inspector'] },
     { href: '/companies', label: 'კომპანიები', icon: Building2, roles: ['admin', 'dispatcher'] },
     { href: '/inspectors', label: 'ინსპექტორები', icon: Users, roles: ['admin', 'dispatcher'] },
+    { href: '/locations', label: 'ლოკაციების რუკა', icon: MapPin, roles: ['admin', 'dispatcher'] },
     { href: '/admin/assignments', label: 'დანიშვნები', icon: UserCog, roles: ['admin', 'dispatcher'] },
     { href: '/routes/builder', label: 'მარშრუტის შექმნა', icon: MapIcon, roles: ['admin', 'dispatcher'] },
     { href: '/routes/manage', label: 'მარშრუტები', icon: Route, roles: ['admin', 'dispatcher'] },
