@@ -24,11 +24,31 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  // TEMPORARY: Mock user for development - REMOVE IN PRODUCTION
+  const [user, setUser] = useState<User | null>({
+    id: 'dev-admin-user',
+    email: 'dev@geosafety.ge',
+    aud: 'authenticated',
+    role: 'authenticated',
+    created_at: new Date().toISOString(),
+    app_metadata: {},
+    user_metadata: { full_name: 'Development Admin' },
+  } as User);
+  
+  const [userRole, setUserRole] = useState<UserRole | null>({ 
+    role: 'admin',
+    inspector_id: undefined 
+  });
+  
+  const [loading, setLoading] = useState(false); // Set to false since we're mocking
 
   useEffect(() => {
+    // DISABLED: Authentication bypassed for development
+    console.log('⚠️ AUTH DISABLED - Using mock admin user for development');
+    setLoading(false);
+    
+    // Original code (commented out):
+    /*
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -53,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
+    */
   }, []);
 
   const fetchUserRole = async (userId: string) => {
@@ -74,23 +95,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
+    // DISABLED: Mock sign in - always succeeds
+    console.log('⚠️ Mock sign in - authentication bypassed');
+    return { error: null };
+    
+    // Original code (commented out):
+    /*
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     return { error };
+    */
   };
 
   const signUp = async (email: string, password: string) => {
+    // DISABLED: Mock sign up - always succeeds
+    console.log('⚠️ Mock sign up - authentication bypassed');
+    return { error: null };
+    
+    // Original code (commented out):
+    /*
     const { error } = await supabase.auth.signUp({
       email,
       password,
     });
     return { error };
+    */
   };
 
   const signOut = async () => {
+    // DISABLED: Mock sign out
+    console.log('⚠️ Mock sign out - authentication bypassed');
+    
+    // Original code (commented out):
+    /*
     await supabase.auth.signOut();
+    */
   };
 
   const value = {
