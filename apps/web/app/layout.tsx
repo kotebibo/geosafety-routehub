@@ -1,13 +1,32 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
+import { Poppins, Figtree, Noto_Sans_Georgian } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
-import { Toaster } from '@/components/ui/toaster'
-import Navigation from '@/components/Navigation'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { Toaster, MondayLayout } from '@/shared/components/ui'
+import { ErrorBoundary } from '@/shared/components/feedback'
 // import { WebVitalsTracker } from '@/components/WebVitalsTracker' // Temporarily disabled
 
-const inter = Inter({ subsets: ['latin'] })
+// Monday.com Design System Fonts
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-brand',
+  display: 'swap',
+})
+
+const figtree = Figtree({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-product',
+  display: 'swap',
+})
+
+const georgian = Noto_Sans_Georgian({
+  subsets: ['latin', 'georgian'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-georgian',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'GeoSafety RouteHub - Intelligent Route Optimization',
@@ -20,7 +39,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#2563EB',
+  themeColor: '#6161FF', // Monday.com primary color
 }
 
 export default function RootLayout({
@@ -30,13 +49,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${figtree.variable} ${poppins.variable} ${georgian.variable} font-product`}>
         <ErrorBoundary>
           <Providers>
-            <Navigation />
-            {children}
-            <Toaster />
-            {/* <WebVitalsTracker /> */}
+            <MondayLayout>
+              {children}
+              <Toaster />
+              {/* <WebVitalsTracker /> */}
+            </MondayLayout>
           </Providers>
         </ErrorBoundary>
       </body>

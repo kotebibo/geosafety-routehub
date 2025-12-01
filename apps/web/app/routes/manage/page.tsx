@@ -1,12 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { StatCard } from '@/components/ui/StatCard'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { RoutesTable } from '@/components/routes/RoutesTable'
-import { useRoutes } from '@/hooks/useRoutes'
+import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
+import { RoutesTable } from '@/features/routes/components'
+import { useRoutes } from '@/features/routes/hooks'
 import { Route as RouteIcon, Calendar, CheckCircle, Plus } from 'lucide-react'
 
 export default function RoutesManagePage() {

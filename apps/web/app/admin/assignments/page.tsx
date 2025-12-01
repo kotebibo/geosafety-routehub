@@ -1,12 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { AssignmentStatCards } from '@/components/assignments/AssignmentStatCards'
-import { CompanyAssignmentTable } from '@/components/assignments/CompanyAssignmentTable'
-import { InspectorWorkloadPanel } from '@/components/assignments/InspectorWorkloadPanel'
-import { useCompanyAssignments } from '@/hooks/useCompanyAssignments'
+import { PageHeader, LoadingSpinner } from '@/shared/components/ui'
+import { AssignmentStatCards, CompanyAssignmentTable, InspectorWorkloadPanel } from '@/features/assignments/components'
+import { useCompanyAssignments } from '@/features/assignments/hooks'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
 
 export default function AssignmentsPage() {

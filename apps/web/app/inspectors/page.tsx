@@ -1,12 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { StatCard } from '@/components/ui/StatCard'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { InspectorTable } from '@/components/inspectors/InspectorTable'
-import { useInspectors } from '@/hooks/useInspectors'
+import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
+import { InspectorTable } from '@/features/inspectors/components'
+import { useInspectors } from '@/features/inspectors/hooks'
 import { Users, UserCheck, UserX, Plus } from 'lucide-react'
 
 export default function InspectorsPage() {

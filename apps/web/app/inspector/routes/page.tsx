@@ -4,10 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { StatCard } from '@/components/ui/StatCard'
-import { EmptyState } from '@/components/ui/EmptyState'
+import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
 import { Calendar, Clock, MapPin, Route as RouteIcon } from 'lucide-react'
 
 interface Route {

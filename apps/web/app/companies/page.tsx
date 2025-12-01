@@ -1,12 +1,9 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { PageHeader } from '@/components/ui/PageHeader'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
-import { StatCard } from '@/components/ui/StatCard'
-import { EmptyState } from '@/components/ui/EmptyState'
-import { CompanyTable } from '@/components/companies/CompanyTable'
-import { useCompanies } from '@/hooks/useCompanies'
+import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
+import { CompanyTable } from '@/features/companies/components'
+import { useCompanies } from '@/features/companies/hooks'
 import { Building2, Plus, Search } from 'lucide-react'
 
 export default function CompaniesPage() {

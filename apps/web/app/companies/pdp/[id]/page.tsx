@@ -8,8 +8,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Building2, MapPin, Phone, Mail, User } from 'lucide-react';
-import { PhaseProgressTracker } from '@/components/compliance';
-import { companiesService } from '@/services/companies.service';
+import { PhaseProgressTracker } from '@/features/compliance';
+import { companiesService } from '@/features/companies/services';
 
 interface Company {
   id: string;
