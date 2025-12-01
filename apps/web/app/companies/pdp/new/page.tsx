@@ -7,9 +7,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { AddCompanyWithCompliance } from '@/components/compliance';
-import { companiesService } from '@/services/companies.service';
-import { complianceService } from '@/services/compliance.service';
+import { AddCompanyWithCompliance } from '@/features/compliance';
+import { companiesService } from '@/features/companies/services';
+import { complianceService } from '@/features/compliance/services';
 import { ArrowLeft } from 'lucide-react';
 
 export default function NewPDPCompanyPage() {

@@ -1,0 +1,338 @@
+// Monday.com-style Board Types
+
+export type BoardType = 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom'
+
+export type ColumnType =
+  | 'text'
+  | 'status'
+  | 'person'
+  | 'date'
+  | 'number'
+  | 'location'
+  | 'actions'
+
+export type SortDirection = 'asc' | 'desc'
+
+// User-Created Board
+export interface Board {
+  id: string
+  owner_id: string
+  board_type: BoardType
+  name: string
+  name_ka?: string
+  description?: string
+  icon?: string
+  color?: string
+  is_template: boolean
+  is_public: boolean
+  folder_id?: string
+  settings: BoardSettings
+  created_at: string
+  updated_at: string
+}
+
+export interface BoardSettings {
+  allowComments: boolean
+  allowActivityFeed: boolean
+  defaultView: 'table' | 'kanban' | 'calendar'
+  permissions: {
+    canEdit: string[]
+    canView: string[]
+  }
+}
+
+// Board Item (row in a board)
+export interface BoardItem {
+  id: string
+  board_id: string
+  group_id?: string
+  position: number
+  data: Record<string, any> // Dynamic fields stored as JSONB
+  name: string
+  status: StatusType
+  assigned_to?: string
+  due_date?: string
+  priority: number
+  created_by?: string
+  created_at: string
+  updated_at: string
+}
+
+// Board Group (for organizing items like Monday.com)
+export interface BoardGroup {
+  id: string
+  board_id: string
+  name: string
+  color: string
+  position: number
+  is_collapsed?: boolean
+  created_at?: string
+}
+
+// Board Member
+export interface BoardMember {
+  board_id: string
+  user_id: string
+  role: 'owner' | 'editor' | 'viewer'
+  added_by?: string
+  added_at: string
+  user?: {
+    full_name: string
+    email: string
+    avatar_url?: string
+  }
+}
+
+// Board Template
+export interface BoardTemplate {
+  id: string
+  name: string
+  name_ka?: string
+  description?: string
+  board_type: BoardType
+  icon: string
+  color: string
+  category?: string
+  default_columns: BoardColumnConfig[]
+  default_items: any[]
+  is_featured: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface BoardColumnConfig {
+  id: string
+  name: string
+  name_ka?: string
+  type: ColumnType
+  width: number
+  config?: Record<string, any>
+}
+
+export type StatusType =
+  | 'working_on_it'
+  | 'stuck'
+  | 'done'
+  | 'pending'
+  | 'default'
+
+// Board Column Configuration
+export interface BoardColumn {
+  id: string
+  board_type: BoardType
+  column_id: string
+  column_name: string
+  column_name_ka?: string
+  column_type: ColumnType
+  is_visible: boolean
+  is_pinned: boolean
+  position: number
+  width: number
+  config: Record<string, any>
+  created_at?: string
+  updated_at?: string
+}
+
+// Board View (Saved filters/sorts)
+export interface BoardView {
+  id: string
+  user_id: string
+  board_type: BoardType
+  view_name: string
+  view_name_ka?: string
+  filters: BoardFilter[]
+  sort_config: SortConfig
+  column_config: ColumnConfig[]
+  is_default: boolean
+  is_shared: boolean
+  created_at?: string
+  updated_at?: string
+}
+
+// Filter Configuration
+export interface BoardFilter {
+  column_id: string
+  operator: FilterOperator
+  value: any
+}
+
+export type FilterOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'not_contains'
+  | 'starts_with'
+  | 'ends_with'
+  | 'is_empty'
+  | 'is_not_empty'
+  | 'greater_than'
+  | 'less_than'
+  | 'greater_than_or_equal'
+  | 'less_than_or_equal'
+  | 'is_one_of'
+  | 'is_not_one_of'
+  | 'date_is'
+  | 'date_before'
+  | 'date_after'
+  | 'date_between'
+
+// Sort Configuration
+export interface SortConfig {
+  column_id: string
+  direction: SortDirection
+}
+
+// Column Configuration (for saved views)
+export interface ColumnConfig {
+  column_id: string
+  is_visible: boolean
+  width?: number
+  position?: number
+}
+
+// Activity/Update Types
+export interface ItemUpdate {
+  id: string
+  item_type: 'route' | 'company' | 'inspector' | 'inspection'
+  item_id: string
+  user_id?: string
+  user_name?: string
+  update_type: UpdateType
+  field_name?: string
+  old_value?: string
+  new_value?: string
+  content?: string
+  metadata?: Record<string, any>
+  created_at: string
+}
+
+export type UpdateType =
+  | 'created'
+  | 'updated'
+  | 'deleted'
+  | 'status_changed'
+  | 'assigned'
+  | 'reassigned'
+  | 'comment'
+  | 'completed'
+
+// Comment Types
+export interface ItemComment {
+  id: string
+  item_type: 'route' | 'company' | 'inspector' | 'inspection'
+  item_id: string
+  user_id: string
+  user_name?: string
+  user_avatar?: string
+  parent_comment_id?: string
+  content: string
+  mentions: string[]
+  attachments: string[]
+  is_edited: boolean
+  created_at: string
+  updated_at: string
+  replies?: ItemComment[]
+}
+
+// Presence Types
+export interface BoardPresence {
+  user_id: string
+  user_name: string
+  user_avatar?: string
+  board_type: BoardType
+  board_id?: string
+  last_seen: string
+  is_editing: boolean
+  editing_item_id?: string
+}
+
+// User Settings
+export interface UserSettings {
+  user_id: string
+  theme: 'light' | 'dark' | 'auto'
+  language: 'ka' | 'en'
+  notification_settings: NotificationSettings
+  board_preferences: BoardPreferences
+  created_at?: string
+  updated_at?: string
+}
+
+export interface NotificationSettings {
+  email_notifications: boolean
+  push_notifications: boolean
+  activity_feed: boolean
+  assignment_changes: boolean
+}
+
+export interface BoardPreferences {
+  default_view: 'table' | 'kanban' | 'calendar'
+  rows_per_page: number
+  auto_refresh: boolean
+  show_activity_feed: boolean
+}
+
+// Board Data Row (generic)
+export interface BoardRow {
+  id: string
+  [key: string]: any
+}
+
+// Board State
+export interface BoardState {
+  columns: BoardColumn[]
+  data: BoardRow[]
+  filters: BoardFilter[]
+  sort: SortConfig | null
+  selectedRows: Set<string>
+  editingCell: { rowId: string; columnId: string } | null
+  loading: boolean
+  error: Error | null
+}
+
+// Board Props
+export interface BoardTableProps {
+  boardType: BoardType
+  data: BoardRow[]
+  columns: BoardColumn[]
+  onRowClick?: (row: BoardRow) => void
+  onCellEdit?: (rowId: string, columnId: string, value: any) => Promise<void>
+  onRowsReorder?: (newOrder: BoardRow[]) => Promise<void>
+  onColumnResize?: (columnId: string, width: number) => void
+  onColumnReorder?: (columnIds: string[]) => void
+  onSort?: (columnId: string, direction: SortDirection) => void
+  onFilter?: (filters: BoardFilter[]) => void
+  onSelectionChange?: (selectedIds: Set<string>) => void
+  loading?: boolean
+  enableVirtualization?: boolean
+  enableDragDrop?: boolean
+  enableMultiSelect?: boolean
+  enableInlineEdit?: boolean
+  height?: number | string
+}
+
+// Cell Component Props
+export interface BoardCellProps {
+  row: BoardRow
+  column: BoardColumn
+  value: any
+  isEditing: boolean
+  onEdit: () => void
+  onSave: (value: any) => Promise<void>
+  onCancel: () => void
+}
+
+// Toolbar Props
+export interface BoardToolbarProps {
+  boardType: BoardType
+  currentView?: BoardView
+  views: BoardView[]
+  filters: BoardFilter[]
+  selectedCount: number
+  onViewChange: (viewId: string) => void
+  onSaveView: (view: Partial<BoardView>) => Promise<void>
+  onDeleteView: (viewId: string) => Promise<void>
+  onFilterChange: (filters: BoardFilter[]) => void
+  onSearch: (query: string) => void
+  onExport: () => void
+  onBulkAction: (action: string) => void
+}

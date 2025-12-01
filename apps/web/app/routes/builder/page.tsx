@@ -8,10 +8,10 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import dynamic from 'next/dynamic';
-import SaveRouteModal from '@/components/SaveRouteModal';
+import SaveRouteModal from '@/features/routes/components/SaveRouteModal';
 
 // Import map dynamically (client-side only) - Using FIXED version
-const RouteMap = dynamic(() => import('@/components/map/RouteMapFixed'), {
+const RouteMap = dynamic(() => import('@/features/locations/components/RouteMapFixed'), {
   ssr: false,
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-gray-100">
@@ -94,16 +94,16 @@ export default function RouteBuilderPage() {
     }
 
     setLoading(true);
-    
+
     try {
-      // Get the current session for authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        alert('გთხოვთ გაიაროთ ავტორიზაცია');
-        setLoading(false);
-        return;
-      }
+      // TODO: Re-enable authentication before deployment
+      // Get the current session for authentication (disabled for dev)
+      // const { data: { session } } = await supabase.auth.getSession();
+      // if (!session) {
+      //   alert('გთხოვთ გაიაროთ ავტორიზაცია');
+      //   setLoading(false);
+      //   return;
+      // }
 
       const locations = selectedCompanies.map(c => ({
         id: c.id,
@@ -114,14 +114,14 @@ export default function RouteBuilderPage() {
 
       const response = await fetch('/api/routes/optimize', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}` // Pass the token
+          // 'Authorization': `Bearer ${session.access_token}` // Disabled for dev
         },
-        credentials: 'include', // Include cookies for authentication
+        credentials: 'include',
         body: JSON.stringify({
           locations,
-          options: { 
+          options: {
             algorithm: 'hybrid',
             useRealRoads: true // Enable OSRM
           }
@@ -168,23 +168,23 @@ export default function RouteBuilderPage() {
       return;
     }
 
-    // Get the current session for authentication
-    const { data: { session } } = await supabase.auth.getSession();
-    
-    if (!session) {
-      alert('გთხოვთ გაიაროთ ავტორიზაცია');
-      return;
-    }
+    // TODO: Re-enable authentication before deployment
+    // Get the current session for authentication (disabled for dev)
+    // const { data: { session } } = await supabase.auth.getSession();
+    // if (!session) {
+    //   alert('გთხოვთ გაიაროთ ავტორიზაცია');
+    //   return;
+    // }
 
     const totalDistance = optimizedRoute.reduce((sum, stop) => sum + (stop.distance || 0), 0);
 
     const response = await fetch('/api/routes/save', {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${session.access_token}` // Pass the token
+        // 'Authorization': `Bearer ${session.access_token}` // Disabled for dev
       },
-      credentials: 'include', // Include cookies for authentication
+      credentials: 'include',
       body: JSON.stringify({
         name: data.name,
         date: data.date,

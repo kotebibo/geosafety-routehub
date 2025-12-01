@@ -5,7 +5,7 @@
 
 'use client';
 
-import { ComplianceDashboard } from '@/components/compliance';
+import { ComplianceDashboard } from '@/features/compliance';
 
 export default function PDPCompaniesPage() {
   return (
