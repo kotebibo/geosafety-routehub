@@ -1,7 +1,11 @@
 // Board Components - Barrel Export
 export * from './BoardTable'
+export * from './BoardPresence'
 export { CreateBoardModal } from './CreateBoardModal'
 export { UserPicker } from './UserPicker'
+export { RoutePicker } from './RoutePicker'
+export { CompanyPicker } from './CompanyPicker'
+export { ServiceTypePicker } from './ServiceTypePicker'
 export { ErrorBoundary } from './ErrorBoundary'
 export { ColumnConfigPanel } from './ColumnConfig/ColumnConfigPanel'
 export { AddColumnModal } from './ColumnConfig/AddColumnModal'

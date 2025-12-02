@@ -10,6 +10,12 @@ export type ColumnType =
   | 'number'
   | 'location'
   | 'actions'
+  | 'route'
+  | 'company'
+  | 'service_type'
+  | 'checkbox'
+  | 'phone'
+  | 'files'
 
 export type SortDirection = 'asc' | 'desc'
 
@@ -244,6 +250,7 @@ export interface BoardPresence {
   last_seen: string
   is_editing: boolean
   editing_item_id?: string
+  editing_column_id?: string
 }
 
 // User Settings

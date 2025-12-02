@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import type { CellRendererProps } from '../types'
 
-export function NumberCell({ value, onEdit, column }: CellRendererProps) {
+export function NumberCell({ value, onEdit, column, onEditStart }: CellRendererProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value?.toString() || '')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -71,7 +71,10 @@ export function NumberCell({ value, onEdit, column }: CellRendererProps) {
 
   return (
     <div
-      onClick={() => setIsEditing(true)}
+      onClick={() => {
+        setIsEditing(true)
+        onEditStart?.()
+      }}
       className={cn(
         'w-full h-full min-h-[36px] px-2',
         'flex items-center justify-end',

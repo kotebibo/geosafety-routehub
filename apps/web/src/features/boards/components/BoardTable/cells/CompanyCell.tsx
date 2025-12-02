@@ -1,33 +1,24 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { useInspectors } from '@/hooks/useInspectors'
-import { UserPicker } from '../../UserPicker'
+import { useCompanies } from '@/hooks/useCompanies'
+import { CompanyPicker } from '../../CompanyPicker'
 import { cn } from '@/lib/utils'
+import { Building2 } from 'lucide-react'
 
-interface PersonCellProps {
+interface CompanyCellProps {
   value?: string | null
   onEdit?: (value: string | null) => void
   readOnly?: boolean
   onEditStart?: () => void
 }
 
-export function PersonCell({ value, onEdit, readOnly = false, onEditStart }: PersonCellProps) {
+export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: CompanyCellProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const { inspectors } = useInspectors()
+  const { allCompanies } = useCompanies()
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const selectedInspector = inspectors?.find(i => i.id === value)
-
-  const getInitials = (firstName?: string | null, lastName?: string | null) => {
-    const first = firstName?.charAt(0) || ''
-    const last = lastName?.charAt(0) || ''
-    return (first + last).toUpperCase() || '?'
-  }
-
-  const getFullName = (firstName?: string | null, lastName?: string | null) => {
-    return `${firstName || ''} ${lastName || ''}`.trim() || 'Unknown'
-  }
+  const selectedCompany = allCompanies?.find(c => c.id === value)
 
   useEffect(() => {
     if (isEditing) {
@@ -53,14 +44,14 @@ export function PersonCell({ value, onEdit, readOnly = false, onEditStart }: Per
     return <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
   }
 
-  if (readOnly && value && selectedInspector) {
+  if (readOnly && value && selectedCompany) {
     return (
       <div className="h-full min-h-[36px] flex items-center gap-2 px-3">
-        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#6161ff] text-white flex items-center justify-center text-xs font-semibold">
-          {getInitials(selectedInspector.first_name, selectedInspector.last_name)}
+        <div className="flex-shrink-0 w-6 h-6 rounded bg-[#6161ff] flex items-center justify-center">
+          <Building2 className="w-3 h-3 text-white" />
         </div>
         <span className="text-sm text-[#323338] truncate">
-          {getFullName(selectedInspector.first_name, selectedInspector.last_name)}
+          {selectedCompany.name || 'Unnamed Company'}
         </span>
       </div>
     )
@@ -81,22 +72,22 @@ export function PersonCell({ value, onEdit, readOnly = false, onEditStart }: Per
           readOnly && 'cursor-default'
         )}
       >
-        {value && selectedInspector ? (
+        {value && selectedCompany ? (
           <>
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#6161ff] text-white flex items-center justify-center text-xs font-semibold">
-              {getInitials(selectedInspector.first_name, selectedInspector.last_name)}
+            <div className="flex-shrink-0 w-6 h-6 rounded bg-[#6161ff] flex items-center justify-center">
+              <Building2 className="w-3 h-3 text-white" />
             </div>
             <span className="text-sm text-[#323338] truncate">
-              {getFullName(selectedInspector.first_name, selectedInspector.last_name)}
+              {selectedCompany.name || 'Unnamed Company'}
             </span>
           </>
         ) : (
-          <span className="text-sm text-[#9699a6]">Select person...</span>
+          <span className="text-sm text-[#9699a6]">Select company...</span>
         )}
       </button>
 
       {isEditing && !readOnly && (
-        <UserPicker
+        <CompanyPicker
           value={value}
           onChange={handleChange}
           onClose={() => setIsEditing(false)}

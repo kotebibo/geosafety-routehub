@@ -23,7 +23,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       </AuthProvider>
       {/* React Query Devtools - only in development */}
       {process.env.NODE_ENV === 'development' && (
-        <ReactQueryDevtools initialIsOpen={false} position="bottom-right" />
+        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
       )}
     </QueryClientProvider>
   );

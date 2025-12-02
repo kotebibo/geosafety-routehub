@@ -269,6 +269,40 @@ export function useBulkUpdateItems(boardId: string) {
   })
 }
 
+/**
+ * Hook to duplicate a single board item
+ */
+export function useDuplicateBoardItem(boardId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ itemId, newName, targetBoardId }: { itemId: string; newName?: string; targetBoardId?: string }) =>
+      userBoardsService.duplicateBoardItem(itemId, { newName, targetBoardId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-items', boardId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to duplicate multiple board items
+ */
+export function useDuplicateBoardItems(boardId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ itemIds, targetBoardId }: { itemIds: string[]; targetBoardId?: string }) =>
+      userBoardsService.duplicateBoardItems(itemIds, targetBoardId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-items', boardId],
+      })
+    },
+  })
+}
+
 // ==================== BOARD MEMBERS ====================
 
 /**

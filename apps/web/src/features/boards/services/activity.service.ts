@@ -1,7 +1,8 @@
 import { getSupabase } from '@/lib/supabase'
 import type { ItemUpdate, ItemComment, UpdateType } from '@/types/board'
 
-const supabase = getSupabase()
+// Use any type for supabase to bypass strict table typings
+const supabase = getSupabase() as any
 
 /**
  * Activity & Comments Service
