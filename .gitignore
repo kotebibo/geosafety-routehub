@@ -58,3 +58,9 @@ logs/
 *.backup
 *.bak
 *~
+
+# Claude Code
+.claude/settings.local.json
+
+# Windows artifacts
+nul
