@@ -118,24 +118,24 @@ export const queryKeys = {
 
 // Helper function to invalidate all related queries when an item changes
 export function getInvalidationKeys(itemType: string, itemId?: string) {
-  const keys: any[][] = []
+  const keys: readonly unknown[][] = []
 
   switch (itemType) {
     case 'route':
-      keys.push(queryKeys.routes.lists())
-      if (itemId) keys.push(queryKeys.routes.detail(itemId))
+      (keys as unknown[][]).push([...queryKeys.routes.lists()])
+      if (itemId) (keys as unknown[][]).push([...queryKeys.routes.detail(itemId)])
       break
     case 'company':
-      keys.push(queryKeys.companies.lists())
-      if (itemId) keys.push(queryKeys.companies.detail(itemId))
+      (keys as unknown[][]).push([...queryKeys.companies.lists()])
+      if (itemId) (keys as unknown[][]).push([...queryKeys.companies.detail(itemId)])
       break
     case 'inspector':
-      keys.push(queryKeys.inspectors.lists())
-      if (itemId) keys.push(queryKeys.inspectors.detail(itemId))
+      (keys as unknown[][]).push([...queryKeys.inspectors.lists()])
+      if (itemId) (keys as unknown[][]).push([...queryKeys.inspectors.detail(itemId)])
       break
     case 'inspection':
-      keys.push(queryKeys.inspections.lists())
-      if (itemId) keys.push(queryKeys.inspections.detail(itemId))
+      (keys as unknown[][]).push([...queryKeys.inspections.lists()])
+      if (itemId) (keys as unknown[][]).push([...queryKeys.inspections.detail(itemId)])
       break
   }
 

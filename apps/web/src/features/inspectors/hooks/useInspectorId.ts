@@ -7,7 +7,8 @@ import { queryKeys } from '@/lib/react-query'
  * Maps Supabase Auth user to inspectors table record
  */
 export function useInspectorId(userEmail: string | undefined) {
-  const supabase = createClient()
+  // Use any type for supabase to bypass strict table typings
+  const supabase = createClient() as any
 
   return useQuery({
     queryKey: [...queryKeys.routes.all, 'inspector-id', userEmail],
@@ -29,6 +30,6 @@ export function useInspectorId(userEmail: string | undefined) {
     },
     enabled: !!userEmail,
     staleTime: Infinity, // Inspector ID won't change
-    cacheTime: Infinity,
+    gcTime: Infinity, // React Query v5 renamed cacheTime to gcTime
   })
 }

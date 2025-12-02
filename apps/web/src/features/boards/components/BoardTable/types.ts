@@ -19,6 +19,7 @@ export interface CellRendererProps<TData = any> {
   value: any
   onEdit?: (value: any) => void
   isEditing?: boolean
+  onEditStart?: () => void
 }
 
 export interface HeaderCellProps {

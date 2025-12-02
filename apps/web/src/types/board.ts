@@ -10,6 +10,12 @@ export type ColumnType =
   | 'number'
   | 'location'
   | 'actions'
+  | 'route'
+  | 'company'
+  | 'service_type'
+  | 'checkbox'
+  | 'phone'
+  | 'files'
 
 export type SortDirection = 'asc' | 'desc'
 
@@ -45,6 +51,7 @@ export interface BoardSettings {
 export interface BoardItem {
   id: string
   board_id: string
+  group_id?: string
   position: number
   data: Record<string, any> // Dynamic fields stored as JSONB
   name: string
@@ -232,6 +239,7 @@ export interface BoardPresence {
   last_seen: string
   is_editing: boolean
   editing_item_id?: string
+  editing_column_id?: string
 }
 
 // User Settings

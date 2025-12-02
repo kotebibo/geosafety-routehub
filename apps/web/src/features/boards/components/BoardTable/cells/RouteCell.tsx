@@ -1,32 +1,35 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { useInspectors } from '@/hooks/useInspectors'
-import { UserPicker } from '../../UserPicker'
+import { useRoutes } from '@/hooks/useRoutes'
+import { RoutePicker } from '../../RoutePicker'
 import { cn } from '@/lib/utils'
+import { MapPin, Calendar } from 'lucide-react'
 
-interface PersonCellProps {
+interface RouteCellProps {
   value?: string | null
   onEdit?: (value: string | null) => void
   readOnly?: boolean
   onEditStart?: () => void
 }
 
-export function PersonCell({ value, onEdit, readOnly = false, onEditStart }: PersonCellProps) {
+const STATUS_COLORS: Record<string, string> = {
+  planned: '#579bfc',
+  in_progress: '#fdab3d',
+  completed: '#00c875',
+  cancelled: '#e2445c',
+}
+
+export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: RouteCellProps) {
   const [isEditing, setIsEditing] = useState(false)
-  const { inspectors } = useInspectors()
+  const { routes } = useRoutes()
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const selectedInspector = inspectors?.find(i => i.id === value)
+  const selectedRoute = routes?.find(r => r.id === value)
 
-  const getInitials = (firstName?: string | null, lastName?: string | null) => {
-    const first = firstName?.charAt(0) || ''
-    const last = lastName?.charAt(0) || ''
-    return (first + last).toUpperCase() || '?'
-  }
-
-  const getFullName = (firstName?: string | null, lastName?: string | null) => {
-    return `${firstName || ''} ${lastName || ''}`.trim() || 'Unknown'
+  const formatDate = (date: string) => {
+    if (!date) return ''
+    return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
   useEffect(() => {
@@ -53,14 +56,17 @@ export function PersonCell({ value, onEdit, readOnly = false, onEditStart }: Per
     return <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
   }
 
-  if (readOnly && value && selectedInspector) {
+  if (readOnly && value && selectedRoute) {
     return (
       <div className="h-full min-h-[36px] flex items-center gap-2 px-3">
-        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#6161ff] text-white flex items-center justify-center text-xs font-semibold">
-          {getInitials(selectedInspector.first_name, selectedInspector.last_name)}
+        <div
+          className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
+          style={{ backgroundColor: STATUS_COLORS[selectedRoute.status] || '#579bfc' }}
+        >
+          <MapPin className="w-3 h-3 text-white" />
         </div>
         <span className="text-sm text-[#323338] truncate">
-          {getFullName(selectedInspector.first_name, selectedInspector.last_name)}
+          {selectedRoute.name || 'Unnamed Route'}
         </span>
       </div>
     )
@@ -81,22 +87,31 @@ export function PersonCell({ value, onEdit, readOnly = false, onEditStart }: Per
           readOnly && 'cursor-default'
         )}
       >
-        {value && selectedInspector ? (
+        {value && selectedRoute ? (
           <>
-            <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#6161ff] text-white flex items-center justify-center text-xs font-semibold">
-              {getInitials(selectedInspector.first_name, selectedInspector.last_name)}
+            <div
+              className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
+              style={{ backgroundColor: STATUS_COLORS[selectedRoute.status] || '#579bfc' }}
+            >
+              <MapPin className="w-3 h-3 text-white" />
             </div>
-            <span className="text-sm text-[#323338] truncate">
-              {getFullName(selectedInspector.first_name, selectedInspector.last_name)}
-            </span>
+            <div className="flex-1 overflow-hidden">
+              <span className="text-sm text-[#323338] truncate block">
+                {selectedRoute.name || 'Unnamed Route'}
+              </span>
+              <span className="text-xs text-[#9699a6] flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                {formatDate(selectedRoute.date)}
+              </span>
+            </div>
           </>
         ) : (
-          <span className="text-sm text-[#9699a6]">Select person...</span>
+          <span className="text-sm text-[#9699a6]">Select route...</span>
         )}
       </button>
 
       {isEditing && !readOnly && (
-        <UserPicker
+        <RoutePicker
           value={value}
           onChange={handleChange}
           onClose={() => setIsEditing(false)}

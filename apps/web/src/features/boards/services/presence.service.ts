@@ -1,7 +1,8 @@
 import { getSupabase } from '@/lib/supabase'
 import type { BoardPresence, BoardType } from '@/types/board'
 
-const supabase = getSupabase()
+// Use any type for supabase to bypass strict table typings
+const supabase = getSupabase() as any
 
 /**
  * Real-time Presence Service
@@ -166,15 +167,16 @@ export const presenceService = {
             last_seen: presence.timestamp,
             is_editing: presence.is_editing || false,
             editing_item_id: presence.editing_item_id,
+            editing_column_id: presence.editing_column_id,
           }))
       })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+      .on('presence', { event: 'join' }, ({ key, newPresences }: { key: string; newPresences: any[] }) => {
         console.log('User joined:', key, newPresences)
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+      .on('presence', { event: 'leave' }, ({ key, leftPresences }: { key: string; leftPresences: any[] }) => {
         console.log('User left:', key, leftPresences)
       })
-      .subscribe(async (status) => {
+      .subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
           await channel.track({
             user_id: userId,

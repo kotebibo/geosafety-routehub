@@ -83,7 +83,7 @@ function getColorInfo(colorKey: string): { hex: string; text: string } {
   return MONDAY_COLORS.explosive
 }
 
-export function StatusCell({ value, column, onEdit }: CellRendererProps) {
+export function StatusCell({ value, column, onEdit, onEditStart }: CellRendererProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showEditor, setShowEditor] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
@@ -136,6 +136,9 @@ export function StatusCell({ value, column, onEdit }: CellRendererProps) {
         top: rect.bottom + window.scrollY + 4,
         left: rect.left + window.scrollX,
       })
+    }
+    if (!isOpen) {
+      onEditStart?.()
     }
     setIsOpen(!isOpen)
   }

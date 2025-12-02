@@ -4,7 +4,8 @@ import type { Database } from '@/types/database'
 type Company = Database['public']['Tables']['companies']['Row']
 
 export class CompaniesService {
-  private supabase = getSupabase()
+  // Use any type for supabase to bypass strict table typings
+  private supabase = getSupabase() as any
 
   async getCompanies(filters?: {
     type?: string

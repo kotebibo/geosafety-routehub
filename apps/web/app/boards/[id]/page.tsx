@@ -3,15 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { useBoard, useBoardItems, useBoardColumns, useCreateBoardItem, useUpdateBoardItem } from '@/features/boards/hooks'
+import { useBoard, useBoardItems, useBoardColumns, useCreateBoardItem, useUpdateBoardItem, useDuplicateBoardItems, useDeleteBoardItem, useCreateUpdate, useRealtimeBoard } from '@/features/boards/hooks'
 import { useInspectorId } from '@/hooks/useInspectorId'
-import { MondayBoardTable, ErrorBoundary, ColumnConfigPanel, AddColumnModal, ItemDetailDrawer } from '@/features/boards/components'
+import { MondayBoardTable, ErrorBoundary, ColumnConfigPanel, AddColumnModal, ItemDetailDrawer, BoardPresenceIndicator } from '@/features/boards/components'
 import { Button } from '@/shared/components/ui'
 import { useToast } from '@/components/ui-monday/Toast'
-import { ArrowLeft, Plus, Users, Settings, MoreHorizontal, Columns, Search } from 'lucide-react'
+import { ArrowLeft, Plus, Users, Settings, MoreHorizontal, Columns, Search, Download, Copy, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BoardItem, BoardColumn, BoardGroup, ColumnType } from '@/features/boards/types/board'
 import { boardsService } from '@/features/boards/services'
+import { exportToCSV, exportToExcel } from '@/features/boards/utils/exportBoard'
 
 // Monday.com color palette for groups
 const GROUP_COLORS = [
@@ -42,6 +43,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const [selectedItem, setSelectedItem] = useState<BoardItem | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [groups, setGroups] = useState<BoardGroup[]>(INITIAL_GROUPS)
+  const [showExportMenu, setShowExportMenu] = useState(false)
 
   const { data: inspectorId } = useInspectorId(user?.email)
 
@@ -51,6 +53,25 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
   const createItem = useCreateBoardItem(params.id)
   const updateItem = useUpdateBoardItem(params.id)
+  const duplicateItems = useDuplicateBoardItems(params.id)
+  const deleteItem = useDeleteBoardItem(params.id)
+  const createUpdate = useCreateUpdate()
+
+  // Real-time collaboration
+  const {
+    presence,
+    isConnected,
+    setEditing,
+    isUserEditing,
+    getUsersEditingItem,
+    publishItemChange,
+  } = useRealtimeBoard({
+    boardId: params.id,
+    boardType: board?.board_type || 'custom',
+    userId: inspectorId || undefined,
+    userName: user?.email?.split('@')[0] || 'User',
+    enabled: !!board && !!inspectorId,
+  })
 
   // Filter items based on search
   const filteredItems = items?.filter(item => {
@@ -71,7 +92,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     try {
       // Store group_id in data JSONB until migration 016 is run
       // After migration, we can use the proper group_id column
-      await createItem.mutateAsync({
+      const newItem = await createItem.mutateAsync({
         board_id: params.id,
         position: (items?.length || 0) + 1,
         data: {
@@ -82,6 +103,12 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         priority: 0,
         created_by: inspectorId,
       })
+
+      // Notify other users about the new item via Ably
+      if (newItem?.id) {
+        publishItemChange('insert', newItem.id, newItem)
+      }
+
       showToast('Item created successfully', 'success')
     } catch (error) {
       console.error('Failed to create item:', error)
@@ -95,16 +122,63 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       const currentItem = items?.find(item => item.id === rowId)
       if (!currentItem) return
 
-      // Update the data JSONB field with the new value
-      await updateItem.mutateAsync({
-        itemId: rowId,
-        updates: {
-          data: {
-            ...currentItem.data,
-            [columnId]: value,
+      // Get old value for activity logging
+      const oldValue = columnId === 'name'
+        ? currentItem.name
+        : currentItem.data?.[columnId]
+
+      // Skip if value hasn't actually changed
+      if (JSON.stringify(oldValue) === JSON.stringify(value)) return
+
+      // If editing the 'name' column, update the item's name field directly
+      if (columnId === 'name') {
+        await updateItem.mutateAsync({
+          itemId: rowId,
+          updates: {
+            name: value,
           },
-        },
-      })
+        })
+      } else {
+        // Update the data JSONB field with the new value
+        await updateItem.mutateAsync({
+          itemId: rowId,
+          updates: {
+            data: {
+              ...currentItem.data,
+              [columnId]: value,
+            },
+          },
+        })
+      }
+
+      // Notify other users about the change via Ably (instant real-time)
+      publishItemChange('update', rowId, { [columnId]: value })
+
+      // Log the activity (fire and forget - don't block on this)
+      if (inspectorId) {
+        const column = columns?.find(c => c.column_id === columnId)
+        const fieldName = column?.column_name || columnId
+
+        // Determine update type
+        const updateType = columnId === 'status' ? 'status_changed' : 'updated'
+
+        // Format values for display
+        const formatValue = (val: any): string => {
+          if (val === null || val === undefined) return ''
+          if (typeof val === 'object') return JSON.stringify(val)
+          return String(val)
+        }
+
+        createUpdate.mutate({
+          item_type: 'board_item',
+          item_id: rowId,
+          user_id: inspectorId,
+          update_type: updateType,
+          field_name: fieldName,
+          old_value: formatValue(oldValue),
+          new_value: formatValue(value),
+        })
+      }
     } catch (error) {
       console.error('Failed to update item:', error)
       showToast('Failed to update item', 'error')
@@ -113,6 +187,47 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
   const handleRowClick = (row: BoardItem) => {
     setSelectedItem(row)
+  }
+
+  // Handle duplicate selected items
+  const handleDuplicateSelected = async () => {
+    if (selection.size === 0) return
+
+    try {
+      await duplicateItems.mutateAsync({
+        itemIds: Array.from(selection),
+      })
+      showToast(`Duplicated ${selection.size} item(s)`, 'success')
+      setSelection(new Set())
+    } catch (error) {
+      console.error('Failed to duplicate items:', error)
+      showToast('Failed to duplicate items', 'error')
+    }
+  }
+
+  // Handle delete selected items
+  const handleDeleteSelected = async () => {
+    if (selection.size === 0) return
+
+    const confirmMessage = selection.size === 1
+      ? 'Are you sure you want to delete this item?'
+      : `Are you sure you want to delete ${selection.size} items?`
+
+    if (!confirm(confirmMessage)) return
+
+    try {
+      const itemIds = Array.from(selection)
+      for (const itemId of itemIds) {
+        await deleteItem.mutateAsync(itemId)
+        // Notify other users about the deletion via Ably
+        publishItemChange('delete', itemId)
+      }
+      showToast(`Deleted ${selection.size} item(s)`, 'success')
+      setSelection(new Set())
+    } catch (error) {
+      console.error('Failed to delete items:', error)
+      showToast('Failed to delete items', 'error')
+    }
   }
 
   const handleUpdateColumn = async (columnId: string, updates: Partial<BoardColumn>) => {
@@ -207,6 +322,12 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         person: 'Person',
         location: 'Location',
         actions: 'Actions',
+        route: 'Route',
+        company: 'Company',
+        service_type: 'Service Type',
+        checkbox: 'Checkbox',
+        phone: 'Phone',
+        files: 'Files',
       }
 
       const baseName = typeLabels[columnType] || 'Column'
@@ -275,6 +396,32 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     }
   }
 
+  // Handle export
+  const handleExport = (format: 'csv' | 'excel') => {
+    if (!board || !columns || !filteredItems) return
+
+    try {
+      const options = {
+        format,
+        items: filteredItems,
+        columns: columns.filter(col => col.is_visible),
+        boardName: board.name,
+      }
+
+      if (format === 'csv') {
+        exportToCSV(options)
+      } else {
+        exportToExcel(options)
+      }
+
+      showToast(`Exported to ${format.toUpperCase()}`, 'success')
+      setShowExportMenu(false)
+    } catch (error) {
+      console.error('Export failed:', error)
+      showToast('Export failed', 'error')
+    }
+  }
+
   if (boardLoading || itemsLoading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -331,15 +478,21 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             </button>
 
             <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-              <Button variant="secondary" size="small" onClick={() => setShowColumnConfig(true)}>
+              {/* Real-time presence indicator */}
+              <BoardPresenceIndicator
+                presence={presence}
+                isConnected={isConnected}
+              />
+
+              <Button variant="secondary" size="sm" onClick={() => setShowColumnConfig(true)}>
                 <Columns className="w-4 h-4 mr-2" />
                 Columns
               </Button>
-              <Button variant="secondary" size="small">
+              <Button variant="secondary" size="sm">
                 <Users className="w-4 h-4 mr-2" />
                 Share
               </Button>
-              <Button variant="secondary" size="small">
+              <Button variant="secondary" size="sm">
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </Button>
@@ -380,18 +533,76 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             </Button>
 
             {selection.size > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-text-secondary">
+              <div className="flex items-center gap-2 pl-3 ml-3 border-l border-border-light">
+                <span className="text-sm text-text-secondary font-medium">
                   {selection.size} selected
                 </span>
-                <Button variant="secondary" size="small">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleDuplicateSelected}
+                  disabled={duplicateItems.isPending}
+                >
+                  <Copy className="w-4 h-4 mr-1" />
+                  {duplicateItems.isPending ? 'Duplicating...' : 'Duplicate'}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleDeleteSelected}
+                  disabled={deleteItem.isPending}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
                   Delete
                 </Button>
+                <button
+                  onClick={() => setSelection(new Set())}
+                  className="text-xs text-text-tertiary hover:text-text-secondary ml-1"
+                >
+                  Clear
+                </button>
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Export Button */}
+            <div className="relative">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowExportMenu(!showExportMenu)}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+              {showExportMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowExportMenu(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-lg shadow-lg border border-border-light z-50 py-1">
+                    <button
+                      onClick={() => handleExport('csv')}
+                      className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4 text-[#00c875]" />
+                      Export to CSV
+                    </button>
+                    <button
+                      onClick={() => handleExport('excel')}
+                      className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
+                    >
+                      <Download className="w-4 h-4 text-[#579bfc]" />
+                      Export to Excel
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary" />
@@ -443,6 +654,9 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               onOpenAddColumnModal={() => setShowAddColumn(true)}
               onColumnRename={handleColumnRename}
               isLoading={itemsLoading}
+              presence={presence}
+              onCellEditStart={(itemId, columnId) => setEditing(itemId, columnId)}
+              onCellEditEnd={() => setEditing(null)}
             />
           </ErrorBoundary>
         ) : (

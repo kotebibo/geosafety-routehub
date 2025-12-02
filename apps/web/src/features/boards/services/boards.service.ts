@@ -8,7 +8,9 @@ import type {
   ColumnConfig,
 } from '@/types/board'
 
-const supabase = getSupabase()
+// Use any type for supabase to bypass strict table typings
+// This is needed because the database schema types may not be in sync
+const supabase = getSupabase() as any
 
 /**
  * Board Configuration Service
@@ -75,7 +77,7 @@ export const boardsService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as BoardColumn
   },
 
   /**

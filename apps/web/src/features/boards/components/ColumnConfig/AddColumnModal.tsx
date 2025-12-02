@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
-import { X, Type, Hash, Calendar, CheckSquare, User, Link as LinkIcon, List } from 'lucide-react'
+import { X, Type, Hash, Calendar, CheckSquare, User, MapPin, Building2, Shield, Check, Phone, Paperclip } from 'lucide-react'
 import type { ColumnType } from '@/types/board'
 
 interface AddColumnModalProps {
@@ -46,6 +46,42 @@ const COLUMN_TYPES: Array<{
     icon: <User className="w-5 h-5" />,
     description: 'Assign people',
   },
+  {
+    type: 'route',
+    label: 'Route',
+    icon: <MapPin className="w-5 h-5" />,
+    description: 'Link to a route',
+  },
+  {
+    type: 'company',
+    label: 'Company',
+    icon: <Building2 className="w-5 h-5" />,
+    description: 'Link to a company',
+  },
+  {
+    type: 'service_type',
+    label: 'Service Type',
+    icon: <Shield className="w-5 h-5" />,
+    description: 'Select inspection service',
+  },
+  {
+    type: 'checkbox',
+    label: 'Checkbox',
+    icon: <Check className="w-5 h-5" />,
+    description: 'Yes/No toggle',
+  },
+  {
+    type: 'phone',
+    label: 'Phone',
+    icon: <Phone className="w-5 h-5" />,
+    description: 'Click-to-call phone number',
+  },
+  {
+    type: 'files',
+    label: 'Files',
+    icon: <Paperclip className="w-5 h-5" />,
+    description: 'Attach photos and documents',
+  },
 ]
 
 export function AddColumnModal({ onClose, onAdd }: AddColumnModalProps) {
@@ -74,7 +110,7 @@ export function AddColumnModal({ onClose, onAdd }: AddColumnModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative bg-bg-primary rounded-lg shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+      <div className="relative bg-bg-primary rounded-lg shadow-2xl w-full max-w-3xl mx-4 overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
           <h2 className="text-lg font-semibold text-text-primary">Add New Column</h2>
@@ -87,7 +123,7 @@ export function AddColumnModal({ onClose, onAdd }: AddColumnModalProps) {
         </div>
 
         {/* Content */}
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto flex-1">
           {/* Column Name */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-text-primary mb-2">
@@ -108,7 +144,7 @@ export function AddColumnModal({ onClose, onAdd }: AddColumnModalProps) {
             <label className="block text-sm font-medium text-text-primary mb-3">
               Column Type
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {COLUMN_TYPES.map((type) => (
                 <button
                   key={type.type}

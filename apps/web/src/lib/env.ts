@@ -50,6 +50,11 @@ export const env = {
     enableDebugMode: getOptionalEnvVar('NEXT_PUBLIC_ENABLE_DEBUG_MODE') === 'true',
     enablePerformanceLogging: getOptionalEnvVar('NEXT_PUBLIC_ENABLE_PERFORMANCE_LOGGING') === 'true',
   },
+
+  // Ably Realtime
+  ably: {
+    apiKey: getOptionalEnvVar('NEXT_PUBLIC_ABLY_API_KEY'),
+  },
 } as const
 
 // Server-only environment variables (NEVER exposed to browser)
@@ -65,13 +70,13 @@ export const serverEnv = {
   },
   
   rateLimit: {
-    maxRequests: parseInt(getOptionalEnvVar('RATE_LIMIT_MAX_REQUESTS', '100')),
-    windowMs: parseInt(getOptionalEnvVar('RATE_LIMIT_WINDOW_MS', '900000')),
+    maxRequests: parseInt(getOptionalEnvVar('RATE_LIMIT_MAX_REQUESTS', '100') || '100'),
+    windowMs: parseInt(getOptionalEnvVar('RATE_LIMIT_WINDOW_MS', '900000') || '900000'),
   },
-  
+
   session: {
     secret: getOptionalEnvVar('SESSION_SECRET'),
-    maxAge: parseInt(getOptionalEnvVar('SESSION_MAX_AGE', '604800000')),
+    maxAge: parseInt(getOptionalEnvVar('SESSION_MAX_AGE', '604800000') || '604800000'),
   },
 } as const
 

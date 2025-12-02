@@ -3,9 +3,10 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
-import { ChevronDown, ChevronRight, Plus, Type, Hash, Calendar, User, MapPin, CheckSquare, MoreHorizontal } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Type, Hash, Calendar, User, MapPin, CheckSquare, MoreHorizontal, Building2, Phone, Shield, Check, Paperclip, Keyboard } from 'lucide-react'
 import { CellRenderer } from './CellRenderer'
-import type { BoardColumn, BoardItem, BoardGroup, BoardType, ColumnType } from '../../types/board'
+import { useKeyboardNavigation, KeyboardShortcutsHelp } from '../../hooks/useKeyboardNavigation'
+import type { BoardColumn, BoardItem, BoardGroup, BoardType, ColumnType, BoardPresence } from '../../types/board'
 
 // Essential column types for quick-add popup
 const ESSENTIAL_COLUMNS: { type: ColumnType; label: string; icon: React.ElementType }[] = [
@@ -24,6 +25,12 @@ const ALL_COLUMN_TYPES: { type: ColumnType; label: string; icon: React.ElementTy
   { type: 'date', label: 'Date', icon: Calendar, description: 'Add dates and deadlines' },
   { type: 'person', label: 'Person', icon: User, description: 'Assign people to items' },
   { type: 'location', label: 'Location', icon: MapPin, description: 'Add addresses and coordinates' },
+  { type: 'route', label: 'Route', icon: MapPin, description: 'Link to a route' },
+  { type: 'company', label: 'Company', icon: Building2, description: 'Link to a company' },
+  { type: 'service_type', label: 'Service Type', icon: Shield, description: 'Select a service type' },
+  { type: 'checkbox', label: 'Checkbox', icon: Check, description: 'Track completion with a checkbox' },
+  { type: 'phone', label: 'Phone', icon: Phone, description: 'Add phone numbers with click-to-call' },
+  { type: 'files', label: 'Files', icon: Paperclip, description: 'Attach photos and documents' },
 ]
 
 // Monday.com color palette for groups
@@ -54,6 +61,10 @@ interface MondayBoardTableProps {
   onQuickAddColumn?: (columnType: ColumnType) => void
   onOpenAddColumnModal?: () => void
   onColumnRename?: (columnId: string, newName: string) => void
+  // Real-time collaboration props
+  presence?: BoardPresence[]
+  onCellEditStart?: (itemId: string, columnId: string) => void
+  onCellEditEnd?: () => void
 }
 
 const DEFAULT_GROUP: BoardGroup = {
@@ -83,6 +94,9 @@ export function MondayBoardTable({
   onQuickAddColumn,
   onOpenAddColumnModal,
   onColumnRename,
+  presence = [],
+  onCellEditStart,
+  onCellEditEnd,
 }: MondayBoardTableProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [sortConfig, setSortConfig] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null)
@@ -111,6 +125,45 @@ export function MondayBoardTable({
   const [scrollbarPosition, setScrollbarPosition] = useState({ left: 0, width: 0, bottom: 0 })
   const scrollbarDragStartX = useRef(0)
   const scrollbarDragStartScrollLeft = useRef(0)
+
+  // Keyboard shortcuts toggle
+  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
+
+  // Keyboard navigation - flatten items for navigation
+  const flattenedItems = useMemo(() => {
+    return data.sort((a, b) => a.position - b.position)
+  }, [data])
+
+  // Keyboard navigation hook
+  const {
+    tableRef: keyboardTableRef,
+    focusedCell,
+    isEditing: isKeyboardEditing,
+    isCellFocused,
+    isCellEditing,
+    setFocusedCell,
+  } = useKeyboardNavigation({
+    items: flattenedItems,
+    columns,
+    onCellEdit,
+    onRowClick,
+    onSelectionChange,
+    selection,
+    enabled: !resizingColumn && !isDraggingScrollbar,
+  })
+
+  // Helper to check if a cell is being edited by another user
+  const getUsersEditingCell = useCallback((itemId: string, columnId: string) => {
+    return presence.filter(p =>
+      p.editing_item_id === itemId &&
+      p.editing_column_id === columnId
+    )
+  }, [presence])
+
+  // Helper to check if item is being edited (any cell)
+  const getUsersEditingItem = useCallback((itemId: string) => {
+    return presence.filter(p => p.editing_item_id === itemId)
+  }, [presence])
 
   // Initialize column widths from props
   useEffect(() => {
@@ -699,6 +752,8 @@ export function MondayBoardTable({
                       {items.map((item, itemIndex) => {
                         const isSelected = selection.has(item.id)
                         const isLast = itemIndex === items.length - 1 && !onAddItem
+                        // Find the global row index for keyboard navigation
+                        const globalRowIndex = flattenedItems.findIndex(i => i.id === item.id)
 
                         return (
                           <tr
@@ -743,40 +798,84 @@ export function MondayBoardTable({
                             />
                             <td
                               className={cn(
-                                'sticky z-10 border border-[#c3c6d4] p-0 align-middle',
-                                isSelected ? 'bg-[#e5e9ff]' : 'bg-white'
+                                'sticky z-10 border p-0 align-middle',
+                                isSelected ? 'bg-[#e5e9ff]' : 'bg-white',
+                                isCellFocused(globalRowIndex, 0)
+                                  ? 'border-2 border-[#0073ea] z-20'
+                                  : 'border-[#c3c6d4]'
                               )}
                               style={{
                                 width: firstColumnWidth,
                                 left: onSelectionChange ? checkboxWidth + colorBarWidth : colorBarWidth,
                                 height: 36,
                               }}
-                              onClick={(e) => e.stopPropagation()}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setFocusedCell({ rowIndex: globalRowIndex, columnIndex: 0 })
+                              }}
+                              onDoubleClick={(e) => {
+                                e.stopPropagation()
+                                onRowClick?.(item)
+                              }}
                             >
-                              <div className="flex items-center h-full px-3">
-                                <span className="text-sm text-[#323338] truncate">
-                                  {item.data?.[visibleColumns[0]?.column_id] ?? item.name ?? 'Unnamed'}
-                                </span>
-                              </div>
+                              {visibleColumns[0] && (
+                                <CellRenderer
+                                  row={item}
+                                  column={visibleColumns[0]}
+                                  value={visibleColumns[0].column_id === 'name'
+                                    ? (item.name ?? 'Unnamed')
+                                    : (item.data?.[visibleColumns[0].column_id] ?? '')}
+                                  isEditing={isCellEditing(globalRowIndex, 0)}
+                                  onEdit={(newValue) => onCellEdit?.(item.id, visibleColumns[0].column_id, newValue)}
+                                />
+                              )}
                             </td>
                             {/* Non-sticky cells */}
-                            {visibleColumns.slice(1).map((column) => {
+                            {visibleColumns.slice(1).map((column, colIndex) => {
                               const value = item.data?.[column.column_id] ?? item[column.column_id as keyof BoardItem]
+                              const columnIndex = colIndex + 1 // +1 because we skip the first column
+                              const isFocused = isCellFocused(globalRowIndex, columnIndex)
+                              const isCellInEditMode = isCellEditing(globalRowIndex, columnIndex)
+                              const editingUsers = getUsersEditingCell(item.id, column.column_id)
+                              const isBeingEditedByOther = editingUsers.length > 0
                               return (
                                 <td
                                   key={`${item.id}-${column.id}`}
                                   className={cn(
-                                    'border border-[#c3c6d4] p-0 align-middle',
-                                    isSelected ? 'bg-[#e5e9ff]' : 'bg-white'
+                                    'border p-0 align-middle relative',
+                                    isSelected ? 'bg-[#e5e9ff]' : 'bg-white',
+                                    isBeingEditedByOther && 'ring-2 ring-inset ring-yellow-400',
+                                    isFocused
+                                      ? 'border-2 border-[#0073ea] z-10'
+                                      : 'border-[#c3c6d4]'
                                   )}
                                   style={{ width: getColumnWidth(column), height: 36 }}
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setFocusedCell({ rowIndex: globalRowIndex, columnIndex })
+                                  }}
+                                  onDoubleClick={(e) => {
+                                    e.stopPropagation()
+                                    onRowClick?.(item)
+                                  }}
+                                  title={isBeingEditedByOther ? `${editingUsers[0].user_name} is editing` : undefined}
                                 >
+                                  {/* Editing indicator */}
+                                  {isBeingEditedByOther && (
+                                    <div className="absolute -top-1 -right-1 z-20 w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center text-[8px] font-bold text-white shadow-sm">
+                                      {editingUsers[0].user_name.charAt(0).toUpperCase()}
+                                    </div>
+                                  )}
                                   <CellRenderer
                                     row={item}
                                     column={column}
                                     value={value}
-                                    onEdit={(newValue) => onCellEdit?.(item.id, column.column_id, newValue)}
+                                    isEditing={isCellInEditMode}
+                                    onEdit={(newValue) => {
+                                      onCellEditEnd?.()
+                                      onCellEdit?.(item.id, column.column_id, newValue)
+                                    }}
+                                    onEditStart={() => onCellEditStart?.(item.id, column.column_id)}
                                   />
                                 </td>
                               )
@@ -917,6 +1016,27 @@ export function MondayBoardTable({
       {(resizingColumn || isDraggingScrollbar) && (
         <div className="fixed inset-0 z-50" style={{ cursor: resizingColumn ? 'col-resize' : 'grabbing' }} />
       )}
+
+      {/* Keyboard shortcuts help button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => setShowKeyboardHelp(!showKeyboardHelp)}
+          className={cn(
+            'p-2.5 rounded-full shadow-lg transition-all',
+            showKeyboardHelp
+              ? 'bg-monday-primary text-white'
+              : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+          )}
+          title="Keyboard shortcuts"
+        >
+          <Keyboard className="w-5 h-5" />
+        </button>
+        {showKeyboardHelp && (
+          <div className="absolute bottom-12 right-0 w-72 bg-white rounded-lg shadow-xl border border-gray-200 p-4">
+            <KeyboardShortcutsHelp />
+          </div>
+        )}
+      </div>
 
       {/* Quick Add Column Popup */}
       {showAddColumnPopup && typeof document !== 'undefined' && createPortal(

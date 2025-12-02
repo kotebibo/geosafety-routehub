@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import type { CellRendererProps } from '../types'
 
-export function TextCell({ value, onEdit, isEditing: externalIsEditing }: CellRendererProps) {
+export function TextCell({ value, onEdit, isEditing: externalIsEditing, onEditStart }: CellRendererProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -19,6 +19,11 @@ export function TextCell({ value, onEdit, isEditing: externalIsEditing }: CellRe
       inputRef.current.select()
     }
   }, [isEditing])
+
+  const handleStartEdit = () => {
+    setIsEditing(true)
+    onEditStart?.()
+  }
 
   const handleSave = () => {
     if (editValue !== value && onEdit) {
@@ -57,7 +62,7 @@ export function TextCell({ value, onEdit, isEditing: externalIsEditing }: CellRe
 
   return (
     <div
-      onClick={() => setIsEditing(true)}
+      onClick={handleStartEdit}
       className={cn(
         'w-full h-full min-h-[36px] flex items-center px-2',
         'text-sm',

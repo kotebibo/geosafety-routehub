@@ -2,7 +2,7 @@
 // Export all UI components from this central location
 
 // Core UI Components
-export { Button, buttonVariants, type ButtonProps } from './Button'
+export { Button, buttonVariants, type ButtonProps } from './button'
 export {
   StatusPill,
   statusPillVariants,
