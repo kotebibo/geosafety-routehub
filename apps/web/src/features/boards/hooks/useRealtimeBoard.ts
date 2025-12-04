@@ -53,7 +53,6 @@ export function useRealtimeBoard({
 
   // Set editing state
   const setEditing = useCallback((itemId: string | null, columnId?: string) => {
-    console.log('useRealtimeBoard: setEditing called with itemId=', itemId, 'columnId=', columnId)
     updatePresence({
       is_editing: !!itemId,
       editing_item_id: itemId || undefined,
@@ -118,7 +117,6 @@ export function useRealtimeBoard({
 
     // Listen for item changes from other users
     channel.onItemChange((change: BoardItemChange) => {
-      console.log('Item change from another user:', change)
       // Immediately invalidate queries to refresh data
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.routes.all, 'board-items', boardId],
@@ -126,7 +124,6 @@ export function useRealtimeBoard({
     })
 
     setState(prev => ({ ...prev, isConnected: true }))
-    console.log('Ably realtime connected for board:', boardId)
 
     // Cleanup
     return () => {
