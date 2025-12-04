@@ -842,7 +842,8 @@ export function MondayBoardTable({
                                 <td
                                   key={`${item.id}-${column.id}`}
                                   className={cn(
-                                    'border p-0 align-middle relative',
+                                    'border align-middle relative',
+                                    isBeingEditedByOther ? 'p-[2px]' : 'p-0',
                                     isSelected ? 'bg-[#e5e9ff]' : 'bg-white',
                                     isBeingEditedByOther && 'ring-2 ring-inset ring-yellow-400',
                                     isFocused
