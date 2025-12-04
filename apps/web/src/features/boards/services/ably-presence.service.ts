@@ -88,56 +88,37 @@ export const ablyPresenceService = {
       // Capture connectionId when we have it (after connection is established)
       if (!myConnectionId && ably.connection.id) {
         myConnectionId = ably.connection.id
-        console.log('Ably presence: Captured my connectionId =', myConnectionId)
       }
-
-      console.log('Ably presence: updatePresenceState called, fetching members...')
 
       try {
         const members = await channel.presence.get()
-        console.log('Ably presence: Got members via promise:', members?.length)
 
         // Filter out our own presence entry by connectionId
         const filteredMembers = (members || [])
           .filter((member) => {
-            // If we have our connectionId, use it; otherwise fall back to not filtering
             if (myConnectionId) {
               return member.connectionId !== myConnectionId
             }
             return true
           })
 
-        console.log('Ably presence: After filter (my connectionId=' + myConnectionId + ') =', filteredMembers.length, 'other members')
-
-        presenceState = filteredMembers
-          .map((member) => {
-            const data = member.data as AblyPresenceData
-            return {
-              user_id: data.user_id,
-              user_name: data.user_name,
-              user_avatar: data.user_avatar,
-              board_type: data.board_type,
-              board_id: data.board_id,
-              last_seen: data.timestamp,
-              is_editing: data.is_editing,
-              editing_item_id: data.editing_item_id,
-              editing_column_id: data.editing_column_id,
-            } as BoardPresence
-          })
-
-        // Log the final state with editing info
-        console.log('Ably presence: presenceState with editors =', presenceState.map(p => ({
-          user: p.user_name,
-          is_editing: p.is_editing,
-          editing_item: p.editing_item_id,
-          editing_col: p.editing_column_id,
-        })))
+        presenceState = filteredMembers.map((member) => {
+          const data = member.data as AblyPresenceData
+          return {
+            user_id: data.user_id,
+            user_name: data.user_name,
+            user_avatar: data.user_avatar,
+            board_type: data.board_type,
+            board_id: data.board_id,
+            last_seen: data.timestamp,
+            is_editing: data.is_editing,
+            editing_item_id: data.editing_item_id,
+            editing_column_id: data.editing_column_id,
+          } as BoardPresence
+        })
 
         if (onPresenceChange) {
-          console.log('Ably presence: Calling onPresenceChange callback')
           onPresenceChange(presenceState)
-        } else {
-          console.warn('Ably presence: onPresenceChange callback NOT SET!')
         }
       } catch (err) {
         console.error('Error getting presence:', err)
@@ -171,9 +152,7 @@ export const ablyPresenceService = {
             timestamp: new Date().toISOString(),
             ...updates,
           } as AblyPresenceData
-          console.log('Ably presence: Updating presence with:', fullUpdate)
           await channel.presence.update(fullUpdate)
-          console.log('Ably presence: Update successful')
         } catch (err) {
           console.error('Error updating presence:', err)
         }
@@ -185,9 +164,7 @@ export const ablyPresenceService = {
             ...change,
             changed_by: userId,
           } as BoardItemChange
-          console.log('Ably publishing item:change:', fullChange)
           await channel.publish('item:change', fullChange)
-          console.log('Ably publish successful')
         } catch (err) {
           console.error('Error publishing item change:', err)
         }
