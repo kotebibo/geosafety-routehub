@@ -55,29 +55,17 @@ export const ablyPresenceService = {
     let onItemChange: ((change: BoardItemChange) => void) | null = null
 
     // Track presence
-    channel.presence.subscribe('enter', (member) => {
-      updatePresenceState()
-    })
-
-    channel.presence.subscribe('leave', (member) => {
-      updatePresenceState()
-    })
-
-    channel.presence.subscribe('update', (member) => {
-      updatePresenceState()
-    })
+    channel.presence.subscribe('enter', () => updatePresenceState())
+    channel.presence.subscribe('leave', () => updatePresenceState())
+    channel.presence.subscribe('update', () => updatePresenceState())
 
     // Subscribe to item changes
     channel.subscribe('item:change', (message) => {
-      console.log('Ably received item:change message:', message)
       const change = message.data as BoardItemChange
       // Note: We allow same-user updates to support testing with same account in multiple tabs
       // The React Query cache will dedupe if the data hasn't actually changed
       if (onItemChange) {
-        console.log('Calling onItemChange callback with:', change)
         onItemChange(change)
-      } else {
-        console.warn('onItemChange callback not set!')
       }
     })
 
@@ -96,24 +84,18 @@ export const ablyPresenceService = {
       timestamp: new Date().toISOString(),
     } as AblyPresenceData)
 
-    function updatePresenceState() {
+    async function updatePresenceState() {
       // Capture connectionId when we have it (after connection is established)
       if (!myConnectionId && ably.connection.id) {
         myConnectionId = ably.connection.id
         console.log('Ably presence: Captured my connectionId =', myConnectionId)
       }
 
-      channel.presence.get((err, members) => {
-        if (err) {
-          console.error('Error getting presence:', err)
-          return
-        }
+      console.log('Ably presence: updatePresenceState called, fetching members...')
 
-        console.log('Ably presence: Raw members =', members?.map(m => ({
-          connectionId: m.connectionId,
-          clientId: m.clientId,
-          data: m.data,
-        })))
+      try {
+        const members = await channel.presence.get()
+        console.log('Ably presence: Got members via promise:', members?.length)
 
         // Filter out our own presence entry by connectionId
         const filteredMembers = (members || [])
@@ -125,7 +107,7 @@ export const ablyPresenceService = {
             return true
           })
 
-        console.log('Ably presence: After filter (my connectionId=' + myConnectionId + ') =', filteredMembers.length, 'members')
+        console.log('Ably presence: After filter (my connectionId=' + myConnectionId + ') =', filteredMembers.length, 'other members')
 
         presenceState = filteredMembers
           .map((member) => {
@@ -143,12 +125,23 @@ export const ablyPresenceService = {
             } as BoardPresence
           })
 
-        console.log('Ably presence: Final presenceState =', presenceState)
+        // Log the final state with editing info
+        console.log('Ably presence: presenceState with editors =', presenceState.map(p => ({
+          user: p.user_name,
+          is_editing: p.is_editing,
+          editing_item: p.editing_item_id,
+          editing_col: p.editing_column_id,
+        })))
 
         if (onPresenceChange) {
+          console.log('Ably presence: Calling onPresenceChange callback')
           onPresenceChange(presenceState)
+        } else {
+          console.warn('Ably presence: onPresenceChange callback NOT SET!')
         }
-      })
+      } catch (err) {
+        console.error('Error getting presence:', err)
+      }
     }
 
     // Initial presence fetch
