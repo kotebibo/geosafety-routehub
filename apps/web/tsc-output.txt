@@ -1,0 +1,134 @@
+app/admin/setup-pdp/page.tsx(92,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "service_types", never, "POST">', gave the following error.
+    Argument of type '{ name: string; name_ka: string; description: string; description_ka: string; required_inspector_type: string; default_frequency_days: number; regulatory_requirement: boolean; is_active: boolean; sort_order: number; }[]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "service_types", never, "POST">', gave the following error.
+    Argument of type '{ name: string; name_ka: string; description: string; description_ka: string; required_inspector_type: string; default_frequency_days: number; regulatory_requirement: boolean; is_active: boolean; sort_order: number; }[]' is not assignable to parameter of type 'never[]'.
+      Type '{ name: string; name_ka: string; description: string; description_ka: string; required_inspector_type: string; default_frequency_days: number; regulatory_requirement: boolean; is_active: boolean; sort_order: number; }' is not assignable to type 'never'.
+app/api/routes/optimize/route.ts(8,45): error TS2305: Module '"@geosafety/route-optimizer"' has no exported member 'OptimizerOptions'.
+app/companies/new/page.tsx(51,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "companies", never, "POST">', gave the following error.
+    Argument of type '{ name: string; address: string; type: string; contact_name: string; contact_phone: string; contact_email: string; priority: string; status: string; notes: string; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "companies", never, "POST">', gave the following error.
+    Argument of type '{ name: string; address: string; type: string; contact_name: string; contact_phone: string; contact_email: string; priority: string; status: string; notes: string; }' is not assignable to parameter of type 'never[]'.
+      Type '{ name: string; address: string; type: string; contact_name: string; contact_phone: string; contact_email: string; priority: string; status: string; notes: string; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
+app/companies/new/page.tsx(60,31): error TS2339: Property 'id' does not exist on type 'never'.
+app/companies/new/page.tsx(71,19): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "company_pdp_phases", never, "POST">', gave the following error.
+    Argument of type '{ company_id: any; phase: number; scheduled_date: string | undefined; completed_date: string | undefined; inspector_id: string | undefined; notes: string | undefined; current_phase: number; }[]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "company_pdp_phases", never, "POST">', gave the following error.
+    Argument of type '{ company_id: any; phase: number; scheduled_date: string | undefined; completed_date: string | undefined; inspector_id: string | undefined; notes: string | undefined; current_phase: number; }[]' is not assignable to parameter of type 'never[]'.
+      Type '{ company_id: any; phase: number; scheduled_date: string | undefined; completed_date: string | undefined; inspector_id: string | undefined; notes: string | undefined; current_phase: number; }' is not assignable to type 'never'.
+app/companies/new/page.tsx(81,10): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "company_services", never, "POST">', gave the following error.
+    Argument of type '{ company_id: any; service_type_id: string; inspection_frequency_days: number; priority: string; next_inspection_date: string | null; assigned_inspector_id: string | null; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "company_services", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'company_id' does not exist in type 'never[]'.
+app/companies/new/page.tsx(82,31): error TS2339: Property 'id' does not exist on type 'never'.
+app/companies/pdp/new/page.tsx(46,9): error TS2353: Object literal may only specify known properties, and 'contact_name' does not exist in type '{ name: string; address: string; lat: number; lng: number; }'.
+app/companies/pdp/new/page.tsx(51,32): error TS2339: Property 'id' does not exist on type 'never'.
+app/companies/pdp/new/page.tsx(55,47): error TS2339: Property 'id' does not exist on type 'never'.
+app/companies/pdp/new/page.tsx(59,17): error TS2339: Property 'id' does not exist on type 'never'.
+app/companies/pdp/new/page.tsx(73,41): error TS2339: Property 'id' does not exist on type 'never'.
+app/inspector/routes/page.tsx(37,29): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type '{}'.
+  Type 'undefined' is not assignable to type '{}'.
+app/routes/builder/page.tsx(302,13): error TS2322: Type 'number[][] | null' is not assignable to type 'number[][] | undefined'.
+  Type 'null' is not assignable to type 'number[][] | undefined'.
+app/routes/builder/page.tsx(304,13): error TS2719: Type '(company: Company) => void' is not assignable to type '(company: Company) => void'. Two different types with this name exist, but they are unrelated.
+  Types of parameters 'company' and 'company' are incompatible.
+    Type 'Company' is missing the following properties from type 'Company': type, priority
+app/routes/builder/page.tsx(350,31): error TS2339: Property 'distance' does not exist on type '{ company: Company; position: number; }'.
+app/routes/builder/page.tsx(352,39): error TS2339: Property 'distance' does not exist on type '{ company: Company; position: number; }'.
+check-coords.ts(49,25): error TS7006: Parameter 'c' implicitly has an 'any' type.
+sentry.client.config.ts(18,16): error TS2339: Property 'Replay' does not exist on type 'typeof import("D:/geosafety-routehub/apps/web/node_modules/@sentry/nextjs/build/types/index.types")'.
+src/__tests__/lib/validations/route.schema.test.ts(9,3): error TS2305: Module '"@/lib/validations/route.schema"' has no exported member 'reassignRouteSchema'.
+src/__tests__/lib/validations/route.schema.test.ts(10,3): error TS2724: '"@/lib/validations/route.schema"' has no exported member named 'routeStatusSchema'. Did you mean 'routeStopSchema'?
+src/__tests__/unit/api-health.test.ts(2,21): error TS2307: Cannot find module '@/app/api/health/route' or its corresponding type declarations.
+src/components/PDPOnboardingManager.tsx(75,27): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type '{}'.
+  Type 'undefined' is not assignable to type '{}'.
+src/components/PDPOnboardingManager.tsx(80,46): error TS2339: Property 'completed_date' does not exist on type 'never'.
+src/components/PDPOnboardingManager.tsx(81,49): error TS2339: Property 'phase' does not exist on type 'never'.
+src/features/assignments/services/assignments.service.ts(7,15): error TS2345: Argument of type '{ assigned_inspector_id: string | null; }' is not assignable to parameter of type 'never'.
+src/features/assignments/services/assignments.service.ts(41,59): error TS2339: Property 'id' does not exist on type 'never'.
+src/features/assignments/services/assignments.service.ts(60,42): error TS2339: Property 'assigned_inspector_id' does not exist on type 'never'.
+src/features/assignments/services/assignments.service.ts(84,16): error TS2339: Property 'assigned_inspector_id' does not exist on type 'never'.
+src/features/assignments/services/assignments.service.ts(84,52): error TS2339: Property 'id' does not exist on type 'never'.
+src/features/assignments/services/assignments.service.ts(88,9): error TS2698: Spread types may only be created from object types.
+src/features/boards/components/BoardTable/MondayBoardTable.tsx(152,15): error TS2322: Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'LegacyRef<HTMLInputElement> | undefined'.
+  Type 'RefObject<HTMLInputElement | null>' is not assignable to type 'RefObject<HTMLInputElement>'.
+    Type 'HTMLInputElement | null' is not assignable to type 'HTMLInputElement'.
+      Type 'null' is not assignable to type 'HTMLInputElement'.
+src/features/boards/services/ably-presence.service.ts(89,30): error TS18047: 'ably' is possibly 'null'.
+src/features/boards/services/ably-presence.service.ts(90,26): error TS18047: 'ably' is possibly 'null'.
+src/features/boards/utils/importBoard.ts(330,33): error TS2339: Property 'column_id' does not exist on type 'never'.
+src/features/boards/utils/importBoard.ts(331,37): error TS2339: Property 'column_type' does not exist on type 'never'.
+src/features/companies/services/companies.service.ts(47,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "companies", never, "POST">', gave the following error.
+    Argument of type '{ name: string; address: string; lat: number; lng: number; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "companies", never, "POST">', gave the following error.
+    Argument of type '{ name: string; address: string; lat: number; lng: number; }' is not assignable to parameter of type 'never[]'.
+      Type '{ name: string; address: string; lat: number; lng: number; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
+src/features/companies/services/companies.service.ts(58,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/features/compliance/services/compliance.service.ts(121,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/features/compliance/services/compliance.service.ts(193,15): error TS2345: Argument of type '{ next_checkup_date: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+src/features/inspectors/services/inspectors.service.ts(64,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "inspectors", never, "POST">', gave the following error.
+    Argument of type '{ full_name: string; email: string; phone: string; specialty: string; status: "active"; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "inspectors", never, "POST">', gave the following error.
+    Argument of type '{ full_name: string; email: string; phone: string; specialty: string; status: "active"; }' is not assignable to parameter of type 'never[]'.
+      Type '{ full_name: string; email: string; phone: string; specialty: string; status: "active"; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
+src/features/inspectors/services/inspectors.service.ts(75,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/features/routes/services/routes.service.ts(61,8): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "routes", never, "POST">', gave the following error.
+    Argument of type '{ name: string; inspector_id: string; date: string; start_time: string; status: string; total_distance_km: number; route_geometry: any; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "routes", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'name' does not exist in type 'never[]'.
+src/features/routes/services/routes.service.ts(78,25): error TS2339: Property 'id' does not exist on type 'never'.
+src/features/routes/services/routes.service.ts(87,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "route_stops", never, "POST">', gave the following error.
+    Argument of type '{ route_id: any; company_id: any; position: number; scheduled_arrival_time: string; status: string; }[]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "route_stops", never, "POST">', gave the following error.
+    Argument of type '{ route_id: any; company_id: any; position: number; scheduled_arrival_time: string; status: string; }[]' is not assignable to parameter of type 'never[]'.
+      Type '{ route_id: any; company_id: any; position: number; scheduled_arrival_time: string; status: string; }' is not assignable to type 'never'.
+src/features/routes/services/routes.service.ts(98,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/features/routes/services/routes.service.ts(119,15): error TS2345: Argument of type '{ inspector_id: string; }' is not assignable to parameter of type 'never'.
+src/lib/logger.ts(123,63): error TS2345: Argument of type '{ component: string; action: string; metadata: { status: number; duration: string | undefined; }; userId?: string; timestamp?: string; }' is not assignable to parameter of type 'Error & LogContext'.
+  Type '{ component: string; action: string; metadata: { status: number; duration: string | undefined; }; userId?: string | undefined; timestamp?: string | undefined; }' is missing the following properties from type 'Error': name, message
+src/lib/monitoring/performance.ts(123,58): error TS2339: Property 'domLoading' does not exist on type 'PerformanceNavigationTiming'.
+src/services/assignments.service.ts(7,15): error TS2345: Argument of type '{ assigned_inspector_id: string | null; }' is not assignable to parameter of type 'never'.
+src/services/assignments.service.ts(41,59): error TS2339: Property 'id' does not exist on type 'never'.
+src/services/assignments.service.ts(60,42): error TS2339: Property 'assigned_inspector_id' does not exist on type 'never'.
+src/services/assignments.service.ts(84,16): error TS2339: Property 'assigned_inspector_id' does not exist on type 'never'.
+src/services/assignments.service.ts(84,52): error TS2339: Property 'id' does not exist on type 'never'.
+src/services/assignments.service.ts(88,9): error TS2698: Spread types may only be created from object types.
+src/services/companies.service.ts(47,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "companies", never, "POST">', gave the following error.
+    Argument of type '{ name: string; address: string; lat: number; lng: number; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "companies", never, "POST">', gave the following error.
+    Argument of type '{ name: string; address: string; lat: number; lng: number; }' is not assignable to parameter of type 'never[]'.
+      Type '{ name: string; address: string; lat: number; lng: number; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
+src/services/companies.service.ts(58,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/services/compliance.service.ts(121,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/services/compliance.service.ts(193,15): error TS2345: Argument of type '{ next_checkup_date: string; updated_at: string; }' is not assignable to parameter of type 'never'.
+src/services/inspectors.service.ts(64,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "inspectors", never, "POST">', gave the following error.
+    Argument of type '{ full_name: string; email: string; phone: string; specialty: string; status: "active"; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "inspectors", never, "POST">', gave the following error.
+    Argument of type '{ full_name: string; email: string; phone: string; specialty: string; status: "active"; }' is not assignable to parameter of type 'never[]'.
+      Type '{ full_name: string; email: string; phone: string; specialty: string; status: "active"; }' is missing the following properties from type 'never[]': length, pop, push, concat, and 35 more.
+src/services/inspectors.service.ts(75,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/services/routes.service.ts(61,8): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "routes", never, "POST">', gave the following error.
+    Argument of type '{ name: string; inspector_id: string; date: string; start_time: string; status: string; total_distance_km: number; route_geometry: any; }' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "routes", never, "POST">', gave the following error.
+    Object literal may only specify known properties, and 'name' does not exist in type 'never[]'.
+src/services/routes.service.ts(78,25): error TS2339: Property 'id' does not exist on type 'never'.
+src/services/routes.service.ts(87,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(values: never, options?: { count?: "planned" | "exact" | "estimated" | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "route_stops", never, "POST">', gave the following error.
+    Argument of type '{ route_id: any; company_id: any; position: number; scheduled_arrival_time: string; status: string; }[]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(values: never[], options?: { count?: "planned" | "exact" | "estimated" | undefined; defaultToNull?: boolean | undefined; } | undefined): PostgrestFilterBuilder<{ PostgrestVersion: "12"; }, never, never, null, "route_stops", never, "POST">', gave the following error.
+    Argument of type '{ route_id: any; company_id: any; position: number; scheduled_arrival_time: string; status: string; }[]' is not assignable to parameter of type 'never[]'.
+      Type '{ route_id: any; company_id: any; position: number; scheduled_arrival_time: string; status: string; }' is not assignable to type 'never'.
+src/services/routes.service.ts(98,15): error TS2345: Argument of type 'any' is not assignable to parameter of type 'never'.
+src/services/routes.service.ts(119,15): error TS2345: Argument of type '{ inspector_id: string; }' is not assignable to parameter of type 'never'.
+src/shared/components/ui/Sidebar.tsx(242,40): error TS2353: Object literal may only specify known properties, and 'is_favorite' does not exist in type 'BoardSettings'.
+src/shared/components/ui/Sidebar.tsx(260,40): error TS2353: Object literal may only specify known properties, and 'is_archived' does not exist in type 'BoardSettings'.
