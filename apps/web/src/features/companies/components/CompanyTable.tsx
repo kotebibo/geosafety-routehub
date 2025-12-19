@@ -76,7 +76,10 @@ export function CompanyTable({ companies, onDelete }: Props) {
                   </div>
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-600">
-                  {company.lat.toFixed(4)}, {company.lng.toFixed(4)}
+                  {company.lat && company.lng 
+                    ? `${company.lat.toFixed(4)}, ${company.lng.toFixed(4)}`
+                    : '-'
+                  }
                 </td>
                 <td className="px-6 py-4 text-right">
                   <button

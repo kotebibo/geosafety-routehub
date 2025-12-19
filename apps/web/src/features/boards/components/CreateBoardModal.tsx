@@ -40,8 +40,8 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated }: CreateBoar
   const [selectedColor, setSelectedColor] = useState('blue')
 
   const { data: templates, isLoading: templatesLoading } = useBoardTemplates()
-  const createBoard = useCreateBoard(user?.id || '')
-  const createFromTemplate = useCreateBoardFromTemplate(user?.id || '')
+  const createBoard = useCreateBoard(inspectorId || '')
+  const createFromTemplate = useCreateBoardFromTemplate(inspectorId || '')
 
   const handleCreateBlankBoard = async () => {
     if (!boardName.trim() || !user || !inspectorId) return
@@ -77,13 +77,10 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated }: CreateBoar
     if (!boardName.trim() || !selectedTemplate || !user || !inspectorId) return
 
     try {
-      // Call service directly with inspectorId instead of using the hook
-      const { userBoardsService } = await import('../services/user-boards.service')
-      const newBoard = await userBoardsService.createBoardFromTemplate(
-        selectedTemplate.id,
-        boardName,
-        inspectorId
-      )
+      const newBoard = await createFromTemplate.mutateAsync({
+        templateId: selectedTemplate.id,
+        name: boardName,
+      })
 
       onBoardCreated?.(newBoard.id)
       handleClose()

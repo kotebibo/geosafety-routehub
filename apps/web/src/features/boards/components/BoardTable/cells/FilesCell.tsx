@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
 import { Paperclip, Upload, X, File, Image, FileText, Download, Trash2, Plus } from 'lucide-react'
+import { calculatePopupPosition } from './usePopupPosition'
 
 interface FileAttachment {
   id: string
@@ -13,10 +14,11 @@ interface FileAttachment {
   type: string
   size: number
   uploaded_at: string
+  path?: string // Storage path for refreshing signed URLs
 }
 
 interface FilesCellProps {
-  value?: FileAttachment[] | null
+  value?: FileAttachment[] | string | null
   onEdit?: (value: FileAttachment[]) => void
   readOnly?: boolean
   itemId?: string
@@ -31,9 +33,34 @@ const ACCEPTED_TYPES = {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
-export function FilesCell({ value, onEdit, readOnly = false, itemId, onEditStart }: FilesCellProps) {
+// Parse value to ensure it's always an array of FileAttachment
+function parseFilesValue(value: FileAttachment[] | string | null | undefined): FileAttachment[] {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+
+  // Handle string values (from imports)
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return []
+
+    // Try to parse as JSON array
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) return parsed
+    } catch {
+      // Not JSON, ignore
+    }
+
+    // Return empty - string file references can't be used directly
+    return []
+  }
+
+  return []
+}
+
+export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = false, itemId, onEditStart }: FilesCellProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [files, setFiles] = useState<FileAttachment[]>(value || [])
+  const [files, setFiles] = useState<FileAttachment[]>(() => parseFilesValue(value))
   const [uploading, setUploading] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef<HTMLButtonElement>(null)
@@ -41,7 +68,7 @@ export function FilesCell({ value, onEdit, readOnly = false, itemId, onEditStart
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    setFiles(value || [])
+    setFiles(parseFilesValue(value))
   }, [value])
 
   useEffect(() => {
@@ -64,11 +91,12 @@ export function FilesCell({ value, onEdit, readOnly = false, itemId, onEditStart
 
   const handleOpen = () => {
     if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
+      const position = calculatePopupPosition({
+        triggerRect: buttonRef.current.getBoundingClientRect(),
+        popupWidth: 320,
+        popupHeight: 350,
       })
+      setDropdownPosition(position)
     }
     if (!isOpen) {
       onEditStart?.()
@@ -112,34 +140,49 @@ export function FilesCell({ value, onEdit, readOnly = false, itemId, onEditStart
         const fileName = `${itemId || 'item'}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
         const filePath = `board-attachments/${fileName}`
 
-        // Upload to Supabase Storage
-        const { data, error } = await supabase.storage
-          .from('attachments')
-          .upload(filePath, file)
+        // Try to upload to Supabase Storage
+        // Note: The 'attachments' bucket must be created in Supabase Dashboard
+        try {
+          const { data, error } = await supabase.storage
+            .from('attachments')
+            .upload(filePath, file)
 
-        if (error) {
-          console.error('Upload error:', error)
-          continue
+          if (error) {
+            // Check if bucket doesn't exist
+            if (error.message?.includes('Bucket not found') || error.message?.includes('bucket')) {
+              console.warn('Storage bucket "attachments" not found. Please create it in Supabase Dashboard.')
+              // Fall back to storing file metadata without actual upload
+              // In production, you'd want to create the bucket
+            } else {
+              console.error('Upload error:', error)
+            }
+            continue
+          }
+
+          // Get signed URL for private bucket (expires in 1 year)
+          const { data: urlData } = await supabase.storage
+            .from('attachments')
+            .createSignedUrl(filePath, 60 * 60 * 24 * 365) // 1 year expiry
+
+          newFiles.push({
+            id: `file_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+            name: file.name,
+            url: urlData?.signedUrl || '',
+            type: file.type,
+            size: file.size,
+            uploaded_at: new Date().toISOString(),
+            path: filePath, // Store path for refreshing signed URL later
+          })
+        } catch (uploadError: any) {
+          console.warn('File upload failed:', uploadError?.message || 'Unknown error')
         }
-
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('attachments')
-          .getPublicUrl(filePath)
-
-        newFiles.push({
-          id: `file_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-          name: file.name,
-          url: urlData.publicUrl,
-          type: file.type,
-          size: file.size,
-          uploaded_at: new Date().toISOString(),
-        })
       }
 
-      const updatedFiles = [...files, ...newFiles]
-      setFiles(updatedFiles)
-      onEdit?.(updatedFiles)
+      if (newFiles.length > 0) {
+        const updatedFiles = [...files, ...newFiles]
+        setFiles(updatedFiles)
+        onEdit?.(updatedFiles)
+      }
     } catch (error) {
       console.error('Error uploading files:', error)
     } finally {
@@ -328,4 +371,4 @@ export function FilesCell({ value, onEdit, readOnly = false, itemId, onEditStart
       )}
     </div>
   )
-}
+})

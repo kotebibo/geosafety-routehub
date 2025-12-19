@@ -1,29 +1,32 @@
 import { supabase } from '@/lib/supabase/client'
 
+// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
+const db = supabase as any
+
 export const routesService = {
   getAll: async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('routes')
       .select('*')
       .order('date', { ascending: true })
-    
+
     if (error) throw error
     return data
   },
 
   getByInspector: async (inspectorId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('routes')
       .select('*')
       .eq('inspector_id', inspectorId)
       .order('date', { ascending: true })
-    
+
     if (error) throw error
     return data
   },
 
   getById: async (id: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('routes')
       .select(`
         *,
@@ -40,7 +43,7 @@ export const routesService = {
       `)
       .eq('id', id)
       .single()
-    
+
     if (error) throw error
     return data
   },
@@ -56,7 +59,7 @@ export const routesService = {
     notes?: string
   }) => {
     // Create the route first
-    const { data: route, error: routeError } = await supabase
+    const { data: route, error: routeError } = await db
       .from('routes')
       .insert({
         name: routeData.name,
@@ -69,12 +72,12 @@ export const routesService = {
       })
       .select()
       .single()
-    
+
     if (routeError) throw routeError
 
     // Create route stops
     if (routeData.stops && routeData.stops.length > 0) {
-      const stops = routeData.stops.map((stop, index) => ({
+      const stops = routeData.stops.map((stop: any, index: number) => ({
         route_id: route.id,
         company_id: stop.company.id,
         position: index + 1,  // Changed from stop_order
@@ -82,7 +85,7 @@ export const routesService = {
         status: 'pending',
       }))
 
-      const { error: stopsError } = await supabase
+      const { error: stopsError } = await db
         .from('route_stops')
         .insert(stops)
 
@@ -93,34 +96,34 @@ export const routesService = {
   },
 
   update: async (id: string, updates: any) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('routes')
       .update(updates)
       .eq('id', id)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   },
 
   delete: async (id: string) => {
-    const { error } = await supabase
+    const { error } = await db
       .from('routes')
       .delete()
       .eq('id', id)
-    
+
     if (error) throw error
   },
 
   reassign: async (routeId: string, newInspectorId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('routes')
       .update({ inspector_id: newInspectorId })
       .eq('id', routeId)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   },

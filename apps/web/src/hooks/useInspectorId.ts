@@ -22,7 +22,10 @@ export function useInspectorId(userEmail: string | undefined) {
         .single()
 
       if (error) {
-        console.error('Error fetching inspector ID:', error)
+        // PGRST116 means no rows found - this is expected for users without inspector records
+        if (error.code !== 'PGRST116') {
+          console.error('Error fetching inspector ID:', error)
+        }
         return null
       }
 

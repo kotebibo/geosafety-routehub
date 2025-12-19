@@ -86,7 +86,7 @@ export const ablyPresenceService = {
 
     async function updatePresenceState() {
       // Capture connectionId when we have it (after connection is established)
-      if (!myConnectionId && ably.connection.id) {
+      if (!myConnectionId && ably?.connection.id) {
         myConnectionId = ably.connection.id
       }
 

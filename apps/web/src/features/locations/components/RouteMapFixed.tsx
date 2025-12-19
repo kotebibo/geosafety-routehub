@@ -23,6 +23,8 @@ interface Company {
   address: string;
   lat: number;
   lng: number;
+  type?: string;
+  priority?: string;
 }
 
 interface RouteMapProps {

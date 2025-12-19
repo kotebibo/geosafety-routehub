@@ -115,8 +115,8 @@ export async function optimizeRoute(
   let distanceMatrix: number[][];
   let usingRealRoads = false;
 
-  // Try OSRM for real roads
-  if (useRealRoads && limitedLocations.length <= 25) {
+  // Try OSRM for real roads (Table API supports up to ~100 locations efficiently)
+  if (useRealRoads && limitedLocations.length <= 100) {
     try {
       console.log('Fetching real road distances from OSRM...');
       distanceMatrix = await getOSRMDistanceMatrix(limitedLocations);
@@ -136,6 +136,9 @@ export async function optimizeRoute(
       distanceMatrix = createDistanceMatrix(limitedLocations);
     }
   } else {
+    if (limitedLocations.length > 100) {
+      console.log(`⚠️ ${limitedLocations.length} locations exceeds OSRM limit, using Haversine`);
+    }
     distanceMatrix = createDistanceMatrix(limitedLocations);
   }
 

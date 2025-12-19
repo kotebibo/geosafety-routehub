@@ -1,13 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
+// Re-export from main supabase file to avoid multiple client instances
+import { getSupabase } from '@/lib/supabase'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('⚠️ Supabase environment variables not found. Database features will be limited.')
-}
-
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co', 
-  supabaseAnonKey || 'placeholder-key'
-)
+// Export singleton client
+export const supabase = getSupabase()

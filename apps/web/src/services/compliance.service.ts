@@ -6,12 +6,15 @@
 import { supabase } from '@/lib/supabase/client';
 import { PDPCompliancePhase, PDPComplianceOverview } from '@/types/compliance';
 
+// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
+const db = supabase as any;
+
 export const complianceService = {
   /**
    * Get compliance status for a specific company
    */
   async getCompanyCompliance(companyId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_phases')
       .select('*')
       .eq('company_id', companyId)
@@ -64,7 +67,7 @@ export const complianceService = {
       complianceData.next_checkup_date = nextCheckup.toISOString().split('T')[0];
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_phases')
       .insert(complianceData)
       .select()
@@ -116,7 +119,7 @@ export const complianceService = {
       }
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_phases')
       .update(updateData)
       .eq('company_id', companyId)
@@ -134,7 +137,7 @@ export const complianceService = {
    * Get all companies with their compliance status
    */
   async getAllCompliance() {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_overview')
       .select('*')
       .order('created_at', { ascending: false });
@@ -150,7 +153,7 @@ export const complianceService = {
    * Get companies with pending phases
    */
   async getPendingPhases() {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_overview')
       .select('*')
       .in('compliance_status', ['new', 'in_progress'])
@@ -170,7 +173,7 @@ export const complianceService = {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + daysAhead);
     
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_overview')
       .select('*')
       .eq('compliance_status', 'active')
@@ -188,9 +191,9 @@ export const complianceService = {
    * Update next checkup date
    */
   async updateCheckupDate(companyId: string, nextDate: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_phases')
-      .update({ 
+      .update({
         next_checkup_date: nextDate,
         updated_at: new Date().toISOString()
       })

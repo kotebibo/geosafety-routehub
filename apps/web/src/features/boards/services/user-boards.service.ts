@@ -107,9 +107,10 @@ export const userBoardsService = {
 
     const createdBoard = await this.createBoard(board)
 
-    // Create columns from template
+    // Create columns from template - each board gets its own columns
     const columns = template.default_columns.map((col, index) => ({
       board_type: template.board_type,
+      board_id: createdBoard.id,  // Link columns to this specific board
       column_id: col.id,
       column_name: col.name,
       column_name_ka: col.name_ka,
@@ -527,6 +528,59 @@ export const userBoardsService = {
       .from('board_templates')
       .select('*')
       .eq('id', templateId)
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  /**
+   * Save a board as a template
+   */
+  async saveAsTemplate(
+    boardId: string,
+    templateData: {
+      name: string
+      description?: string
+      category?: string
+      is_featured?: boolean
+    }
+  ): Promise<BoardTemplate> {
+    // First get the board and its columns
+    const board = await this.getBoard(boardId)
+    const { data: columns, error: columnsError } = await supabase
+      .from('board_columns')
+      .select('*')
+      .eq('board_type', board.board_type)
+      .order('position', { ascending: true })
+
+    if (columnsError) throw columnsError
+
+    // Convert columns to BoardColumnConfig format
+    const defaultColumns = (columns || []).map((col: any) => ({
+      id: col.column_id,
+      name: col.column_name,
+      name_ka: col.column_name_ka,
+      type: col.column_type,
+      width: col.width,
+      config: col.config || {},
+    }))
+
+    // Create the template
+    const { data, error } = await supabase
+      .from('board_templates')
+      .insert({
+        name: templateData.name,
+        description: templateData.description,
+        board_type: board.board_type,
+        icon: board.icon || 'board',
+        color: board.color || 'blue',
+        category: templateData.category,
+        default_columns: defaultColumns,
+        default_items: [], // Empty default items
+        is_featured: templateData.is_featured || false,
+      })
+      .select()
       .single()
 
     if (error) throw error

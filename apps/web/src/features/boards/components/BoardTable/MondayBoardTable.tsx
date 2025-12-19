@@ -1,12 +1,33 @@
 'use client'
 
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
+import React, { useState, useMemo, useRef, useCallback, useEffect, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
-import { ChevronDown, ChevronRight, Plus, Type, Hash, Calendar, User, MapPin, CheckSquare, MoreHorizontal, Building2, Phone, Shield, Check, Paperclip, Keyboard } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Type, Hash, Calendar, User, MapPin, CheckSquare, MoreHorizontal, Building2, Phone, Shield, Check, Paperclip, Keyboard, GripVertical, Trash2, Palette } from 'lucide-react'
 import { CellRenderer } from './CellRenderer'
 import { useKeyboardNavigation, KeyboardShortcutsHelp } from '../../hooks/useKeyboardNavigation'
 import type { BoardColumn, BoardItem, BoardGroup, BoardType, ColumnType, BoardPresence } from '../../types/board'
+
+// @dnd-kit imports for smooth drag-and-drop
+import {
+  DndContext,
+  DragOverlay,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragStartEvent,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { calculatePopupPosition } from './cells/usePopupPosition'
 
 // Essential column types for quick-add popup
 const ESSENTIAL_COLUMNS: { type: ColumnType; label: string; icon: React.ElementType }[] = [
@@ -23,6 +44,7 @@ const ALL_COLUMN_TYPES: { type: ColumnType; label: string; icon: React.ElementTy
   { type: 'number', label: 'Numbers', icon: Hash, description: 'Add numbers and perform calculations' },
   { type: 'status', label: 'Status', icon: CheckSquare, description: 'Track progress with customizable labels' },
   { type: 'date', label: 'Date', icon: Calendar, description: 'Add dates and deadlines' },
+  { type: 'date_range', label: 'Date Range', icon: Calendar, description: 'Add start and end dates' },
   { type: 'person', label: 'Person', icon: User, description: 'Assign people to items' },
   { type: 'location', label: 'Location', icon: MapPin, description: 'Add addresses and coordinates' },
   { type: 'route', label: 'Route', icon: MapPin, description: 'Link to a route' },
@@ -45,6 +67,177 @@ const MONDAY_GROUP_COLORS = [
   { name: 'royal', value: '#784bd1', bg: 'bg-[#784bd1]', light: 'bg-[#784bd1]/10' },
 ]
 
+// Sortable column header component for @dnd-kit
+interface SortableColumnHeaderProps {
+  column: BoardColumn
+  width: number
+  isEditing: boolean
+  editingColumnName: string
+  onColumnNameChange: (value: string) => void
+  onColumnNameSave: () => void
+  onColumnNameKeyDown: (e: React.KeyboardEvent) => void
+  onColumnNameDoubleClick: (e: React.MouseEvent, column: BoardColumn) => void
+  onSort: (columnId: string) => void
+  onResizeStart: (e: React.MouseEvent, columnId: string, width: number) => void
+  canReorder: boolean
+  editInputRef: React.RefObject<HTMLInputElement>
+  isMenuOpen: boolean
+  onMenuToggle: (columnId: string | null) => void
+  onDeleteColumn: (column: BoardColumn) => void
+  menuRef: React.RefObject<HTMLDivElement>
+}
+
+const SortableColumnHeader = memo(function SortableColumnHeader({
+  column,
+  width,
+  isEditing,
+  editingColumnName,
+  onColumnNameChange,
+  onColumnNameSave,
+  onColumnNameKeyDown,
+  onColumnNameDoubleClick,
+  onSort,
+  onResizeStart,
+  canReorder,
+  editInputRef,
+  isMenuOpen,
+  onMenuToggle,
+  onDeleteColumn,
+  menuRef,
+}: SortableColumnHeaderProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: column.id,
+    disabled: !canReorder,
+  })
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    width,
+    zIndex: isDragging ? 50 : undefined,
+  }
+
+  return (
+    <th
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'relative border text-left px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:bg-[#ecedf0] transition-colors group',
+        isDragging && 'bg-blue-50 shadow-lg',
+        'border-[#c3c6d4]'
+      )}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).tagName === 'INPUT') return
+        if ((e.target as HTMLElement).closest('.drag-handle')) return
+        onSort(column.column_id)
+      }}
+      onDoubleClick={(e) => {
+        if (isEditing) return
+        if ((e.target as HTMLElement).closest('.drag-handle')) return
+        onColumnNameDoubleClick(e, column)
+      }}
+    >
+      <div className="flex items-center gap-1">
+        {/* Drag handle with dnd-kit listeners */}
+        {canReorder && !isEditing && (
+          <div
+            {...attributes}
+            {...listeners}
+            className="drag-handle opacity-0 group-hover:opacity-100 hover:opacity-100 cursor-grab active:cursor-grabbing -ml-1 p-0.5"
+          >
+            <GripVertical className="w-3 h-3 text-[#9699a6]" />
+          </div>
+        )}
+        <span className="flex-1 truncate">
+          {isEditing ? (
+            <input
+              ref={editInputRef}
+              type="text"
+              value={editingColumnName}
+              onChange={(e) => onColumnNameChange(e.target.value)}
+              onBlur={onColumnNameSave}
+              onKeyDown={onColumnNameKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="w-full bg-white border border-[#0073ea] rounded px-1 py-0.5 text-xs font-semibold text-[#323338] uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
+            />
+          ) : (
+            column.column_name
+          )}
+        </span>
+        {/* Column menu button */}
+        {!isEditing && (
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onMenuToggle(isMenuOpen ? null : column.id)
+              }}
+              className="column-menu-btn opacity-0 group-hover:opacity-100 p-0.5 hover:bg-[#c3c6d4] rounded transition-colors"
+            >
+              <MoreHorizontal className="w-4 h-4 text-[#676879]" />
+            </button>
+            {isMenuOpen && (
+              <div
+                ref={menuRef}
+                className="absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-border-light z-50 py-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Rename option */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onMenuToggle(null)
+                    // Trigger double-click handler to enter edit mode
+                    onColumnNameDoubleClick(e as any, column)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-text-primary hover:bg-bg-hover transition-colors"
+                >
+                  <Type className="w-4 h-4" />
+                  <span>Rename column</span>
+                </button>
+
+                {/* Divider */}
+                <div className="border-t border-border-light my-1" />
+
+                {/* Delete option */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteColumn(column)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete column</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {/* Resize handle */}
+      <div
+        className={cn(
+          'absolute top-0 right-0 w-1 h-full cursor-col-resize group',
+          'hover:bg-[#0073ea] transition-colors'
+        )}
+        onMouseDown={(e) => onResizeStart(e, column.id, width)}
+      >
+        <div className="absolute top-0 right-0 w-3 h-full -translate-x-1" />
+      </div>
+    </th>
+  )
+})
+
 interface MondayBoardTableProps {
   boardType: BoardType
   columns: BoardColumn[]
@@ -57,14 +250,26 @@ interface MondayBoardTableProps {
   onSelectionChange?: (selection: Set<string>) => void
   onAddItem?: (groupId?: string) => void
   onAddGroup?: () => void
+  onGroupRename?: (groupId: string, newName: string) => void
+  onGroupColorChange?: (groupId: string, color: string) => void
+  onGroupCollapseToggle?: (groupId: string, isCollapsed: boolean) => void
+  onDeleteGroup?: (groupId: string) => void
   onColumnResize?: (columnId: string, width: number) => void
+  onColumnReorder?: (columnIds: string[]) => void
   onQuickAddColumn?: (columnType: ColumnType) => void
   onOpenAddColumnModal?: () => void
   onColumnRename?: (columnId: string, newName: string) => void
+  onDeleteColumn?: (columnId: string) => void
+  // Item drag-and-drop between groups
+  onItemMove?: (itemId: string, targetGroupId: string) => void
+  // Item reorder within group
+  onItemReorder?: (itemId: string, targetItemId: string, position: 'before' | 'after') => void
   // Real-time collaboration props
   presence?: BoardPresence[]
   onCellEditStart?: (itemId: string, columnId: string) => void
   onCellEditEnd?: () => void
+  // Dynamic grouping by column (from toolbar)
+  groupByColumn?: string | null
 }
 
 const DEFAULT_GROUP: BoardGroup = {
@@ -88,15 +293,24 @@ export function MondayBoardTable({
   onCellEdit,
   selection = new Set(),
   onSelectionChange,
+  onItemMove,
+  onItemReorder,
   onAddItem,
   onAddGroup,
+  onGroupRename,
+  onGroupColorChange,
+  onGroupCollapseToggle,
+  onDeleteGroup,
   onColumnResize,
+  onColumnReorder,
   onQuickAddColumn,
   onOpenAddColumnModal,
   onColumnRename,
+  onDeleteColumn,
   presence = [],
   onCellEditStart,
   onCellEditEnd,
+  groupByColumn,
 }: MondayBoardTableProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [sortConfig, setSortConfig] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null)
@@ -129,6 +343,34 @@ export function MondayBoardTable({
   // Keyboard shortcuts toggle
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
 
+  // Row drag-and-drop state (for moving items between groups and reordering within groups)
+  const [draggingItemId, setDraggingItemId] = useState<string | null>(null)
+  const [dragOverGroupId, setDragOverGroupId] = useState<string | null>(null)
+  const [dragOverItemId, setDragOverItemId] = useState<string | null>(null)
+  const [dragOverPosition, setDragOverPosition] = useState<'before' | 'after' | null>(null)
+
+  // @dnd-kit column drag state (replaces native HTML5 drag-and-drop)
+  const [activeColumnId, setActiveColumnId] = useState<string | null>(null)
+
+  // Group menu state
+  const [groupMenuOpen, setGroupMenuOpen] = useState<string | null>(null)
+  const [groupColorPickerOpen, setGroupColorPickerOpen] = useState<string | null>(null)
+  const groupMenuRef = useRef<HTMLDivElement>(null)
+
+  // Column menu state
+  const [columnMenuOpen, setColumnMenuOpen] = useState<string | null>(null)
+  const columnMenuRef = useRef<HTMLDivElement>(null)
+
+  // @dnd-kit sensors with activation constraint to prevent accidental drags
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Minimum drag distance before activating
+      },
+    }),
+    useSensor(KeyboardSensor)
+  )
+
   // Keyboard navigation - flatten items for navigation
   const flattenedItems = useMemo(() => {
     return data.sort((a, b) => a.position - b.position)
@@ -152,26 +394,85 @@ export function MondayBoardTable({
     enabled: !resizingColumn && !isDraggingScrollbar,
   })
 
-  // Helper to check if a cell is being edited by another user
-  const getUsersEditingCell = useCallback((itemId: string, columnId: string) => {
-    return presence.filter(p =>
-      p.editing_item_id === itemId &&
-      p.editing_column_id === columnId
-    )
+  // Pre-compute editing users Map for O(1) lookups (instead of O(n) filtering for each cell)
+  // This is a critical performance optimization - called for every cell in the table
+  const editingUsersMap = useMemo(() => {
+    const map = new Map<string, BoardPresence[]>()
+    for (const p of presence) {
+      if (p.editing_item_id && p.editing_column_id) {
+        const key = `${p.editing_item_id}:${p.editing_column_id}`
+        const existing = map.get(key) || []
+        existing.push(p)
+        map.set(key, existing)
+      }
+    }
+    return map
   }, [presence])
 
-  // Helper to check if item is being edited (any cell)
+  // O(1) lookup instead of O(n) filter
+  const getUsersEditingCell = useCallback((itemId: string, columnId: string) => {
+    return editingUsersMap.get(`${itemId}:${columnId}`) || []
+  }, [editingUsersMap])
+
+  // Helper to check if item is being edited (any cell) - keep filter for this rare use case
   const getUsersEditingItem = useCallback((itemId: string) => {
     return presence.filter(p => p.editing_item_id === itemId)
   }, [presence])
 
-  // Initialize column widths from props
+  // Close group menu when clicking outside
   useEffect(() => {
-    const widths: Record<string, number> = {}
-    columns.forEach(col => {
-      widths[col.id] = col.width || 150
+    if (!groupMenuOpen) return
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (groupMenuRef.current && !groupMenuRef.current.contains(e.target as Node)) {
+        setGroupMenuOpen(null)
+        setGroupColorPickerOpen(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [groupMenuOpen])
+
+  // Close column menu when clicking outside
+  useEffect(() => {
+    if (!columnMenuOpen) return
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (columnMenuRef.current && !columnMenuRef.current.contains(e.target as Node)) {
+        setColumnMenuOpen(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [columnMenuOpen])
+
+  // Initialize column widths from props - only for new columns, preserve local state
+  useEffect(() => {
+    setColumnWidths(prev => {
+      const newWidths = { ...prev }
+      let hasChanges = false
+
+      columns.forEach(col => {
+        // Only set width if this column doesn't exist in local state yet
+        // OR if we're not actively resizing and the DB value is newer (different)
+        if (!(col.id in prev)) {
+          newWidths[col.id] = col.width || 150
+          hasChanges = true
+        }
+      })
+
+      // Remove widths for columns that no longer exist
+      Object.keys(prev).forEach(colId => {
+        if (!columns.find(c => c.id === colId)) {
+          delete newWidths[colId]
+          hasChanges = true
+        }
+      })
+
+      return hasChanges ? newWidths : prev
     })
-    setColumnWidths(widths)
   }, [columns])
 
   // Update scroll info and scrollbar position when table scrolls or resizes
@@ -285,11 +586,12 @@ export function MondayBoardTable({
   // Handle add column button click
   const handleAddColumnClick = useCallback(() => {
     if (addColumnButtonRef.current) {
-      const rect = addColumnButtonRef.current.getBoundingClientRect()
-      setAddColumnPopupPosition({
-        top: rect.bottom + 4,
-        left: rect.left,
+      const position = calculatePopupPosition({
+        triggerRect: addColumnButtonRef.current.getBoundingClientRect(),
+        popupWidth: 220,
+        popupHeight: 350,
       })
+      setAddColumnPopupPosition(position)
     }
     setShowAddColumnPopup(prev => !prev)
   }, [])
@@ -433,15 +735,210 @@ export function MondayBoardTable({
     }
   }, [resizingColumn, handleResizeMove, handleResizeEnd])
 
+  // @dnd-kit drag handlers (much smoother than native HTML5 drag-and-drop)
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const { active } = event
+    setActiveColumnId(active.id as string)
+  }, [])
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveColumnId(null)
+
+    if (!over || !onColumnReorder) return
+    if (active.id === over.id) return
+
+    // Get sortable column IDs (excluding first column which stays fixed)
+    const sortableColumnIds = visibleColumns.slice(1).map(col => col.id)
+    const oldIndex = sortableColumnIds.indexOf(active.id as string)
+    const newIndex = sortableColumnIds.indexOf(over.id as string)
+
+    if (oldIndex === -1 || newIndex === -1) return
+
+    // Reorder the sortable columns
+    const reorderedSortable = arrayMove(sortableColumnIds, oldIndex, newIndex)
+
+    // Prepend the first column (always stays first)
+    const newColumnIds = [visibleColumns[0].id, ...reorderedSortable]
+
+    onColumnReorder(newColumnIds)
+  }, [visibleColumns, onColumnReorder])
+
+  const handleDragCancel = useCallback(() => {
+    setActiveColumnId(null)
+  }, [])
+
   // Helper to get group_id from item (checks both column and data JSONB)
-  const getItemGroupId = (item: BoardItem): string => {
+  const getItemGroupId = useCallback((item: BoardItem): string => {
     if (item.group_id) return item.group_id
     if (item.data?.group_id) return item.data.group_id as string
     return 'default'
-  }
+  }, [])
 
-  // Group items by group_id
+  // Item drag-and-drop handlers (for moving items between groups and reordering within groups)
+  const handleItemDragStart = useCallback((e: React.DragEvent, itemId: string, groupId: string) => {
+    e.dataTransfer.setData('text/plain', itemId)
+    e.dataTransfer.setData('application/x-group-id', groupId)
+    e.dataTransfer.effectAllowed = 'move'
+    setDraggingItemId(itemId)
+  }, [])
+
+  const handleItemDragEnd = useCallback(() => {
+    setDraggingItemId(null)
+    setDragOverGroupId(null)
+    setDragOverItemId(null)
+    setDragOverPosition(null)
+  }, [])
+
+  const handleGroupDragOver = useCallback((e: React.DragEvent, groupId: string) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverGroupId(groupId)
+  }, [])
+
+  const handleGroupDragLeave = useCallback(() => {
+    setDragOverGroupId(null)
+  }, [])
+
+  const handleGroupDrop = useCallback((e: React.DragEvent, groupId: string) => {
+    e.preventDefault()
+    const itemId = e.dataTransfer.getData('text/plain')
+    if (itemId && onItemMove) {
+      onItemMove(itemId, groupId)
+    }
+    setDraggingItemId(null)
+    setDragOverGroupId(null)
+    setDragOverItemId(null)
+    setDragOverPosition(null)
+  }, [onItemMove])
+
+  // Row drag-over handler for within-group reordering
+  const handleRowDragOver = useCallback((e: React.DragEvent, targetItemId: string, targetGroupId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const sourceGroupId = e.dataTransfer.types.includes('application/x-group-id')
+      ? e.dataTransfer.getData('application/x-group-id')
+      : null
+
+    // Only show row indicator if in same group and reordering is enabled
+    if (onItemReorder && draggingItemId && draggingItemId !== targetItemId) {
+      const rect = e.currentTarget.getBoundingClientRect()
+      const midY = rect.top + rect.height / 2
+      const position = e.clientY < midY ? 'before' : 'after'
+
+      setDragOverItemId(targetItemId)
+      setDragOverPosition(position)
+      setDragOverGroupId(targetGroupId)
+    }
+  }, [onItemReorder, draggingItemId])
+
+  const handleRowDragLeave = useCallback((e: React.DragEvent) => {
+    // Only clear if actually leaving the row (not entering a child)
+    const relatedTarget = e.relatedTarget as HTMLElement
+    if (!e.currentTarget.contains(relatedTarget)) {
+      setDragOverItemId(null)
+      setDragOverPosition(null)
+    }
+  }, [])
+
+  const handleRowDrop = useCallback((e: React.DragEvent, targetItemId: string, targetGroupId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const sourceItemId = e.dataTransfer.getData('text/plain')
+    if (!sourceItemId || sourceItemId === targetItemId) {
+      setDraggingItemId(null)
+      setDragOverGroupId(null)
+      setDragOverItemId(null)
+      setDragOverPosition(null)
+      return
+    }
+
+    // Get source item's group
+    const sourceItem = data.find(item => item.id === sourceItemId)
+    const sourceGroupId = sourceItem ? getItemGroupId(sourceItem) : null
+
+    // If same group and reorder is enabled, reorder within group
+    if (sourceGroupId === targetGroupId && onItemReorder && dragOverPosition) {
+      onItemReorder(sourceItemId, targetItemId, dragOverPosition)
+    }
+    // If different group, move to group
+    else if (sourceGroupId !== targetGroupId && onItemMove) {
+      onItemMove(sourceItemId, targetGroupId)
+    }
+
+    setDraggingItemId(null)
+    setDragOverGroupId(null)
+    setDragOverItemId(null)
+    setDragOverPosition(null)
+  }, [data, onItemMove, onItemReorder, dragOverPosition, getItemGroupId])
+
+  // Group items by group_id or by column value (dynamic grouping)
   const groupedItems = useMemo(() => {
+    // If groupByColumn is set, create dynamic groups based on column values
+    if (groupByColumn) {
+      const column = columns.find(c => c.column_id === groupByColumn)
+      const columnName = column?.column_name || groupByColumn
+
+      // Group items by the column value
+      const groupsMap = new Map<string, BoardItem[]>()
+
+      data.forEach(item => {
+        const value = groupByColumn === 'name'
+          ? item.name
+          : item.data?.[groupByColumn]
+
+        // Handle different value types
+        let groupKey: string
+        if (value === null || value === undefined || value === '') {
+          groupKey = '(Empty)'
+        } else if (typeof value === 'boolean') {
+          groupKey = value ? 'Yes' : 'No'
+        } else if (typeof value === 'object') {
+          // For status objects, use the label
+          groupKey = value.label || value.text || JSON.stringify(value)
+        } else {
+          groupKey = String(value)
+        }
+
+        const existing = groupsMap.get(groupKey) || []
+        existing.push(item)
+        groupsMap.set(groupKey, existing)
+      })
+
+      // Convert to array and sort groups alphabetically
+      const dynamicGroups = Array.from(groupsMap.entries())
+        .sort((a, b) => {
+          // Keep (Empty) at the end
+          if (a[0] === '(Empty)') return 1
+          if (b[0] === '(Empty)') return -1
+          return a[0].localeCompare(b[0])
+        })
+        .map(([groupName, items], index) => ({
+          group: {
+            id: `dynamic-${groupName}`,
+            board_id: '',
+            name: groupName,
+            color: MONDAY_GROUP_COLORS[index % MONDAY_GROUP_COLORS.length].value,
+            position: index,
+          } as BoardGroup,
+          items: items.sort((a, b) => {
+            if (!sortConfig) return a.position - b.position
+            const aValue = a.data?.[sortConfig.column] ?? a[sortConfig.column as keyof BoardItem]
+            const bValue = b.data?.[sortConfig.column] ?? b[sortConfig.column as keyof BoardItem]
+            if (aValue === null || aValue === undefined) return 1
+            if (bValue === null || bValue === undefined) return -1
+            if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
+            if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
+            return 0
+          }),
+        }))
+
+      return dynamicGroups
+    }
+
+    // Default grouping by group_id
     const effectiveGroups = groups.length > 0 ? groups : [DEFAULT_GROUP]
 
     const result = effectiveGroups.map((group) => ({
@@ -461,18 +958,80 @@ export function MondayBoardTable({
     }))
 
     return result
-  }, [data, groups, sortConfig])
+  }, [data, groups, columns, sortConfig, groupByColumn])
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroups((prev) => {
       const next = new Set(prev)
-      if (next.has(groupId)) {
+      const isCollapsed = next.has(groupId)
+      if (isCollapsed) {
         next.delete(groupId)
       } else {
         next.add(groupId)
       }
+      // Notify parent if handler provided (for database persistence)
+      onGroupCollapseToggle?.(groupId, !isCollapsed)
       return next
     })
+  }
+
+  // Group name editing state
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const [editingGroupName, setEditingGroupName] = useState('')
+  const groupNameInputRef = useRef<HTMLInputElement>(null)
+
+  const handleGroupNameDoubleClick = (groupId: string, currentName: string) => {
+    setEditingGroupId(groupId)
+    setEditingGroupName(currentName)
+    setTimeout(() => {
+      groupNameInputRef.current?.focus()
+      groupNameInputRef.current?.select()
+    }, 0)
+  }
+
+  const handleGroupNameSave = () => {
+    if (editingGroupId && editingGroupName.trim() && onGroupRename) {
+      onGroupRename(editingGroupId, editingGroupName.trim())
+    }
+    setEditingGroupId(null)
+    setEditingGroupName('')
+  }
+
+  const handleGroupNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleGroupNameSave()
+    } else if (e.key === 'Escape') {
+      setEditingGroupId(null)
+      setEditingGroupName('')
+    }
+  }
+
+  const handleDeleteGroup = (groupId: string, groupName: string, itemCount: number) => {
+    // Don't allow deleting if it's the only group
+    if (groups.length <= 1) {
+      alert('Cannot delete the only group. Create another group first.')
+      return
+    }
+
+    // Confirm deletion
+    const message = itemCount > 0
+      ? `Are you sure you want to delete "${groupName}"? ${itemCount} item(s) will be moved to the first group.`
+      : `Are you sure you want to delete "${groupName}"?`
+
+    if (confirm(message)) {
+      onDeleteGroup?.(groupId)
+      setGroupMenuOpen(null)
+    }
+  }
+
+  const handleDeleteColumn = (column: BoardColumn) => {
+    // Confirm deletion
+    const message = `Are you sure you want to delete the "${column.column_name}" column? This will remove the column and its data from all items.`
+
+    if (confirm(message)) {
+      onDeleteColumn?.(column.id)
+      setColumnMenuOpen(null)
+    }
   }
 
   const handleSort = (columnId: string) => {
@@ -517,6 +1076,16 @@ export function MondayBoardTable({
     return groupItems.length > 0 && groupItems.every((item) => selection.has(item.id))
   }
 
+  // Add column header width
+  const addColumnWidth = 44
+
+  // Calculate total table width based on all column widths
+  // NOTE: This hook must be called before any early returns to satisfy React's rules of hooks
+  const totalTableWidth = useMemo(() => {
+    const columnsWidth = visibleColumns.reduce((sum, col) => sum + getColumnWidth(col), 0)
+    return checkboxWidth + colorBarWidth + columnsWidth + addColumnWidth
+  }, [visibleColumns, getColumnWidth, checkboxWidth, colorBarWidth])
+
   if (isLoading) {
     return <TableSkeleton columns={visibleColumns} hasCheckbox={!!onSelectionChange} />
   }
@@ -530,15 +1099,6 @@ export function MondayBoardTable({
       </div>
     )
   }
-
-  // Add column header width
-  const addColumnWidth = 44
-
-  // Calculate total table width based on all column widths
-  const totalTableWidth = useMemo(() => {
-    const columnsWidth = visibleColumns.reduce((sum, col) => sum + getColumnWidth(col), 0)
-    return checkboxWidth + colorBarWidth + columnsWidth + addColumnWidth
-  }, [visibleColumns, getColumnWidth, checkboxWidth, colorBarWidth])
 
   // Calculate scrollbar dimensions
   const hasHorizontalScroll = scrollInfo.scrollWidth > scrollInfo.clientWidth
@@ -585,9 +1145,19 @@ export function MondayBoardTable({
             const groupItemCount = items.length
 
             return (
-              <div key={group.id} className={cn(groupIndex > 0 && 'mt-6')}>
+              <div
+                key={group.id}
+                className={cn(
+                  groupIndex > 0 && 'mt-6',
+                  // Highlight when dragging an item over this group
+                  dragOverGroupId === group.id && 'ring-2 ring-[#0073ea] ring-inset rounded-lg'
+                )}
+                onDragOver={(e) => handleGroupDragOver(e, group.id)}
+                onDragLeave={handleGroupDragLeave}
+                onDrop={(e) => handleGroupDrop(e, group.id)}
+              >
                 {/* Group Header Row */}
-                <div className="flex items-center h-9 bg-white" style={{ width: totalTableWidth, minWidth: totalTableWidth }}>
+                <div className="group flex items-center h-9 bg-white" style={{ width: totalTableWidth, minWidth: totalTableWidth }}>
                   {/* Sticky section */}
                   <div
                     className="flex items-center sticky left-0 z-20 bg-bg-primary"
@@ -607,28 +1177,148 @@ export function MondayBoardTable({
                       className="h-full rounded-tl"
                       style={{ width: colorBarWidth, backgroundColor: group.color }}
                     />
-                    <button
-                      onClick={() => toggleGroup(group.id)}
-                      className="flex items-center gap-2 px-3 h-full hover:bg-bg-hover transition-colors flex-1"
-                    >
-                      {isCollapsed ? (
-                        <ChevronRight className="w-4 h-4" style={{ color: group.color }} />
+                    <div className="flex items-center gap-2 px-3 h-full flex-1">
+                      <button
+                        onClick={() => toggleGroup(group.id)}
+                        className="hover:bg-bg-hover rounded p-0.5 transition-colors"
+                      >
+                        {isCollapsed ? (
+                          <ChevronRight className="w-4 h-4" style={{ color: group.color }} />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" style={{ color: group.color }} />
+                        )}
+                      </button>
+                      {editingGroupId === group.id ? (
+                        <input
+                          ref={groupNameInputRef}
+                          type="text"
+                          value={editingGroupName}
+                          onChange={(e) => setEditingGroupName(e.target.value)}
+                          onBlur={handleGroupNameSave}
+                          onKeyDown={handleGroupNameKeyDown}
+                          className="font-semibold text-sm bg-white border border-monday-primary rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-monday-primary"
+                          style={{ color: group.color, minWidth: '80px' }}
+                        />
                       ) : (
-                        <ChevronDown className="w-4 h-4" style={{ color: group.color }} />
+                        <span
+                          className="font-semibold text-sm cursor-pointer hover:underline"
+                          style={{ color: group.color }}
+                          onDoubleClick={() => handleGroupNameDoubleClick(group.id, group.name)}
+                          title="Double-click to rename"
+                        >
+                          {group.name}
+                        </span>
                       )}
-                      <span className="font-semibold text-sm" style={{ color: group.color }}>
-                        {group.name}
-                      </span>
                       <span className="text-xs text-text-tertiary">
                         {groupItemCount} {groupItemCount === 1 ? 'item' : 'items'}
                       </span>
-                    </button>
+
+                      {/* Group menu button */}
+                      <div className="relative ml-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setGroupMenuOpen(groupMenuOpen === group.id ? null : group.id)
+                          }}
+                          className="p-1 rounded hover:bg-bg-hover transition-colors opacity-0 group-hover:opacity-100"
+                          title="Group options"
+                        >
+                          <MoreHorizontal className="w-4 h-4 text-text-tertiary" />
+                        </button>
+
+                        {/* Group dropdown menu */}
+                        {groupMenuOpen === group.id && (
+                          <div
+                            ref={groupMenuRef}
+                            className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-border-light z-50 py-1"
+                          >
+                            {/* Rename option */}
+                            <button
+                              onClick={() => {
+                                setGroupMenuOpen(null)
+                                handleGroupNameDoubleClick(group.id, group.name)
+                              }}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors"
+                            >
+                              <Type className="w-4 h-4 text-text-tertiary" />
+                              <span>Rename group</span>
+                            </button>
+
+                            {/* Color picker */}
+                            <div className="relative">
+                              <button
+                                onClick={() => setGroupColorPickerOpen(groupColorPickerOpen === group.id ? null : group.id)}
+                                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors"
+                              >
+                                <Palette className="w-4 h-4 text-text-tertiary" />
+                                <span>Change color</span>
+                                <div
+                                  className="w-4 h-4 rounded ml-auto"
+                                  style={{ backgroundColor: group.color }}
+                                />
+                              </button>
+
+                              {/* Color picker dropdown */}
+                              {groupColorPickerOpen === group.id && (
+                                <div className="absolute left-full top-0 ml-1 bg-white rounded-lg shadow-lg border border-border-light p-2 grid grid-cols-4 gap-1 w-36">
+                                  {MONDAY_GROUP_COLORS.map((colorOption) => (
+                                    <button
+                                      key={colorOption.value}
+                                      onClick={() => {
+                                        onGroupColorChange?.(group.id, colorOption.value)
+                                        setGroupColorPickerOpen(null)
+                                        setGroupMenuOpen(null)
+                                      }}
+                                      className={cn(
+                                        'w-7 h-7 rounded-full hover:scale-110 transition-transform',
+                                        group.color === colorOption.value && 'ring-2 ring-offset-1 ring-gray-400'
+                                      )}
+                                      style={{ backgroundColor: colorOption.value }}
+                                      title={colorOption.name}
+                                    />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Divider */}
+                            <div className="border-t border-border-light my-1" />
+
+                            {/* Delete option */}
+                            <button
+                              onClick={() => handleDeleteGroup(group.id, group.name, groupItemCount)}
+                              className={cn(
+                                "w-full flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors",
+                                groups.length <= 1
+                                  ? "text-gray-400 cursor-not-allowed"
+                                  : "text-red-600 hover:bg-red-50"
+                              )}
+                              disabled={groups.length <= 1}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>Delete group</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Table content when not collapsed */}
                 {!isCollapsed && (
-                  <table className="border-collapse" style={{ tableLayout: 'fixed', width: totalTableWidth, minWidth: totalTableWidth }}>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragCancel={handleDragCancel}
+                  >
+                    <SortableContext
+                      items={visibleColumns.slice(1).map(col => col.id)}
+                      strategy={horizontalListSortingStrategy}
+                    >
+                      <table className="border-collapse" style={{ tableLayout: 'fixed', width: totalTableWidth, minWidth: totalTableWidth }}>
                     {/* Column widths */}
                     <colgroup>
                       {onSelectionChange && <col style={{ width: checkboxWidth }} />}
@@ -662,73 +1352,115 @@ export function MondayBoardTable({
                           }}
                         />
                         <th
-                          className="sticky z-20 bg-[#f5f6f8] border border-[#c3c6d4] text-left px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:bg-[#ecedf0]"
+                          className="sticky z-20 bg-[#f5f6f8] border border-[#c3c6d4] text-left px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:bg-[#ecedf0] group"
                           style={{
                             width: firstColumnWidth,
                             left: onSelectionChange ? checkboxWidth + colorBarWidth : colorBarWidth,
                           }}
                           onClick={(e) => {
-                            // Don't sort if clicking on the input
+                            // Don't sort if clicking on the input or menu
                             if ((e.target as HTMLElement).tagName === 'INPUT') return
+                            if ((e.target as HTMLElement).closest('.column-menu-btn')) return
                             visibleColumns[0] && handleSort(visibleColumns[0].column_id)
                           }}
                           onDoubleClick={(e) => {
-                            // Don't trigger if already editing
+                            // Don't trigger if already editing or clicking menu
                             if (editingColumnId) return
+                            if ((e.target as HTMLElement).closest('.column-menu-btn')) return
                             if (visibleColumns[0]) handleColumnNameDoubleClick(e, visibleColumns[0])
                           }}
                         >
-                          {editingColumnId === visibleColumns[0]?.id ? (
-                            <input
-                              ref={editInputRef}
-                              type="text"
-                              value={editingColumnName}
-                              onChange={(e) => setEditingColumnName(e.target.value)}
-                              onBlur={handleColumnNameSave}
-                              onKeyDown={handleColumnNameKeyDown}
-                              onClick={(e) => e.stopPropagation()}
-                              onMouseDown={(e) => e.stopPropagation()}
-                              className="w-full bg-white border border-[#0073ea] rounded px-1 py-0.5 text-xs font-semibold text-[#323338] uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
-                            />
-                          ) : (
-                            visibleColumns[0]?.column_name
-                          )}
+                          <div className="flex items-center gap-1">
+                            <span className="flex-1 truncate">
+                              {editingColumnId === visibleColumns[0]?.id ? (
+                                <input
+                                  ref={editInputRef}
+                                  type="text"
+                                  value={editingColumnName}
+                                  onChange={(e) => setEditingColumnName(e.target.value)}
+                                  onBlur={handleColumnNameSave}
+                                  onKeyDown={handleColumnNameKeyDown}
+                                  onClick={(e) => e.stopPropagation()}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  className="w-full bg-white border border-[#0073ea] rounded px-1 py-0.5 text-xs font-semibold text-[#323338] uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
+                                />
+                              ) : (
+                                visibleColumns[0]?.column_name
+                              )}
+                            </span>
+                            {/* Column menu button for first column */}
+                            {editingColumnId !== visibleColumns[0]?.id && visibleColumns[0] && (
+                              <div className="relative">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setColumnMenuOpen(columnMenuOpen === visibleColumns[0].id ? null : visibleColumns[0].id)
+                                  }}
+                                  className="column-menu-btn opacity-0 group-hover:opacity-100 p-0.5 hover:bg-[#c3c6d4] rounded transition-colors"
+                                >
+                                  <MoreHorizontal className="w-4 h-4 text-[#676879]" />
+                                </button>
+                                {columnMenuOpen === visibleColumns[0].id && (
+                                  <div
+                                    ref={columnMenuRef}
+                                    className="absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-border-light z-50 py-1"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    {/* Rename option */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setColumnMenuOpen(null)
+                                        handleColumnNameDoubleClick(e as any, visibleColumns[0])
+                                      }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-text-primary hover:bg-bg-hover transition-colors"
+                                    >
+                                      <Type className="w-4 h-4" />
+                                      <span>Rename column</span>
+                                    </button>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-border-light my-1" />
+
+                                    {/* Delete option */}
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleDeleteColumn(visibleColumns[0])
+                                      }}
+                                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                      <span>Delete column</span>
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
                           <ResizeHandle columnId={visibleColumns[0]?.id} width={firstColumnWidth} />
                         </th>
-                        {/* Non-sticky header cells */}
+                        {/* Non-sticky header cells with @dnd-kit */}
                         {visibleColumns.slice(1).map((column) => (
-                          <th
+                          <SortableColumnHeader
                             key={column.id}
-                            className="relative border border-[#c3c6d4] text-left px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:bg-[#ecedf0]"
-                            style={{ width: getColumnWidth(column) }}
-                            onClick={(e) => {
-                              // Don't sort if clicking on the input
-                              if ((e.target as HTMLElement).tagName === 'INPUT') return
-                              handleSort(column.column_id)
-                            }}
-                            onDoubleClick={(e) => {
-                              // Don't trigger if already editing
-                              if (editingColumnId) return
-                              handleColumnNameDoubleClick(e, column)
-                            }}
-                          >
-                            {editingColumnId === column.id ? (
-                              <input
-                                ref={editInputRef}
-                                type="text"
-                                value={editingColumnName}
-                                onChange={(e) => setEditingColumnName(e.target.value)}
-                                onBlur={handleColumnNameSave}
-                                onKeyDown={handleColumnNameKeyDown}
-                                onClick={(e) => e.stopPropagation()}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                className="w-full bg-white border border-[#0073ea] rounded px-1 py-0.5 text-xs font-semibold text-[#323338] uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
-                              />
-                            ) : (
-                              column.column_name
-                            )}
-                            <ResizeHandle columnId={column.id} width={getColumnWidth(column)} />
-                          </th>
+                            column={column}
+                            width={getColumnWidth(column)}
+                            isEditing={editingColumnId === column.id}
+                            editingColumnName={editingColumnName}
+                            onColumnNameChange={setEditingColumnName}
+                            onColumnNameSave={handleColumnNameSave}
+                            onColumnNameKeyDown={handleColumnNameKeyDown}
+                            onColumnNameDoubleClick={handleColumnNameDoubleClick}
+                            onSort={handleSort}
+                            onResizeStart={handleResizeStart}
+                            canReorder={!editingColumnId && onColumnReorder !== undefined}
+                            editInputRef={editInputRef}
+                            isMenuOpen={columnMenuOpen === column.id}
+                            onMenuToggle={setColumnMenuOpen}
+                            onDeleteColumn={handleDeleteColumn}
+                            menuRef={columnMenuRef}
+                          />
                         ))}
                         {/* Add column header */}
                         <th
@@ -755,14 +1487,27 @@ export function MondayBoardTable({
                         // Find the global row index for keyboard navigation
                         const globalRowIndex = flattenedItems.findIndex(i => i.id === item.id)
 
+                        const isDragOver = dragOverItemId === item.id
+                        const showDropIndicatorBefore = isDragOver && dragOverPosition === 'before'
+                        const showDropIndicatorAfter = isDragOver && dragOverPosition === 'after'
+
                         return (
                           <tr
                             key={item.id}
                             className={cn(
-                              'hover:bg-[#f0f3ff] transition-colors cursor-pointer',
-                              isSelected && 'bg-[#e5e9ff]'
+                              'hover:bg-[#f0f3ff] transition-colors cursor-pointer group/row relative',
+                              isSelected && 'bg-[#e5e9ff]',
+                              draggingItemId === item.id && 'opacity-50',
+                              showDropIndicatorBefore && 'before:absolute before:left-0 before:right-0 before:top-0 before:h-[2px] before:bg-[#0073ea] before:z-20',
+                              showDropIndicatorAfter && 'after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[2px] after:bg-[#0073ea] after:z-20'
                             )}
                             onClick={() => onRowClick?.(item)}
+                            draggable={!!(onItemMove || onItemReorder)}
+                            onDragStart={(e) => handleItemDragStart(e, item.id, group.id)}
+                            onDragEnd={handleItemDragEnd}
+                            onDragOver={(e) => handleRowDragOver(e, item.id, group.id)}
+                            onDragLeave={handleRowDragLeave}
+                            onDrop={(e) => handleRowDrop(e, item.id, group.id)}
                           >
                             {/* Sticky cells */}
                             {onSelectionChange && (
@@ -775,6 +1520,11 @@ export function MondayBoardTable({
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <div className="flex items-center justify-center h-full">
+                                  {onItemMove && (
+                                    <div className="absolute left-0.5 opacity-0 group-hover/row:opacity-100 cursor-grab active:cursor-grabbing">
+                                      <GripVertical className="w-3 h-3 text-gray-400" />
+                                    </div>
+                                  )}
                                   <input
                                     type="checkbox"
                                     checked={isSelected}
@@ -944,8 +1694,18 @@ export function MondayBoardTable({
                           />
                         </tr>
                       )}
-                    </tbody>
-                  </table>
+                      </tbody>
+                      </table>
+                      {/* Drag overlay for visual feedback - rendered via portal */}
+                      <DragOverlay>
+                        {activeColumnId ? (
+                          <div className="bg-white border-2 border-[#0073ea] rounded px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide shadow-lg">
+                            {visibleColumns.find(c => c.id === activeColumnId)?.column_name}
+                          </div>
+                        ) : null}
+                      </DragOverlay>
+                    </SortableContext>
+                  </DndContext>
                 )}
               </div>
             )

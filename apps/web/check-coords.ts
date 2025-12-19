@@ -46,7 +46,7 @@ async function checkCoordinates() {
     if (companies.length > 1) {
       duplicates += companies.length;
       console.log(`\n📍 ${coords} (${companies.length} companies):`);
-      companies.forEach(c => console.log(`  - ${c.name}`));
+      companies.forEach((c: any) => console.log(`  - ${c.name}`));
     }
   }
 

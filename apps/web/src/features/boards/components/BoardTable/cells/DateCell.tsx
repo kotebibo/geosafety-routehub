@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, memo } from 'react'
 import { cn } from '@/lib/utils'
 import { Calendar, AlertCircle, Clock } from 'lucide-react'
 import type { CellRendererProps } from '../types'
 
 type DateStatus = 'overdue' | 'today' | 'upcoming' | 'future' | 'none'
 
-export function DateCell({ value, column, onEdit, onEditStart }: CellRendererProps) {
+export const DateCell = memo(function DateCell({ value, column, onEdit, onEditStart }: CellRendererProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
 
@@ -164,4 +164,4 @@ export function DateCell({ value, column, onEdit, onEditStart }: CellRendererPro
       )}
     </div>
   )
-}
+})

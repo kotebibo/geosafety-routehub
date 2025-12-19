@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase/client';
+
+// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
+const db = supabase as any;
 import { Shield } from 'lucide-react';
 
 export default function SetupPDPServicesPage() {
@@ -73,7 +76,7 @@ export default function SetupPDPServicesPage() {
     
     try {
       // First check existing service types
-      const { data: existing } = await supabase
+      const { data: existing } = await db
         .from('service_types')
         .select('*')
         .ilike('name', '%personal%data%')
@@ -87,7 +90,7 @@ export default function SetupPDPServicesPage() {
       }
       
       // Insert all service types
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('service_types')
         .insert(pdpServiceTypes)
         .select();

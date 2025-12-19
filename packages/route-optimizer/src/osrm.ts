@@ -17,8 +17,16 @@ interface OSRMResponse {
   routes: OSRMRoute[];
 }
 
+interface OSRMTableResponse {
+  code: string;
+  distances: number[][] | null; // matrix in meters (null cells for unreachable)
+  durations: number[][] | null; // matrix in seconds
+}
+
 // OSRM public server (free, no API key needed)
-const OSRM_BASE_URL = 'http://router.project-osrm.org/route/v1/driving';
+const OSRM_BASE_URL = 'http://router.project-osrm.org';
+const OSRM_ROUTE_URL = `${OSRM_BASE_URL}/route/v1/driving`;
+const OSRM_TABLE_URL = `${OSRM_BASE_URL}/table/v1/driving`;
 
 /**
  * Get real road route from OSRM
@@ -42,7 +50,7 @@ export async function getOSRMRoute(
     annotations: 'true', // Get additional route info
   });
 
-  const url = `${OSRM_BASE_URL}/${coordsStr}?${params}`;
+  const url = `${OSRM_ROUTE_URL}/${coordsStr}?${params}`;
 
   try {
     const response = await fetch(url, {
@@ -69,11 +77,72 @@ export async function getOSRMRoute(
 }
 
 /**
- * Get distance matrix using OSRM (real road distances)
+ * Get distance matrix using OSRM Table service (single API call)
+ * Much more efficient than individual route requests
  * @param locations Array of locations with lat/lng
  * @returns 2D matrix of distances in kilometers
  */
 export async function getOSRMDistanceMatrix(
+  locations: Array<{ lat: number; lng: number }>
+): Promise<number[][]> {
+  const n = locations.length;
+
+  if (n < 2) {
+    return [[0]];
+  }
+
+  // Format coordinates: lng,lat;lng,lat;lng,lat...
+  const coordsStr = locations.map(loc => `${loc.lng},${loc.lat}`).join(';');
+
+  const params = new URLSearchParams({
+    annotations: 'distance', // We want distance matrix
+  });
+
+  const url = `${OSRM_TABLE_URL}/${coordsStr}?${params}`;
+
+  try {
+    console.log(`Fetching OSRM distance matrix for ${n} locations...`);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      console.error('OSRM Table error:', response.status);
+      throw new Error(`OSRM Table returned ${response.status}`);
+    }
+
+    const data: OSRMTableResponse = await response.json();
+
+    if (data.code === 'Ok' && data.distances) {
+      // Convert meters to kilometers
+      const matrixKm = data.distances.map(row =>
+        row.map(dist => (dist !== null ? dist / 1000 : 0))
+      );
+      console.log(`✅ Got OSRM distance matrix (${n}x${n})`);
+      return matrixKm;
+    }
+
+    throw new Error(`OSRM Table returned code: ${data.code}`);
+  } catch (error) {
+    console.error('OSRM Table request failed:', error);
+
+    // Fallback to pairwise requests for small matrices
+    if (n <= 10) {
+      console.log('Falling back to pairwise OSRM requests...');
+      return getOSRMDistanceMatrixPairwise(locations);
+    }
+
+    throw error;
+  }
+}
+
+/**
+ * Fallback: Get distance matrix using pairwise requests
+ * Used when Table service fails
+ */
+async function getOSRMDistanceMatrixPairwise(
   locations: Array<{ lat: number; lng: number }>
 ): Promise<number[][]> {
   const n = locations.length;
