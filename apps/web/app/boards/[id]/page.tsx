@@ -1,18 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
-import { useBoard, useBoardItems, useBoardColumns, useCreateBoardItem, useUpdateBoardItem, useDuplicateBoardItems, useDeleteBoardItem, useCreateUpdate, useRealtimeBoard } from '@/features/boards/hooks'
+import { useBoard, useBoardItems, useBoardColumns, useBoardGroups, useCreateBoardGroup, useUpdateBoardGroup, useDeleteBoardGroup, useCreateBoardItem, useUpdateBoardItem, useDuplicateBoardItems, useDeleteBoardItem, useCreateUpdate, useRealtimeBoard, useUndoRedo, type UndoableAction } from '@/features/boards/hooks'
+import { queryKeys } from '@/lib/react-query'
 import { useInspectorId } from '@/hooks/useInspectorId'
-import { MondayBoardTable, ErrorBoundary, ColumnConfigPanel, AddColumnModal, ItemDetailDrawer, BoardPresenceIndicator } from '@/features/boards/components'
+import { useCompanies } from '@/hooks/useCompanies'
+import { useRoutes } from '@/hooks/useRoutes'
+import { useServiceTypes } from '@/hooks/useServiceTypes'
+import { MondayBoardTable, ErrorBoundary, ColumnConfigPanel, AddColumnModal, ItemDetailDrawer, BoardPresenceIndicator, BoardToolbar, ImportBoardModal, SaveAsTemplateModal, ActivityLogPanel, type SortConfig, type FilterConfig } from '@/features/boards/components'
+import { useBoardUpdates } from '@/features/boards/hooks'
 import { Button } from '@/shared/components/ui'
 import { useToast } from '@/components/ui-monday/Toast'
-import { ArrowLeft, Plus, Users, Settings, MoreHorizontal, Columns, Search, Download, Copy, Trash2 } from 'lucide-react'
+import { ArrowLeft, Plus, Columns, Search, Download, Upload, Copy, Trash2, Undo2, Redo2, History, FileCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BoardItem, BoardColumn, BoardGroup, ColumnType } from '@/features/boards/types/board'
-import { boardsService } from '@/features/boards/services'
-import { exportToCSV, exportToExcel } from '@/features/boards/utils/exportBoard'
+import { boardsService, userBoardsService } from '@/features/boards/services'
+import { exportToCSV, exportToExcel, type ExportLookups } from '@/features/boards/utils/exportBoard'
 
 // Monday.com color palette for groups
 const GROUP_COLORS = [
@@ -26,15 +32,15 @@ const GROUP_COLORS = [
   '#784bd1', // Royal
 ]
 
-// Initial groups - will be managed in state (later from DB after migration)
-const INITIAL_GROUPS: BoardGroup[] = [
-  { id: 'default', board_id: '', name: 'New', color: '#579bfc', position: 0 },
-  { id: 'in-progress', board_id: '', name: 'In Progress', color: '#fdab3d', position: 1 },
-  { id: 'done', board_id: '', name: 'Done', color: '#00c875', position: 2 },
+// Default group shown when database has no groups (fallback for new boards)
+// Only ONE default group - users can add more if needed
+const DEFAULT_GROUPS: BoardGroup[] = [
+  { id: 'default', board_id: '', name: 'Items', color: '#579bfc', position: 0 },
 ]
 
 export default function BoardDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { user } = useAuth()
   const { showToast } = useToast()
   const [selection, setSelection] = useState<Set<string>>(new Set())
@@ -42,20 +48,192 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const [showAddColumn, setShowAddColumn] = useState(false)
   const [selectedItem, setSelectedItem] = useState<BoardItem | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
-  const [groups, setGroups] = useState<BoardGroup[]>(INITIAL_GROUPS)
   const [showExportMenu, setShowExportMenu] = useState(false)
+  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null)
+  const [groupByColumn, setGroupByColumn] = useState<string | null>(null)
+  const [filters, setFilters] = useState<FilterConfig[]>([])
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [showActivityLog, setShowActivityLog] = useState(false)
+  const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false)
 
   const { data: inspectorId } = useInspectorId(user?.email)
+
+  // Fetch activity log for this board
+  const { data: activityUpdates, isLoading: activityLoading, refetch: refetchActivity } = useBoardUpdates(params.id)
+
+  // Fetch lookup data for export
+  const { allCompanies } = useCompanies()
+  const { routes, inspectors } = useRoutes()
+  const { serviceTypes } = useServiceTypes()
+
+  // Build lookup maps for export
+  const exportLookups = useMemo<ExportLookups>(() => {
+    const lookups: ExportLookups = {}
+
+    // Build persons lookup (inspectors)
+    if (inspectors && inspectors.length > 0) {
+      lookups.persons = new Map()
+      inspectors.forEach((inspector: any) => {
+        if (inspector.id && inspector.full_name) {
+          lookups.persons!.set(inspector.id, inspector.full_name)
+        }
+      })
+    }
+
+    // Build companies lookup
+    if (allCompanies && allCompanies.length > 0) {
+      lookups.companies = new Map()
+      allCompanies.forEach((company: any) => {
+        if (company.id && company.name) {
+          lookups.companies!.set(company.id, company.name)
+        }
+      })
+    }
+
+    // Build routes lookup
+    if (routes && routes.length > 0) {
+      lookups.routes = new Map()
+      routes.forEach((route: any) => {
+        if (route.id && route.name) {
+          lookups.routes!.set(route.id, route.name)
+        }
+      })
+    }
+
+    // Build service types lookup
+    if (serviceTypes && serviceTypes.length > 0) {
+      lookups.serviceTypes = new Map()
+      serviceTypes.forEach((st: any) => {
+        if (st.id && st.name) {
+          lookups.serviceTypes!.set(st.id, st.name)
+        }
+      })
+    }
+
+    return lookups
+  }, [inspectors, allCompanies, routes, serviceTypes])
 
   const { data: board, isLoading: boardLoading, error: boardError } = useBoard(params.id)
   const { data: items, isLoading: itemsLoading, error: itemsError } = useBoardItems(params.id)
   const { data: columns, refetch: refetchColumns } = useBoardColumns(board?.board_type || 'custom', params.id)
+  const { data: dbGroups, isLoading: groupsLoading } = useBoardGroups(params.id)
+
+  // Use database groups or fallback to defaults
+  const groups = useMemo(() => {
+    if (dbGroups && dbGroups.length > 0) {
+      return dbGroups
+    }
+    return DEFAULT_GROUPS.map(g => ({ ...g, board_id: params.id }))
+  }, [dbGroups, params.id])
 
   const createItem = useCreateBoardItem(params.id)
   const updateItem = useUpdateBoardItem(params.id)
   const duplicateItems = useDuplicateBoardItems(params.id)
   const deleteItem = useDeleteBoardItem(params.id)
   const createUpdate = useCreateUpdate()
+  const createGroup = useCreateBoardGroup(params.id)
+  const updateGroup = useUpdateBoardGroup(params.id)
+  const deleteGroup = useDeleteBoardGroup(params.id)
+
+  // Undo/Redo system
+  const handleUndoAction = useCallback(async (action: UndoableAction) => {
+    try {
+      switch (action.type) {
+        case 'cell_edit':
+          // Revert to previous value
+          const currentItem = items?.find(item => item.id === action.targetId)
+          if (currentItem && action.metadata?.columnId) {
+            if (action.metadata.columnId === 'name') {
+              await updateItem.mutateAsync({
+                itemId: action.targetId,
+                updates: { name: action.previousValue },
+              })
+            } else {
+              await updateItem.mutateAsync({
+                itemId: action.targetId,
+                updates: {
+                  data: { ...currentItem.data, [action.metadata.columnId]: action.previousValue },
+                },
+              })
+            }
+          }
+          break
+        case 'group_rename':
+          await updateGroup.mutateAsync({
+            groupId: action.targetId,
+            updates: { name: action.previousValue },
+          })
+          break
+        case 'group_color_change':
+          await updateGroup.mutateAsync({
+            groupId: action.targetId,
+            updates: { color: action.previousValue },
+          })
+          break
+        default:
+          console.log('Undo not implemented for:', action.type)
+      }
+      showToast('Undone', 'success')
+    } catch (error) {
+      console.error('Failed to undo:', error)
+      showToast('Failed to undo', 'error')
+    }
+  }, [items, updateItem, updateGroup, showToast])
+
+  const handleRedoAction = useCallback(async (action: UndoableAction) => {
+    try {
+      switch (action.type) {
+        case 'cell_edit':
+          const currentItem = items?.find(item => item.id === action.targetId)
+          if (currentItem && action.metadata?.columnId) {
+            if (action.metadata.columnId === 'name') {
+              await updateItem.mutateAsync({
+                itemId: action.targetId,
+                updates: { name: action.newValue },
+              })
+            } else {
+              await updateItem.mutateAsync({
+                itemId: action.targetId,
+                updates: {
+                  data: { ...currentItem.data, [action.metadata.columnId]: action.newValue },
+                },
+              })
+            }
+          }
+          break
+        case 'group_rename':
+          await updateGroup.mutateAsync({
+            groupId: action.targetId,
+            updates: { name: action.newValue },
+          })
+          break
+        case 'group_color_change':
+          await updateGroup.mutateAsync({
+            groupId: action.targetId,
+            updates: { color: action.newValue },
+          })
+          break
+        default:
+          console.log('Redo not implemented for:', action.type)
+      }
+      showToast('Redone', 'success')
+    } catch (error) {
+      console.error('Failed to redo:', error)
+      showToast('Failed to redo', 'error')
+    }
+  }, [items, updateItem, updateGroup, showToast])
+
+  const {
+    canUndo,
+    canRedo,
+    pushAction,
+    undo: performUndo,
+    redo: performRedo,
+    lastAction,
+  } = useUndoRedo({
+    onUndo: handleUndoAction,
+    onRedo: handleRedoAction,
+  })
 
   // Real-time collaboration
   const {
@@ -73,17 +251,94 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     enabled: !!board && !!inspectorId,
   })
 
-  // Filter items based on search
-  const filteredItems = items?.filter(item => {
-    if (!searchQuery) return true
-    const searchLower = searchQuery.toLowerCase()
-    return (
-      item.name?.toLowerCase().includes(searchLower) ||
-      Object.values(item.data || {}).some(val =>
-        String(val).toLowerCase().includes(searchLower)
+  // Filter items based on search, filters, and sorting
+  const filteredItems = useMemo(() => {
+    let result = items || []
+
+    // Apply search filter
+    if (searchQuery) {
+      const searchLower = searchQuery.toLowerCase()
+      result = result.filter(item =>
+        item.name?.toLowerCase().includes(searchLower) ||
+        Object.values(item.data || {}).some(val =>
+          String(val).toLowerCase().includes(searchLower)
+        )
       )
-    )
-  })
+    }
+
+    // Apply column filters
+    if (filters.length > 0) {
+      result = result.filter(item => {
+        return filters.every(filter => {
+          const value = filter.column === 'name'
+            ? item.name
+            : item.data?.[filter.column]
+
+          switch (filter.condition) {
+            case 'equals':
+              return String(value || '').toLowerCase() === String(filter.value || '').toLowerCase()
+            case 'not_equals':
+              return String(value || '').toLowerCase() !== String(filter.value || '').toLowerCase()
+            case 'contains':
+              return String(value || '').toLowerCase().includes(String(filter.value || '').toLowerCase())
+            case 'starts_with':
+              return String(value || '').toLowerCase().startsWith(String(filter.value || '').toLowerCase())
+            case 'ends_with':
+              return String(value || '').toLowerCase().endsWith(String(filter.value || '').toLowerCase())
+            case 'greater_than':
+              return Number(value) > Number(filter.value)
+            case 'less_than':
+              return Number(value) < Number(filter.value)
+            case 'before':
+              return new Date(value) < new Date(filter.value)
+            case 'after':
+              return new Date(value) > new Date(filter.value)
+            case 'is_empty':
+              return value === null || value === undefined || value === ''
+            case 'is_not_empty':
+              return value !== null && value !== undefined && value !== ''
+            case 'is_checked':
+              return value === true
+            case 'is_not_checked':
+              return value !== true
+            default:
+              return true
+          }
+        })
+      })
+    }
+
+    // Apply sorting
+    if (sortConfig) {
+      result = [...result].sort((a, b) => {
+        const aVal = sortConfig.column === 'name'
+          ? a.name
+          : a.data?.[sortConfig.column]
+        const bVal = sortConfig.column === 'name'
+          ? b.name
+          : b.data?.[sortConfig.column]
+
+        // Handle null/undefined
+        if (aVal == null && bVal == null) return 0
+        if (aVal == null) return sortConfig.direction === 'asc' ? 1 : -1
+        if (bVal == null) return sortConfig.direction === 'asc' ? -1 : 1
+
+        // Compare based on type
+        let comparison = 0
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          comparison = aVal - bVal
+        } else if (aVal instanceof Date || bVal instanceof Date) {
+          comparison = new Date(aVal).getTime() - new Date(bVal).getTime()
+        } else {
+          comparison = String(aVal).localeCompare(String(bVal))
+        }
+
+        return sortConfig.direction === 'asc' ? comparison : -comparison
+      })
+    }
+
+    return result
+  }, [items, searchQuery, filters, sortConfig])
 
 
   const handleAddItem = async (groupId?: string) => {
@@ -116,10 +371,15 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     }
   }
 
-  const handleCellEdit = async (rowId: string, columnId: string, value: any) => {
+  const handleCellEdit = useCallback(async (rowId: string, columnId: string, value: any) => {
     try {
-      // Get the current item to merge with existing data
-      const currentItem = items?.find(item => item.id === rowId)
+      // Get the FRESH current item from the query cache to avoid stale closure issues
+      const cachedItems = queryClient.getQueryData<BoardItem[]>([
+        ...queryKeys.routes.all,
+        'board-items',
+        params.id,
+      ])
+      const currentItem = cachedItems?.find(item => item.id === rowId)
       if (!currentItem) return
 
       // Get old value for activity logging
@@ -129,6 +389,21 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
       // Skip if value hasn't actually changed
       if (JSON.stringify(oldValue) === JSON.stringify(value)) return
+
+      // Get column name for description
+      const column = columns?.find(c => c.column_id === columnId)
+      const fieldName = column?.column_name || columnId
+
+      // Push undoable action before making the change
+      pushAction({
+        type: 'cell_edit',
+        description: `Edit ${fieldName}`,
+        targetId: rowId,
+        targetType: 'item',
+        previousValue: oldValue,
+        newValue: value,
+        metadata: { columnId, columnName: fieldName },
+      })
 
       // If editing the 'name' column, update the item's name field directly
       if (columnId === 'name') {
@@ -156,9 +431,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
       // Log the activity (fire and forget - don't block on this)
       if (inspectorId) {
-        const column = columns?.find(c => c.column_id === columnId)
-        const fieldName = column?.column_name || columnId
-
         // Determine update type
         const updateType = columnId === 'status' ? 'status_changed' : 'updated'
 
@@ -174,16 +446,17 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           item_id: rowId,
           user_id: inspectorId,
           update_type: updateType,
-          field_name: fieldName,
+          field_name: columnId, // Use columnId for data lookup during rollback
           old_value: formatValue(oldValue),
           new_value: formatValue(value),
+          metadata: { displayName: fieldName }, // Store display name for UI
         })
       }
     } catch (error) {
       console.error('Failed to update item:', error)
       showToast('Failed to update item', 'error')
     }
-  }
+  }, [queryClient, params.id, columns, updateItem, publishItemChange, pushAction, createUpdate, inspectorId, showToast])
 
   const handleRowClick = (row: BoardItem) => {
     setSelectedItem(row)
@@ -255,26 +528,23 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     }
   }
 
-  const handleAddColumn = async (columnData: { column_name: string; column_type: any; width: number }) => {
+  const handleAddColumn = async (columnData: { column_name: string; column_type: any; width: number; config?: Record<string, any> }) => {
     try {
       if (!board) return
 
       const column_id = columnData.column_name.toLowerCase().replace(/\s+/g, '_')
 
-      // Create column data - only include board_id if the column exists in the schema
+      // Always include board_id for user-created boards to ensure uniqueness
       const columnPayload: any = {
         board_type: board.board_type,
+        board_id: params.id,
         column_id,
         column_name: columnData.column_name,
         column_type: columnData.column_type,
         width: columnData.width,
         position: (columns?.length || 0),
         is_visible: true,
-      }
-
-      // Check if we have existing columns with board_id field
-      if (columns && columns.length > 0 && 'board_id' in columns[0]) {
-        columnPayload.board_id = params.id
+        config: columnData.config || {},
       }
 
       await boardsService.createColumn(columnPayload)
@@ -289,7 +559,32 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
   const handleDeleteColumn = async (columnId: string) => {
     try {
+      // Find the column to get its column_id (the key used in item data)
+      const column = columns?.find(col => col.id === columnId)
+      const columnKey = column?.column_id
+
+      // Delete the column definition
       await boardsService.deleteColumn(columnId)
+
+      // Clear the column data from all items to prevent ghost data
+      // when a new column with the same name is created
+      if (columnKey && items && items.length > 0) {
+        const updatePromises = items
+          .filter(item => item.data && columnKey in item.data)
+          .map(item => {
+            const newData = { ...item.data }
+            delete newData[columnKey]
+            return updateItem.mutateAsync({
+              itemId: item.id,
+              updates: { data: newData }
+            })
+          })
+
+        if (updatePromises.length > 0) {
+          await Promise.all(updatePromises)
+        }
+      }
+
       await refetchColumns()
       showToast('Column deleted', 'success')
     } catch (error) {
@@ -300,11 +595,20 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
   const handleColumnResize = async (columnId: string, width: number) => {
     try {
+      // Optimistically update the cache so the columns data stays in sync
+      queryClient.setQueryData(
+        ['board-columns', board?.board_type || 'custom', params.id],
+        (old: BoardColumn[] | undefined) => {
+          if (!old) return old
+          return old.map(col => col.id === columnId ? { ...col, width } : col)
+        }
+      )
+
       await boardsService.updateColumn(columnId, { width })
-      // Don't refetch immediately to avoid UI flicker - the local state in MondayBoardTable handles it
     } catch (error) {
       console.error('Failed to resize column:', error)
-      // Silently fail - the column will reset on next page load
+      // Rollback on error by refetching
+      await refetchColumns()
     }
   }
 
@@ -319,15 +623,18 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         number: 'Numbers',
         status: 'Status',
         date: 'Date',
+        date_range: 'Date Range',
         person: 'Person',
         location: 'Location',
         actions: 'Actions',
         route: 'Route',
         company: 'Company',
+        company_address: 'Company Address',
         service_type: 'Service Type',
         checkbox: 'Checkbox',
         phone: 'Phone',
         files: 'Files',
+        updates: 'Updates',
       }
 
       const baseName = typeLabels[columnType] || 'Column'
@@ -341,19 +648,16 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
       const column_id = columnName.toLowerCase().replace(/\s+/g, '_')
 
+      // Always include board_id for user-created boards to ensure uniqueness
       const columnPayload: any = {
         board_type: board.board_type,
+        board_id: params.id,
         column_id,
         column_name: columnName,
         column_type: columnType,
         width: 150,
         position: columns?.length || 0,
         is_visible: true,
-      }
-
-      // Check if we have existing columns with board_id field
-      if (columns && columns.length > 0 && 'board_id' in columns[0]) {
-        columnPayload.board_id = params.id
       }
 
       await boardsService.createColumn(columnPayload)
@@ -365,23 +669,89 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     }
   }
 
-  const handleAddGroup = () => {
-    // Generate a unique ID for the new group
-    const newId = `group-${Date.now()}`
-    // Pick a color that's not already in use (or cycle through)
-    const usedColors = groups.map(g => g.color)
-    const availableColor = GROUP_COLORS.find(c => !usedColors.includes(c)) || GROUP_COLORS[groups.length % GROUP_COLORS.length]
+  const handleAddGroup = async () => {
+    try {
+      // Pick a color that's not already in use (or cycle through)
+      const usedColors = groups.map(g => g.color)
+      const availableColor = GROUP_COLORS.find(c => !usedColors.includes(c)) || GROUP_COLORS[groups.length % GROUP_COLORS.length]
 
-    const newGroup: BoardGroup = {
-      id: newId,
-      board_id: params.id,
-      name: 'New Group',
-      color: availableColor,
-      position: groups.length,
+      await createGroup.mutateAsync({
+        name: 'New Group',
+        color: availableColor,
+        position: groups.length,
+      })
+
+      showToast('Group added - click the name to rename it', 'success')
+    } catch (error) {
+      console.error('Failed to add group:', error)
+      showToast('Failed to add group', 'error')
+    }
+  }
+
+  // Handle group rename
+  const handleGroupRename = async (groupId: string, newName: string) => {
+    try {
+      await updateGroup.mutateAsync({ groupId, updates: { name: newName } })
+      showToast('Group renamed', 'success')
+    } catch (error) {
+      console.error('Failed to rename group:', error)
+      showToast('Failed to rename group', 'error')
+    }
+  }
+
+  // Handle group color change
+  const handleGroupColorChange = async (groupId: string, color: string) => {
+    try {
+      await updateGroup.mutateAsync({ groupId, updates: { color } })
+    } catch (error) {
+      console.error('Failed to change group color:', error)
+      showToast('Failed to change group color', 'error')
+    }
+  }
+
+  // Handle group collapse toggle
+  const handleGroupCollapseToggle = async (groupId: string, isCollapsed: boolean) => {
+    try {
+      await updateGroup.mutateAsync({ groupId, updates: { is_collapsed: isCollapsed } })
+    } catch (error) {
+      console.error('Failed to toggle group collapse:', error)
+    }
+  }
+
+  // Handle group delete
+  const handleDeleteGroup = async (groupId: string) => {
+    // Don't delete if it's the only group
+    if (groups.length <= 1) {
+      showToast('Cannot delete the last group', 'error')
+      return
     }
 
-    setGroups([...groups, newGroup])
-    showToast('Group added - click the name to rename it', 'success')
+    try {
+      // Find items in the group being deleted
+      const itemsInGroup = items?.filter(item => item.data?.group_id === groupId) || []
+
+      // Find the first remaining group to move items to
+      const targetGroup = groups.find(g => g.id !== groupId)
+
+      if (itemsInGroup.length > 0 && targetGroup) {
+        // Move all items to the target group
+        for (const item of itemsInGroup) {
+          await updateItem.mutateAsync({
+            itemId: item.id,
+            updates: {
+              data: { ...item.data, group_id: targetGroup.id }
+            }
+          })
+        }
+      }
+
+      // Now delete the group
+      await deleteGroup.mutateAsync(groupId)
+      showToast('Group deleted', 'success')
+    } catch (error) {
+      console.error('Failed to delete group:', error)
+      showToast('Failed to delete group', 'error')
+    }
   }
 
   // Handle column rename
@@ -396,6 +766,125 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     }
   }
 
+  // Handle column reorder from table drag-and-drop (receives column IDs in new order)
+  // Uses optimistic update for instant visual feedback
+  const handleTableColumnReorder = useCallback(async (columnIds: string[]) => {
+    if (!columns || !board) return
+
+    // Map column IDs to full column objects in the new order with updated positions
+    const reorderedColumns = columnIds
+      .map(id => columns.find(col => col.id === id))
+      .filter((col): col is BoardColumn => col !== undefined)
+      .map((col, index) => ({ ...col, position: index }))
+
+    // Query key for the columns cache - must match useBoardColumns hook
+    // useBoardColumns uses: [...queryKeys.boardColumns.byType(boardType), boardId]
+    const columnsQueryKey = [...queryKeys.boardColumns.byType(board.board_type), params.id]
+
+    // Optimistically update the cache immediately (instant visual feedback)
+    queryClient.setQueryData(columnsQueryKey, reorderedColumns)
+
+    try {
+      // Update positions in database
+      const updates = reorderedColumns.map((col, index) => ({
+        id: col.id,
+        position: index,
+      }))
+
+      await boardsService.updateColumns(updates)
+      // No need to refetch - optimistic update already applied
+    } catch (error) {
+      console.error('Failed to reorder columns:', error)
+      showToast('Failed to reorder columns', 'error')
+      // Rollback on error by refetching
+      await refetchColumns()
+    }
+  }, [columns, board, params.id, queryClient, refetchColumns, showToast])
+
+  // Handle item move between groups (drag-and-drop)
+  const handleItemMove = useCallback(async (itemId: string, targetGroupId: string) => {
+    try {
+      // Get the current item
+      const currentItem = items?.find(item => item.id === itemId)
+      if (!currentItem) return
+
+      // Get current group_id (from data JSONB or column)
+      const currentGroupId = currentItem.group_id || currentItem.data?.group_id
+
+      // Skip if item is already in the target group
+      if (currentGroupId === targetGroupId) return
+
+      // Update the item's group_id in the data JSONB
+      await updateItem.mutateAsync({
+        itemId,
+        updates: {
+          data: {
+            ...currentItem.data,
+            group_id: targetGroupId,
+          },
+        },
+      })
+
+      // Notify other users about the move via Ably
+      publishItemChange('update', itemId, { group_id: targetGroupId })
+
+      showToast('Item moved to group', 'success')
+    } catch (error) {
+      console.error('Failed to move item:', error)
+      showToast('Failed to move item', 'error')
+    }
+  }, [items, updateItem, publishItemChange, showToast])
+
+  // Handle item reorder within a group
+  const handleItemReorder = useCallback(async (itemId: string, targetItemId: string, position: 'before' | 'after') => {
+    try {
+      if (!items) return
+
+      // Find the dragged item and target item
+      const draggedItem = items.find(item => item.id === itemId)
+      const targetItem = items.find(item => item.id === targetItemId)
+      if (!draggedItem || !targetItem) return
+
+      // Get the group ID (from data.group_id or group_id column)
+      const targetGroupId = targetItem.group_id || targetItem.data?.group_id || 'default'
+
+      // Get all items in the same group, sorted by position
+      const groupItems = items
+        .filter(item => (item.group_id || item.data?.group_id || 'default') === targetGroupId)
+        .sort((a, b) => (a.position || 0) - (b.position || 0))
+
+      // Remove the dragged item from its current position
+      const filteredItems = groupItems.filter(item => item.id !== itemId)
+
+      // Find the index where to insert
+      const targetIndex = filteredItems.findIndex(item => item.id === targetItemId)
+      const insertIndex = position === 'before' ? targetIndex : targetIndex + 1
+
+      // Insert the dragged item at the new position
+      filteredItems.splice(insertIndex, 0, draggedItem)
+
+      // Calculate new positions for all items in the group
+      const reorderUpdates = filteredItems.map((item, index) => ({
+        id: item.id,
+        position: index,
+      }))
+
+      // Update positions in database
+      await userBoardsService.reorderItems(reorderUpdates)
+
+      // Invalidate the items query to refetch
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-items', params.id],
+      })
+
+      // Notify other users about the reorder via Ably
+      publishItemChange('update', itemId, { position: insertIndex })
+    } catch (error) {
+      console.error('Failed to reorder item:', error)
+      showToast('Failed to reorder item', 'error')
+    }
+  }, [items, queryClient, params.id, publishItemChange, showToast])
+
   // Handle export
   const handleExport = (format: 'csv' | 'excel') => {
     if (!board || !columns || !filteredItems) return
@@ -406,6 +895,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         items: filteredItems,
         columns: columns.filter(col => col.is_visible),
         boardName: board.name,
+        lookups: exportLookups,
       }
 
       if (format === 'csv') {
@@ -419,6 +909,36 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     } catch (error) {
       console.error('Export failed:', error)
       showToast('Export failed', 'error')
+    }
+  }
+
+  // Handle import items
+  const handleImportItems = async (
+    importedItems: Array<{ name: string; data: Record<string, any>; group_id: string }>
+  ) => {
+    if (!user || !inspectorId) {
+      showToast('You must be logged in to import items', 'error')
+      return
+    }
+
+    try {
+      // Create items one by one (in batches handled by the modal)
+      for (const item of importedItems) {
+        await createItem.mutateAsync({
+          board_id: params.id,
+          position: (items?.length || 0) + 1,
+          data: item.data,
+          name: item.name,
+          status: 'default',
+          priority: 0,
+          created_by: inspectorId,
+        })
+      }
+
+      showToast(`Imported ${importedItems.length} items`, 'success')
+    } catch (error) {
+      console.error('Import failed:', error)
+      throw error // Re-throw to let modal handle it
     }
   }
 
@@ -484,21 +1004,22 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 isConnected={isConnected}
               />
 
+              {/* Activity Log Button */}
+              <Button variant="secondary" size="sm" onClick={() => setShowActivityLog(true)}>
+                <History className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Activity</span>
+              </Button>
+
+              {/* Save as Template Button */}
+              <Button variant="secondary" size="sm" onClick={() => setShowSaveAsTemplate(true)}>
+                <FileCheck className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Save Template</span>
+              </Button>
+
               <Button variant="secondary" size="sm" onClick={() => setShowColumnConfig(true)}>
                 <Columns className="w-4 h-4 mr-2" />
                 Columns
               </Button>
-              <Button variant="secondary" size="sm">
-                <Users className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
-              <button className="p-2 rounded-md hover:bg-bg-hover transition-colors">
-                <MoreHorizontal className="w-5 h-5 text-text-secondary" />
-              </button>
             </div>
           </div>
 
@@ -527,13 +1048,8 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       <div className="flex-shrink-0 bg-bg-primary border-b border-border-light px-4 md:px-6 py-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-            <Button variant="primary" onClick={() => handleAddItem()} disabled={createItem.isPending || !inspectorId}>
-              <Plus className="w-5 h-5 mr-2" />
-              {createItem.isPending ? 'Adding...' : 'New Item'}
-            </Button>
-
-            {selection.size > 0 && (
-              <div className="flex items-center gap-2 pl-3 ml-3 border-l border-border-light">
+            {selection.size > 0 ? (
+              <div className="flex items-center gap-2">
                 <span className="text-sm text-text-secondary font-medium">
                   {selection.size} selected
                 </span>
@@ -563,10 +1079,30 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   Clear
                 </button>
               </div>
+            ) : columns && columns.length > 0 && (
+              <BoardToolbar
+                columns={columns}
+                sortConfig={sortConfig}
+                onSortChange={setSortConfig}
+                groupByColumn={groupByColumn}
+                onGroupByChange={setGroupByColumn}
+                filters={filters}
+                onFiltersChange={setFilters}
+              />
             )}
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Import Button */}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowImportModal(true)}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Import
+            </Button>
+
             {/* Export Button */}
             <div className="relative">
               <Button
@@ -649,14 +1185,23 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               onSelectionChange={setSelection}
               onAddItem={handleAddItem}
               onAddGroup={handleAddGroup}
+              onGroupRename={handleGroupRename}
+              onGroupColorChange={handleGroupColorChange}
+              onGroupCollapseToggle={handleGroupCollapseToggle}
+              onDeleteGroup={handleDeleteGroup}
               onColumnResize={handleColumnResize}
+              onColumnReorder={handleTableColumnReorder}
               onQuickAddColumn={handleQuickAddColumn}
               onOpenAddColumnModal={() => setShowAddColumn(true)}
               onColumnRename={handleColumnRename}
-              isLoading={itemsLoading}
+              onDeleteColumn={handleDeleteColumn}
+              onItemMove={handleItemMove}
+              onItemReorder={handleItemReorder}
+              isLoading={itemsLoading || groupsLoading}
               presence={presence}
               onCellEditStart={(itemId, columnId) => setEditing(itemId, columnId)}
               onCellEditEnd={() => setEditing(null)}
+              groupByColumn={groupByColumn}
             />
           </ErrorBoundary>
         ) : (
@@ -691,6 +1236,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         <AddColumnModal
           onClose={() => setShowAddColumn(false)}
           onAdd={handleAddColumn}
+          existingColumns={columns || []}
         />
       )}
 
@@ -705,6 +1251,97 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           }}
         />
       )}
+
+      {/* Import Modal */}
+      {showImportModal && columns && (
+        <ImportBoardModal
+          columns={columns}
+          onImport={handleImportItems}
+          onClose={() => setShowImportModal(false)}
+          defaultGroupId={groups[0]?.id || 'default'}
+        />
+      )}
+
+      {/* Save as Template Modal */}
+      {showSaveAsTemplate && board && (
+        <SaveAsTemplateModal
+          isOpen={showSaveAsTemplate}
+          onClose={() => setShowSaveAsTemplate(false)}
+          boardId={params.id}
+          boardName={board.name}
+          onSuccess={() => {
+            showToast('Board saved as template', 'success')
+          }}
+        />
+      )}
+
+      {/* Activity Log Panel */}
+      <ActivityLogPanel
+        isOpen={showActivityLog}
+        onClose={() => setShowActivityLog(false)}
+        updates={activityUpdates || []}
+        isLoading={activityLoading}
+        onRefresh={() => refetchActivity()}
+        showRollback={true}
+        onRollback={async (update) => {
+          // Rollback implementation - restore old value
+          if (!update.field_name) {
+            showToast('Cannot rollback: no field name', 'error')
+            return
+          }
+
+          // old_value can be empty string (which is valid), so check for undefined/null
+          if (update.old_value === undefined || update.old_value === null) {
+            showToast('Cannot rollback: no previous value', 'error')
+            return
+          }
+
+          try {
+            const item = items?.find(i => i.id === update.item_id)
+            if (!item) {
+              showToast('Cannot rollback: item not found', 'error')
+              return
+            }
+
+            // Parse old value if it's JSON
+            let oldValue: any = update.old_value
+            try {
+              oldValue = JSON.parse(update.old_value)
+            } catch {
+              // Keep as string
+            }
+
+            // Apply the rollback - field_name contains the columnId (not display name)
+            if (update.field_name === 'name') {
+              await updateItem.mutateAsync({
+                itemId: update.item_id,
+                updates: { name: oldValue },
+              })
+            } else {
+              await updateItem.mutateAsync({
+                itemId: update.item_id,
+                updates: {
+                  data: { ...item.data, [update.field_name]: oldValue },
+                },
+              })
+            }
+
+            showToast('Change rolled back successfully', 'success')
+
+            // Force refetch to ensure UI is in sync
+            await queryClient.refetchQueries({
+              queryKey: [...queryKeys.routes.all, 'board-items', params.id],
+              type: 'active',
+            })
+
+            // Also refetch activity log
+            refetchActivity()
+          } catch (error) {
+            console.error('Failed to rollback:', error)
+            showToast('Failed to rollback change', 'error')
+          }
+        }}
+      />
     </div>
   )
 }

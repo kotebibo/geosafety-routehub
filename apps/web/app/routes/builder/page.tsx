@@ -29,8 +29,8 @@ interface Company {
   address: string;
   lat: number;
   lng: number;
-  type: string;
-  priority: string;
+  type?: string;
+  priority?: string;
 }
 
 interface RouteStop {
@@ -219,7 +219,7 @@ export default function RouteBuilderPage() {
     c.address.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const displayedRoute = optimizedRoute.length > 0 ? optimizedRoute : selectedCompanies.map((c, i) => ({
+  const displayedRoute: RouteStop[] = optimizedRoute.length > 0 ? optimizedRoute : selectedCompanies.map((c, i) => ({
     company: c,
     position: i + 1,
   }));
@@ -299,7 +299,7 @@ export default function RouteBuilderPage() {
             key={`map-${mapKey}`}
             companies={selectedCompanies}
             route={displayedRoute}
-            routeGeometry={routeGeometry}
+            routeGeometry={routeGeometry ?? undefined}
             hoveredStop={hoveredStop}
             onMarkerClick={toggleCompany}
           />

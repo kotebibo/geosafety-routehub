@@ -1,7 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { userBoardsService } from '../services/user-boards.service'
+import { boardsService } from '../services/boards.service'
 import { queryKeys } from '@/lib/react-query'
 import type { Board, BoardItem, BoardMember, BoardTemplate, BoardType } from '@/types/board'
+import type { BoardGroup } from '../types/board'
 
 // ==================== BOARDS ====================
 
@@ -35,6 +37,7 @@ export function useBoard(boardId: string) {
     queryKey: [...queryKeys.routes.all, 'user-boards', 'detail', boardId],
     queryFn: () => userBoardsService.getBoard(boardId),
     enabled: !!boardId,
+    staleTime: 5 * 60 * 1000, // 5 minutes - board metadata rarely changes
   })
 }
 
@@ -139,6 +142,8 @@ export function useBoardItems(boardId: string) {
     queryKey: [...queryKeys.routes.all, 'board-items', boardId],
     queryFn: () => userBoardsService.getBoardItems(boardId),
     enabled: !!boardId,
+    staleTime: 30 * 1000, // 30 seconds - prevent immediate refetch on mount
+    refetchOnWindowFocus: false, // Real-time updates handle this via Ably
   })
 }
 
@@ -202,7 +207,7 @@ export function useUpdateBoardItem(boardId: string) {
 
       return { previousItems }
     },
-    onError: (err, variables, context) => {
+    onError: (_err, _variables, context) => {
       // Rollback on error
       if (context?.previousItems) {
         queryClient.setQueryData(
@@ -212,8 +217,11 @@ export function useUpdateBoardItem(boardId: string) {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({
+      // Use refetchQueries instead of invalidateQueries to bypass staleTime
+      // This ensures the data is always fresh after a mutation
+      queryClient.refetchQueries({
         queryKey: [...queryKeys.routes.all, 'board-items', boardId],
+        type: 'active',
       })
     },
   })
@@ -373,6 +381,200 @@ export function useRemoveBoardMember(boardId: string) {
   })
 }
 
+// ==================== BOARD GROUPS ====================
+
+/**
+ * Hook to fetch board groups
+ */
+export function useBoardGroups(boardId: string) {
+  return useQuery({
+    queryKey: [...queryKeys.routes.all, 'board-groups', boardId],
+    queryFn: () => boardsService.getBoardGroups(boardId),
+    enabled: !!boardId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * Hook to create a board group
+ */
+export function useCreateBoardGroup(boardId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (group: { name: string; color: string; position: number }) =>
+      boardsService.createBoardGroup({ ...group, board_id: boardId }),
+    onSuccess: (newGroup) => {
+      // Optimistically add to cache
+      const queryKey = [...queryKeys.routes.all, 'board-groups', boardId]
+      const previousGroups = queryClient.getQueryData<BoardGroup[]>(queryKey) || []
+      queryClient.setQueryData(queryKey, [...previousGroups, newGroup])
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-groups', boardId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to update a board group
+ */
+export function useUpdateBoardGroup(boardId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      groupId,
+      updates,
+    }: {
+      groupId: string
+      updates: Partial<Pick<BoardGroup, 'name' | 'color' | 'position' | 'is_collapsed'>>
+    }) => boardsService.updateBoardGroup(groupId, updates),
+    onMutate: async ({ groupId, updates }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: [...queryKeys.routes.all, 'board-groups', boardId],
+      })
+
+      // Snapshot previous value
+      const previousGroups = queryClient.getQueryData<BoardGroup[]>([
+        ...queryKeys.routes.all,
+        'board-groups',
+        boardId,
+      ])
+
+      // Optimistically update
+      if (previousGroups) {
+        queryClient.setQueryData(
+          [...queryKeys.routes.all, 'board-groups', boardId],
+          previousGroups.map((group) =>
+            group.id === groupId ? { ...group, ...updates } : group
+          )
+        )
+      }
+
+      return { previousGroups }
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousGroups) {
+        queryClient.setQueryData(
+          [...queryKeys.routes.all, 'board-groups', boardId],
+          context.previousGroups
+        )
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-groups', boardId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to delete a board group
+ */
+export function useDeleteBoardGroup(boardId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (groupId: string) => boardsService.deleteBoardGroup(groupId),
+    onMutate: async (groupId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: [...queryKeys.routes.all, 'board-groups', boardId],
+      })
+
+      // Snapshot previous value
+      const previousGroups = queryClient.getQueryData<BoardGroup[]>([
+        ...queryKeys.routes.all,
+        'board-groups',
+        boardId,
+      ])
+
+      // Optimistically remove
+      if (previousGroups) {
+        queryClient.setQueryData(
+          [...queryKeys.routes.all, 'board-groups', boardId],
+          previousGroups.filter((group) => group.id !== groupId)
+        )
+      }
+
+      return { previousGroups }
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousGroups) {
+        queryClient.setQueryData(
+          [...queryKeys.routes.all, 'board-groups', boardId],
+          context.previousGroups
+        )
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-groups', boardId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to reorder board groups
+ */
+export function useReorderBoardGroups(boardId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (updates: Array<{ id: string; position: number }>) =>
+      boardsService.reorderBoardGroups(updates),
+    onMutate: async (updates) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: [...queryKeys.routes.all, 'board-groups', boardId],
+      })
+
+      // Snapshot previous value
+      const previousGroups = queryClient.getQueryData<BoardGroup[]>([
+        ...queryKeys.routes.all,
+        'board-groups',
+        boardId,
+      ])
+
+      // Optimistically update positions
+      if (previousGroups) {
+        const updatedGroups = previousGroups.map((group) => {
+          const update = updates.find((u) => u.id === group.id)
+          return update ? { ...group, position: update.position } : group
+        })
+        queryClient.setQueryData(
+          [...queryKeys.routes.all, 'board-groups', boardId],
+          updatedGroups.sort((a, b) => a.position - b.position)
+        )
+      }
+
+      return { previousGroups }
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousGroups) {
+        queryClient.setQueryData(
+          [...queryKeys.routes.all, 'board-groups', boardId],
+          context.previousGroups
+        )
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-groups', boardId],
+      })
+    },
+  })
+}
+
 // ==================== BOARD TEMPLATES ====================
 
 /**
@@ -415,6 +617,34 @@ export function useBoardTemplate(templateId: string) {
     queryKey: [...queryKeys.routes.all, 'board-templates', 'detail', templateId],
     queryFn: () => userBoardsService.getTemplate(templateId),
     enabled: !!templateId,
+  })
+}
+
+/**
+ * Hook to save a board as a template
+ */
+export function useSaveAsTemplate() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      boardId,
+      templateData,
+    }: {
+      boardId: string
+      templateData: {
+        name: string
+        description?: string
+        category?: string
+        is_featured?: boolean
+      }
+    }) => userBoardsService.saveAsTemplate(boardId, templateData),
+    onSuccess: () => {
+      // Invalidate templates cache
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-templates'],
+      })
+    },
   })
 }
 

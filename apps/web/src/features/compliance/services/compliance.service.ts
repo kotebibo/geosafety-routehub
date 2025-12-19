@@ -6,22 +6,25 @@
 import { supabase } from '@/lib/supabase/client';
 import { PDPCompliancePhase, PDPComplianceOverview } from '@/types/compliance';
 
+// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
+const db = supabase as any;
+
 export const complianceService = {
   /**
    * Get compliance status for a specific company
    */
   async getCompanyCompliance(companyId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_phases')
       .select('*')
       .eq('company_id', companyId)
       .single();
-    
+
     if (error && error.code !== 'PGRST116') {
       console.error('Error fetching compliance:', error);
       return { data: null, error };
     }
-    
+
     return { data: data as PDPCompliancePhase | null, error: null };
   },
 
@@ -57,23 +60,23 @@ export const complianceService = {
       }
       complianceData.certification_date = today;
       complianceData.compliance_status = 'active';
-      
+
       // Set next checkup date (90 days from now)
       const nextCheckup = new Date();
       nextCheckup.setDate(nextCheckup.getDate() + 90);
       complianceData.next_checkup_date = nextCheckup.toISOString().split('T')[0];
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_phases')
       .insert(complianceData)
       .select()
       .single();
-    
+
     if (error) {
       console.error('Error creating compliance:', error);
     }
-    
+
     return { data: data as PDPCompliancePhase | null, error };
   },
 
@@ -86,7 +89,7 @@ export const complianceService = {
     updates: { date?: string; completed?: boolean; notes?: string }
   ) {
     const updateData: any = { updated_at: new Date().toISOString() };
-    
+
     if (updates.date !== undefined) {
       updateData[`phase_${phase}_date`] = updates.date;
     }
@@ -100,10 +103,10 @@ export const complianceService = {
     // Check if all phases are completed
     const { data: current } = await this.getCompanyCompliance(companyId);
     if (current && updates.completed) {
-      const allCompleted = [1, 2, 3, 4, 5].every(i => 
+      const allCompleted = [1, 2, 3, 4, 5].every(i =>
         i === phase ? true : current[`phase_${i}_completed` as keyof typeof current]
       );
-      
+
       if (allCompleted) {
         updateData.compliance_status = 'certified';
         updateData.certification_date = new Date().toISOString().split('T')[0];
@@ -116,17 +119,17 @@ export const complianceService = {
       }
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_phases')
       .update(updateData)
       .eq('company_id', companyId)
       .select()
       .single();
-    
+
     if (error) {
       console.error('Error updating phase:', error);
     }
-    
+
     return { data: data as PDPCompliancePhase | null, error };
   },
 
@@ -134,15 +137,15 @@ export const complianceService = {
    * Get all companies with their compliance status
    */
   async getAllCompliance() {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_overview')
       .select('*')
       .order('created_at', { ascending: false });
-    
+
     if (error) {
       console.error('Error fetching all compliance:', error);
     }
-    
+
     return { data: data as PDPComplianceOverview[] | null, error };
   },
 
@@ -150,16 +153,16 @@ export const complianceService = {
    * Get companies with pending phases
    */
   async getPendingPhases() {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_overview')
       .select('*')
       .in('compliance_status', ['new', 'in_progress'])
       .order('created_at', { ascending: true });
-    
+
     if (error) {
       console.error('Error fetching pending phases:', error);
     }
-    
+
     return { data: data as PDPComplianceOverview[] | null, error };
   },
 
@@ -169,18 +172,18 @@ export const complianceService = {
   async getUpcomingCheckups(daysAhead: number = 30) {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + daysAhead);
-    
-    const { data, error } = await supabase
+
+    const { data, error } = await db
       .from('pdp_compliance_overview')
       .select('*')
       .eq('compliance_status', 'active')
       .lte('next_checkup_date', futureDate.toISOString().split('T')[0])
       .order('next_checkup_date', { ascending: true });
-    
+
     if (error) {
       console.error('Error fetching upcoming checkups:', error);
     }
-    
+
     return { data: data as PDPComplianceOverview[] | null, error };
   },
 
@@ -188,20 +191,20 @@ export const complianceService = {
    * Update next checkup date
    */
   async updateCheckupDate(companyId: string, nextDate: string) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('pdp_compliance_phases')
-      .update({ 
+      .update({
         next_checkup_date: nextDate,
         updated_at: new Date().toISOString()
       })
       .eq('company_id', companyId)
       .select()
       .single();
-    
+
     if (error) {
       console.error('Error updating checkup date:', error);
     }
-    
+
     return { data: data as PDPCompliancePhase | null, error };
   }
 };

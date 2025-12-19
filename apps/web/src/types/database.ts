@@ -27,6 +27,9 @@ export interface Database {
           next_inspection_date: string | null
           priority: 'low' | 'medium' | 'high' | null
           status: 'active' | 'inactive' | 'pending' | null
+          assigned_inspector_id: string | null
+          assignment_date: string | null
+          primary_location_address: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -47,6 +50,9 @@ export interface Database {
           next_inspection_date?: string | null
           priority?: 'low' | 'medium' | 'high' | null
           status?: 'active' | 'inactive' | 'pending' | null
+          assigned_inspector_id?: string | null
+          assignment_date?: string | null
+          primary_location_address?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -67,6 +73,47 @@ export interface Database {
           next_inspection_date?: string | null
           priority?: 'low' | 'medium' | 'high' | null
           status?: 'active' | 'inactive' | 'pending' | null
+          assigned_inspector_id?: string | null
+          assignment_date?: string | null
+          primary_location_address?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      company_locations: {
+        Row: {
+          id: string
+          company_id: string
+          name: string | null
+          address: string
+          lat: number
+          lng: number
+          is_primary: boolean
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          name?: string | null
+          address: string
+          lat: number
+          lng: number
+          is_primary?: boolean
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          name?: string | null
+          address?: string
+          lat?: number
+          lng?: number
+          is_primary?: boolean
+          notes?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -78,13 +125,16 @@ export interface Database {
           full_name: string
           phone: string | null
           role: 'admin' | 'dispatcher' | 'inspector' | 'manager' | null
-          certifications: Json | null
+          specialty: string | null
+          certifications: string[] | null
+          certification_expiry_dates: Json | null
           vehicle_id: string | null
           working_hours: Json | null
           zone: string | null
           status: 'active' | 'inactive' | 'on_leave' | null
           current_location: unknown | null
           last_location_update: string | null
+          user_id: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -94,13 +144,16 @@ export interface Database {
           full_name: string
           phone?: string | null
           role?: 'admin' | 'dispatcher' | 'inspector' | 'manager' | null
-          certifications?: Json | null
+          specialty?: string | null
+          certifications?: string[] | null
+          certification_expiry_dates?: Json | null
           vehicle_id?: string | null
           working_hours?: Json | null
           zone?: string | null
           status?: 'active' | 'inactive' | 'on_leave' | null
           current_location?: unknown | null
           last_location_update?: string | null
+          user_id?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -110,13 +163,16 @@ export interface Database {
           full_name?: string
           phone?: string | null
           role?: 'admin' | 'dispatcher' | 'inspector' | 'manager' | null
-          certifications?: Json | null
+          specialty?: string | null
+          certifications?: string[] | null
+          certification_expiry_dates?: Json | null
           vehicle_id?: string | null
           working_hours?: Json | null
           zone?: string | null
           status?: 'active' | 'inactive' | 'on_leave' | null
           current_location?: unknown | null
           last_location_update?: string | null
+          user_id?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -127,6 +183,7 @@ export interface Database {
           name: string | null
           date: string
           inspector_id: string | null
+          service_type_id: string | null
           status: 'planned' | 'in_progress' | 'completed' | 'cancelled' | null
           start_time: string | null
           end_time: string | null
@@ -142,6 +199,7 @@ export interface Database {
           name?: string | null
           date: string
           inspector_id?: string | null
+          service_type_id?: string | null
           status?: 'planned' | 'in_progress' | 'completed' | 'cancelled' | null
           start_time?: string | null
           end_time?: string | null
@@ -157,6 +215,7 @@ export interface Database {
           name?: string | null
           date?: string
           inspector_id?: string | null
+          service_type_id?: string | null
           status?: 'planned' | 'in_progress' | 'completed' | 'cancelled' | null
           start_time?: string | null
           end_time?: string | null
@@ -224,12 +283,855 @@ export interface Database {
           updated_at?: string | null
         }
       }
+      user_roles: {
+        Row: {
+          id: string
+          user_id: string
+          role: string
+          inspector_id: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          role: string
+          inspector_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          role?: string
+          inspector_id?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      users: {
+        Row: {
+          id: string
+          email: string
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id: string
+          email: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      role_permissions: {
+        Row: {
+          id: string
+          role_name: string
+          permission: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          role_name: string
+          permission: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          role_name?: string
+          permission?: string
+          created_at?: string | null
+        }
+      }
+      service_types: {
+        Row: {
+          id: string
+          name: string
+          name_ka: string
+          description: string | null
+          description_ka: string | null
+          required_inspector_type: string | null
+          default_frequency_days: number | null
+          regulatory_requirement: boolean | null
+          is_active: boolean | null
+          sort_order: number | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          name_ka: string
+          description?: string | null
+          description_ka?: string | null
+          required_inspector_type?: string | null
+          default_frequency_days?: number | null
+          regulatory_requirement?: boolean | null
+          is_active?: boolean | null
+          sort_order?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          name_ka?: string
+          description?: string | null
+          description_ka?: string | null
+          required_inspector_type?: string | null
+          default_frequency_days?: number | null
+          regulatory_requirement?: boolean | null
+          is_active?: boolean | null
+          sort_order?: number | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      company_services: {
+        Row: {
+          id: string
+          company_id: string
+          service_type_id: string
+          inspection_frequency_days: number | null
+          last_inspection_date: string | null
+          next_inspection_date: string | null
+          assigned_inspector_id: string | null
+          priority: 'low' | 'medium' | 'high' | null
+          status: 'active' | 'inactive' | 'suspended' | null
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          service_type_id: string
+          inspection_frequency_days?: number | null
+          last_inspection_date?: string | null
+          next_inspection_date?: string | null
+          assigned_inspector_id?: string | null
+          priority?: 'low' | 'medium' | 'high' | null
+          status?: 'active' | 'inactive' | 'suspended' | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          service_type_id?: string
+          inspection_frequency_days?: number | null
+          last_inspection_date?: string | null
+          next_inspection_date?: string | null
+          assigned_inspector_id?: string | null
+          priority?: 'low' | 'medium' | 'high' | null
+          status?: 'active' | 'inactive' | 'suspended' | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      inspection_history: {
+        Row: {
+          id: string
+          company_id: string
+          service_type_id: string
+          inspector_id: string
+          route_id: string | null
+          inspection_date: string
+          check_in_time: string | null
+          check_out_time: string | null
+          duration_minutes: number | null
+          status: 'completed' | 'failed' | 'skipped' | 'in_progress' | 'partial' | null
+          failure_reason: string | null
+          notes: string | null
+          photos: string[] | null
+          gps_coordinates: unknown | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          service_type_id: string
+          inspector_id: string
+          route_id?: string | null
+          inspection_date: string
+          check_in_time?: string | null
+          check_out_time?: string | null
+          duration_minutes?: number | null
+          status?: 'completed' | 'failed' | 'skipped' | 'in_progress' | 'partial' | null
+          failure_reason?: string | null
+          notes?: string | null
+          photos?: string[] | null
+          gps_coordinates?: unknown | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          service_type_id?: string
+          inspector_id?: string
+          route_id?: string | null
+          inspection_date?: string
+          check_in_time?: string | null
+          check_out_time?: string | null
+          duration_minutes?: number | null
+          status?: 'completed' | 'failed' | 'skipped' | 'in_progress' | 'partial' | null
+          failure_reason?: string | null
+          notes?: string | null
+          photos?: string[] | null
+          gps_coordinates?: unknown | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      reassignment_history: {
+        Row: {
+          id: string
+          company_id: string
+          service_type_id: string
+          from_inspector_id: string | null
+          to_inspector_id: string
+          reassigned_by_user_id: string | null
+          reassignment_date: string | null
+          reason: string | null
+          is_temporary: boolean | null
+          revert_date: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          service_type_id: string
+          from_inspector_id?: string | null
+          to_inspector_id: string
+          reassigned_by_user_id?: string | null
+          reassignment_date?: string | null
+          reason?: string | null
+          is_temporary?: boolean | null
+          revert_date?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          service_type_id?: string
+          from_inspector_id?: string | null
+          to_inspector_id?: string
+          reassigned_by_user_id?: string | null
+          reassignment_date?: string | null
+          reason?: string | null
+          is_temporary?: boolean | null
+          revert_date?: string | null
+          created_at?: string | null
+        }
+      }
+      boards: {
+        Row: {
+          id: string
+          owner_id: string
+          board_type: 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom'
+          name: string
+          name_ka: string | null
+          description: string | null
+          icon: string | null
+          color: string | null
+          is_template: boolean | null
+          is_public: boolean | null
+          folder_id: string | null
+          settings: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          owner_id: string
+          board_type: 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom'
+          name: string
+          name_ka?: string | null
+          description?: string | null
+          icon?: string | null
+          color?: string | null
+          is_template?: boolean | null
+          is_public?: boolean | null
+          folder_id?: string | null
+          settings?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          owner_id?: string
+          board_type?: 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom'
+          name?: string
+          name_ka?: string | null
+          description?: string | null
+          icon?: string | null
+          color?: string | null
+          is_template?: boolean | null
+          is_public?: boolean | null
+          folder_id?: string | null
+          settings?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      board_items: {
+        Row: {
+          id: string
+          board_id: string
+          group_id: string | null
+          position: number
+          data: Json
+          name: string
+          status: string | null
+          assigned_to: string | null
+          due_date: string | null
+          priority: number | null
+          created_by: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          board_id: string
+          group_id?: string | null
+          position?: number
+          data?: Json
+          name: string
+          status?: string | null
+          assigned_to?: string | null
+          due_date?: string | null
+          priority?: number | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          board_id?: string
+          group_id?: string | null
+          position?: number
+          data?: Json
+          name?: string
+          status?: string | null
+          assigned_to?: string | null
+          due_date?: string | null
+          priority?: number | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      board_groups: {
+        Row: {
+          id: string
+          board_id: string
+          name: string
+          color: string | null
+          position: number
+          is_collapsed: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          board_id: string
+          name: string
+          color?: string | null
+          position?: number
+          is_collapsed?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          board_id?: string
+          name?: string
+          color?: string | null
+          position?: number
+          is_collapsed?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      board_columns: {
+        Row: {
+          id: string
+          board_id: string | null
+          board_type: string | null
+          column_id: string
+          column_name: string
+          column_name_ka: string | null
+          column_type: string
+          is_visible: boolean | null
+          is_pinned: boolean | null
+          position: number
+          width: number | null
+          config: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          board_id?: string | null
+          board_type?: string | null
+          column_id: string
+          column_name: string
+          column_name_ka?: string | null
+          column_type: string
+          is_visible?: boolean | null
+          is_pinned?: boolean | null
+          position: number
+          width?: number | null
+          config?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          board_id?: string | null
+          board_type?: string | null
+          column_id?: string
+          column_name?: string
+          column_name_ka?: string | null
+          column_type?: string
+          is_visible?: boolean | null
+          is_pinned?: boolean | null
+          position?: number
+          width?: number | null
+          config?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      board_members: {
+        Row: {
+          board_id: string
+          user_id: string
+          role: 'owner' | 'editor' | 'viewer'
+          added_by: string | null
+          added_at: string | null
+        }
+        Insert: {
+          board_id: string
+          user_id: string
+          role: 'owner' | 'editor' | 'viewer'
+          added_by?: string | null
+          added_at?: string | null
+        }
+        Update: {
+          board_id?: string
+          user_id?: string
+          role?: 'owner' | 'editor' | 'viewer'
+          added_by?: string | null
+          added_at?: string | null
+        }
+      }
+      board_templates: {
+        Row: {
+          id: string
+          name: string
+          name_ka: string | null
+          description: string | null
+          board_type: string
+          icon: string | null
+          color: string | null
+          category: string | null
+          default_columns: Json
+          default_items: Json | null
+          is_featured: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          name_ka?: string | null
+          description?: string | null
+          board_type: string
+          icon?: string | null
+          color?: string | null
+          category?: string | null
+          default_columns?: Json
+          default_items?: Json | null
+          is_featured?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          name_ka?: string | null
+          description?: string | null
+          board_type?: string
+          icon?: string | null
+          color?: string | null
+          category?: string | null
+          default_columns?: Json
+          default_items?: Json | null
+          is_featured?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      board_views: {
+        Row: {
+          id: string
+          user_id: string
+          board_type: string
+          view_name: string
+          view_name_ka: string | null
+          filters: Json | null
+          sort_config: Json | null
+          column_config: Json | null
+          is_default: boolean | null
+          is_shared: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          board_type: string
+          view_name: string
+          view_name_ka?: string | null
+          filters?: Json | null
+          sort_config?: Json | null
+          column_config?: Json | null
+          is_default?: boolean | null
+          is_shared?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          board_type?: string
+          view_name?: string
+          view_name_ka?: string | null
+          filters?: Json | null
+          sort_config?: Json | null
+          column_config?: Json | null
+          is_default?: boolean | null
+          is_shared?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      item_updates: {
+        Row: {
+          id: string
+          item_type: string
+          item_id: string
+          user_id: string | null
+          update_type: string
+          field_name: string | null
+          old_value: string | null
+          new_value: string | null
+          content: string | null
+          metadata: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          item_type: string
+          item_id: string
+          user_id?: string | null
+          update_type: string
+          field_name?: string | null
+          old_value?: string | null
+          new_value?: string | null
+          content?: string | null
+          metadata?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          item_type?: string
+          item_id?: string
+          user_id?: string | null
+          update_type?: string
+          field_name?: string | null
+          old_value?: string | null
+          new_value?: string | null
+          content?: string | null
+          metadata?: Json | null
+          created_at?: string | null
+        }
+      }
+      item_comments: {
+        Row: {
+          id: string
+          item_type: string
+          item_id: string
+          user_id: string
+          parent_comment_id: string | null
+          content: string
+          mentions: Json | null
+          attachments: Json | null
+          is_edited: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          item_type: string
+          item_id: string
+          user_id: string
+          parent_comment_id?: string | null
+          content: string
+          mentions?: Json | null
+          attachments?: Json | null
+          is_edited?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          item_type?: string
+          item_id?: string
+          user_id?: string
+          parent_comment_id?: string | null
+          content?: string
+          mentions?: Json | null
+          attachments?: Json | null
+          is_edited?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      board_presence: {
+        Row: {
+          user_id: string
+          board_type: string
+          board_id: string
+          last_seen: string | null
+          is_editing: boolean | null
+          editing_item_id: string | null
+        }
+        Insert: {
+          user_id: string
+          board_type: string
+          board_id?: string
+          last_seen?: string | null
+          is_editing?: boolean | null
+          editing_item_id?: string | null
+        }
+        Update: {
+          user_id?: string
+          board_type?: string
+          board_id?: string
+          last_seen?: string | null
+          is_editing?: boolean | null
+          editing_item_id?: string | null
+        }
+      }
+      user_settings: {
+        Row: {
+          user_id: string
+          theme: 'light' | 'dark' | 'auto' | null
+          language: 'ka' | 'en' | null
+          notification_settings: Json | null
+          board_preferences: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          user_id: string
+          theme?: 'light' | 'dark' | 'auto' | null
+          language?: 'ka' | 'en' | null
+          notification_settings?: Json | null
+          board_preferences?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          user_id?: string
+          theme?: 'light' | 'dark' | 'auto' | null
+          language?: 'ka' | 'en' | null
+          notification_settings?: Json | null
+          board_preferences?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      pdp_phases: {
+        Row: {
+          id: string
+          company_id: string
+          phase: number
+          completed_date: string | null
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          phase: number
+          completed_date?: string | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          phase?: number
+          completed_date?: string | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      pdp_compliance_phases: {
+        Row: {
+          id: string
+          company_id: string
+          compliance_status: string | null
+          phase_1_date: string | null
+          phase_1_completed: boolean | null
+          phase_1_notes: string | null
+          phase_2_date: string | null
+          phase_2_completed: boolean | null
+          phase_2_notes: string | null
+          phase_3_date: string | null
+          phase_3_completed: boolean | null
+          phase_3_notes: string | null
+          phase_4_date: string | null
+          phase_4_completed: boolean | null
+          phase_4_notes: string | null
+          phase_5_date: string | null
+          phase_5_completed: boolean | null
+          phase_5_notes: string | null
+          certification_date: string | null
+          next_checkup_date: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          compliance_status?: string | null
+          phase_1_date?: string | null
+          phase_1_completed?: boolean | null
+          phase_1_notes?: string | null
+          phase_2_date?: string | null
+          phase_2_completed?: boolean | null
+          phase_2_notes?: string | null
+          phase_3_date?: string | null
+          phase_3_completed?: boolean | null
+          phase_3_notes?: string | null
+          phase_4_date?: string | null
+          phase_4_completed?: boolean | null
+          phase_4_notes?: string | null
+          phase_5_date?: string | null
+          phase_5_completed?: boolean | null
+          phase_5_notes?: string | null
+          certification_date?: string | null
+          next_checkup_date?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          compliance_status?: string | null
+          phase_1_date?: string | null
+          phase_1_completed?: boolean | null
+          phase_1_notes?: string | null
+          phase_2_date?: string | null
+          phase_2_completed?: boolean | null
+          phase_2_notes?: string | null
+          phase_3_date?: string | null
+          phase_3_completed?: boolean | null
+          phase_3_notes?: string | null
+          phase_4_date?: string | null
+          phase_4_completed?: boolean | null
+          phase_4_notes?: string | null
+          phase_5_date?: string | null
+          phase_5_completed?: boolean | null
+          phase_5_notes?: string | null
+          certification_date?: string | null
+          next_checkup_date?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
     }
     Views: {
-      [_ in never]: never
+      pdp_compliance_overview: {
+        Row: {
+          id: string
+          company_id: string
+          company_name: string | null
+          compliance_status: string | null
+          phases_completed: number | null
+          next_checkup_date: string | null
+          certification_date: string | null
+          created_at: string | null
+        }
+      }
+      companies_with_location_count: {
+        Row: {
+          id: string
+          name: string
+          location_count: number
+          primary_location_id: string | null
+          primary_location_name: string | null
+          primary_location_address: string | null
+        }
+      }
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { uid: string }
+        Returns: string
+      }
+      is_admin_user: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
+      is_admin_or_dispatcher: {
+        Args: { check_user_id: string }
+        Returns: boolean
+      }
+      get_user_inspector_id: {
+        Args: { check_user_id: string }
+        Returns: string
+      }
+      can_access_board: {
+        Args: { check_user_id: string; check_board_id: string }
+        Returns: boolean
+      }
+      can_edit_board: {
+        Args: { check_user_id: string; check_board_id: string }
+        Returns: boolean
+      }
+      upsert_user_profile: {
+        Args: {
+          p_user_id: string
+          p_user_email: string
+          p_user_full_name: string | null
+          p_user_avatar_url: string | null
+        }
+        Returns: void
+      }
     }
     Enums: {
       [_ in never]: never

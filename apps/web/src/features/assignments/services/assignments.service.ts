@@ -1,17 +1,20 @@
 import { supabase } from '@/lib/supabase/client'
 
+// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
+const db = supabase as any
+
 export const assignmentsService = {
   bulkAssign: async (companyServiceIds: string[], inspectorId: string | null) => {
-    const { error } = await supabase
+    const { error } = await db
       .from('company_services')
       .update({ assigned_inspector_id: inspectorId })
       .in('id', companyServiceIds)
-    
+
     if (error) throw error
   },
 
   getByServiceType: async (serviceTypeId?: string) => {
-    let query = supabase
+    let query = db
       .from('company_services')
       .select(`
         *,
@@ -19,7 +22,7 @@ export const assignmentsService = {
         service_type:service_types(id, name, name_ka),
         assigned_inspector:inspectors(id, full_name)
       `)
-    
+
     if (serviceTypeId && serviceTypeId !== 'all') {
       // Check if it's a UUID (contains hyphens) or a service name
       if (serviceTypeId.includes('-')) {
@@ -28,12 +31,12 @@ export const assignmentsService = {
       } else {
         // It's a service code name like "personal_data_protection"
         // We need to first get the service type UUID
-        const { data: serviceType, error: stError } = await supabase
+        const { data: serviceType, error: stError } = await db
           .from('service_types')
           .select('id')
           .eq('name', serviceTypeId)
           .single()
-        
+
         if (stError || !serviceType) {
           console.warn(`Could not find service type with name "${serviceTypeId}". Returning all assignments.`)
           // Don't add any filter - return all
@@ -42,54 +45,54 @@ export const assignmentsService = {
         }
       }
     }
-    
+
     const { data, error } = await query.order('company(name)')
-    
+
     if (error) throw error
     return data || []
   },
 
   getStatistics: async () => {
-    const { data: all, error: allError } = await supabase
+    const { data: all, error: allError } = await db
       .from('company_services')
       .select('id, assigned_inspector_id')
-    
+
     if (allError) throw allError
-    
+
     const total = all.length
-    const assigned = all.filter(cs => cs.assigned_inspector_id).length
+    const assigned = all.filter((cs: any) => cs.assigned_inspector_id).length
     const unassigned = total - assigned
-    
+
     return { total, assigned, unassigned }
   },
 
   getInspectorWorkload: async () => {
-    const { data: inspectors, error: inspError } = await supabase
+    const { data: inspectors, error: inspError } = await db
       .from('inspectors')
       .select('id, full_name, specialty')
       .eq('status', 'active')
       .order('full_name')
-    
+
     if (inspError) throw inspError
-    
-    const { data: assignments, error: assignError } = await supabase
+
+    const { data: assignments, error: assignError } = await db
       .from('company_services')
       .select('assigned_inspector_id')
       .not('assigned_inspector_id', 'is', null)
-    
+
     if (assignError) throw assignError
-    
-    const workload = inspectors.map(inspector => {
+
+    const workload = inspectors.map((inspector: any) => {
       const count = assignments.filter(
-        a => a.assigned_inspector_id === inspector.id
+        (a: any) => a.assigned_inspector_id === inspector.id
       ).length
-      
+
       return {
         ...inspector,
         assignedCount: count,
       }
     })
-    
+
     return workload
   },
 }

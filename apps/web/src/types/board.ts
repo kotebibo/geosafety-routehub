@@ -7,15 +7,18 @@ export type ColumnType =
   | 'status'
   | 'person'
   | 'date'
+  | 'date_range'
   | 'number'
   | 'location'
   | 'actions'
   | 'route'
   | 'company'
+  | 'company_address'  // Auto-populated from company+location selection
   | 'service_type'
   | 'checkbox'
   | 'phone'
   | 'files'
+  | 'updates'
 
 export type SortDirection = 'asc' | 'desc'
 
@@ -45,6 +48,8 @@ export interface BoardSettings {
     canEdit: string[]
     canView: string[]
   }
+  is_favorite?: boolean
+  is_archived?: boolean
 }
 
 // Board Item (row in a board)

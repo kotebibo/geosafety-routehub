@@ -120,7 +120,7 @@ export function trackPageLoad(pageName: string): void {
           tcp: perfData.connectEnd - perfData.connectStart,
           ttfb: perfData.responseStart - perfData.requestStart,
           download: perfData.responseEnd - perfData.responseStart,
-          domProcessing: perfData.domComplete - perfData.domLoading,
+          domProcessing: perfData.domComplete - perfData.domContentLoadedEventEnd,
           total: perfData.loadEventEnd,
         })
       }

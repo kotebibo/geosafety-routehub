@@ -7,6 +7,7 @@ import type {
   SortConfig,
   ColumnConfig,
 } from '@/types/board'
+import type { BoardGroup } from '../types/board'
 
 // Use any type for supabase to bypass strict table typings
 // This is needed because the database schema types may not be in sync
@@ -20,30 +21,23 @@ export const boardsService = {
   // ==================== BOARD COLUMNS ====================
 
   /**
-   * Get all columns for a specific board type or board
-   * If boardId is provided, gets board-specific columns + default columns for that type
-   * If boardId is null, gets only default columns for the board type
+   * Get all columns for a specific board
+   * Each board has its own columns - no shared/global columns
    */
-  async getColumns(boardType: BoardType, boardId?: string): Promise<BoardColumn[]> {
-    // Simple query that works both before and after migration 015
+  async getColumns(_boardType: BoardType, boardId?: string): Promise<BoardColumn[]> {
+    // If no boardId provided, return empty - columns are always board-specific
+    if (!boardId) {
+      return []
+    }
+
+    // Get columns for this specific board only
     const { data, error } = await supabase
       .from('board_columns')
       .select('*')
-      .eq('board_type', boardType)
+      .eq('board_id', boardId)
       .order('position', { ascending: true })
 
     if (error) throw error
-
-    // Filter client-side if boardId is provided and board_id column exists
-    if (boardId && data && data.length > 0) {
-      // Check if board_id column exists in the data
-      const hasBoardIdColumn = 'board_id' in data[0]
-      if (hasBoardIdColumn) {
-        // After migration 015: include columns where board_id is null OR matches boardId
-        return data.filter((col: any) => !col.board_id || col.board_id === boardId)
-      }
-    }
-
     return data || []
   },
 
@@ -120,7 +114,7 @@ export const boardsService = {
     board_type: BoardType
     board_id?: string
     column_id: string
-    label: string
+    column_name: string
     column_type: string
     width: number
     position: number
@@ -146,6 +140,87 @@ export const boardsService = {
       .eq('id', columnId)
 
     if (error) throw error
+  },
+
+  // ==================== BOARD GROUPS ====================
+
+  /**
+   * Get all groups for a board
+   */
+  async getBoardGroups(boardId: string): Promise<BoardGroup[]> {
+    const { data, error } = await supabase
+      .from('board_groups')
+      .select('*')
+      .eq('board_id', boardId)
+      .order('position', { ascending: true })
+
+    if (error) throw error
+    return data || []
+  },
+
+  /**
+   * Create a new group
+   */
+  async createBoardGroup(group: {
+    board_id: string
+    name: string
+    color: string
+    position: number
+  }): Promise<BoardGroup> {
+    const { data, error } = await supabase
+      .from('board_groups')
+      .insert(group)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  /**
+   * Update a group
+   */
+  async updateBoardGroup(
+    groupId: string,
+    updates: Partial<Pick<BoardGroup, 'name' | 'color' | 'position' | 'is_collapsed'>>
+  ): Promise<BoardGroup> {
+    const { data, error } = await supabase
+      .from('board_groups')
+      .update(updates)
+      .eq('id', groupId)
+      .select()
+      .single()
+
+    if (error) throw error
+    return data
+  },
+
+  /**
+   * Delete a group
+   */
+  async deleteBoardGroup(groupId: string): Promise<void> {
+    const { error } = await supabase
+      .from('board_groups')
+      .delete()
+      .eq('id', groupId)
+
+    if (error) throw error
+  },
+
+  /**
+   * Reorder multiple groups (batch update positions)
+   */
+  async reorderBoardGroups(
+    updates: Array<{ id: string; position: number }>
+  ): Promise<void> {
+    const promises = updates.map((update) =>
+      supabase
+        .from('board_groups')
+        .update({ position: update.position })
+        .eq('id', update.id)
+    )
+
+    await Promise.all(promises)
   },
 
   // ==================== BOARD VIEWS ====================

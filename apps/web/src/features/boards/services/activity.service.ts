@@ -412,4 +412,91 @@ export const activityService = {
   async unsubscribe(channel: any) {
     await supabase.removeChannel(channel)
   },
+
+  // ==================== BOARD-WIDE ACTIVITY ====================
+
+  /**
+   * Get all updates for items in a specific board
+   */
+  async getBoardUpdates(boardId: string, limit = 100): Promise<ItemUpdate[]> {
+    // First get all item IDs in the board
+    const { data: items, error: itemsError } = await supabase
+      .from('board_items')
+      .select('id')
+      .eq('board_id', boardId)
+
+    if (itemsError) throw itemsError
+    if (!items || items.length === 0) return []
+
+    const itemIds = items.map((item: any) => item.id)
+
+    // Then get updates for those items
+    const { data, error } = await supabase
+      .from('item_updates')
+      .select(`
+        *,
+        inspectors:user_id (
+          full_name,
+          email
+        )
+      `)
+      .in('item_id', itemIds)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+
+    if (error) throw error
+
+    return (data || []).map((update: any) => ({
+      ...update,
+      user_name: update.inspectors?.full_name || update.inspectors?.email,
+    }))
+  },
+
+  // ==================== ROLLBACK FUNCTIONALITY ====================
+
+  /**
+   * Rollback a change by applying the old value
+   */
+  async rollbackUpdate(
+    updateId: string,
+    userId: string,
+    applyRollback: (itemId: string, fieldName: string, oldValue: any) => Promise<void>
+  ): Promise<ItemUpdate | null> {
+    // Get the update to rollback
+    const { data: update, error } = await supabase
+      .from('item_updates')
+      .select('*')
+      .eq('id', updateId)
+      .single()
+
+    if (error || !update) return null
+
+    // Parse old value if it's JSON
+    let oldValue = update.old_value
+    try {
+      oldValue = JSON.parse(update.old_value)
+    } catch {
+      // Keep as string
+    }
+
+    // Apply the rollback using the provided callback
+    if (update.field_name) {
+      await applyRollback(update.item_id, update.field_name, oldValue)
+    }
+
+    // Create a new update to track the rollback
+    await this.createUpdate({
+      item_type: update.item_type,
+      item_id: update.item_id,
+      user_id: userId,
+      update_type: 'updated',
+      field_name: update.field_name,
+      old_value: update.new_value,
+      new_value: update.old_value,
+      content: `Rolled back change to ${update.field_name}`,
+      metadata: { rollback_of: updateId },
+    })
+
+    return update
+  },
 }

@@ -7,6 +7,9 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
+
+// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
+const db = supabase as any;
 import { Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 interface PDPPhase {
@@ -69,7 +72,7 @@ export default function PDPOnboardingManager({
 
   async function fetchCompanyPhases() {
     try {
-      const { data } = await supabase
+      const { data } = await db
         .from('company_pdp_phases')
         .select('*')
         .eq('company_id', companyId);
@@ -77,7 +80,7 @@ export default function PDPOnboardingManager({
       if (data && data.length > 0) {
         setPhases(data);
         // Find the current phase (first incomplete phase or last phase)
-        const incomplete = data.find(p => !p.completed_date);
+        const incomplete = data.find((p: any) => !p.completed_date);
         setCurrentPhase(incomplete ? incomplete.phase : 5);
       } else {
         initializePhases();

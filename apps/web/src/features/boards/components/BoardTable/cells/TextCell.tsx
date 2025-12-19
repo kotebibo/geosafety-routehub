@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, memo } from 'react'
 import { cn } from '@/lib/utils'
 import type { CellRendererProps } from '../types'
 
-export function TextCell({ value, onEdit, isEditing: externalIsEditing, onEditStart }: CellRendererProps) {
+export const TextCell = memo(function TextCell({ value, onEdit, isEditing: externalIsEditing, onEditStart }: CellRendererProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -74,4 +74,4 @@ export function TextCell({ value, onEdit, isEditing: externalIsEditing, onEditSt
       </span>
     </div>
   )
-}
+})

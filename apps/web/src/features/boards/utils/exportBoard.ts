@@ -1,16 +1,184 @@
 import type { BoardItem, BoardColumn } from '../types/board'
 
+// Default status options if column config doesn't specify
+const DEFAULT_STATUS_OPTIONS = [
+  { key: 'not_started', label: 'Not Started' },
+  { key: 'working_on_it', label: 'Working on it' },
+  { key: 'stuck', label: 'Stuck' },
+  { key: 'done', label: 'Done' },
+  { key: 'in_progress', label: 'In Progress' },
+]
+
+export interface ExportLookups {
+  persons?: Map<string, string>        // UUID -> name
+  companies?: Map<string, string>      // UUID -> name
+  routes?: Map<string, string>         // UUID -> name
+  serviceTypes?: Map<string, string>   // UUID -> name
+}
+
 interface ExportOptions {
   format: 'csv' | 'excel'
   items: BoardItem[]
   columns: BoardColumn[]
   boardName: string
+  lookups?: ExportLookups
+}
+
+/**
+ * Get status label from column config or default options
+ */
+function getStatusLabel(statusKey: string, column: BoardColumn): string {
+  if (!statusKey) return ''
+
+  let statusOptions = DEFAULT_STATUS_OPTIONS
+
+  if (column.config?.options) {
+    if (Array.isArray(column.config.options)) {
+      statusOptions = column.config.options.map((opt: any) => ({
+        key: opt.key || opt.label?.toLowerCase().replace(/\s+/g, '_'),
+        label: opt.label,
+      }))
+    } else {
+      statusOptions = Object.entries(column.config.options).map(([key, opt]: [string, any]) => ({
+        key,
+        label: opt.label,
+      }))
+    }
+  }
+
+  const option = statusOptions.find(opt => opt.key === statusKey)
+  return option?.label || statusKey
+}
+
+/**
+ * Format cell value for export based on column type
+ */
+function formatCellValue(
+  value: any,
+  column: BoardColumn,
+  lookups?: ExportLookups
+): string {
+  if (value === null || value === undefined || value === '') {
+    return ''
+  }
+
+  const columnType = column.column_type
+
+  switch (columnType) {
+    case 'status':
+      return getStatusLabel(String(value), column)
+
+    case 'person':
+      // Resolve person UUID to name
+      if (lookups?.persons?.has(value)) {
+        return lookups.persons.get(value) || value
+      }
+      return value
+
+    case 'company':
+      // Resolve company UUID to name
+      if (lookups?.companies?.has(value)) {
+        return lookups.companies.get(value) || value
+      }
+      return value
+
+    case 'route':
+      // Resolve route UUID to name
+      if (lookups?.routes?.has(value)) {
+        return lookups.routes.get(value) || value
+      }
+      return value
+
+    case 'service_type':
+      // Resolve service type UUID to name
+      if (lookups?.serviceTypes?.has(value)) {
+        return lookups.serviceTypes.get(value) || value
+      }
+      return value
+
+    case 'checkbox':
+      return value === true ? 'Yes' : value === false ? 'No' : ''
+
+    case 'date':
+      if (value) {
+        try {
+          const date = new Date(value)
+          return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          })
+        } catch {
+          return String(value)
+        }
+      }
+      return ''
+
+    case 'date_range':
+      if (value && typeof value === 'object') {
+        const startDate = value.start || value.startDate
+        const endDate = value.end || value.endDate
+        const formatDateRange = (d: string) => {
+          try {
+            const date = new Date(d)
+            return date.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })
+          } catch {
+            return d
+          }
+        }
+        if (startDate && endDate) {
+          return `${formatDateRange(startDate)} to ${formatDateRange(endDate)}`
+        }
+        if (startDate) {
+          return `${formatDateRange(startDate)} to -`
+        }
+        if (endDate) {
+          return `- to ${formatDateRange(endDate)}`
+        }
+      }
+      if (typeof value === 'string' && value.includes(' to ')) {
+        return value // Already formatted
+      }
+      return ''
+
+    case 'files':
+      if (Array.isArray(value)) {
+        return value.length > 0 ? `${value.length} file(s)` : ''
+      }
+      return ''
+
+    case 'updates':
+      // Updates column shows comment count
+      if (typeof value === 'number') {
+        return value > 0 ? `${value} update(s)` : ''
+      }
+      return ''
+
+    case 'number':
+      return typeof value === 'number' ? String(value) : value
+
+    default:
+      if (typeof value === 'boolean') {
+        return value ? 'Yes' : 'No'
+      }
+      if (Array.isArray(value)) {
+        return value.join(', ')
+      }
+      if (typeof value === 'object') {
+        return JSON.stringify(value)
+      }
+      return String(value)
+  }
 }
 
 /**
  * Export board data to CSV format
  */
-export function exportToCSV({ items, columns, boardName }: ExportOptions): void {
+export function exportToCSV({ items, columns, boardName, lookups }: ExportOptions): void {
   // Build headers
   const headers = ['Name', ...columns.map(col => col.column_name)]
 
@@ -20,22 +188,7 @@ export function exportToCSV({ items, columns, boardName }: ExportOptions): void 
 
     columns.forEach(col => {
       const value = item.data?.[col.column_id] ?? ''
-      // Handle different column types
-      let displayValue = ''
-
-      if (value === null || value === undefined) {
-        displayValue = ''
-      } else if (typeof value === 'boolean') {
-        displayValue = value ? 'Yes' : 'No'
-      } else if (Array.isArray(value)) {
-        // For files column, show count
-        displayValue = `${value.length} file(s)`
-      } else if (typeof value === 'object') {
-        displayValue = JSON.stringify(value)
-      } else {
-        displayValue = String(value)
-      }
-
+      const displayValue = formatCellValue(value, col, lookups)
       rowData.push(displayValue)
     })
 
@@ -57,7 +210,7 @@ export function exportToCSV({ items, columns, boardName }: ExportOptions): void 
  * Export board data to Excel format (XLSX)
  * Uses a simple XML-based format that Excel can open
  */
-export function exportToExcel({ items, columns, boardName }: ExportOptions): void {
+export function exportToExcel({ items, columns, boardName, lookups }: ExportOptions): void {
   // Build headers
   const headers = ['Name', ...columns.map(col => col.column_name)]
 
@@ -67,23 +220,14 @@ export function exportToExcel({ items, columns, boardName }: ExportOptions): voi
 
     columns.forEach(col => {
       const value = item.data?.[col.column_id]
-      let displayValue: string | number | boolean = ''
+      const displayValue = formatCellValue(value, col, lookups)
 
-      if (value === null || value === undefined) {
-        displayValue = ''
-      } else if (typeof value === 'boolean') {
-        displayValue = value ? 'Yes' : 'No'
-      } else if (typeof value === 'number') {
-        displayValue = value
-      } else if (Array.isArray(value)) {
-        displayValue = `${value.length} file(s)`
-      } else if (typeof value === 'object') {
-        displayValue = JSON.stringify(value)
+      // Keep numbers as numbers for Excel
+      if (col.column_type === 'number' && typeof value === 'number') {
+        rowData.push(value)
       } else {
-        displayValue = String(value)
+        rowData.push(displayValue)
       }
-
-      rowData.push(displayValue)
     })
 
     return rowData

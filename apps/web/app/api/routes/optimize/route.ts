@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { optimizeRoute, type Location, type OptimizerOptions } from '@geosafety/route-optimizer'
+import { optimizeRoute, type Location, type OptimizationOptions } from '@geosafety/route-optimizer'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 
 export async function POST(request: NextRequest) {
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     console.log('⚠️ Auth temporarily disabled for testing');
 
     const body = await request.json()
-    const { locations, options }: { locations: Location[]; options?: OptimizerOptions } = body
+    const { locations, options }: { locations: Location[]; options?: OptimizationOptions } = body
     
     // Validate input
     if (!locations || !Array.isArray(locations) || locations.length === 0) {

@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import type { CellRendererProps } from '../types'
 import { StatusLabelEditor } from './StatusLabelEditor'
+import { calculatePopupPosition } from './usePopupPosition'
 
 export interface StatusOption {
   key: string
@@ -83,7 +84,7 @@ function getColorInfo(colorKey: string): { hex: string; text: string } {
   return MONDAY_COLORS.explosive
 }
 
-export function StatusCell({ value, column, onEdit, onEditStart }: CellRendererProps) {
+export const StatusCell = memo(function StatusCell({ value, column, onEdit, onEditStart }: CellRendererProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showEditor, setShowEditor] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
@@ -131,11 +132,12 @@ export function StatusCell({ value, column, onEdit, onEditStart }: CellRendererP
 
   const handleOpen = () => {
     if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect()
-      setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
+      const position = calculatePopupPosition({
+        triggerRect: buttonRef.current.getBoundingClientRect(),
+        popupWidth: 160,
+        popupHeight: 250,
       })
+      setDropdownPosition(position)
     }
     if (!isOpen) {
       onEditStart?.()
@@ -251,4 +253,4 @@ export function StatusCell({ value, column, onEdit, onEditStart }: CellRendererP
       />
     </div>
   )
-}
+})

@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { memo } from 'react'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
 
@@ -11,7 +11,7 @@ interface CheckboxCellProps {
   onEditStart?: () => void
 }
 
-export function CheckboxCell({ value, onEdit, readOnly = false, onEditStart }: CheckboxCellProps) {
+export const CheckboxCell = memo(function CheckboxCell({ value, onEdit, readOnly = false, onEditStart }: CheckboxCellProps) {
   const isChecked = Boolean(value)
 
   const handleToggle = () => {
@@ -41,4 +41,4 @@ export function CheckboxCell({ value, onEdit, readOnly = false, onEditStart }: C
       </button>
     </div>
   )
-}
+})

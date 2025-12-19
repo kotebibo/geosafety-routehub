@@ -30,11 +30,13 @@ export default function InspectorRoutesPage() {
   }, [authLoading, userRole])
 
   const fetchRoutes = async () => {
+    if (!userRole?.inspector_id) return
+
     try {
       const { data, error } = await supabase
         .from('routes')
         .select('*')
-        .eq('inspector_id', userRole?.inspector_id)
+        .eq('inspector_id', userRole.inspector_id)
         .order('scheduled_date', { ascending: true })
 
       if (error) throw error

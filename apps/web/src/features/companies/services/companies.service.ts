@@ -1,8 +1,11 @@
 import { supabase } from '@/lib/supabase/client'
 
+// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
+const db = supabase as any
+
 export const companiesService = {
   getAll: async () => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('companies')
       .select('*')
       .order('name')
@@ -12,7 +15,7 @@ export const companiesService = {
   },
 
   getById: async (id: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('companies')
       .select('*')
       .eq('id', id)
@@ -23,7 +26,7 @@ export const companiesService = {
   },
 
   getWithServices: async (companyId: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('company_services')
       .select(`
         *,
@@ -38,22 +41,28 @@ export const companiesService = {
 
   create: async (companyData: {
     name: string
-    address: string
-    lat: number
-    lng: number
+    address?: string
+    lat?: number
+    lng?: number
+    contact_name?: string
+    contact_phone?: string
+    contact_email?: string
+    type?: string
+    priority?: string
+    status?: string
   }) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('companies')
       .insert(companyData)
       .select()
       .single()
-    
+
     if (error) throw error
     return data
   },
 
   update: async (id: string, updates: any) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('companies')
       .update(updates)
       .eq('id', id)
@@ -65,7 +74,7 @@ export const companiesService = {
   },
 
   delete: async (id: string) => {
-    const { error } = await supabase
+    const { error } = await db
       .from('companies')
       .delete()
       .eq('id', id)
@@ -74,7 +83,7 @@ export const companiesService = {
   },
 
   search: async (searchTerm: string) => {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('companies')
       .select('*')
       .or(`name.ilike.%${searchTerm}%,address.ilike.%${searchTerm}%`)

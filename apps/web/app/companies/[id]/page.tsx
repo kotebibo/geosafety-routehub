@@ -1,6 +1,6 @@
 /**
  * Company Details Page
- * View and manage company information and PDP onboarding
+ * View and manage company information, locations, and PDP onboarding
  */
 
 'use client';
@@ -9,12 +9,15 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useRouter, useParams } from 'next/navigation';
 import PDPOnboardingManager from '@/components/PDPOnboardingManager';
-import { Save, ArrowLeft, Edit2, Shield } from 'lucide-react';
+import LocationManager from '@/features/companies/components/LocationManager';
+import { Save, ArrowLeft, Edit2, Shield, MapPin, Building2 } from 'lucide-react';
+import { companiesService } from '@/services/companies.service';
+import type { CompanyLocation, LocationFormData, CompanyLocationInput } from '@/types/company';
 
 interface Company {
   id: string;
   name: string;
-  address: string;
+  address?: string;
   type: string;
   contact_name: string;
   contact_phone: string;
@@ -49,9 +52,14 @@ export default function CompanyDetailsPage() {
   
   const [company, setCompany] = useState<Company | null>(null);
   const [services, setServices] = useState<CompanyService[]>([]);
+  const [locations, setLocations] = useState<CompanyLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
+  const [editingLocations, setEditingLocations] = useState(false);
   const [saving, setSaving] = useState(false);
+  
+  // For location editing
+  const [editableLocations, setEditableLocations] = useState<LocationFormData[]>([]);
 
   useEffect(() => {
     fetchCompanyData();
@@ -68,6 +76,10 @@ export default function CompanyDetailsPage() {
 
       if (companyError) throw companyError;
       setCompany(companyData);
+
+      // Fetch locations
+      const locationsData = await companiesService.locations.getByCompanyId(companyId);
+      setLocations(locationsData);
 
       // Fetch services with relations
       const { data: servicesData, error: servicesError } = await supabase
@@ -91,6 +103,64 @@ export default function CompanyDetailsPage() {
       alert('შეცდომა მონაცემების ჩატვირთვისას');
     } finally {
       setLoading(false);
+    }
+  }
+
+  // Start editing locations
+  function handleStartEditLocations() {
+    setEditableLocations(locations.map(loc => ({
+      id: loc.id,
+      name: loc.name,
+      address: loc.address,
+      lat: loc.lat,
+      lng: loc.lng,
+      is_primary: loc.is_primary,
+      contact_name: loc.contact_name || '',
+      contact_phone: loc.contact_phone || '',
+      contact_email: loc.contact_email || '',
+      notes: loc.notes || '',
+    })));
+    setEditingLocations(true);
+  }
+
+  // Save locations
+  async function handleSaveLocations() {
+    if (editableLocations.length === 0) {
+      alert('გთხოვთ დაამატოთ მინიმუმ ერთი ლოკაცია');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // Delete all existing locations
+      for (const loc of locations) {
+        await companiesService.locations.delete(loc.id);
+      }
+
+      // Create new locations
+      const locationsForApi: CompanyLocationInput[] = editableLocations.map(loc => ({
+        name: loc.name,
+        address: loc.address,
+        lat: loc.lat,
+        lng: loc.lng,
+        is_primary: loc.is_primary,
+        contact_name: loc.contact_name || null,
+        contact_phone: loc.contact_phone || null,
+        contact_email: loc.contact_email || null,
+        notes: loc.notes || null,
+      }));
+
+      await companiesService.locations.createMany(companyId, locationsForApi);
+
+      // Refresh data
+      await fetchCompanyData();
+      setEditingLocations(false);
+      alert('ლოკაციები წარმატებით განახლდა!');
+    } catch (error: any) {
+      console.error('Error saving locations:', error);
+      alert('შეცდომა: ' + error.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -166,6 +236,8 @@ export default function CompanyDetailsPage() {
     );
   }
 
+  const primaryLocation = locations.find(loc => loc.is_primary);
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -178,7 +250,12 @@ export default function CompanyDetailsPage() {
           უკან
         </button>
         <h1 className="text-3xl font-bold text-gray-900">{company.name}</h1>
-        <p className="text-gray-600 mt-1">{company.address}</p>
+        {primaryLocation && (
+          <p className="text-gray-600 mt-1 flex items-center gap-1">
+            <MapPin className="w-4 h-4" />
+            {primaryLocation.address}
+          </p>
+        )}
       </div>
 
       {/* Company Info */}
@@ -235,6 +312,89 @@ export default function CompanyDetailsPage() {
         </div>
       </div>
 
+      {/* Locations Section */}
+      <div className="bg-white rounded-lg shadow p-6 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-gray-500" />
+            <h2 className="text-xl font-semibold text-gray-900">ლოკაციები</h2>
+            <span className="text-sm text-gray-500">({locations.length})</span>
+          </div>
+          {!editingLocations && (
+            <button
+              onClick={handleStartEditLocations}
+              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+            >
+              <Edit2 size={18} />
+              რედაქტირება
+            </button>
+          )}
+        </div>
+
+        {editingLocations ? (
+          <div>
+            <LocationManager
+              locations={editableLocations}
+              onChange={setEditableLocations}
+            />
+            <div className="flex gap-3 mt-6 pt-4 border-t">
+              <button
+                onClick={handleSaveLocations}
+                disabled={saving}
+                className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+              >
+                <Save size={18} />
+                {saving ? 'მიმდინარეობს...' : 'შენახვა'}
+              </button>
+              <button
+                onClick={() => setEditingLocations(false)}
+                className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              >
+                გაუქმება
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {locations.length === 0 ? (
+              <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+                <MapPin className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                ლოკაციები არ არის დამატებული
+              </div>
+            ) : (
+              locations.map((location) => (
+                <div
+                  key={location.id}
+                  className={`border rounded-lg p-4 ${
+                    location.is_primary 
+                      ? 'border-yellow-400 bg-yellow-50' 
+                      : 'border-gray-200 bg-white'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <MapPin className={`w-5 h-5 mt-0.5 ${location.is_primary ? 'text-yellow-600' : 'text-gray-400'}`} />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900">{location.name}</span>
+                        {location.is_primary && (
+                          <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded">
+                            მთავარი
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-0.5">{location.address}</p>
+                      {location.contact_phone && (
+                        <p className="text-sm text-gray-500 mt-1">📞 {location.contact_phone}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Services Section */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-6">
@@ -255,14 +415,12 @@ export default function CompanyDetailsPage() {
             <PDPOnboardingManager
               companyId={companyId}
               onPhaseChange={(phases, currentPhase) => {
-                // Handle phase changes
                 console.log('Phases updated:', phases, 'Current phase:', currentPhase);
               }}
             />
             <div className="flex gap-3 mt-6">
               <button
                 onClick={async () => {
-                  // Save PDP phases when saving
                   setEditing(false);
                 }}
                 className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
@@ -284,7 +442,7 @@ export default function CompanyDetailsPage() {
                 სერვისები არ არის დამატებული
               </div>
             ) : (
-              services.map((service, index) => (
+              services.map((service) => (
                 <div
                   key={service.id}
                   className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50"

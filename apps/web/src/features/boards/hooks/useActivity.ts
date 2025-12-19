@@ -205,3 +205,44 @@ export function useCommentCount(itemType: string, itemId: string) {
     enabled: !!itemType && !!itemId,
   })
 }
+
+/**
+ * Hook to fetch all updates for a board (all items in the board)
+ */
+export function useBoardUpdates(boardId: string, limit = 100) {
+  return useQuery({
+    queryKey: [...queryKeys.activity.all, 'board', boardId],
+    queryFn: () => activityService.getBoardUpdates(boardId, limit),
+    enabled: !!boardId,
+    staleTime: 30 * 1000, // 30 seconds
+  })
+}
+
+/**
+ * Hook to rollback an update
+ */
+export function useRollbackUpdate(boardId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({
+      updateId,
+      userId,
+      applyRollback,
+    }: {
+      updateId: string
+      userId: string
+      applyRollback: (itemId: string, fieldName: string, oldValue: any) => Promise<void>
+    }) => activityService.rollbackUpdate(updateId, userId, applyRollback),
+    onSuccess: () => {
+      // Invalidate board updates
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.activity.all, 'board', boardId],
+      })
+      // Invalidate board items
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-items', boardId],
+      })
+    },
+  })
+}
