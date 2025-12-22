@@ -83,12 +83,14 @@ export function useRealtimeBoard({
     // Check if Ably is available
     if (!ablyPresenceService.isAvailable()) {
       console.warn('Ably not configured. Using polling fallback.')
-      // Fallback to polling every 3 seconds
+      // Fallback to polling every 15 seconds (reduced from 3s for performance)
+      // Only invalidate active queries to minimize unnecessary requests
       const pollInterval = setInterval(() => {
         queryClient.invalidateQueries({
           queryKey: [...queryKeys.routes.all, 'board-items', boardId],
+          refetchType: 'active', // Only refetch active queries
         })
-      }, 3000)
+      }, 15000) // 15 seconds instead of 3 seconds
 
       setState(prev => ({ ...prev, isConnected: true }))
 

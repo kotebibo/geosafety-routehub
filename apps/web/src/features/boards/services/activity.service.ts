@@ -192,12 +192,13 @@ export const activityService = {
   // ==================== COMMENTS ====================
 
   /**
-   * Get all comments for an item
+   * Get all comments for an item (optimized: single query with nested replies)
    */
   async getComments(
     itemType: string,
     itemId: string
   ): Promise<ItemComment[]> {
+    // Fetch all comments for this item in a single query
     const { data, error } = await supabase
       .from('item_comments')
       .select(`
@@ -209,24 +210,41 @@ export const activityService = {
       `)
       .eq('item_type', itemType)
       .eq('item_id', itemId)
-      .is('parent_comment_id', null) // Top-level comments only
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
 
     if (error) throw error
+    if (!data || data.length === 0) return []
 
-    // Fetch replies for each comment
-    const commentsWithReplies = await Promise.all(
-      (data || []).map(async (comment: any) => {
-        const replies = await this.getCommentReplies(comment.id)
-        return {
-          ...comment,
-          user_name: comment.inspectors?.full_name || comment.inspectors?.email,
-          replies,
-        }
+    // Build comment tree in memory (O(n) instead of N+1 queries)
+    const commentMap = new Map<string, any>()
+    const topLevelComments: any[] = []
+
+    // First pass: create map of all comments
+    for (const comment of data) {
+      commentMap.set(comment.id, {
+        ...comment,
+        user_name: comment.inspectors?.full_name || comment.inspectors?.email,
+        replies: [],
       })
-    )
+    }
 
-    return commentsWithReplies
+    // Second pass: build tree structure
+    for (const comment of data) {
+      const mappedComment = commentMap.get(comment.id)
+      if (comment.parent_comment_id) {
+        // This is a reply - add to parent's replies
+        const parent = commentMap.get(comment.parent_comment_id)
+        if (parent) {
+          parent.replies.push(mappedComment)
+        }
+      } else {
+        // This is a top-level comment
+        topLevelComments.push(mappedComment)
+      }
+    }
+
+    // Return top-level comments (newest first) with nested replies
+    return topLevelComments.reverse()
   },
 
   /**
@@ -416,21 +434,10 @@ export const activityService = {
   // ==================== BOARD-WIDE ACTIVITY ====================
 
   /**
-   * Get all updates for items in a specific board
+   * Get all updates for items in a specific board (optimized: single query with join)
    */
   async getBoardUpdates(boardId: string, limit = 100): Promise<ItemUpdate[]> {
-    // First get all item IDs in the board
-    const { data: items, error: itemsError } = await supabase
-      .from('board_items')
-      .select('id')
-      .eq('board_id', boardId)
-
-    if (itemsError) throw itemsError
-    if (!items || items.length === 0) return []
-
-    const itemIds = items.map((item: any) => item.id)
-
-    // Then get updates for those items
+    // Use a single query with inner join on board_items
     const { data, error } = await supabase
       .from('item_updates')
       .select(`
@@ -438,9 +445,13 @@ export const activityService = {
         inspectors:user_id (
           full_name,
           email
+        ),
+        board_items!inner (
+          board_id
         )
       `)
-      .in('item_id', itemIds)
+      .eq('board_items.board_id', boardId)
+      .eq('item_type', 'board_item')
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -449,6 +460,7 @@ export const activityService = {
     return (data || []).map((update: any) => ({
       ...update,
       user_name: update.inspectors?.full_name || update.inspectors?.email,
+      board_items: undefined, // Remove join data from response
     }))
   },
 
