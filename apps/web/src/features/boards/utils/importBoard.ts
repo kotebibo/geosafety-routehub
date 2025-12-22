@@ -1,5 +1,15 @@
-import * as XLSX from 'xlsx'
+// Lazy load xlsx library for better performance (400KB+ library)
 import type { BoardColumn, ColumnType } from '../types/board'
+
+// Dynamic import for xlsx - only loaded when actually needed
+let xlsxModule: typeof import('xlsx') | null = null
+
+async function getXLSX() {
+  if (!xlsxModule) {
+    xlsxModule = await import('xlsx')
+  }
+  return xlsxModule
+}
 
 export interface ParsedRow {
   [key: string]: string
@@ -28,9 +38,11 @@ export interface ImportError {
 /**
  * Parse Excel file (xlsx/xls) using SheetJS
  * Handles Monday.com export format where headers may not be on row 1
+ * Note: Uses async import to lazy-load xlsx library (~400KB)
  */
-export function parseExcelFile(data: ArrayBuffer): { headers: string[]; rows: ParsedRow[] } {
+export async function parseExcelFile(data: ArrayBuffer): Promise<{ headers: string[]; rows: ParsedRow[] }> {
   try {
+    const XLSX = await getXLSX()
     const workbook = XLSX.read(data, { type: 'array' })
     const sheetName = workbook.SheetNames[0]
     const sheet = workbook.Sheets[sheetName]

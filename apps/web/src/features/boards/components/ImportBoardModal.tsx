@@ -68,7 +68,7 @@ export function ImportBoardModal({
       if (isModernExcel(selectedFile.name)) {
         // Modern Excel files (.xlsx, .xls) - read as ArrayBuffer
         const buffer = await readFileAsArrayBuffer(selectedFile)
-        const result = parseExcelFile(buffer)
+        const result = await parseExcelFile(buffer)
         parsedHeaders = result.headers
         parsedRows = result.rows
       } else {
