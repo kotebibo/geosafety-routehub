@@ -17,10 +17,6 @@ CREATE INDEX IF NOT EXISTS idx_item_updates_item_created
 CREATE INDEX IF NOT EXISTS idx_item_updates_item_id
   ON item_updates(item_id) WHERE item_type = 'board_item';
 
--- Index for user_boards favorite/archived queries
-CREATE INDEX IF NOT EXISTS idx_user_boards_user_status
-  ON user_boards(user_id, is_favorite, is_archived);
-
 -- Index for board_columns by board (used in getColumns)
 CREATE INDEX IF NOT EXISTS idx_board_columns_board_position
   ON board_columns(board_id, position);
@@ -49,7 +45,6 @@ CREATE INDEX IF NOT EXISTS idx_company_locations_company
 ANALYZE board_items;
 ANALYZE item_comments;
 ANALYZE item_updates;
-ANALYZE user_boards;
 ANALYZE board_columns;
 ANALYZE board_groups;
 ANALYZE inspectors;
