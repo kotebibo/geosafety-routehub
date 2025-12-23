@@ -6,8 +6,10 @@ import { cn } from '@/lib/utils'
 import { ChevronDown, ChevronRight, Plus, MoreHorizontal, Keyboard, GripVertical, Trash2, Palette, Type } from 'lucide-react'
 import { CellRenderer } from './CellRenderer'
 import { useKeyboardNavigation, KeyboardShortcutsHelp } from '../../hooks/useKeyboardNavigation'
+import { useColumnResize } from '../../hooks/useColumnResize'
+import { useTableScrollbar } from '../../hooks/useTableScrollbar'
 import type { BoardColumn, BoardItem, BoardGroup, BoardType, BoardPresence, ColumnType } from '../../types/board'
-import { ESSENTIAL_COLUMNS, ALL_COLUMN_TYPES, MONDAY_GROUP_COLORS, MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH, DEFAULT_GROUP } from './constants'
+import { ESSENTIAL_COLUMNS, ALL_COLUMN_TYPES, MONDAY_GROUP_COLORS, DEFAULT_GROUP } from './constants'
 
 // @dnd-kit imports for smooth drag-and-drop
 import {
@@ -276,21 +278,26 @@ export function MondayBoardTable({
   const addColumnButtonRef = useRef<HTMLButtonElement>(null)
   const addColumnPopupRef = useRef<HTMLDivElement>(null)
   const tableContainerRef = useRef<HTMLDivElement>(null)
-  const scrollbarRef = useRef<HTMLDivElement>(null)
-  const scrollbarThumbRef = useRef<HTMLDivElement>(null)
 
-  // Column resizing state
-  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({})
-  const [resizingColumn, setResizingColumn] = useState<string | null>(null)
-  const resizeStartX = useRef<number>(0)
-  const resizeStartWidth = useRef<number>(0)
+  // Column resizing hook
+  const {
+    columnWidths,
+    resizingColumn,
+    handleResizeStart,
+    setColumnWidths,
+  } = useColumnResize({ onColumnResize })
 
-  // Scrollbar state
-  const [scrollInfo, setScrollInfo] = useState({ scrollLeft: 0, scrollWidth: 0, clientWidth: 0 })
-  const [isDraggingScrollbar, setIsDraggingScrollbar] = useState(false)
-  const [scrollbarPosition, setScrollbarPosition] = useState({ left: 0, width: 0, bottom: 0 })
-  const scrollbarDragStartX = useRef(0)
-  const scrollbarDragStartScrollLeft = useRef(0)
+  // Table scrollbar hook
+  const {
+    scrollbarRef,
+    scrollbarThumbRef,
+    scrollInfo,
+    scrollbarPosition,
+    isDraggingScrollbar,
+    handleScrollbarMouseDown,
+    handleTrackClick,
+    showScrollbar,
+  } = useTableScrollbar({ tableContainerRef })
 
   // Keyboard shortcuts toggle
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
@@ -427,114 +434,6 @@ export function MondayBoardTable({
     })
   }, [columns])
 
-  // Update scroll info and scrollbar position when table scrolls or resizes
-  useEffect(() => {
-    const container = tableContainerRef.current
-    if (!container) return
-
-    const updateScrollInfo = () => {
-      const rect = container.getBoundingClientRect()
-      const viewportHeight = window.innerHeight
-
-      // Calculate where the scrollbar should be positioned
-      // If the container bottom is below the viewport, position at viewport bottom
-      // Otherwise position at the container bottom
-      const containerBottom = rect.bottom
-      const isContainerBelowViewport = containerBottom > viewportHeight
-
-      setScrollInfo({
-        scrollLeft: container.scrollLeft,
-        scrollWidth: container.scrollWidth,
-        clientWidth: container.clientWidth,
-      })
-
-      setScrollbarPosition({
-        left: rect.left,
-        width: rect.width,
-        // Position at viewport bottom if container extends below, otherwise at container bottom
-        bottom: isContainerBelowViewport ? 0 : viewportHeight - containerBottom,
-      })
-    }
-
-    updateScrollInfo()
-    container.addEventListener('scroll', updateScrollInfo)
-    window.addEventListener('scroll', updateScrollInfo, true)
-    window.addEventListener('resize', updateScrollInfo)
-
-    // Also update when columns change
-    const resizeObserver = new ResizeObserver(updateScrollInfo)
-    resizeObserver.observe(container)
-
-    return () => {
-      container.removeEventListener('scroll', updateScrollInfo)
-      window.removeEventListener('scroll', updateScrollInfo, true)
-      window.removeEventListener('resize', updateScrollInfo)
-      resizeObserver.disconnect()
-    }
-  }, [columnWidths])
-
-  // Handle custom scrollbar drag
-  const handleScrollbarMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    setIsDraggingScrollbar(true)
-    scrollbarDragStartX.current = e.clientX
-    scrollbarDragStartScrollLeft.current = tableContainerRef.current?.scrollLeft || 0
-    document.body.style.cursor = 'grabbing'
-    document.body.style.userSelect = 'none'
-  }, [])
-
-  const handleScrollbarMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDraggingScrollbar || !tableContainerRef.current) return
-
-    const container = tableContainerRef.current
-    const scrollableWidth = container.scrollWidth - container.clientWidth
-    const trackWidth = scrollbarRef.current?.clientWidth || container.clientWidth
-    const thumbWidth = Math.max(50, (container.clientWidth / container.scrollWidth) * trackWidth)
-    const availableTrackWidth = trackWidth - thumbWidth
-
-    const deltaX = e.clientX - scrollbarDragStartX.current
-    const scrollRatio = deltaX / availableTrackWidth
-    const newScrollLeft = scrollbarDragStartScrollLeft.current + scrollRatio * scrollableWidth
-
-    container.scrollLeft = Math.max(0, Math.min(scrollableWidth, newScrollLeft))
-  }, [isDraggingScrollbar])
-
-  const handleScrollbarMouseUp = useCallback(() => {
-    setIsDraggingScrollbar(false)
-    document.body.style.cursor = ''
-    document.body.style.userSelect = ''
-  }, [])
-
-  // Attach/detach scrollbar drag listeners
-  useEffect(() => {
-    if (isDraggingScrollbar) {
-      document.addEventListener('mousemove', handleScrollbarMouseMove)
-      document.addEventListener('mouseup', handleScrollbarMouseUp)
-      return () => {
-        document.removeEventListener('mousemove', handleScrollbarMouseMove)
-        document.removeEventListener('mouseup', handleScrollbarMouseUp)
-      }
-    }
-  }, [isDraggingScrollbar, handleScrollbarMouseMove, handleScrollbarMouseUp])
-
-  // Handle click on scrollbar track
-  const handleTrackClick = useCallback((e: React.MouseEvent) => {
-    if (!tableContainerRef.current || !scrollbarRef.current) return
-    // Only handle clicks on the track itself, not the thumb
-    if (e.target !== scrollbarRef.current) return
-
-    const container = tableContainerRef.current
-    const trackRect = scrollbarRef.current.getBoundingClientRect()
-    const clickPosition = e.clientX - trackRect.left
-    const trackWidth = trackRect.width
-    const scrollableWidth = container.scrollWidth - container.clientWidth
-
-    // Calculate where to scroll based on click position
-    const scrollRatio = clickPosition / trackWidth
-    const newScrollLeft = scrollRatio * container.scrollWidth - container.clientWidth / 2
-    container.scrollLeft = Math.max(0, Math.min(scrollableWidth, newScrollLeft))
-  }, [])
-
   // Handle add column button click
   const handleAddColumnClick = useCallback(() => {
     if (addColumnButtonRef.current) {
@@ -639,53 +538,6 @@ export function MondayBoardTable({
   const colorBarWidth = 6
   const checkboxWidth = onSelectionChange ? 40 : 0
   const stickyWidth = checkboxWidth + colorBarWidth + firstColumnWidth
-
-  // Column resize handlers
-  const handleResizeStart = useCallback((e: React.MouseEvent, columnId: string, currentWidth: number) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setResizingColumn(columnId)
-    resizeStartX.current = e.clientX
-    resizeStartWidth.current = currentWidth
-    document.body.style.cursor = 'col-resize'
-    document.body.style.userSelect = 'none'
-  }, [])
-
-  const handleResizeMove = useCallback((e: MouseEvent) => {
-    if (!resizingColumn) return
-
-    const delta = e.clientX - resizeStartX.current
-    const newWidth = Math.max(MIN_COLUMN_WIDTH, Math.min(MAX_COLUMN_WIDTH, resizeStartWidth.current + delta))
-
-    setColumnWidths(prev => ({
-      ...prev,
-      [resizingColumn]: newWidth
-    }))
-  }, [resizingColumn])
-
-  const handleResizeEnd = useCallback(() => {
-    if (resizingColumn && onColumnResize) {
-      const finalWidth = columnWidths[resizingColumn]
-      if (finalWidth) {
-        onColumnResize(resizingColumn, finalWidth)
-      }
-    }
-    setResizingColumn(null)
-    document.body.style.cursor = ''
-    document.body.style.userSelect = ''
-  }, [resizingColumn, columnWidths, onColumnResize])
-
-  // Attach/detach mouse listeners for resizing
-  useEffect(() => {
-    if (resizingColumn) {
-      document.addEventListener('mousemove', handleResizeMove)
-      document.addEventListener('mouseup', handleResizeEnd)
-      return () => {
-        document.removeEventListener('mousemove', handleResizeMove)
-        document.removeEventListener('mouseup', handleResizeEnd)
-      }
-    }
-  }, [resizingColumn, handleResizeMove, handleResizeEnd])
 
   // @dnd-kit drag handlers (much smoother than native HTML5 drag-and-drop)
   const handleDragStart = useCallback((event: DragStartEvent) => {
