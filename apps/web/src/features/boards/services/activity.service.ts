@@ -1,8 +1,48 @@
 import { getSupabase } from '@/lib/supabase'
 import type { ItemUpdate, ItemComment, UpdateType } from '@/types/board'
 
-// Use any type for supabase to bypass strict table typings
+// Use 'any' type assertion to bypass Supabase generated table typings
+// This is intentional - proper types would require generating Supabase types
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const supabase = getSupabase() as any
+
+// Type for update records with joined inspector data from Supabase
+interface UpdateRecord {
+  id: string
+  item_type: string
+  item_id: string
+  user_id: string
+  update_type: UpdateType
+  field_name?: string
+  old_value?: string
+  new_value?: string
+  content?: string
+  metadata?: Record<string, unknown>
+  created_at: string
+  inspectors?: {
+    full_name?: string
+    email?: string
+  }
+}
+
+// Type for comment records with joined inspector data from Supabase
+interface CommentRecord {
+  id: string
+  item_type: string
+  item_id: string
+  user_id: string
+  parent_comment_id?: string
+  content: string
+  mentions: string[]
+  attachments: string[]
+  is_edited: boolean
+  created_at: string
+  updated_at: string
+  inspectors?: {
+    full_name?: string
+    email?: string
+  }
+}
 
 /**
  * Activity & Comments Service
@@ -36,7 +76,7 @@ export const activityService = {
     if (error) throw error
 
     // Map inspector data to user_name
-    return (data || []).map((update: any) => ({
+    return (data || []).map((update: UpdateRecord) => ({
       ...update,
       user_name: update.inspectors?.full_name || update.inspectors?.email,
     }))
@@ -60,7 +100,7 @@ export const activityService = {
 
     if (error) throw error
 
-    return (data || []).map((update: any) => ({
+    return (data || []).map((update: UpdateRecord) => ({
       ...update,
       user_name: update.inspectors?.full_name || update.inspectors?.email,
     }))
@@ -85,7 +125,7 @@ export const activityService = {
 
     if (error) throw error
 
-    return (data || []).map((update: any) => ({
+    return (data || []).map((update: UpdateRecord) => ({
       ...update,
       user_name: update.inspectors?.full_name || update.inspectors?.email,
     }))
@@ -175,8 +215,8 @@ export const activityService = {
     itemId: string,
     userId: string,
     fieldName: string,
-    oldValue: any,
-    newValue: any
+    oldValue: unknown,
+    newValue: unknown
   ): Promise<ItemUpdate> {
     return this.createUpdate({
       item_type: itemType,
@@ -216,7 +256,10 @@ export const activityService = {
     if (!data || data.length === 0) return []
 
     // Build comment tree in memory (O(n) instead of N+1 queries)
+    // Using any for complex tree structure - proper typing would require recursive types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const commentMap = new Map<string, any>()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const topLevelComments: any[] = []
 
     // First pass: create map of all comments
@@ -265,7 +308,7 @@ export const activityService = {
 
     if (error) throw error
 
-    return (data || []).map((reply: any) => ({
+    return (data || []).map((reply: CommentRecord) => ({
       ...reply,
       user_name: reply.inspectors?.full_name || reply.inspectors?.email,
     }))
@@ -384,7 +427,7 @@ export const activityService = {
   subscribeToItemUpdates(
     itemType: string,
     itemId: string,
-    callback: (payload: any) => void
+    callback: (payload: { new: UpdateRecord; old: UpdateRecord | null }) => void
   ) {
     return supabase
       .channel(`item-updates:${itemType}:${itemId}`)
@@ -407,7 +450,7 @@ export const activityService = {
   subscribeToItemComments(
     itemType: string,
     itemId: string,
-    callback: (payload: any) => void
+    callback: (payload: { new: CommentRecord; old: CommentRecord | null }) => void
   ) {
     return supabase
       .channel(`item-comments:${itemType}:${itemId}`)
@@ -427,6 +470,7 @@ export const activityService = {
   /**
    * Unsubscribe from a channel
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async unsubscribe(channel: any) {
     await supabase.removeChannel(channel)
   },
@@ -434,10 +478,21 @@ export const activityService = {
   // ==================== BOARD-WIDE ACTIVITY ====================
 
   /**
-   * Get all updates for items in a specific board (optimized: single query with join)
+   * Get all updates for items in a specific board
    */
   async getBoardUpdates(boardId: string, limit = 100): Promise<ItemUpdate[]> {
-    // Use a single query with inner join on board_items
+    // First, get all board item IDs for this board
+    const { data: boardItems, error: boardItemsError } = await supabase
+      .from('board_items')
+      .select('id')
+      .eq('board_id', boardId)
+
+    if (boardItemsError) throw boardItemsError
+    if (!boardItems || boardItems.length === 0) return []
+
+    const boardItemIds = boardItems.map((item: { id: string }) => item.id)
+
+    // Then get updates for these items
     const { data, error } = await supabase
       .from('item_updates')
       .select(`
@@ -445,22 +500,18 @@ export const activityService = {
         inspectors:user_id (
           full_name,
           email
-        ),
-        board_items!inner (
-          board_id
         )
       `)
-      .eq('board_items.board_id', boardId)
+      .in('item_id', boardItemIds)
       .eq('item_type', 'board_item')
       .order('created_at', { ascending: false })
       .limit(limit)
 
     if (error) throw error
 
-    return (data || []).map((update: any) => ({
+    return (data || []).map((update: UpdateRecord) => ({
       ...update,
       user_name: update.inspectors?.full_name || update.inspectors?.email,
-      board_items: undefined, // Remove join data from response
     }))
   },
 
@@ -472,7 +523,7 @@ export const activityService = {
   async rollbackUpdate(
     updateId: string,
     userId: string,
-    applyRollback: (itemId: string, fieldName: string, oldValue: any) => Promise<void>
+    applyRollback: (itemId: string, fieldName: string, oldValue: unknown) => Promise<void>
   ): Promise<ItemUpdate | null> {
     // Get the update to rollback
     const { data: update, error } = await supabase
