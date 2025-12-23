@@ -1,0 +1,178 @@
+'use client'
+
+import React, { memo } from 'react'
+import { cn } from '@/lib/utils'
+import { MoreHorizontal, GripVertical, Trash2, Type } from 'lucide-react'
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import type { BoardColumn } from '../../types/board'
+
+export interface SortableColumnHeaderProps {
+  column: BoardColumn
+  width: number
+  isEditing: boolean
+  editingColumnName: string
+  onColumnNameChange: (value: string) => void
+  onColumnNameSave: () => void
+  onColumnNameKeyDown: (e: React.KeyboardEvent) => void
+  onColumnNameDoubleClick: (e: React.MouseEvent, column: BoardColumn) => void
+  onSort: (columnId: string) => void
+  onResizeStart: (e: React.MouseEvent, columnId: string, width: number) => void
+  canReorder: boolean
+  editInputRef: React.RefObject<HTMLInputElement>
+  isMenuOpen: boolean
+  onMenuToggle: (columnId: string | null) => void
+  onDeleteColumn: (column: BoardColumn) => void
+  menuRef: React.RefObject<HTMLDivElement>
+}
+
+export const SortableColumnHeader = memo(function SortableColumnHeader({
+  column,
+  width,
+  isEditing,
+  editingColumnName,
+  onColumnNameChange,
+  onColumnNameSave,
+  onColumnNameKeyDown,
+  onColumnNameDoubleClick,
+  onSort,
+  onResizeStart,
+  canReorder,
+  editInputRef,
+  isMenuOpen,
+  onMenuToggle,
+  onDeleteColumn,
+  menuRef,
+}: SortableColumnHeaderProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: column.id,
+    disabled: !canReorder,
+  })
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    width,
+    zIndex: isDragging ? 50 : undefined,
+  }
+
+  return (
+    <th
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'relative border text-left px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:bg-[#ecedf0] transition-colors group',
+        isDragging && 'bg-blue-50 shadow-lg',
+        'border-[#c3c6d4]'
+      )}
+      onClick={(e) => {
+        if ((e.target as HTMLElement).tagName === 'INPUT') return
+        if ((e.target as HTMLElement).closest('.drag-handle')) return
+        onSort(column.column_id)
+      }}
+      onDoubleClick={(e) => {
+        if (isEditing) return
+        if ((e.target as HTMLElement).closest('.drag-handle')) return
+        onColumnNameDoubleClick(e, column)
+      }}
+    >
+      <div className="flex items-center gap-1">
+        {/* Drag handle with dnd-kit listeners */}
+        {canReorder && !isEditing && (
+          <div
+            {...attributes}
+            {...listeners}
+            className="drag-handle opacity-0 group-hover:opacity-100 hover:opacity-100 cursor-grab active:cursor-grabbing -ml-1 p-0.5"
+          >
+            <GripVertical className="w-3 h-3 text-[#9699a6]" />
+          </div>
+        )}
+        <span className="flex-1 truncate">
+          {isEditing ? (
+            <input
+              ref={editInputRef}
+              type="text"
+              value={editingColumnName}
+              onChange={(e) => onColumnNameChange(e.target.value)}
+              onBlur={onColumnNameSave}
+              onKeyDown={onColumnNameKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              className="w-full bg-white border border-[#0073ea] rounded px-1 py-0.5 text-xs font-semibold text-[#323338] uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
+            />
+          ) : (
+            column.column_name
+          )}
+        </span>
+        {/* Column menu button */}
+        {!isEditing && (
+          <div className="relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onMenuToggle(isMenuOpen ? null : column.id)
+              }}
+              className="column-menu-btn opacity-0 group-hover:opacity-100 p-0.5 hover:bg-[#c3c6d4] rounded transition-colors"
+            >
+              <MoreHorizontal className="w-4 h-4 text-[#676879]" />
+            </button>
+            {isMenuOpen && (
+              <div
+                ref={menuRef}
+                className="absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-border-light z-50 py-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Rename option */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onMenuToggle(null)
+                    // Trigger double-click handler to enter edit mode
+                    onColumnNameDoubleClick(e as unknown as React.MouseEvent, column)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-text-primary hover:bg-bg-hover transition-colors"
+                >
+                  <Type className="w-4 h-4" />
+                  <span>Rename column</span>
+                </button>
+
+                {/* Divider */}
+                <div className="border-t border-border-light my-1" />
+
+                {/* Delete option */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDeleteColumn(column)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Delete column</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {/* Resize handle */}
+      <div
+        className={cn(
+          'absolute top-0 right-0 w-1 h-full cursor-col-resize group',
+          'hover:bg-[#0073ea] transition-colors'
+        )}
+        onMouseDown={(e) => onResizeStart(e, column.id, width)}
+      >
+        <div className="absolute top-0 right-0 w-3 h-full -translate-x-1" />
+      </div>
+    </th>
+  )
+})
