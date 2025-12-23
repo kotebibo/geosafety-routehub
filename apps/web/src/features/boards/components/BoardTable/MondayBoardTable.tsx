@@ -3,10 +3,11 @@
 import React, { useState, useMemo, useRef, useCallback, useEffect, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
-import { ChevronDown, ChevronRight, Plus, Type, Hash, Calendar, User, MapPin, CheckSquare, MoreHorizontal, Building2, Phone, Shield, Check, Paperclip, Keyboard, GripVertical, Trash2, Palette } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, MoreHorizontal, Keyboard, GripVertical, Trash2, Palette, Type } from 'lucide-react'
 import { CellRenderer } from './CellRenderer'
 import { useKeyboardNavigation, KeyboardShortcutsHelp } from '../../hooks/useKeyboardNavigation'
-import type { BoardColumn, BoardItem, BoardGroup, BoardType, ColumnType, BoardPresence } from '../../types/board'
+import type { BoardColumn, BoardItem, BoardGroup, BoardType, BoardPresence, ColumnType } from '../../types/board'
+import { ESSENTIAL_COLUMNS, ALL_COLUMN_TYPES, MONDAY_GROUP_COLORS, MIN_COLUMN_WIDTH, MAX_COLUMN_WIDTH, DEFAULT_GROUP } from './constants'
 
 // @dnd-kit imports for smooth drag-and-drop
 import {
@@ -28,44 +29,6 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { calculatePopupPosition } from './cells/usePopupPosition'
-
-// Essential column types for quick-add popup
-const ESSENTIAL_COLUMNS: { type: ColumnType; label: string; icon: React.ElementType }[] = [
-  { type: 'text', label: 'Text', icon: Type },
-  { type: 'number', label: 'Numbers', icon: Hash },
-  { type: 'status', label: 'Status', icon: CheckSquare },
-  { type: 'date', label: 'Date', icon: Calendar },
-  { type: 'person', label: 'Person', icon: User },
-]
-
-// All available column types
-const ALL_COLUMN_TYPES: { type: ColumnType; label: string; icon: React.ElementType; description: string }[] = [
-  { type: 'text', label: 'Text', icon: Type, description: 'Add text, links, or notes' },
-  { type: 'number', label: 'Numbers', icon: Hash, description: 'Add numbers and perform calculations' },
-  { type: 'status', label: 'Status', icon: CheckSquare, description: 'Track progress with customizable labels' },
-  { type: 'date', label: 'Date', icon: Calendar, description: 'Add dates and deadlines' },
-  { type: 'date_range', label: 'Date Range', icon: Calendar, description: 'Add start and end dates' },
-  { type: 'person', label: 'Person', icon: User, description: 'Assign people to items' },
-  { type: 'location', label: 'Location', icon: MapPin, description: 'Add addresses and coordinates' },
-  { type: 'route', label: 'Route', icon: MapPin, description: 'Link to a route' },
-  { type: 'company', label: 'Company', icon: Building2, description: 'Link to a company' },
-  { type: 'service_type', label: 'Service Type', icon: Shield, description: 'Select a service type' },
-  { type: 'checkbox', label: 'Checkbox', icon: Check, description: 'Track completion with a checkbox' },
-  { type: 'phone', label: 'Phone', icon: Phone, description: 'Add phone numbers with click-to-call' },
-  { type: 'files', label: 'Files', icon: Paperclip, description: 'Attach photos and documents' },
-]
-
-// Monday.com color palette for groups
-const MONDAY_GROUP_COLORS = [
-  { name: 'bright-blue', value: '#579bfc', bg: 'bg-[#579bfc]', light: 'bg-[#579bfc]/10' },
-  { name: 'dark-purple', value: '#a25ddc', bg: 'bg-[#a25ddc]', light: 'bg-[#a25ddc]/10' },
-  { name: 'grass-green', value: '#00c875', bg: 'bg-[#00c875]', light: 'bg-[#00c875]/10' },
-  { name: 'egg-yolk', value: '#fdab3d', bg: 'bg-[#fdab3d]', light: 'bg-[#fdab3d]/10' },
-  { name: 'berry', value: '#e2445c', bg: 'bg-[#e2445c]', light: 'bg-[#e2445c]/10' },
-  { name: 'aquamarine', value: '#00d2d2', bg: 'bg-[#00d2d2]', light: 'bg-[#00d2d2]/10' },
-  { name: 'peach', value: '#ffadad', bg: 'bg-[#ffadad]', light: 'bg-[#ffadad]/10' },
-  { name: 'royal', value: '#784bd1', bg: 'bg-[#784bd1]', light: 'bg-[#784bd1]/10' },
-]
 
 // Sortable column header component for @dnd-kit
 interface SortableColumnHeaderProps {
@@ -271,17 +234,6 @@ interface MondayBoardTableProps {
   // Dynamic grouping by column (from toolbar)
   groupByColumn?: string | null
 }
-
-const DEFAULT_GROUP: BoardGroup = {
-  id: 'default',
-  board_id: '',
-  name: 'Items',
-  color: '#579bfc',
-  position: 0,
-}
-
-const MIN_COLUMN_WIDTH = 80
-const MAX_COLUMN_WIDTH = 600
 
 export function MondayBoardTable({
   boardType,
