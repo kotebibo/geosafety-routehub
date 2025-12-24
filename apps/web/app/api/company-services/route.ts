@@ -1,10 +1,12 @@
 /**
  * Company Services API
  * Get company services with filters
+ * Protected: Requires authentication
  */
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAuth } from '@/middleware/auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +15,8 @@ const supabase = createClient(
 
 export async function GET(request: Request) {
   try {
+    // Require authentication to view company services
+    await requireAuth();
     const { searchParams } = new URL(request.url);
     const serviceTypeId = searchParams.get('service_type_id');
     const inspectorId = searchParams.get('inspector_id');
@@ -65,6 +69,11 @@ export async function GET(request: Request) {
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('Error fetching company services:', error);
+
+    if (error.name === 'UnauthorizedError') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     return NextResponse.json(
       { error: error.message },
       { status: 500 }

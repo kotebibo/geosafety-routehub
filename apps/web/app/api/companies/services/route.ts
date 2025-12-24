@@ -1,10 +1,12 @@
 /**
  * Company Services API
  * POST - Save/update services for a company
+ * Protected: Requires admin or dispatcher role
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAdminOrDispatcher } from '@/middleware/auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +15,9 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
+    // Require admin or dispatcher role to manage company services
+    await requireAdminOrDispatcher();
+
     const body = await request.json();
     const { companyId, services } = body;
 
@@ -102,6 +107,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Error saving company services:', error);
+
+    if (error.name === 'UnauthorizedError') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    if (error.name === 'ForbiddenError') {
+      return NextResponse.json({ error: 'Admin or dispatcher access required' }, { status: 403 });
+    }
+
     return NextResponse.json(
       { error: error.message || 'Failed to save services' },
       { status: 500 }

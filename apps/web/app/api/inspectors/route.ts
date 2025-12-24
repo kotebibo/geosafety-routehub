@@ -20,9 +20,8 @@ const supabase = createClient(
 
 export async function GET(request: NextRequest) {
   try {
-    // Temporarily disable authentication for testing
-    // await requireAuth();
-    console.log('⚠️ Auth temporarily disabled for testing');
+    // Require authentication for reading inspectors
+    await requireAuth();
 
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get('status');
@@ -41,14 +40,19 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error;
 
-    return NextResponse.json(data);
+    // Add cache headers - inspector list is relatively stable
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching inspectors:', error);
-    
+
     if (error.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
-    
+
     return NextResponse.json(
       { error: error.message },
       { status: 500 }

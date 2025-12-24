@@ -10,9 +10,8 @@ import { requireAdminOrDispatcher } from '@/middleware/auth'
 
 export async function POST(request: NextRequest) {
   try {
-    // Temporarily disable authentication for testing
-    // await requireAdminOrDispatcher()
-    console.log('⚠️ Auth temporarily disabled for testing');
+    // Require admin or dispatcher role to optimize routes
+    await requireAdminOrDispatcher();
 
     const body = await request.json()
     const { locations, options }: { locations: Location[]; options?: OptimizationOptions } = body

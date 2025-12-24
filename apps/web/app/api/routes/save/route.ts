@@ -36,9 +36,8 @@ interface SaveRouteRequest {
 
 export async function POST(request: NextRequest) {
   try {
-    // Temporarily disable authentication for testing
-    // await requireAdminOrDispatcher();
-    console.log('⚠️ Auth temporarily disabled for testing');
+    // Require admin or dispatcher role to save routes
+    await requireAdminOrDispatcher();
 
     const body: SaveRouteRequest = await request.json();
 

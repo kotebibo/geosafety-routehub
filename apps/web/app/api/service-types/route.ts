@@ -1,10 +1,13 @@
 /**
  * Service Types API Routes
  * Handles CRUD operations for service types
+ * - GET: Public (cached reference data)
+ * - POST/PUT/DELETE: Admin only
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from '@/middleware/auth';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,7 +24,12 @@ export async function GET() {
 
     if (error) throw error;
 
-    return NextResponse.json(data);
+    // Add cache headers - service types change rarely
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching service types:', error);
     return NextResponse.json(
@@ -31,9 +39,12 @@ export async function GET() {
   }
 }
 
-// POST - Create new service type
+// POST - Create new service type (Admin only)
 export async function POST(request: NextRequest) {
   try {
+    // Require admin role to create service types
+    await requireAdmin();
+
     const body = await request.json();
 
     const { data, error } = await supabase
@@ -47,6 +58,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('Error creating service type:', error);
+
+    if (error.name === 'UnauthorizedError') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    if (error.name === 'ForbiddenError') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
     return NextResponse.json(
       { error: error.message },
       { status: 500 }
@@ -54,9 +73,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PUT - Update service type
+// PUT - Update service type (Admin only)
 export async function PUT(request: NextRequest) {
   try {
+    // Require admin role to update service types
+    await requireAdmin();
+
     const body = await request.json();
     const { id, ...updates } = body;
 
@@ -79,6 +101,14 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json(data);
   } catch (error: any) {
     console.error('Error updating service type:', error);
+
+    if (error.name === 'UnauthorizedError') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    if (error.name === 'ForbiddenError') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
     return NextResponse.json(
       { error: error.message },
       { status: 500 }
@@ -86,9 +116,12 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-// DELETE - Delete service type
+// DELETE - Delete service type (Admin only)
 export async function DELETE(request: NextRequest) {
   try {
+    // Require admin role to delete service types
+    await requireAdmin();
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -109,6 +142,14 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error deleting service type:', error);
+
+    if (error.name === 'UnauthorizedError') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    if (error.name === 'ForbiddenError') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+
     return NextResponse.json(
       { error: error.message },
       { status: 500 }
