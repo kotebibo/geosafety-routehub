@@ -148,7 +148,8 @@ export function Sidebar({ className }: SidebarProps) {
       const boardId = pathname.split('/')[2]
       const board = allBoards.find((b: any) => b.id === boardId)
       if (board?.workspace_id) {
-        setExpandedWorkspaces(prev => new Set([...prev, board.workspace_id]))
+        const wsId = board.workspace_id
+        setExpandedWorkspaces(prev => new Set([...prev, wsId]))
       }
     }
   }, [pathname, allBoards])

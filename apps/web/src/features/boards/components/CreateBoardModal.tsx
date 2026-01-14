@@ -78,7 +78,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
         settings: {
           allowComments: true,
           allowActivityFeed: true,
-          defaultView: 'table',
+          defaultView: 'table' as const,
           permissions: {
             canEdit: [],
             canView: [],
