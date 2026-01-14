@@ -1,148 +1,205 @@
-# 🚀 GeoSafety RouteHub
+# GeoSafety RouteHub
 
-## Production-Ready Route Optimization System
+**Intelligent Route Optimization & Field Management System**
 
-[![CI/CD Pipeline](https://github.com/geosafety/routehub/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/geosafety/routehub/actions/workflows/ci-cd.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 
-### 🎯 Overview
-GeoSafety RouteHub is a comprehensive route optimization and field management system designed for safety inspection services in Georgia. The system enables efficient route planning, real-time tracking, and comprehensive reporting for field inspectors.
+## Overview
 
-### ✨ Key Features
-- **🗺️ Interactive Route Planning** - Visual map-based route creation with drag-and-drop
-- **📱 Mobile Inspector App** - Real-time route tracking and status updates
-- **🏢 Company Management** - Complete database of 216+ Georgian companies
-- **👥 Inspector Assignment** - Bulk assignment and workload balancing
-- **📊 Analytics Dashboard** - Performance metrics and reporting
-- **🔒 Secure Authentication** - Role-based access control (Admin, Dispatcher, Inspector)
-- **🌐 Bilingual Support** - Georgian and English interfaces
+GeoSafety RouteHub is a comprehensive route optimization and field management system designed for safety inspection services in Georgia. It enables efficient route planning with real road distances, real-time field tracking, and Monday.com-style collaborative workboards for managing inspections.
 
-### 🛠️ Technology Stack
-- **Frontend:** Next.js 14, React 18, TypeScript, Tailwind CSS
-- **Backend:** Supabase (PostgreSQL), Row-Level Security
-- **Maps:** OpenStreetMap / Mapbox GL
-- **Monitoring:** Sentry, Web Vitals
-- **Deployment:** Vercel / Docker / VPS
+## Key Features
 
-### 📋 Prerequisites
-- Node.js 18+ 
-- npm or yarn
-- Supabase account
-- Domain with SSL certificate
+- **Route Optimization** - Hybrid algorithm (Nearest Neighbor + 2-opt) with OSRM real road distances
+- **Monday.com-Style Boards** - 14+ column types, real-time collaboration via Ably, activity tracking
+- **Interactive Maps** - Leaflet/Mapbox integration with route visualization
+- **Company Management** - 216+ Georgian companies with coordinates and service tracking
+- **Inspector Management** - Assignment, workload balancing, and real-time location tracking
+- **PDP Compliance** - Personal Data Protection phase tracking for regulatory compliance
+- **Role-Based Access** - Admin, Dispatcher, and Inspector roles with Row-Level Security
+- **Bilingual Interface** - Georgian and English support
 
-### 🚀 Quick Start
+## Tech Stack
 
-#### 1. Clone the repository
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | Next.js 14, React 18, TypeScript, Tailwind CSS, Radix UI |
+| **State** | Zustand, TanStack React Query |
+| **Real-time** | Ably (presence & messaging) |
+| **Maps** | Leaflet, Mapbox GL, OpenStreetMap |
+| **Backend** | Supabase (PostgreSQL + PostGIS), Row-Level Security |
+| **Testing** | Vitest, React Testing Library |
+| **Build** | Turborepo (monorepo) |
+
+## Project Structure
+
+```
+geosafety-routehub/
+├── apps/
+│   ├── web/                    # Next.js 14 web application
+│   │   ├── app/                # App Router (pages, API routes)
+│   │   ├── src/
+│   │   │   ├── features/       # Feature modules (boards, routes, companies...)
+│   │   │   ├── lib/            # Utilities (supabase, ably, validations)
+│   │   │   ├── services/       # Business logic services
+│   │   │   ├── shared/         # Shared UI components
+│   │   │   └── store/          # Zustand state management
+│   │   └── supabase/           # Database migrations
+│   │
+│   └── mobile/                 # React Native (Expo) inspector app
+│
+├── packages/
+│   └── route-optimizer/        # Route optimization algorithm package
+│
+├── supabase/                   # Database migrations (35+ versions)
+│   └── migrations/
+│
+└── docs/                       # Documentation
+```
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+
+- npm 9+
+- Supabase account ([supabase.com](https://supabase.com))
+- Ably account for real-time features ([ably.com](https://ably.com))
+
+### Installation
+
 ```bash
+# Clone the repository
 git clone https://github.com/geosafety/routehub.git
-cd routehub/apps/web
-```
+cd geosafety-routehub
 
-#### 2. Install dependencies
-```bash
+# Install dependencies
 npm install
+
+# Copy environment template
+cp apps/web/.env.example apps/web/.env.local
+
+# Edit .env.local with your credentials:
+# - NEXT_PUBLIC_SUPABASE_URL
+# - NEXT_PUBLIC_SUPABASE_ANON_KEY
+# - NEXT_PUBLIC_ABLY_API_KEY
 ```
 
-#### 3. Set up environment variables
-```bash
-cp .env.example .env.local
-# Edit .env.local with your Supabase credentials
-```
+### Development
 
-#### 4. Run development server
 ```bash
+# Start all apps
 npm run dev
+
+# Start web only
+npm run dev:web
+
+# Start mobile only
+npm run dev:mobile
 ```
 
-#### 5. Open browser
-Navigate to http://localhost:3000
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 🏗️ Project Structure
-```
-apps/web/
-├── app/              # Next.js 14 App Router
-├── components/       # React components
-├── src/
-│   ├── config/      # Configuration files
-│   ├── lib/         # Utilities and libraries
-│   ├── services/    # API services
-│   ├── hooks/       # Custom React hooks
-│   └── types/       # TypeScript types
-├── public/          # Static assets
-└── supabase/        # Database migrations
-```
+## Available Scripts
 
-### 📦 Available Scripts
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start all development servers |
+| `npm run dev:web` | Start web app only |
+| `npm run build` | Build all apps for production |
+| `npm run test` | Run test suite |
+| `npm run lint` | Run ESLint |
+| `npm run format` | Format code with Prettier |
+| `npm run type-check` | TypeScript type checking |
+| `npm run seed:db` | Seed database with initial data |
+| `npm run seed:services` | Seed service types |
+
+## Apps & Packages
+
+| Name | Description | Docs |
+|------|-------------|------|
+| `apps/web` | Next.js 14 web application | [README](apps/web/README.md) |
+| `apps/mobile` | React Native (Expo) mobile app | [README](apps/mobile/README.md) |
+| `packages/route-optimizer` | Route optimization algorithm | [README](packages/route-optimizer/README.md) |
+
+## Database Setup
+
+The project uses Supabase with 35+ migrations including:
+
+- Companies, inspectors, and routes tables
+- Monday.com-style boards system
+- PDP compliance tracking
+- Row-Level Security policies
+- PostGIS for geographic queries
+
+Migrations are applied automatically via Supabase. For manual setup:
+
 ```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run start        # Start production server
-npm run test         # Run tests
-npm run lint         # Run ESLint
-npm run type-check   # Check TypeScript
+npm run db:push
+npm run seed:db
+npm run seed:services
 ```
 
-### 🔒 Security Features
+## Security
+
 - Row-Level Security (RLS) on all tables
 - API rate limiting
 - Input validation with Zod
-- XSS protection
-- CORS configuration
-- Security headers
-- Session management
+- Security headers (CSP, HSTS, X-Frame-Options)
+- PKCE authentication flow
 
-### 📊 Performance
+## Performance
+
 - Lighthouse Score: 90+
 - First Contentful Paint: < 1.8s
 - Time to Interactive: < 3.9s
-- Bundle size: < 250kb (gzipped)
+- Virtualized lists for large datasets
 
-### 🧪 Testing
-- Unit tests with Vitest
-- Integration tests for APIs
-- E2E tests for critical flows
-- Current coverage: ~20% (target: 70%)
+## Documentation
 
-### 📝 Documentation
-- [Deployment Guide](docs/DEPLOYMENT.md)
-- [API Documentation](docs/api/README.md)
-- [Database Schema](docs/DATABASE_SCHEMA.md)
-- [Security Guide](docs/security/README.md)
+- [Deployment Guide](DEPLOYMENT_GUIDE.md)
+- [Features Overview](FEATURES.md)
+- [API Documentation](docs/api/)
+- [Security Guide](docs/security/)
+- [Getting Started Guide](GET_STARTED.md)
 
-### 🚢 Deployment Options
-1. **Vercel** (Recommended) - One-click deploy
-2. **Docker** - Containerized deployment
-3. **VPS** - Traditional server deployment
-4. **Railway/Render** - Alternative platforms
+## Deployment
 
-### 👥 Team
-- **Product Owner:** GeoSafety Team
-- **Technical Lead:** Development Team
-- **UI/UX Design:** Design Team
+### Vercel (Recommended)
 
-### 📄 License
-MIT License - see [LICENSE](LICENSE) file for details
+```bash
+vercel deploy
+```
 
-### 🤝 Contributing
+### Docker
+
+```bash
+docker build -t geosafety-routehub .
+docker run -p 3000:3000 geosafety-routehub
+```
+
+See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed instructions.
+
+## Contributing
+
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### 📞 Support
-- **Email:** support@geosafety.ge
-- **Documentation:** [docs.geosafety.ge](https://docs.geosafety.ge)
-- **Issues:** [GitHub Issues](https://github.com/geosafety/routehub/issues)
+## License
 
-### 🎉 Acknowledgments
-- OpenStreetMap contributors
-- Supabase team
-- Next.js community
-- All our beta testers
+MIT License - see [LICENSE](LICENSE) for details.
+
+## Support
+
+- **Issues:** [GitHub Issues](https://github.com/geosafety/routehub/issues)
+- **Email:** support@geosafety.ge
 
 ---
 
-**Production Status:** ✅ Ready for deployment
-**Version:** 1.0.0
-**Last Updated:** October 2025
+**Version:** 1.0.0 | **Status:** Production Ready
