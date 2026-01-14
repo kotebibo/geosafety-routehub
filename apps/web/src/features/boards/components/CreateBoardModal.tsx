@@ -13,6 +13,7 @@ interface CreateBoardModalProps {
   isOpen: boolean
   onClose: () => void
   onBoardCreated?: (boardId: string) => void
+  workspaceId?: string | null
 }
 
 const ICON_MAP = {
@@ -31,13 +32,31 @@ const COLOR_OPTIONS = [
   { name: 'Orange', value: 'orange', class: 'bg-orange-500' },
 ]
 
-export function CreateBoardModal({ isOpen, onClose, onBoardCreated }: CreateBoardModalProps) {
+export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId }: CreateBoardModalProps) {
   const { user } = useAuth()
   const { data: inspectorId, isLoading: inspectorLoading } = useInspectorId(user?.email)
   const [step, setStep] = useState<'method' | 'template' | 'custom'>('method')
   const [boardName, setBoardName] = useState('')
   const [selectedTemplate, setSelectedTemplate] = useState<BoardTemplate | null>(null)
   const [selectedColor, setSelectedColor] = useState('blue')
+
+  // Capture the workspaceId when modal opens - this prevents the value from changing
+  // if the parent component's state updates while the modal is open
+  const [capturedWorkspaceId, setCapturedWorkspaceId] = React.useState<string | null | undefined>(undefined)
+
+  React.useEffect(() => {
+    if (isOpen && capturedWorkspaceId === undefined) {
+      // Capture the workspace ID when modal first opens
+      setCapturedWorkspaceId(workspaceId)
+    } else if (!isOpen) {
+      // Reset when modal closes
+      setCapturedWorkspaceId(undefined)
+    }
+  }, [isOpen, workspaceId, capturedWorkspaceId])
+
+  // Use captured value, falling back to prop only if not yet captured
+  const effectiveWorkspaceId = capturedWorkspaceId !== undefined ? capturedWorkspaceId : workspaceId
+
 
   const { data: templates, isLoading: templatesLoading } = useBoardTemplates()
   const createBoard = useCreateBoard(inspectorId || '')
@@ -47,14 +66,15 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated }: CreateBoar
     if (!boardName.trim() || !user || !inspectorId) return
 
     try {
-      const newBoard = await createBoard.mutateAsync({
+      const boardData = {
         owner_id: inspectorId,
-        board_type: 'custom',
+        board_type: 'custom' as const,
         name: boardName,
         icon: 'board',
         color: selectedColor,
         is_template: false,
         is_public: false,
+        workspace_id: effectiveWorkspaceId || undefined,
         settings: {
           allowComments: true,
           allowActivityFeed: true,
@@ -64,7 +84,9 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated }: CreateBoar
             canView: [],
           },
         },
-      })
+      }
+
+      const newBoard = await createBoard.mutateAsync(boardData)
 
       onBoardCreated?.(newBoard.id)
       handleClose()
@@ -80,6 +102,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated }: CreateBoar
       const newBoard = await createFromTemplate.mutateAsync({
         templateId: selectedTemplate.id,
         name: boardName,
+        workspaceId: effectiveWorkspaceId || undefined,
       })
 
       onBoardCreated?.(newBoard.id)

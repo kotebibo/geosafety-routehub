@@ -1,10 +1,19 @@
 'use client'
 
+import { useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
-import { CompanyTable } from '@/features/companies/components'
+import { PageHeader, LoadingSpinner, StatCard, EmptyState, DataTable } from '@/shared/components/ui'
+import type { Column } from '@/shared/components/ui'
 import { useCompanies } from '@/features/companies/hooks'
-import { Building2, Plus, Search } from 'lucide-react'
+import { Building2, Plus, Search, MapPin, Trash2 } from 'lucide-react'
+
+interface Company {
+  id: string
+  name: string
+  address: string
+  lat: number
+  lng: number
+}
 
 export default function CompaniesPage() {
   const router = useRouter()
@@ -18,9 +27,69 @@ export default function CompaniesPage() {
     deleteCompany,
   } = useCompanies()
 
-  if (loading) {
-    return <LoadingSpinner message="კომპანიების ჩატვირთვა..." />
-  }
+  const handleDelete = useCallback(async (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (confirm(`დარწმუნებული ხართ, რომ გსურთ ${name}-ის წაშლა?`)) {
+      try {
+        await deleteCompany(id)
+        alert('კომპანია წაიშალა')
+      } catch {
+        alert('წაშლისას დაფიქსირდა შეცდომა')
+      }
+    }
+  }, [deleteCompany])
+
+  const columns = useMemo<Column<Company>[]>(() => [
+    {
+      id: 'name',
+      header: 'კომპანია',
+      accessorKey: 'name',
+      sortable: true,
+      cell: ({ value }) => (
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <Building2 className="w-5 h-5 text-blue-600" />
+          </div>
+          <span className="font-medium text-gray-900">{value as string}</span>
+        </div>
+      ),
+    },
+    {
+      id: 'address',
+      header: 'მისამართი',
+      accessorKey: 'address',
+      sortable: true,
+      cell: ({ value }) => (
+        <div className="flex items-center gap-2 text-gray-600">
+          <MapPin className="w-4 h-4 flex-shrink-0" />
+          <span>{value as string}</span>
+        </div>
+      ),
+    },
+    {
+      id: 'coordinates',
+      header: 'კოორდინატები',
+      accessorFn: (row) =>
+        row.lat && row.lng
+          ? `${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}`
+          : null,
+    },
+    {
+      id: 'actions',
+      header: '',
+      align: 'right',
+      width: 100,
+      cell: ({ row }) => (
+        <button
+          onClick={(e) => handleDelete(row.id, row.name, e)}
+          className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+        >
+          <Trash2 className="w-4 h-4" />
+          წაშლა
+        </button>
+      ),
+    },
+  ], [handleDelete])
 
   if (error) {
     return (
@@ -109,9 +178,12 @@ export default function CompaniesPage() {
             }}
           />
         ) : (
-          <CompanyTable
-            companies={companies}
-            onDelete={deleteCompany}
+          <DataTable
+            data={companies}
+            columns={columns}
+            loading={loading}
+            onRowClick={(row) => router.push(`/companies/${row.id}`)}
+            caption="კომპანიების სია"
           />
         )}
       </div>

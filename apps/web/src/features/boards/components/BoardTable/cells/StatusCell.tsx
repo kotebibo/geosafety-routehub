@@ -1,9 +1,11 @@
-import React, { useState, useRef, useEffect, memo } from 'react'
+import React, { useState, useRef, useEffect, memo, lazy, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import type { CellRendererProps } from '../types'
-import { StatusLabelEditor } from './StatusLabelEditor'
 import { calculatePopupPosition } from './usePopupPosition'
+
+// Lazy load the heavy editor component (~10KB) - only loaded when user clicks "Edit Labels"
+const StatusLabelEditor = lazy(() => import('./StatusLabelEditor').then(m => ({ default: m.StatusLabelEditor })))
 
 export interface StatusOption {
   key: string
@@ -244,13 +246,17 @@ export const StatusCell = memo(function StatusCell({ value, column, onEdit, onEd
         document.body
       )}
 
-      {/* Status Label Editor Modal */}
-      <StatusLabelEditor
-        isOpen={showEditor}
-        onClose={() => setShowEditor(false)}
-        column={column}
-        currentOptions={statusOptions}
-      />
+      {/* Status Label Editor Modal - Lazy loaded */}
+      {showEditor && (
+        <Suspense fallback={null}>
+          <StatusLabelEditor
+            isOpen={showEditor}
+            onClose={() => setShowEditor(false)}
+            column={column}
+            currentOptions={statusOptions}
+          />
+        </Suspense>
+      )}
     </div>
   )
 })

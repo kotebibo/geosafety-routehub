@@ -26,6 +26,7 @@ export type SortDirection = 'asc' | 'desc'
 export interface Board {
   id: string
   owner_id: string
+  workspace_id?: string
   board_type: BoardType
   name: string
   name_ka?: string

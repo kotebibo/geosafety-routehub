@@ -10,7 +10,17 @@ import {
   ArrowRight,
   Clock,
 } from 'lucide-react'
-import { format } from 'date-fns'
+// Using native Intl.DateTimeFormat instead of date-fns to reduce bundle size
+const formatDateTime = (dateStr: string): string => {
+  const date = new Date(dateStr)
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date)
+}
 
 export interface ItemUpdate {
   id: string
@@ -189,7 +199,7 @@ export function ActivityLog({
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5 text-gray-400" />
-                      <span>{format(new Date(update.created_at), 'MMM d, HH:mm')}</span>
+                      <span>{formatDateTime(update.created_at)}</span>
                     </div>
                   </td>
 

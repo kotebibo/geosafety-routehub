@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import {
@@ -126,7 +126,7 @@ interface BoardToolbarProps {
   onFiltersChange: (filters: FilterConfig[]) => void
 }
 
-export function BoardToolbar({
+export const BoardToolbar = memo(function BoardToolbar({
   columns,
   sortConfig,
   onSortChange,
@@ -160,7 +160,7 @@ export function BoardToolbar({
     setTempSortDirection(sortConfig?.direction || 'asc')
   }, [sortConfig])
 
-  const openDropdown = (
+  const openDropdown = useCallback((
     ref: React.RefObject<HTMLButtonElement>,
     setter: (val: boolean) => void
   ) => {
@@ -172,82 +172,82 @@ export function BoardToolbar({
       })
     }
     setter(true)
-  }
+  }, [])
 
-  const closeAllDropdowns = () => {
+  const closeAllDropdowns = useCallback(() => {
     setShowSortDropdown(false)
     setShowGroupDropdown(false)
     setShowFilterDropdown(false)
-  }
+  }, [])
 
   // Handle sort apply
-  const handleApplySort = () => {
+  const handleApplySort = useCallback(() => {
     if (tempSortColumn) {
       onSortChange({ column: tempSortColumn, direction: tempSortDirection })
     }
     setShowSortDropdown(false)
-  }
+  }, [tempSortColumn, tempSortDirection, onSortChange])
 
-  const handleClearSort = () => {
+  const handleClearSort = useCallback(() => {
     onSortChange(null)
     setTempSortColumn('')
     setTempSortDirection('asc')
     setShowSortDropdown(false)
-  }
+  }, [onSortChange])
 
   // Handle group by
-  const handleGroupBySelect = (columnId: string | null) => {
+  const handleGroupBySelect = useCallback((columnId: string | null) => {
     onGroupByChange(columnId)
     setShowGroupDropdown(false)
-  }
+  }, [onGroupByChange])
 
   // Handle add filter
-  const handleAddFilter = () => {
+  const handleAddFilter = useCallback(() => {
     if (!newFilterColumn || !newFilterCondition) return
 
-    const column = columns.find(c => c.column_id === newFilterColumn)
-    const conditionNeedsValue = !['is_empty', 'is_not_empty', 'is_checked', 'is_not_checked'].includes(newFilterCondition)
+    const needsValue = !['is_empty', 'is_not_empty', 'is_checked', 'is_not_checked'].includes(newFilterCondition)
 
-    if (conditionNeedsValue && !newFilterValue) return
+    if (needsValue && !newFilterValue) return
 
     const newFilter: FilterConfig = {
       id: `filter-${Date.now()}`,
       column: newFilterColumn,
       condition: newFilterCondition,
-      value: conditionNeedsValue ? newFilterValue : null,
+      value: needsValue ? newFilterValue : null,
     }
 
     onFiltersChange([...filters, newFilter])
     setNewFilterColumn('')
     setNewFilterCondition('')
     setNewFilterValue('')
-  }
+  }, [newFilterColumn, newFilterCondition, newFilterValue, filters, onFiltersChange])
 
-  const handleRemoveFilter = (filterId: string) => {
+  const handleRemoveFilter = useCallback((filterId: string) => {
     onFiltersChange(filters.filter(f => f.id !== filterId))
-  }
+  }, [filters, onFiltersChange])
 
-  const handleClearAllFilters = () => {
+  const handleClearAllFilters = useCallback(() => {
     onFiltersChange([])
     setShowFilterDropdown(false)
-  }
+  }, [onFiltersChange])
 
   // Get conditions for selected column type
-  const getConditionsForColumn = (columnId: string) => {
+  const getConditionsForColumn = useCallback((columnId: string) => {
     const column = columns.find(c => c.column_id === columnId)
     if (!column) return []
     return CONDITIONS_BY_TYPE[column.column_type] || CONDITIONS_BY_TYPE.text
-  }
+  }, [columns])
 
-  // Groupable columns
-  const groupableColumns = columns.filter(
-    col => !NON_GROUPABLE_TYPES.includes(col.column_type)
+  // Groupable columns - memoized
+  const groupableColumns = React.useMemo(() =>
+    columns.filter(col => !NON_GROUPABLE_TYPES.includes(col.column_type)),
+    [columns]
   )
 
   // Check if condition needs a value input
-  const conditionNeedsValue = (condition: string) => {
+  const conditionNeedsValue = useCallback((condition: string) => {
     return !['is_empty', 'is_not_empty', 'is_checked', 'is_not_checked'].includes(condition)
-  }
+  }, [])
 
   return (
     <div className="flex items-center gap-2">
@@ -592,4 +592,4 @@ export function BoardToolbar({
       )}
     </div>
   )
-}
+})

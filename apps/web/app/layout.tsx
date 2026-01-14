@@ -6,26 +6,28 @@ import { Toaster, MondayLayout } from '@/shared/components/ui'
 import { ErrorBoundary } from '@/shared/components/feedback'
 // import { WebVitalsTracker } from '@/components/WebVitalsTracker' // Temporarily disabled
 
-// Monday.com Design System Fonts
+// Monday.com Design System Fonts - optimized for faster initial load
+// Only load essential weights (400 regular, 500 medium, 600 semibold)
 const poppins = Poppins({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '500', '600'],
   variable: '--font-brand',
   display: 'swap',
 })
 
 const figtree = Figtree({
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['400', '500', '600'],
   variable: '--font-product',
   display: 'swap',
 })
 
+// Georgian font - loaded with optional display for non-blocking
 const georgian = Noto_Sans_Georgian({
-  subsets: ['latin', 'georgian'],
-  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['georgian'],
+  weight: ['400', '500', '600'],
   variable: '--font-georgian',
-  display: 'swap',
+  display: 'optional', // Won't block render, falls back to system font if slow
 })
 
 export const metadata: Metadata = {

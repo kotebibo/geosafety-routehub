@@ -1,16 +1,14 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, lazy, Suspense } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBoard, useBoardItems, useBoardColumns, useBoardGroups, useCreateBoardGroup, useUpdateBoardGroup, useDeleteBoardGroup, useCreateBoardItem, useUpdateBoardItem, useDuplicateBoardItems, useDeleteBoardItem, useCreateUpdate, useRealtimeBoard, useUndoRedo, type UndoableAction } from '@/features/boards/hooks'
 import { queryKeys } from '@/lib/react-query'
 import { useInspectorId } from '@/hooks/useInspectorId'
-import { useCompanies } from '@/hooks/useCompanies'
-import { useRoutes } from '@/hooks/useRoutes'
-import { useServiceTypes } from '@/hooks/useServiceTypes'
-import { MondayBoardTable, ErrorBoundary, ColumnConfigPanel, AddColumnModal, ItemDetailDrawer, BoardPresenceIndicator, BoardToolbar, ImportBoardModal, SaveAsTemplateModal, ActivityLogPanel, type SortConfig, type FilterConfig } from '@/features/boards/components'
+import { MondayBoardTable, ErrorBoundary, BoardPresenceIndicator, BoardToolbar, type SortConfig, type FilterConfig } from '@/features/boards/components'
 import { useBoardUpdates } from '@/features/boards/hooks'
 import { Button } from '@/shared/components/ui'
 import { useToast } from '@/components/ui-monday/Toast'
@@ -18,7 +16,59 @@ import { ArrowLeft, Plus, Columns, Search, Download, Upload, Copy, Trash2, Undo2
 import { cn } from '@/lib/utils'
 import type { BoardItem, BoardColumn, BoardGroup, ColumnType } from '@/features/boards/types/board'
 import { boardsService, userBoardsService } from '@/features/boards/services'
-import { exportToCSV, exportToExcel, type ExportLookups } from '@/features/boards/utils/exportBoard'
+import type { ExportLookups } from '@/features/boards/utils/exportBoard'
+
+// Lazy-load heavy components that aren't needed on initial render
+const ColumnConfigPanel = dynamic(() => import('@/features/boards/components/ColumnConfig/ColumnConfigPanel').then(m => ({ default: m.ColumnConfigPanel })), { ssr: false })
+const AddColumnModal = dynamic(() => import('@/features/boards/components/ColumnConfig/AddColumnModal').then(m => ({ default: m.AddColumnModal })), { ssr: false })
+const ItemDetailDrawer = dynamic(() => import('@/features/boards/components/ItemDetail/ItemDetailDrawer').then(m => ({ default: m.ItemDetailDrawer })), { ssr: false })
+const ImportBoardModal = dynamic(() => import('@/features/boards/components/ImportBoardModal').then(m => ({ default: m.ImportBoardModal })), { ssr: false })
+const SaveAsTemplateModal = dynamic(() => import('@/features/boards/components/SaveAsTemplateModal').then(m => ({ default: m.SaveAsTemplateModal })), { ssr: false })
+const ActivityLogPanel = dynamic(() => import('@/features/boards/components/ActivityLog').then(m => ({ default: m.ActivityLogPanel })), { ssr: false })
+
+// Lazy-load lookup hooks - only fetch when export is triggered
+const useLookupData = () => {
+  const [lookups, setLookups] = useState<ExportLookups | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  const fetchLookups = useCallback(async () => {
+    if (lookups) return lookups
+    setIsLoading(true)
+    try {
+      // Dynamic imports for lookup services and supabase
+      const [companiesModule, routesModule, inspectorsModule, supabaseModule] = await Promise.all([
+        import('@/services/companies.service'),
+        import('@/services/routes.service'),
+        import('@/services/inspectors.service'),
+        import('@/lib/supabase'),
+      ])
+
+      const supabase = supabaseModule.createClient() as any
+
+      const [companies, routes, inspectors, serviceTypesResult] = await Promise.all([
+        companiesModule.companiesService.getAll(),
+        routesModule.routesService.getAll(),
+        inspectorsModule.inspectorsService.getActive(),
+        supabase.from('service_types').select('id, name').eq('is_active', true),
+      ])
+
+      const serviceTypes = serviceTypesResult.data || []
+
+      const newLookups: ExportLookups = {
+        persons: new Map(inspectors.map((i: any) => [i.id, i.full_name])),
+        companies: new Map(companies.map((c: any) => [c.id, c.name])),
+        routes: new Map(routes.map((r: any) => [r.id, r.name])),
+        serviceTypes: new Map(serviceTypes.map((s: any) => [s.id, s.name])),
+      }
+      setLookups(newLookups)
+      return newLookups
+    } finally {
+      setIsLoading(false)
+    }
+  }, [lookups])
+
+  return { lookups, fetchLookups, isLoading }
+}
 
 // Monday.com color palette for groups
 const GROUP_COLORS = [
@@ -61,57 +111,8 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   // Fetch activity log for this board
   const { data: activityUpdates, isLoading: activityLoading, refetch: refetchActivity } = useBoardUpdates(params.id)
 
-  // Fetch lookup data for export
-  const { allCompanies } = useCompanies()
-  const { routes, inspectors } = useRoutes()
-  const { serviceTypes } = useServiceTypes()
-
-  // Build lookup maps for export
-  const exportLookups = useMemo<ExportLookups>(() => {
-    const lookups: ExportLookups = {}
-
-    // Build persons lookup (inspectors)
-    if (inspectors && inspectors.length > 0) {
-      lookups.persons = new Map()
-      inspectors.forEach((inspector: any) => {
-        if (inspector.id && inspector.full_name) {
-          lookups.persons!.set(inspector.id, inspector.full_name)
-        }
-      })
-    }
-
-    // Build companies lookup
-    if (allCompanies && allCompanies.length > 0) {
-      lookups.companies = new Map()
-      allCompanies.forEach((company: any) => {
-        if (company.id && company.name) {
-          lookups.companies!.set(company.id, company.name)
-        }
-      })
-    }
-
-    // Build routes lookup
-    if (routes && routes.length > 0) {
-      lookups.routes = new Map()
-      routes.forEach((route: any) => {
-        if (route.id && route.name) {
-          lookups.routes!.set(route.id, route.name)
-        }
-      })
-    }
-
-    // Build service types lookup
-    if (serviceTypes && serviceTypes.length > 0) {
-      lookups.serviceTypes = new Map()
-      serviceTypes.forEach((st: any) => {
-        if (st.id && st.name) {
-          lookups.serviceTypes!.set(st.id, st.name)
-        }
-      })
-    }
-
-    return lookups
-  }, [inspectors, allCompanies, routes, serviceTypes])
+  // Lazy lookup data for export - only fetched when user exports
+  const { fetchLookups } = useLookupData()
 
   const { data: board, isLoading: boardLoading, error: boardError } = useBoard(params.id)
   const { data: items, isLoading: itemsLoading, error: itemsError } = useBoardItems(params.id)
@@ -885,23 +886,29 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     }
   }, [items, queryClient, params.id, publishItemChange, showToast])
 
-  // Handle export
-  const handleExport = (format: 'csv' | 'excel') => {
+  // Handle export - lazy loads lookup data and export utilities
+  const handleExport = async (format: 'csv' | 'excel') => {
     if (!board || !columns || !filteredItems) return
 
     try {
+      // Lazy load export utilities and lookup data in parallel
+      const [exportModule, lookups] = await Promise.all([
+        import('@/features/boards/utils/exportBoard'),
+        fetchLookups(),
+      ])
+
       const options = {
         format,
         items: filteredItems,
         columns: columns.filter(col => col.is_visible),
         boardName: board.name,
-        lookups: exportLookups,
+        lookups,
       }
 
       if (format === 'csv') {
-        exportToCSV(options)
+        exportModule.exportToCSV(options)
       } else {
-        exportToExcel(options)
+        exportModule.exportToExcel(options)
       }
 
       showToast(`Exported to ${format.toUpperCase()}`, 'success')

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUserBoards } from '@/features/boards/hooks'
 import { Button } from '@/shared/components/ui'
@@ -12,9 +12,53 @@ import type { Board } from '@/features/boards/types/board'
 
 export default function BoardsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null)
   const { data: boards, isLoading } = useUserBoards(user?.id || '')
+
+  // Track the workspace ID that was passed via URL - this persists even after URL is cleared
+  const urlWorkspaceRef = useRef<string | null>(null)
+
+  // Load workspace from URL param or localStorage, and handle ?create=true
+  useEffect(() => {
+    const urlWorkspace = searchParams.get('workspace')
+    const shouldCreate = searchParams.get('create') === 'true'
+
+    // Capture workspace ID from URL first (only if URL has workspace param)
+    if (urlWorkspace) {
+      urlWorkspaceRef.current = urlWorkspace
+      setCurrentWorkspaceId(urlWorkspace)
+    } else if (urlWorkspaceRef.current === null && typeof window !== 'undefined') {
+      // Only use localStorage if we never captured from URL in this page session
+      const savedWorkspaceId = localStorage.getItem('currentWorkspaceId')
+      if (savedWorkspaceId) {
+        setCurrentWorkspaceId(savedWorkspaceId)
+      }
+    }
+    // If urlWorkspaceRef.current is set (not null), we already have the workspace from URL
+    // Don't override with localStorage
+
+    // Then open create modal if requested
+    if (shouldCreate) {
+      setIsCreateModalOpen(true)
+      // Remove the query params from URL after a short delay
+      // The workspace is already captured in urlWorkspaceRef and state
+      const timeout = setTimeout(() => {
+        router.replace('/boards', { scroll: false })
+      }, 100)
+      return () => clearTimeout(timeout)
+    }
+  }, [searchParams, router])
+
+  // Reset the URL workspace ref when modal closes (user might want to create another board in a different workspace)
+  useEffect(() => {
+    if (!isCreateModalOpen) {
+      urlWorkspaceRef.current = null
+    }
+  }, [isCreateModalOpen])
+
 
   const handleBoardCreated = (boardId: string) => {
     // Navigate to the new board
@@ -161,6 +205,7 @@ export default function BoardsPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onBoardCreated={handleBoardCreated}
+        workspaceId={currentWorkspaceId}
       />
     </div>
   )

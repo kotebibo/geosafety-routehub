@@ -1,9 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, lazy, Suspense } from 'react'
 import { cn } from '@/lib/utils'
 import { MessageSquare } from 'lucide-react'
-import { UpdatesModal } from './UpdatesModal'
+
+// Lazy load the heavy modal component (~22KB) - only loaded when user clicks
+const UpdatesModal = lazy(() => import('./UpdatesModal').then(m => ({ default: m.UpdatesModal })))
 
 interface UpdatesCellProps {
   value?: number | null
@@ -46,16 +48,18 @@ export function UpdatesCell({ value, itemId, itemName, itemType = 'board_item', 
         )}
       </button>
 
-      {/* Full Modal View */}
-      {itemId && (
-        <UpdatesModal
-          isOpen={isModalOpen}
-          onClose={handleClose}
-          itemId={itemId}
-          itemName={itemName}
-          itemType={itemType}
-          onCommentCountChange={setCommentCount}
-        />
+      {/* Full Modal View - Lazy loaded */}
+      {itemId && isModalOpen && (
+        <Suspense fallback={null}>
+          <UpdatesModal
+            isOpen={isModalOpen}
+            onClose={handleClose}
+            itemId={itemId}
+            itemName={itemName}
+            itemType={itemType}
+            onCommentCountChange={setCommentCount}
+          />
+        </Suspense>
       )}
     </div>
   )
