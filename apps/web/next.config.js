@@ -2,22 +2,42 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // Commented out for now - these packages might not exist
-  // transpilePackages: ['@geosafety/shared', '@geosafety/ui-components', '@geosafety/api-client'],
+
+  // Optimize package imports for faster initial page loads
+  // This tree-shakes large libraries to only import what's used
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@tanstack/react-query',
+      'date-fns',
+      'lodash',
+    ],
+  },
+
   images: {
     domains: ['api.mapbox.com', 'tiles.mapbox.com'],
+    // Enable modern image formats for smaller file sizes
+    formats: ['image/avif', 'image/webp'],
   },
+
   env: {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   },
-  
+
+  // Modular imports for icon libraries (reduces bundle size significantly)
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+    },
+  },
+
   // Production optimizations
   ...(process.env.NODE_ENV === 'production' && {
     compress: true,
     poweredByHeader: false,
     generateEtags: true,
   }),
-  
+
   // Security headers
   async headers() {
     const ContentSecurityPolicy = `
@@ -26,12 +46,12 @@ const nextConfig = {
       style-src 'self' 'unsafe-inline';
       img-src 'self' blob: data: https:;
       font-src 'self' data:;
-      connect-src 'self' *.supabase.co wss://*.supabase.co https://api.mapbox.com;
+      connect-src 'self' *.supabase.co wss://*.supabase.co https://api.mapbox.com *.ably.io wss://*.ably.io;
       frame-ancestors 'none';
       base-uri 'self';
       form-action 'self';
     `.replace(/\s{2,}/g, ' ').trim()
-    
+
     return [
       {
         source: '/:path*',
@@ -70,18 +90,14 @@ const nextConfig = {
       },
     ];
   },
+
   webpack: (config, { dev }) => {
     // Fix for mapbox-gl
     config.resolve.alias = {
       ...config.resolve.alias,
       'mapbox-gl': 'mapbox-gl/dist/mapbox-gl.js',
     };
-    
-    // Add logging in development
-    if (dev) {
-      console.log('🔧 Webpack building...');
-    }
-    
+
     return config;
   },
 };

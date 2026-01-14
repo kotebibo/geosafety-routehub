@@ -21,11 +21,28 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 }
 
 // Different limits for different endpoints
+// More restrictive for write operations, relaxed for reads
 const ENDPOINT_LIMITS: Record<string, RateLimitConfig> = {
+  // Auth endpoints - very strict
   '/api/auth': { maxRequests: 5, windowMs: 15 * 60 * 1000 }, // 5 per 15 min
+
+  // Route operations - moderate (computationally expensive)
   '/api/routes/optimize': { maxRequests: 20, windowMs: 60 * 1000 }, // 20 per minute
+  '/api/routes/save': { maxRequests: 30, windowMs: 60 * 1000 }, // 30 per minute
+
+  // Admin operations - strict
+  '/api/service-types': { maxRequests: 30, windowMs: 60 * 1000 }, // 30 per minute
+  '/api/inspectors': { maxRequests: 60, windowMs: 60 * 1000 }, // 60 per minute
+
+  // Company operations - moderate
   '/api/companies': { maxRequests: 50, windowMs: 60 * 1000 }, // 50 per minute
-  '/api': { ...DEFAULT_CONFIG }, // Default for all API routes
+  '/api/company-services': { maxRequests: 50, windowMs: 60 * 1000 }, // 50 per minute
+
+  // Board operations - relaxed (frequent updates)
+  '/api/boards': { maxRequests: 120, windowMs: 60 * 1000 }, // 120 per minute
+
+  // Default for all other API routes
+  '/api': { ...DEFAULT_CONFIG },
 }
 
 /**

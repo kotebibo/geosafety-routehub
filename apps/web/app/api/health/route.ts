@@ -46,7 +46,12 @@ export async function GET() {
       return NextResponse.json(checks, { status: 503 })
     }
     
-    return NextResponse.json(checks)
+    // Short cache for health checks - don't hammer the endpoint
+    return NextResponse.json(checks, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
+      },
+    })
   } catch (err) {
     return NextResponse.json({
       ...checks,

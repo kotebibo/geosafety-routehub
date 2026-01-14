@@ -7,46 +7,34 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 import { requireAdminOrDispatcher } from '@/middleware/auth';
-import { createRouteSchema } from '@/lib/validations';
+import { saveRouteSchema, type SaveRouteInput } from '@/lib/validations';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_KEY!
 );
 
-interface SaveRouteRequest {
-  name: string;
-  date: string; // YYYY-MM-DD
-  inspectorId?: string;
-  serviceTypeId?: string; // NEW: Service type for this route
-  startTime?: string; // HH:mm
-  totalDistance: number;
-  totalDuration?: number;
-  optimizationType?: string;
-  routeGeometry?: number[][];
-  stops: Array<{
-    companyId: string;
-    companyServiceId?: string; // NEW: Link to specific service
-    position: number;
-    distanceFromPrevious?: number;
-    durationFromPrevious?: number;
-  }>;
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Require admin or dispatcher role to save routes
     await requireAdminOrDispatcher();
 
-    const body: SaveRouteRequest = await request.json();
+    const rawBody = await request.json();
 
-    // Validate input
-    if (!body.name || !body.date || !body.stops || body.stops.length === 0) {
-      return NextResponse.json(
-        { error: 'Missing required fields: name, date, stops' },
-        { status: 400 }
-      );
+    // Validate input with Zod
+    let body: SaveRouteInput;
+    try {
+      body = saveRouteSchema.parse(rawBody);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return NextResponse.json(
+          { error: 'Validation failed', details: error.issues },
+          { status: 400 }
+        );
+      }
+      throw error;
     }
 
     // Insert route with service_type_id
@@ -174,10 +162,7 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json(
-      {
-        error: 'Failed to save route',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: error instanceof Error ? error.message : 'Failed to save route' },
       { status: 500 }
     );
   }

@@ -66,8 +66,41 @@ export const updateStopStatusSchema = z.object({
   notes: z.string().max(500).optional(),
 })
 
+// Reassign route schema
+export const reassignRouteSchema = z.object({
+  route_id: z.string().uuid('Invalid route ID'),
+  new_inspector_id: z.string().uuid('Invalid inspector ID'),
+})
+
+// Simple route status enum schema (for direct status validation)
+export const routeStatusSchema = z.enum(['planned', 'in_progress', 'completed', 'cancelled'])
+
+// Save route API schema (camelCase for frontend API)
+export const saveRouteSchema = z.object({
+  name: z.string()
+    .min(1, 'Route name is required')
+    .max(100, 'Route name too long'),
+  date: z.string().min(1, 'Date is required'),
+  inspectorId: z.string().uuid('Invalid inspector ID').optional(),
+  serviceTypeId: z.string().uuid('Invalid service type ID').optional(),
+  startTime: z.string().optional(),
+  totalDistance: z.number().nonnegative(),
+  totalDuration: z.number().nonnegative().optional(),
+  optimizationType: z.string().optional(),
+  routeGeometry: z.array(z.array(z.number())).optional(),
+  stops: z.array(z.object({
+    companyId: z.string().uuid('Invalid company ID'),
+    companyServiceId: z.string().uuid().optional(),
+    position: z.number().int().positive(),
+    distanceFromPrevious: z.number().nonnegative().optional(),
+    durationFromPrevious: z.number().nonnegative().optional(),
+  })).min(1, 'Route must have at least one stop'),
+})
+
 export type RouteInput = z.infer<typeof createRouteSchema>
 export type RouteUpdate = z.infer<typeof updateRouteSchema>
 export type OptimizeRouteRequest = z.infer<typeof optimizeRouteSchema>
 export type RouteStatusUpdate = z.infer<typeof updateRouteStatusSchema>
 export type StopStatusUpdate = z.infer<typeof updateStopStatusSchema>
+export type ReassignRoute = z.infer<typeof reassignRouteSchema>
+export type SaveRouteInput = z.infer<typeof saveRouteSchema>

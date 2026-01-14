@@ -19,6 +19,7 @@ CREATE INDEX IF NOT EXISTS idx_item_updates_item_id
 
 -- Index for board_columns by board (used in getColumns)
 CREATE INDEX IF NOT EXISTS idx_board_columns_board_position
+
   ON board_columns(board_id, position);
 
 -- Index for board_groups by board (used in getGroups)

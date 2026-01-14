@@ -71,10 +71,7 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json(
-      {
-        error: 'Route optimization failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
-      },
+      { error: error instanceof Error ? error.message : 'Route optimization failed' },
       { status: 500 }
     )
   }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { GET } from '@/app/api/health/route'
+import { GET } from '../../../app/api/health/route'
 
 // Mock Supabase
 vi.mock('@/lib/supabase/client', () => ({
