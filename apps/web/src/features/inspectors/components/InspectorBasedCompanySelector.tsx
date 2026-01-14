@@ -33,7 +33,7 @@ interface CompanyService {
   };
 }
 
-interface Props {
+interface InspectorBasedCompanySelectorProps {
   selectedInspector: string | null;
   onInspectorChange: (inspectorId: string | null) => void;
   selectedServices: CompanyService[];
@@ -45,7 +45,7 @@ export default function InspectorBasedCompanySelector({
   onInspectorChange,
   selectedServices,
   onServiceToggle,
-}: Props) {
+}: InspectorBasedCompanySelectorProps) {
   const [inspectors, setInspectors] = useState<Inspector[]>([]);
   const [companyServices, setCompanyServices] = useState<CompanyService[]>([]);
   const [loading, setLoading] = useState(false);

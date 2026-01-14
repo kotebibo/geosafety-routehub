@@ -33,7 +33,7 @@ interface CompanyService {
   };
 }
 
-interface Props {
+interface ServiceBasedCompanySelectorProps {
   selectedServiceType: string | null;
   onServiceTypeChange: (serviceTypeId: string | null) => void;
   selectedServices: CompanyService[];
@@ -45,7 +45,7 @@ export default function ServiceBasedCompanySelector({
   onServiceTypeChange,
   selectedServices,
   onServiceToggle,
-}: Props) {
+}: ServiceBasedCompanySelectorProps) {
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
   const [companyServices, setCompanyServices] = useState<CompanyService[]>([]);
   const [loading, setLoading] = useState(false);

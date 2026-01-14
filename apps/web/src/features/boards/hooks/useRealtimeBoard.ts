@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { ablyPresenceService, type AblyBoardChannel, type BoardItemChange } from '../services/ably-presence.service'
+import { ensureAblyLoaded } from '@/lib/ably'
 import { queryKeys } from '@/lib/react-query'
 import type { BoardPresence, BoardType } from '../types/board'
 
@@ -76,60 +77,85 @@ export function useRealtimeBoard({
     }
   }, [boardId])
 
-  // Subscribe to real-time updates via Ably
+  // Subscribe to real-time updates via Ably (lazy-loaded)
   useEffect(() => {
     if (!enabled || !boardId || !userId || !userName) return
+
+    let isActive = true
+    let pollInterval: NodeJS.Timeout | null = null
+    let channel: AblyBoardChannel | null = null
 
     // Check if Ably is available
     if (!ablyPresenceService.isAvailable()) {
       console.warn('Ably not configured. Using polling fallback.')
       // Fallback to polling every 15 seconds (reduced from 3s for performance)
-      // Only invalidate active queries to minimize unnecessary requests
-      const pollInterval = setInterval(() => {
+      pollInterval = setInterval(() => {
         queryClient.invalidateQueries({
           queryKey: [...queryKeys.routes.all, 'board-items', boardId],
-          refetchType: 'active', // Only refetch active queries
+          refetchType: 'active',
         })
-      }, 15000) // 15 seconds instead of 3 seconds
+      }, 15000)
 
       setState(prev => ({ ...prev, isConnected: true }))
 
       return () => {
-        clearInterval(pollInterval)
+        isActive = false
+        if (pollInterval) clearInterval(pollInterval)
       }
     }
 
-    // Create Ably channel for this board
-    const channel = ablyPresenceService.createBoardChannel(
-      boardType,
-      boardId,
-      userId,
-      userName,
-      userAvatar
-    )
-    channelRef.current = channel
+    // Capture values that are guaranteed non-null by the guard above
+    const safeUserId = userId!
+    const safeUserName = userName!
 
-    // Listen for presence changes
-    channel.onPresenceChange((presence) => {
-      setState(prev => ({
-        ...prev,
-        presence,
-      }))
-    })
+    // Lazy load Ably then connect
+    async function initAbly() {
+      await ensureAblyLoaded()
+      if (!isActive) return
 
-    // Listen for item changes from other users
-    channel.onItemChange((change: BoardItemChange) => {
-      // Immediately invalidate queries to refresh data
-      queryClient.invalidateQueries({
-        queryKey: [...queryKeys.routes.all, 'board-items', boardId],
+      // Create Ably channel for this board
+      channel = ablyPresenceService.createBoardChannel(
+        boardType,
+        boardId,
+        safeUserId,
+        safeUserName,
+        userAvatar
+      )
+      channelRef.current = channel
+
+      // Listen for presence changes
+      channel.onPresenceChange((presence) => {
+        if (isActive) {
+          setState(prev => ({
+            ...prev,
+            presence,
+          }))
+        }
       })
-    })
 
-    setState(prev => ({ ...prev, isConnected: true }))
+      // Listen for item changes from other users
+      channel.onItemChange((change: BoardItemChange) => {
+        if (isActive) {
+          queryClient.invalidateQueries({
+            queryKey: [...queryKeys.routes.all, 'board-items', boardId],
+          })
+        }
+      })
+
+      if (isActive) {
+        setState(prev => ({ ...prev, isConnected: true }))
+      }
+    }
+
+    initAbly()
 
     // Cleanup
     return () => {
-      channel.unsubscribe()
+      isActive = false
+      if (pollInterval) clearInterval(pollInterval)
+      if (channel) {
+        channel.unsubscribe()
+      }
       channelRef.current = null
     }
   }, [enabled, boardId, boardType, userId, userName, userAvatar, queryClient])
@@ -163,27 +189,49 @@ export function useBoardPresence(
   useEffect(() => {
     if (!enabled || !boardId || !userId || !userName) return
 
+    let isActive = true
+    let channel: AblyBoardChannel | null = null
+
+    // Capture values that are guaranteed non-null by the guard above
+    const safeBoardId = boardId!
+    const safeUserId = userId!
+    const safeUserName = userName!
+
     if (!ablyPresenceService.isAvailable()) {
       setIsConnected(true)
       return
     }
 
-    const channel = ablyPresenceService.createBoardChannel(
-      boardType,
-      boardId,
-      userId,
-      userName
-    )
-    channelRef.current = channel
+    async function initAbly() {
+      await ensureAblyLoaded()
+      if (!isActive) return
 
-    channel.onPresenceChange((newPresence) => {
-      setPresence(newPresence)
-    })
+      channel = ablyPresenceService.createBoardChannel(
+        boardType,
+        safeBoardId,
+        safeUserId,
+        safeUserName
+      )
+      channelRef.current = channel
 
-    setIsConnected(true)
+      channel.onPresenceChange((newPresence) => {
+        if (isActive) {
+          setPresence(newPresence)
+        }
+      })
+
+      if (isActive) {
+        setIsConnected(true)
+      }
+    }
+
+    initAbly()
 
     return () => {
-      channel.unsubscribe()
+      isActive = false
+      if (channel) {
+        channel.unsubscribe()
+      }
       channelRef.current = null
     }
   }, [enabled, boardType, boardId, userId, userName])

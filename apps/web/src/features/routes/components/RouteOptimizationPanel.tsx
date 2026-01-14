@@ -16,7 +16,7 @@ interface OptimizedRoute {
   totalDistance: number
 }
 
-interface Props {
+interface RouteOptimizationPanelProps {
   optimizedRoute: OptimizedRoute | null
   onOptimize: () => void
   onSave: (data: {
@@ -37,7 +37,7 @@ export function RouteOptimizationPanel({
   optimizing,
   saving,
   hasSelection,
-}: Props) {
+}: RouteOptimizationPanelProps) {
   const [routeName, setRouteName] = useState('')
   const [scheduledDate, setScheduledDate] = useState('')
   const [startTime, setStartTime] = useState('09:00')

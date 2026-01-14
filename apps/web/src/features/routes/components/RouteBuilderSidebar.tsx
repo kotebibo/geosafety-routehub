@@ -14,7 +14,7 @@ interface Company {
   address: string
 }
 
-interface Props {
+interface RouteBuilderSidebarProps {
   inspectors: Inspector[]
   selectedInspector: string
   onInspectorChange: (id: string) => void
@@ -36,7 +36,7 @@ export function RouteBuilderSidebar({
   onSelectAll,
   onClearSelection,
   loading,
-}: Props) {
+}: RouteBuilderSidebarProps) {
   return (
     <div className="w-80 bg-white border-r h-screen overflow-y-auto">
       <div className="p-4 border-b">

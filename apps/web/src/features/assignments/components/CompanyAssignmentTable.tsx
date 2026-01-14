@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Filter, Users, CheckSquare, Square } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Filter, Users } from 'lucide-react'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
 import { FeatureGate } from '@/components/FeatureGate'
+import { DataTable } from '@/shared/components/ui'
+import type { Column } from '@/shared/components/ui'
 
 interface CompanyAssignment {
   id: string
@@ -23,45 +25,30 @@ interface CompanyAssignment {
   } | null
 }
 
-interface Props {
+interface CompanyAssignmentTableProps {
   assignments: CompanyAssignment[]
-  serviceTypes: any[]
-  inspectors: any[]
+  serviceTypes: { id: string; name_ka: string }[]
+  inspectors: { id: string; full_name: string }[]
   onBulkAssign: (ids: string[], inspectorId: string | null) => Promise<void>
 }
 
-export function CompanyAssignmentTable({ 
-  assignments, 
-  serviceTypes, 
+export function CompanyAssignmentTable({
+  assignments,
+  serviceTypes,
   inspectors,
-  onBulkAssign 
-}: Props) {
+  onBulkAssign
+}: CompanyAssignmentTableProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState('all')
   const [assigningTo, setAssigningTo] = useState<string>('')
   const [isAssigning, setIsAssigning] = useState(false)
 
-  const filteredAssignments = filter === 'all'
-    ? assignments
-    : assignments.filter(a => a.service_type.id === filter)
-
-  const toggleSelection = (id: string) => {
-    const newSelected = new Set(selected)
-    if (newSelected.has(id)) {
-      newSelected.delete(id)
-    } else {
-      newSelected.add(id)
-    }
-    setSelected(newSelected)
-  }
-
-  const toggleAll = () => {
-    if (selected.size === filteredAssignments.length) {
-      setSelected(new Set())
-    } else {
-      setSelected(new Set(filteredAssignments.map(a => a.id)))
-    }
-  }
+  const filteredAssignments = useMemo(() =>
+    filter === 'all'
+      ? assignments
+      : assignments.filter(a => a.service_type.id === filter),
+    [assignments, filter]
+  )
 
   const handleBulkAssign = async () => {
     if (selected.size === 0) {
@@ -81,12 +68,59 @@ export function CompanyAssignmentTable({
       setSelected(new Set())
       setAssigningTo('')
       alert('წარმატებით დაინიშნა!')
-    } catch (error) {
+    } catch {
       alert('დაფიქსირდა შეცდომა')
     } finally {
       setIsAssigning(false)
     }
   }
+
+  const columns = useMemo<Column<CompanyAssignment>[]>(() => [
+    {
+      id: 'company',
+      header: 'კომპანია',
+      accessorFn: (row) => row.company?.name,
+      sortable: true,
+      cell: ({ value }) => (
+        <span className="font-medium text-gray-900">{value as string}</span>
+      ),
+    },
+    {
+      id: 'address',
+      header: 'მისამართი',
+      accessorFn: (row) => row.company?.address,
+      sortable: true,
+      cell: ({ value }) => (
+        <span className="text-gray-600">{value as string}</span>
+      ),
+    },
+    {
+      id: 'service',
+      header: 'სერვისი',
+      accessorFn: (row) => row.service_type?.name_ka,
+      sortable: true,
+      cell: ({ value }) => (
+        <span className="text-gray-600">{(value as string) || 'N/A'}</span>
+      ),
+    },
+    {
+      id: 'inspector',
+      header: 'ინსპექტორი',
+      accessorFn: (row) => row.assigned_inspector?.full_name,
+      sortable: true,
+      cell: ({ row }) => (
+        row.assigned_inspector ? (
+          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+            {row.assigned_inspector.full_name}
+          </span>
+        ) : (
+          <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+            არადანიშნული
+          </span>
+        )
+      ),
+    },
+  ], [])
 
   return (
     <div className="bg-white rounded-lg border">
@@ -150,87 +184,21 @@ export function CompanyAssignmentTable({
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="w-12 px-4 py-3">
-                <button
-                  onClick={toggleAll}
-                  className="flex items-center justify-center"
-                >
-                  {selected.size === filteredAssignments.length && filteredAssignments.length > 0 ? (
-                    <CheckSquare className="w-5 h-5 text-blue-600" />
-                  ) : (
-                    <Square className="w-5 h-5 text-gray-400" />
-                  )}
-                </button>
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                კომპანია
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                მისამართი
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                სერვისი
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                ინსპექტორი
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {filteredAssignments.map((assignment) => (
-              <tr
-                key={assignment.id}
-                className={`hover:bg-gray-50 transition-colors ${
-                  selected.has(assignment.id) ? 'bg-blue-50' : ''
-                }`}
-              >
-                <td className="px-4 py-3">
-                  <button
-                    onClick={() => toggleSelection(assignment.id)}
-                    className="flex items-center justify-center"
-                  >
-                    {selected.has(assignment.id) ? (
-                      <CheckSquare className="w-5 h-5 text-blue-600" />
-                    ) : (
-                      <Square className="w-5 h-5 text-gray-400" />
-                    )}
-                  </button>
-                </td>
-                <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                  {assignment.company.name}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {assignment.company.address}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {assignment.service_type?.name_ka || 'N/A'}
-                </td>
-                <td className="px-4 py-3 text-sm">
-                  {assignment.assigned_inspector ? (
-                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                      {assignment.assigned_inspector.full_name}
-                    </span>
-                  ) : (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                      არადანიშნული
-                    </span>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {filteredAssignments.length === 0 && (
-        <div className="p-12 text-center text-gray-500">
-          კომპანიები არ მოიძებნა
-        </div>
-      )}
+      <DataTable
+        data={filteredAssignments}
+        columns={columns}
+        selectable
+        selectedRows={selected}
+        onSelectionChange={setSelected}
+        getRowId={(row) => row.id}
+        emptyState={
+          <div className="text-center text-gray-500">
+            კომპანიები არ მოიძებნა
+          </div>
+        }
+        caption="კომპანიების დანიშვნების სია"
+        className="rounded-t-none border-t-0"
+      />
     </div>
   )
 }

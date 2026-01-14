@@ -7,11 +7,11 @@ interface InspectorWorkload {
   assignedCount: number
 }
 
-interface Props {
+interface InspectorWorkloadPanelProps {
   inspectors: InspectorWorkload[]
 }
 
-export function InspectorWorkloadPanel({ inspectors }: Props) {
+export function InspectorWorkloadPanel({ inspectors }: InspectorWorkloadPanelProps) {
   const maxAssignments = Math.max(...inspectors.map(i => i.assignedCount), 1)
 
   return (

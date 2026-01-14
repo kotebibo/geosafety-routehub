@@ -54,6 +54,10 @@ export function useCreateBoard(userId: string) {
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.routes.all, 'user-boards', userId],
       })
+      // Also invalidate workspace boards
+      queryClient.invalidateQueries({
+        queryKey: ['workspaces'],
+      })
     },
   })
 }
@@ -65,11 +69,15 @@ export function useCreateBoardFromTemplate(userId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ templateId, name }: { templateId: string; name: string }) =>
-      userBoardsService.createBoardFromTemplate(templateId, name, userId),
+    mutationFn: ({ templateId, name, workspaceId }: { templateId: string; name: string; workspaceId?: string }) =>
+      userBoardsService.createBoardFromTemplate(templateId, name, userId, workspaceId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.routes.all, 'user-boards', userId],
+      })
+      // Also invalidate workspace boards
+      queryClient.invalidateQueries({
+        queryKey: ['workspaces'],
       })
     },
   })

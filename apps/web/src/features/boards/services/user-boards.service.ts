@@ -79,7 +79,8 @@ export const userBoardsService = {
   async createBoardFromTemplate(
     templateId: string,
     name: string,
-    ownerId: string
+    ownerId: string,
+    workspaceId?: string
   ): Promise<Board> {
     // Get template
     const template = await this.getTemplate(templateId)
@@ -94,6 +95,7 @@ export const userBoardsService = {
       color: template.color,
       is_template: false,
       is_public: false,
+      workspace_id: workspaceId,
       settings: {
         allowComments: true,
         allowActivityFeed: true,

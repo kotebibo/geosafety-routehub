@@ -1,5 +1,5 @@
-import Ably from 'ably'
-import { getAblyClient, isAblyAvailable } from '@/lib/ably'
+import type Ably from 'ably'
+import { getAblyClient, isAblyAvailable, ensureAblyLoaded } from '@/lib/ably'
 import type { BoardPresence, BoardType } from '../types/board'
 
 export interface AblyPresenceData {

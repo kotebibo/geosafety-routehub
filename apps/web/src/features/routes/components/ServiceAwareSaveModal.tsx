@@ -28,7 +28,7 @@ interface RouteStop {
   distance?: number;
 }
 
-interface Props {
+interface ServiceAwareSaveModalProps {
   isOpen: boolean;
   onClose: () => void;
   route: RouteStop[];
@@ -48,7 +48,7 @@ export default function ServiceAwareSaveModal({
   inspectorId,
   selectedServices,
   onSaveSuccess,
-}: Props) {
+}: ServiceAwareSaveModalProps) {
   const [name, setName] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [startTime, setStartTime] = useState('08:00');

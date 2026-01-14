@@ -18,14 +18,14 @@ interface Inspector {
   full_name: string
 }
 
-interface Props {
+interface RoutesTableProps {
   routes: Route[]
   inspectors: Inspector[]
   onDelete?: (id: string) => void
   onReassign?: (routeId: string, inspectorId: string) => void
 }
 
-export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Props) {
+export function RoutesTable({ routes, inspectors, onDelete, onReassign }: RoutesTableProps) {
   const statusColors = {
     planned: 'bg-blue-100 text-blue-800',
     in_progress: 'bg-amber-100 text-amber-800',

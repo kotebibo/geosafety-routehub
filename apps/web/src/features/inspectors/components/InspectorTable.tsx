@@ -11,13 +11,13 @@ interface Inspector {
   status: 'active' | 'inactive'
 }
 
-interface Props {
+interface InspectorTableProps {
   inspectors: Inspector[]
   onDelete?: (id: string) => void
   onToggleStatus?: (id: string, status: 'active' | 'inactive') => void
 }
 
-export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Props) {
+export function InspectorTable({ inspectors, onDelete, onToggleStatus }: InspectorTableProps) {
   const handleDelete = async (id: string, name: string) => {
     if (confirm(`დარწმუნებული ხართ, რომ გსურთ ${name}-ის წაშლა?`)) {
       try {

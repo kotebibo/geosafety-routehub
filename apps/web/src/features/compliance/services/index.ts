@@ -1,2 +1,2 @@
-// Compliance services exports
-export * from './compliance.service'
+// Re-export from root services for backward compatibility
+export { complianceService } from '@/services/compliance.service'
