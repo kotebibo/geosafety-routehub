@@ -108,6 +108,10 @@ export function Sidebar({ className }: SidebarProps) {
   const { user, userRole } = useAuth()
   const { data: inspectorId } = useInspectorId(user?.email)
 
+  // Use auth user ID for board queries - RLS policies filter by auth.uid()
+  // This ensures boards show up even if user doesn't have an inspector record
+  const userId = user?.id || ''
+
   // Get the user's role name for filtering nav items
   const currentUserRole = userRole?.role || 'inspector'
 
@@ -117,8 +121,8 @@ export function Sidebar({ className }: SidebarProps) {
   // Fetch all workspaces
   const { data: workspaces, isLoading: workspacesLoading } = useWorkspaces()
 
-  // Fetch all user's boards
-  const { data: allBoards, isLoading: allBoardsLoading } = useUserBoards(inspectorId || '')
+  // Fetch all user's boards (using auth user ID, not inspector ID)
+  const { data: allBoards, isLoading: allBoardsLoading } = useUserBoards(userId)
 
   // Group boards by workspace
   const boardsByWorkspace = React.useMemo(() => {
