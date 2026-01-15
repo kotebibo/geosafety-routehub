@@ -10,18 +10,20 @@ import type {
   BoardType,
 } from '@/types/board'
 
-// Use any type for supabase to bypass strict table typings
-const supabase = createClient() as any
+// Helper to get supabase client with current auth state
+// IMPORTANT: Must be called inside functions, not at module level
+const getSupabase = () => createClient() as any
 
 export const userBoardsService = {
   // ==================== BOARDS ====================
 
   /**
    * Get all boards accessible to the user
-   * RLS policies automatically filter based on auth.email()
+   * RLS policies automatically filter based on auth.uid()
    */
   async getBoards(userId?: string): Promise<Board[]> {
-    const { data, error } = await supabase
+    const supabase = getSupabase()
+    const { data, error } = await getSupabase()
       .from('boards')
       .select('*')
       .order('created_at', { ascending: false })
@@ -35,7 +37,7 @@ export const userBoardsService = {
    * RLS policies automatically filter based on auth.email()
    */
   async getBoardsByType(boardType: BoardType, userId?: string): Promise<Board[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('boards')
       .select('*')
       .eq('board_type', boardType)
@@ -49,7 +51,7 @@ export const userBoardsService = {
    * Get a specific board by ID
    */
   async getBoard(boardId: string): Promise<Board> {
-    const { data, error} = await supabase
+    const { data, error} = await getSupabase()
       .from('boards')
       .select('*')
       .eq('id', boardId)
@@ -63,7 +65,7 @@ export const userBoardsService = {
    * Create a new board
    */
   async createBoard(board: Omit<Board, 'id' | 'created_at' | 'updated_at'>): Promise<Board> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('boards')
       .insert(board)
       .select()
@@ -125,7 +127,7 @@ export const userBoardsService = {
     }))
 
     // Insert columns
-    const { error: colError } = await supabase
+    const { error: colError } = await getSupabase()
       .from('board_columns')
       .insert(columns)
 
@@ -138,7 +140,7 @@ export const userBoardsService = {
    * Update a board
    */
   async updateBoard(boardId: string, updates: Partial<Board>): Promise<Board> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('boards')
       .update(updates)
       .eq('id', boardId)
@@ -153,7 +155,7 @@ export const userBoardsService = {
    * Delete a board
    */
   async deleteBoard(boardId: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('boards')
       .delete()
       .eq('id', boardId)
@@ -184,7 +186,7 @@ export const userBoardsService = {
     })
 
     // Get and duplicate columns (board-specific ones only)
-    const { data: originalColumns } = await supabase
+    const { data: originalColumns } = await getSupabase()
       .from('board_columns')
       .select('*')
       .eq('board_type', originalBoard.board_type)
@@ -211,7 +213,7 @@ export const userBoardsService = {
           config: col.config,
         }))
 
-        await supabase.from('board_columns').insert(newColumns)
+        await getSupabase().from('board_columns').insert(newColumns)
       }
     }
 
@@ -232,7 +234,7 @@ export const userBoardsService = {
         created_by: ownerId,
       }))
 
-      await supabase.from('board_items').insert(newItems)
+      await getSupabase().from('board_items').insert(newItems)
     }
 
     return newBoard
@@ -250,7 +252,7 @@ export const userBoardsService = {
 
     // Get the max position in the target board
     const targetBoardId = options?.targetBoardId || originalItem.board_id
-    const { data: existingItems } = await supabase
+    const { data: existingItems } = await getSupabase()
       .from('board_items')
       .select('position')
       .eq('board_id', targetBoardId)
@@ -299,7 +301,7 @@ export const userBoardsService = {
    * Get all items in a board
    */
   async getBoardItems(boardId: string): Promise<BoardItem[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_items')
       .select('*')
       .eq('board_id', boardId)
@@ -313,7 +315,7 @@ export const userBoardsService = {
    * Get a specific item
    */
   async getBoardItem(itemId: string): Promise<BoardItem> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_items')
       .select('*')
       .eq('id', itemId)
@@ -329,7 +331,7 @@ export const userBoardsService = {
   async createBoardItem(
     item: Omit<BoardItem, 'id' | 'created_at' | 'updated_at'>
   ): Promise<BoardItem> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_items')
       .insert(item)
       .select()
@@ -343,7 +345,7 @@ export const userBoardsService = {
    * Update an item
    */
   async updateBoardItem(itemId: string, updates: Partial<BoardItem>): Promise<BoardItem> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_items')
       .update(updates)
       .eq('id', itemId)
@@ -372,7 +374,7 @@ export const userBoardsService = {
    * Delete an item
    */
   async deleteBoardItem(itemId: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('board_items')
       .delete()
       .eq('id', itemId)
@@ -404,7 +406,7 @@ export const userBoardsService = {
    * Get board members
    */
   async getBoardMembers(boardId: string): Promise<BoardMember[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_members')
       .select(`
         *,
@@ -430,7 +432,7 @@ export const userBoardsService = {
     role: 'owner' | 'editor' | 'viewer',
     addedBy: string
   ): Promise<BoardMember> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_members')
       .insert({
         board_id: boardId,
@@ -453,7 +455,7 @@ export const userBoardsService = {
     userId: string,
     role: 'owner' | 'editor' | 'viewer'
   ): Promise<BoardMember> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_members')
       .update({ role })
       .eq('board_id', boardId)
@@ -469,7 +471,7 @@ export const userBoardsService = {
    * Remove member from board
    */
   async removeBoardMember(boardId: string, userId: string): Promise<void> {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('board_members')
       .delete()
       .eq('board_id', boardId)
@@ -484,7 +486,7 @@ export const userBoardsService = {
    * Get all board templates
    */
   async getTemplates(): Promise<BoardTemplate[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .select('*')
       .order('is_featured', { ascending: false })
@@ -498,7 +500,7 @@ export const userBoardsService = {
    * Get templates by category
    */
   async getTemplatesByCategory(category: string): Promise<BoardTemplate[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .select('*')
       .eq('category', category)
@@ -512,7 +514,7 @@ export const userBoardsService = {
    * Get featured templates
    */
   async getFeaturedTemplates(): Promise<BoardTemplate[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .select('*')
       .eq('is_featured', true)
@@ -526,7 +528,7 @@ export const userBoardsService = {
    * Get a specific template
    */
   async getTemplate(templateId: string): Promise<BoardTemplate> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .select('*')
       .eq('id', templateId)
@@ -550,7 +552,7 @@ export const userBoardsService = {
   ): Promise<BoardTemplate> {
     // First get the board and its columns
     const board = await this.getBoard(boardId)
-    const { data: columns, error: columnsError } = await supabase
+    const { data: columns, error: columnsError } = await getSupabase()
       .from('board_columns')
       .select('*')
       .eq('board_type', board.board_type)
@@ -569,7 +571,7 @@ export const userBoardsService = {
     }))
 
     // Create the template
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .insert({
         name: templateData.name,
@@ -596,7 +598,7 @@ export const userBoardsService = {
    * RLS policies automatically filter based on auth.email()
    */
   async searchBoards(query: string, userId?: string): Promise<Board[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('boards')
       .select('*')
       .ilike('name', `%${query}%`)
@@ -611,7 +613,7 @@ export const userBoardsService = {
    * Search items in a board
    */
   async searchBoardItems(boardId: string, query: string): Promise<BoardItem[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('board_items')
       .select('*')
       .eq('board_id', boardId)
