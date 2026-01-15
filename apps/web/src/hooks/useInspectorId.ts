@@ -15,6 +15,13 @@ export function useInspectorId(userEmail: string | undefined) {
     queryFn: async () => {
       if (!userEmail) return null
 
+      // Verify we have an active session before querying
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        // No session - user not authenticated yet
+        return null
+      }
+
       const { data, error } = await supabase
         .from('inspectors')
         .select('id')
