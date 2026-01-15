@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { LogIn, UserPlus, AlertCircle, CheckCircle } from 'lucide-react';
 
@@ -9,6 +9,8 @@ type AuthMode = 'login' | 'signup';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnUrl = searchParams.get('from') || '/';
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
@@ -84,8 +86,8 @@ export default function LoginPage() {
             setError(error.message);
           }
         } else {
-          // Redirect to home page
-          router.push('/');
+          // Redirect to the original page or home
+          router.push(returnUrl);
           router.refresh();
         }
       }

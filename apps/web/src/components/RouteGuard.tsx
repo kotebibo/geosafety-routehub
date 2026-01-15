@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-// TODO: Re-enable authentication before deployment
-const DISABLE_AUTH_FOR_DEV = true;
+// Authentication is now enabled
+const DISABLE_AUTH_FOR_DEV = false;
 
 export default function RouteGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
