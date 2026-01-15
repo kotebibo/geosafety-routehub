@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useUserBoards } from '@/features/boards/hooks'
 import { Button } from '@/shared/components/ui'
 import { CreateBoardModal } from '@/features/boards/components'
-import { Plus, MoreHorizontal, Trash2, Copy, ExternalLink, Users } from 'lucide-react'
+import { Plus, MoreHorizontal, Trash2, Copy, ExternalLink, Users, Folder, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Board } from '@/features/boards/types/board'
 
@@ -144,6 +144,7 @@ export default function BoardsPage() {
                 board={board}
                 onClick={() => handleBoardClick(board)}
                 colorClass={getBoardColorClass(board.color)}
+                isOwner={board.owner_id === user?.id}
               />
             ))}
 
@@ -216,10 +217,12 @@ function BoardCard({
   board,
   onClick,
   colorClass,
+  isOwner,
 }: {
   board: Board
   onClick: () => void
   colorClass: string
+  isOwner: boolean
 }) {
   const [showMenu, setShowMenu] = useState(false)
 
@@ -237,8 +240,8 @@ function BoardCard({
       <div className={cn('h-2 w-full', colorClass)} />
 
       {/* Content */}
-      <div className="p-6 flex flex-col h-full">
-        <div className="flex items-start justify-between mb-3">
+      <div className="p-4 flex flex-col h-full">
+        <div className="flex items-start justify-between mb-2">
           <h3 className="font-semibold text-text-primary text-lg line-clamp-2 flex-1">
             {board.name}
           </h3>
@@ -255,20 +258,34 @@ function BoardCard({
         </div>
 
         {board.description && (
-          <p className="text-sm text-text-tertiary line-clamp-2 mb-4">
+          <p className="text-sm text-text-tertiary line-clamp-2 mb-2">
             {board.description}
           </p>
         )}
 
+        {/* Workspace & Owner Info */}
+        <div className="flex items-center gap-3 text-xs text-text-tertiary mb-2">
+          {board.workspace_id && (
+            <div className="flex items-center gap-1">
+              <Folder className="w-3 h-3" />
+              <span className="truncate max-w-[80px]">Workspace</span>
+            </div>
+          )}
+          <div className="flex items-center gap-1">
+            <User className="w-3 h-3" />
+            <span>{isOwner ? 'You' : 'Shared'}</span>
+          </div>
+        </div>
+
         <div className="mt-auto flex items-center justify-between text-xs text-text-tertiary">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {board.is_public && (
               <div className="flex items-center gap-1">
                 <Users className="w-3 h-3" />
-                <span>Shared</span>
+                <span>Public</span>
               </div>
             )}
-            <span className="capitalize">{board.board_type}</span>
+            <span className="capitalize bg-bg-secondary px-1.5 py-0.5 rounded">{board.board_type}</span>
           </div>
 
           <span>
