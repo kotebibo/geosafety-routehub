@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInspectorId } from '@/hooks/useInspectorId'
-import { useWorkspacesWithBoardCounts } from '@/features/workspaces/hooks'
+import { useWorkspacesWithBoardCounts, useDeleteWorkspace, useUpdateWorkspace } from '@/features/workspaces/hooks'
 import { CreateWorkspaceModal } from '@/features/workspaces/components'
 import { Button } from '@/shared/components/ui'
 import {
@@ -16,6 +16,10 @@ import {
   LayoutDashboard,
   Users,
   Home,
+  ExternalLink,
+  Copy,
+  Pencil,
+  Trash2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Workspace } from '@/types/workspace'
@@ -32,10 +36,21 @@ const WORKSPACE_COLORS: Record<string, string> = {
 
 export default function WorkspacesPage() {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, userRole } = useAuth()
   const { data: inspectorId } = useInspectorId(user?.email)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const { data: workspaces, isLoading } = useWorkspacesWithBoardCounts()
+  const { data: workspaces, isLoading, refetch } = useWorkspacesWithBoardCounts()
+
+  // Check if user is admin
+  const isAdmin = userRole?.role === 'admin'
+
+  // Workspace action states
+  const [renameWorkspace, setRenameWorkspace] = useState<Workspace | null>(null)
+  const [deleteWorkspace, setDeleteWorkspace] = useState<Workspace | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+
+  const deleteMutation = useDeleteWorkspace()
 
   const handleWorkspaceCreated = (workspaceId: string) => {
     router.push(`/workspaces/${workspaceId}`)
@@ -43,6 +58,30 @@ export default function WorkspacesPage() {
 
   const handleWorkspaceClick = (workspace: Workspace) => {
     router.push(`/workspaces/${workspace.id}`)
+  }
+
+  const handleRename = (workspace: Workspace) => {
+    setRenameValue(workspace.name)
+    setRenameWorkspace(workspace)
+  }
+
+  const handleDuplicate = async (workspace: Workspace) => {
+    // Open create modal with pre-filled name
+    setIsCreateModalOpen(true)
+    // Note: CreateWorkspaceModal would need to accept initial values to fully support this
+    // For now, just open the create modal
+  }
+
+  const handleDelete = async () => {
+    if (!deleteWorkspace || deleteConfirmText !== deleteWorkspace.name) return
+    try {
+      await deleteMutation.mutateAsync(deleteWorkspace.id)
+      setDeleteWorkspace(null)
+      setDeleteConfirmText('')
+      refetch()
+    } catch (error) {
+      console.error('Failed to delete workspace:', error)
+    }
   }
 
   const getWorkspaceColorClass = (color?: string) => {
@@ -106,14 +145,21 @@ export default function WorkspacesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {workspaces?.map((workspace) => (
-              <WorkspaceCard
-                key={workspace.id}
-                workspace={workspace}
-                onClick={() => handleWorkspaceClick(workspace)}
-                colorClass={getWorkspaceColorClass(workspace.color)}
-              />
-            ))}
+            {workspaces?.map((workspace) => {
+              const isOwner = workspace.owner_id === user?.id
+              return (
+                <WorkspaceCard
+                  key={workspace.id}
+                  workspace={workspace}
+                  onClick={() => handleWorkspaceClick(workspace)}
+                  colorClass={getWorkspaceColorClass(workspace.color)}
+                  canEdit={isOwner || isAdmin}
+                  onRename={() => handleRename(workspace)}
+                  onDuplicate={() => handleDuplicate(workspace)}
+                  onDelete={() => setDeleteWorkspace(workspace)}
+                />
+              )
+            })}
 
             {/* Create New Workspace Card */}
             <button
@@ -177,6 +223,68 @@ export default function WorkspacesPage() {
           onSuccess={handleWorkspaceCreated}
         />
       )}
+
+      {/* Rename Workspace Modal */}
+      {renameWorkspace && (
+        <RenameWorkspaceModal
+          workspace={renameWorkspace}
+          value={renameValue}
+          onChange={setRenameValue}
+          onClose={() => {
+            setRenameWorkspace(null)
+            setRenameValue('')
+          }}
+          onSuccess={() => {
+            setRenameWorkspace(null)
+            setRenameValue('')
+            refetch()
+          }}
+        />
+      )}
+
+      {/* Delete Workspace Confirmation Modal */}
+      {deleteWorkspace && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              Delete Workspace
+            </h3>
+            <p className="text-text-secondary mb-4">
+              This action cannot be undone. All boards in this workspace will be moved to their owner's default workspace.
+            </p>
+            <p className="text-text-secondary mb-4">
+              Please type <strong>{deleteWorkspace.name}</strong> to confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="Type workspace name"
+              className="w-full px-3 py-2 border border-border-default rounded-lg mb-4"
+            />
+            <div className="flex gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  setDeleteWorkspace(null)
+                  setDeleteConfirmText('')
+                }}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={deleteConfirmText !== deleteWorkspace.name || deleteMutation.isPending}
+                className="flex-1"
+              >
+                {deleteMutation.isPending ? 'Deleting...' : 'Delete Workspace'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -190,12 +298,26 @@ function WorkspaceCard({
   workspace,
   onClick,
   colorClass,
+  canEdit,
+  onRename,
+  onDuplicate,
+  onDelete,
 }: {
   workspace: WorkspaceWithBoardCount
   onClick: () => void
   colorClass: string
+  canEdit: boolean
+  onRename: () => void
+  onDuplicate: () => void
+  onDelete: () => void
 }) {
   const [showMenu, setShowMenu] = useState(false)
+
+  const handleOpenInNewTab = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    window.open(`/workspaces/${workspace.id}`, '_blank')
+    setShowMenu(false)
+  }
 
   return (
     <div
@@ -278,6 +400,37 @@ function WorkspaceCard({
             <Folder className="w-4 h-4" />
             Open Workspace
           </Link>
+          <button
+            onClick={handleOpenInNewTab}
+            className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Open in New Tab
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowMenu(false)
+              onDuplicate()
+            }}
+            className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
+          >
+            <Copy className="w-4 h-4" />
+            Duplicate
+          </button>
+          {canEdit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                setShowMenu(false)
+                onRename()
+              }}
+              className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
+            >
+              <Pencil className="w-4 h-4" />
+              Rename
+            </button>
+          )}
           <Link
             href={`/workspaces/${workspace.id}/settings`}
             className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
@@ -285,8 +438,90 @@ function WorkspaceCard({
             <Settings className="w-4 h-4" />
             Settings
           </Link>
+          {canEdit && !workspace.is_default && (
+            <>
+              <div className="my-1 border-t border-border-light" />
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowMenu(false)
+                  onDelete()
+                }}
+                className="w-full px-4 py-2 text-left text-sm text-status-stuck hover:bg-bg-hover flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </>
+          )}
         </div>
       )}
+    </div>
+  )
+}
+
+// Rename Workspace Modal Component
+function RenameWorkspaceModal({
+  workspace,
+  value,
+  onChange,
+  onClose,
+  onSuccess,
+}: {
+  workspace: Workspace
+  value: string
+  onChange: (value: string) => void
+  onClose: () => void
+  onSuccess: () => void
+}) {
+  const updateMutation = useUpdateWorkspace(workspace.id)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!value.trim()) return
+    try {
+      await updateMutation.mutateAsync({ name: value.trim() })
+      onSuccess()
+    } catch (error) {
+      console.error('Failed to rename workspace:', error)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
+        <h3 className="text-lg font-semibold text-text-primary mb-4">
+          Rename Workspace
+        </h3>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Workspace name"
+            className="w-full px-3 py-2 border border-border-default rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary"
+            autoFocus
+          />
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={!value.trim() || value === workspace.name || updateMutation.isPending}
+              className="flex-1"
+            >
+              {updateMutation.isPending ? 'Saving...' : 'Save'}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   )
 }

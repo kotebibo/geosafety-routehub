@@ -1130,7 +1130,7 @@ export interface Database {
           p_user_full_name: string | null
           p_user_avatar_url: string | null
         }
-        Returns: void
+        Returns: Json
       }
     }
     Enums: {

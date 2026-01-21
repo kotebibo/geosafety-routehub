@@ -85,7 +85,7 @@ export const workspaceService = {
 
     if (wsError) throw wsError
 
-    // Then get members with inspector details
+    // Then get members
     const { data: members, error: memError } = await getSupabase()
       .from('workspace_members')
       .select('*')
@@ -94,28 +94,28 @@ export const workspaceService = {
 
     if (memError) throw memError
 
-    // Fetch inspector details for each member
+    // Fetch user details for each member (user_id is now auth.users.id)
     const memberIds = members?.map((m: any) => m.user_id) || []
-    let inspectorMap: Record<string, any> = {}
+    let userMap: Record<string, any> = {}
 
     if (memberIds.length > 0) {
-      const { data: inspectors } = await getSupabase()
-        .from('inspectors')
+      const { data: users } = await getSupabase()
+        .from('users')
         .select('id, full_name, email, avatar_url')
         .in('id', memberIds)
 
-      if (inspectors) {
-        inspectorMap = inspectors.reduce((acc: any, i: any) => {
-          acc[i.id] = i
+      if (users) {
+        userMap = users.reduce((acc: any, u: any) => {
+          acc[u.id] = u
           return acc
         }, {})
       }
     }
 
-    // Combine members with inspector details
+    // Combine members with user details
     const membersWithDetails = (members || []).map((m: any) => ({
       ...m,
-      user: inspectorMap[m.user_id] || null,
+      user: userMap[m.user_id] || null,
     }))
 
     return {
@@ -368,28 +368,29 @@ export const workspaceService = {
 
     if (error) throw error
 
-    // Fetch inspector details for each member
+    // Fetch user details for each member (user_id is now auth.users.id)
     const memberIds = members?.map((m: any) => m.user_id) || []
-    let inspectorMap: Record<string, any> = {}
+    let userMap: Record<string, any> = {}
 
     if (memberIds.length > 0) {
-      const { data: inspectors } = await getSupabase()
-        .from('inspectors')
+      // First try to get from users table (synced with auth.users)
+      const { data: users } = await getSupabase()
+        .from('users')
         .select('id, full_name, email, avatar_url')
         .in('id', memberIds)
 
-      if (inspectors) {
-        inspectorMap = inspectors.reduce((acc: any, i: any) => {
-          acc[i.id] = i
+      if (users) {
+        userMap = users.reduce((acc: any, u: any) => {
+          acc[u.id] = u
           return acc
         }, {})
       }
     }
 
-    // Combine members with inspector details
+    // Combine members with user details
     return (members || []).map((m: any) => ({
       ...m,
-      user: inspectorMap[m.user_id] || null,
+      user: userMap[m.user_id] || null,
     }))
   },
 

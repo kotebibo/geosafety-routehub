@@ -12,7 +12,7 @@ import { MondayBoardTable, ErrorBoundary, BoardPresenceIndicator, BoardToolbar, 
 import { useBoardUpdates } from '@/features/boards/hooks'
 import { Button } from '@/shared/components/ui'
 import { useToast } from '@/components/ui-monday/Toast'
-import { ArrowLeft, Plus, Columns, Search, Download, Upload, Copy, Trash2, Undo2, Redo2, History, FileCheck } from 'lucide-react'
+import { ArrowLeft, Plus, Columns, Search, Download, Upload, Copy, Trash2, Undo2, Redo2, History, FileCheck, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BoardItem, BoardColumn, BoardGroup, ColumnType } from '@/features/boards/types/board'
 import { boardsService, userBoardsService } from '@/features/boards/services'
@@ -25,6 +25,7 @@ const ItemDetailDrawer = dynamic(() => import('@/features/boards/components/Item
 const ImportBoardModal = dynamic(() => import('@/features/boards/components/ImportBoardModal').then(m => ({ default: m.ImportBoardModal })), { ssr: false })
 const SaveAsTemplateModal = dynamic(() => import('@/features/boards/components/SaveAsTemplateModal').then(m => ({ default: m.SaveAsTemplateModal })), { ssr: false })
 const ActivityLogPanel = dynamic(() => import('@/features/boards/components/ActivityLog').then(m => ({ default: m.ActivityLogPanel })), { ssr: false })
+const BoardAccessModal = dynamic(() => import('@/features/boards/components/BoardAccessModal').then(m => ({ default: m.BoardAccessModal })), { ssr: false })
 
 // Lazy-load lookup hooks - only fetch when export is triggered
 const useLookupData = () => {
@@ -105,6 +106,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const [showImportModal, setShowImportModal] = useState(false)
   const [showActivityLog, setShowActivityLog] = useState(false)
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false)
+  const [showAccessModal, setShowAccessModal] = useState(false)
 
   const { data: inspectorId } = useInspectorId(user?.email)
 
@@ -1023,6 +1025,12 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 <span className="hidden sm:inline">Save Template</span>
               </Button>
 
+              {/* Access Button */}
+              <Button variant="secondary" size="sm" onClick={() => setShowAccessModal(true)}>
+                <Users className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Access</span>
+              </Button>
+
               <Button variant="secondary" size="sm" onClick={() => setShowColumnConfig(true)}>
                 <Columns className="w-4 h-4 mr-2" />
                 Columns
@@ -1279,6 +1287,17 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           onSuccess={() => {
             showToast('Board saved as template', 'success')
           }}
+        />
+      )}
+
+      {/* Board Access Modal */}
+      {showAccessModal && board && (
+        <BoardAccessModal
+          isOpen={showAccessModal}
+          onClose={() => setShowAccessModal(false)}
+          boardId={params.id}
+          boardName={board.name}
+          ownerId={board.owner_id}
         />
       )}
 

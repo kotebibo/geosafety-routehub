@@ -15,6 +15,7 @@ interface AuthContextType {
   userRole: UserRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signUp: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
@@ -62,14 +63,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       // Ensure user profile exists in users table
       // This replaces the auth.users trigger we can't create
+      // The function also triggers creation of default workspace via trigger on users table
       const currentUser = (await supabase.auth.getUser()).data.user;
-      if (currentUser) {
-        await (supabase as any).rpc('upsert_user_profile', {
-          p_user_id: currentUser.id,
-          p_user_email: currentUser.email,
-          p_user_full_name: currentUser.user_metadata?.full_name || null,
-          p_user_avatar_url: currentUser.user_metadata?.avatar_url || null,
-        });
+      if (currentUser && currentUser.email) {
+        try {
+          const { error: rpcError } = await (supabase as any).rpc('upsert_user_profile', {
+            p_user_id: currentUser.id,
+            p_user_email: currentUser.email,
+            p_user_full_name: currentUser.user_metadata?.full_name || '',
+            p_user_avatar_url: currentUser.user_metadata?.avatar_url || '',
+          });
+          if (rpcError) {
+            console.warn('Failed to upsert user profile:', rpcError.message);
+          }
+        } catch (err) {
+          // Log but don't fail - user can still proceed, workspace might not be created
+          console.warn('Failed to upsert user profile:', err);
+        }
       }
 
       // First, get the user's role
@@ -151,6 +161,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    return { error };
+  };
+
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({
       email,
@@ -186,6 +206,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     userRole,
     loading,
     signIn,
+    signInWithGoogle,
     signUp,
     signOut,
     isAdmin: userRole?.role === 'admin',

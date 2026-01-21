@@ -6,8 +6,7 @@ import { X, Plus, Check, Briefcase, Users, CheckSquare, TrendingUp } from 'lucid
 import { Button } from '@/components/ui-monday'
 import { useCreateBoard, useCreateBoardFromTemplate, useBoardTemplates } from '../hooks'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
-import type { BoardTemplate, BoardType } from '@/types/board'
+import type { BoardTemplate } from '@/types/board'
 
 interface CreateBoardModalProps {
   isOpen: boolean
@@ -34,7 +33,8 @@ const COLOR_OPTIONS = [
 
 export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId }: CreateBoardModalProps) {
   const { user } = useAuth()
-  const { data: inspectorId, isLoading: inspectorLoading } = useInspectorId(user?.email)
+  // Use auth user ID directly (auth.uid()) - this is the unified user ID system
+  const userId = user?.id
   const [step, setStep] = useState<'method' | 'template' | 'custom'>('method')
   const [boardName, setBoardName] = useState('')
   const [selectedTemplate, setSelectedTemplate] = useState<BoardTemplate | null>(null)
@@ -59,15 +59,15 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
 
 
   const { data: templates, isLoading: templatesLoading } = useBoardTemplates()
-  const createBoard = useCreateBoard(inspectorId || '')
-  const createFromTemplate = useCreateBoardFromTemplate(inspectorId || '')
+  const createBoard = useCreateBoard(userId || '')
+  const createFromTemplate = useCreateBoardFromTemplate(userId || '')
 
   const handleCreateBlankBoard = async () => {
-    if (!boardName.trim() || !user || !inspectorId) return
+    if (!boardName.trim() || !userId) return
 
     try {
       const boardData = {
-        owner_id: inspectorId,
+        owner_id: userId,  // Use auth.uid() directly
         board_type: 'custom' as const,
         name: boardName,
         icon: 'board',
@@ -96,7 +96,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
   }
 
   const handleCreateFromTemplate = async () => {
-    if (!boardName.trim() || !selectedTemplate || !user || !inspectorId) return
+    if (!boardName.trim() || !selectedTemplate || !userId) return
 
     try {
       const newBoard = await createFromTemplate.mutateAsync({
@@ -360,7 +360,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
             <Button
               variant="primary"
               onClick={handleCreateFromTemplate}
-              disabled={!boardName.trim() || !selectedTemplate || !inspectorId || createFromTemplate.isPending}
+              disabled={!boardName.trim() || !selectedTemplate || !userId || createFromTemplate.isPending}
             >
               {createFromTemplate.isPending ? 'Creating...' : 'Create Board'}
             </Button>
@@ -370,7 +370,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
             <Button
               variant="primary"
               onClick={handleCreateBlankBoard}
-              disabled={!boardName.trim() || createBoard.isPending || !inspectorId}
+              disabled={!boardName.trim() || createBoard.isPending || !userId}
             >
               {createBoard.isPending ? 'Creating...' : 'Create Board'}
             </Button>

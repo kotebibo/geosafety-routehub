@@ -460,6 +460,47 @@ export const usersService = {
   // ==================== STATS ====================
 
   /**
+   * Get user count for each role
+   */
+  async getUserCountByRole(): Promise<Record<string, number>> {
+    const { data: roles, error } = await supabase
+      .from('user_roles')
+      .select('role');
+
+    if (error) throw error;
+
+    return (roles || []).reduce((acc: Record<string, number>, r: { role: string }) => {
+      acc[r.role] = (acc[r.role] || 0) + 1;
+      return acc;
+    }, {});
+  },
+
+  /**
+   * Get role statistics for the roles page
+   */
+  async getRoleStats(): Promise<{
+    totalRoles: number;
+    systemRoles: number;
+    customRoles: number;
+    totalPermissions: number;
+    usersByRole: Record<string, number>;
+  }> {
+    const [roles, permissions, userCounts] = await Promise.all([
+      this.getRoles(),
+      this.getPermissions(),
+      this.getUserCountByRole(),
+    ]);
+
+    return {
+      totalRoles: roles.length,
+      systemRoles: roles.filter(r => r.is_system).length,
+      customRoles: roles.filter(r => !r.is_system).length,
+      totalPermissions: permissions.length,
+      usersByRole: userCounts,
+    };
+  },
+
+  /**
    * Get user statistics
    */
   async getUserStats(): Promise<{

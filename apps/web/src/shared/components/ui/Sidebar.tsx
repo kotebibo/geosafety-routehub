@@ -14,7 +14,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import {
   CreateWorkspaceModal,
 } from '@/features/workspaces/components'
-import { useWorkspaces } from '@/features/workspaces/hooks'
+import { useWorkspaces, useDeleteWorkspace, useUpdateWorkspace } from '@/features/workspaces/hooks'
 import {
   Home,
   Building2,
@@ -89,6 +89,16 @@ interface BoardMenuState {
   position: { top: number; left: number }
 }
 
+// Workspace type for menu state
+interface WorkspaceMenuState {
+  workspaceId: string
+  workspaceName: string
+  isDefault?: boolean
+  isOwner: boolean
+  canEdit: boolean // Owner OR admin
+  position: { top: number; left: number }
+}
+
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = React.useState(false)
   const [boardsExpanded, setBoardsExpanded] = React.useState(true)
@@ -101,6 +111,12 @@ export function Sidebar({ className }: SidebarProps) {
   const [actionLoading, setActionLoading] = React.useState(false)
   const [showCreateWorkspace, setShowCreateWorkspace] = React.useState(false)
   const [expandedWorkspaces, setExpandedWorkspaces] = React.useState<Set<string>>(new Set())
+
+  // Workspace menu state
+  const [workspaceMenuState, setWorkspaceMenuState] = React.useState<WorkspaceMenuState | null>(null)
+  const [workspaceRenameMode, setWorkspaceRenameMode] = React.useState(false)
+  const [workspaceRenameValue, setWorkspaceRenameValue] = React.useState('')
+  const [workspaceDeleteConfirm, setWorkspaceDeleteConfirm] = React.useState(false)
 
   const pathname = usePathname()
   const router = useRouter()
@@ -117,6 +133,8 @@ export function Sidebar({ className }: SidebarProps) {
 
   const menuRef = React.useRef<HTMLDivElement>(null)
   const renameInputRef = React.useRef<HTMLInputElement>(null)
+  const workspaceMenuRef = React.useRef<HTMLDivElement>(null)
+  const workspaceRenameInputRef = React.useRef<HTMLInputElement>(null)
 
   // Fetch all workspaces
   const { data: workspaces, isLoading: workspacesLoading } = useWorkspaces()
@@ -199,6 +217,28 @@ export function Sidebar({ className }: SidebarProps) {
     }
   }, [menuState])
 
+  // Close workspace menu when clicking outside
+  React.useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (workspaceMenuRef.current && !workspaceMenuRef.current.contains(event.target as Node)) {
+        closeWorkspaceMenu()
+      }
+    }
+
+    if (workspaceMenuState) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [workspaceMenuState])
+
+  // Focus workspace rename input when entering rename mode
+  React.useEffect(() => {
+    if (workspaceRenameMode && workspaceRenameInputRef.current) {
+      workspaceRenameInputRef.current.focus()
+      workspaceRenameInputRef.current.select()
+    }
+  }, [workspaceRenameMode])
+
   // Focus rename input when entering rename mode
   React.useEffect(() => {
     if (renameMode && renameInputRef.current) {
@@ -238,6 +278,40 @@ export function Sidebar({ className }: SidebarProps) {
     setShowColorPicker(false)
     setRenameMode(false)
     setShowDeleteConfirm(false)
+  }
+
+  // Workspace menu functions
+  const openWorkspaceMenu = (
+    e: React.MouseEvent,
+    workspaceId: string,
+    workspaceName: string,
+    isDefault: boolean,
+    ownerId: string
+  ) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const rect = (e.target as HTMLElement).getBoundingClientRect()
+    const isOwner = ownerId === user?.id
+    const isAdmin = currentUserRole === 'admin'
+    setWorkspaceMenuState({
+      workspaceId,
+      workspaceName,
+      isDefault,
+      isOwner,
+      canEdit: isOwner || isAdmin, // Owner OR admin can edit
+      position: {
+        top: rect.top,
+        left: rect.right + 8,
+      },
+    })
+    setWorkspaceRenameValue(workspaceName)
+  }
+
+  const closeWorkspaceMenu = () => {
+    setWorkspaceMenuState(null)
+    setWorkspaceRenameMode(false)
+    setWorkspaceDeleteConfirm(false)
   }
 
   const refreshBoards = () => {
@@ -569,34 +643,41 @@ export function Sidebar({ className }: SidebarProps) {
                       const archivedBoards = wsBoards.filter((b: any) => b.settings?.is_archived)
 
                       return (
-                        <div key={workspace.id}>
+                        <div key={workspace.id} className="group/workspace">
                           {/* Workspace Folder Row */}
-                          <button
-                            onClick={() => toggleWorkspace(workspace.id)}
+                          <div
                             className={cn(
                               'flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-sm transition-all',
                               'hover:bg-bg-hover text-text-primary',
                               'pl-4'
                             )}
                           >
-                            <ChevronRight
-                              className={cn(
-                                'w-3.5 h-3.5 text-text-tertiary transition-transform flex-shrink-0',
-                                isExpanded && 'rotate-90'
+                            <button
+                              onClick={() => toggleWorkspace(workspace.id)}
+                              className="flex items-center gap-2 flex-1 min-w-0"
+                            >
+                              <ChevronRight
+                                className={cn(
+                                  'w-3.5 h-3.5 text-text-tertiary transition-transform flex-shrink-0',
+                                  isExpanded && 'rotate-90'
+                                )}
+                              />
+                              {isExpanded ? (
+                                <FolderOpen className="w-4 h-4 flex-shrink-0 text-yellow-500" />
+                              ) : (
+                                <Folder className="w-4 h-4 flex-shrink-0 text-text-tertiary" />
                               )}
-                            />
-                            {isExpanded ? (
-                              <FolderOpen className="w-4 h-4 flex-shrink-0 text-yellow-500" />
-                            ) : (
-                              <Folder className="w-4 h-4 flex-shrink-0 text-text-tertiary" />
-                            )}
-                            <span className="flex-1 truncate text-left font-medium">
-                              {workspace.name}
-                            </span>
-                            <span className="text-xs text-text-tertiary">
-                              {activeBoards.length}
-                            </span>
-                          </button>
+                              <span className="flex-1 truncate text-left font-medium">
+                                {workspace.name}
+                              </span>
+                            </button>
+                            <button
+                              className="opacity-0 group-hover/workspace:opacity-100 p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
+                              onClick={(e) => openWorkspaceMenu(e, workspace.id, workspace.name, workspace.is_default, workspace.owner_id)}
+                            >
+                              <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
+                            </button>
+                          </div>
 
                           {/* Boards inside Workspace */}
                           {isExpanded && (
@@ -936,6 +1017,29 @@ export function Sidebar({ className }: SidebarProps) {
         document.body
       )}
 
+      {/* Workspace Actions Menu Portal */}
+      {workspaceMenuState && typeof document !== 'undefined' && createPortal(
+        <WorkspaceActionsMenu
+          menuRef={workspaceMenuRef}
+          menuState={workspaceMenuState}
+          renameMode={workspaceRenameMode}
+          renameValue={workspaceRenameValue}
+          deleteConfirm={workspaceDeleteConfirm}
+          actionLoading={actionLoading}
+          renameInputRef={workspaceRenameInputRef}
+          onRenameValueChange={setWorkspaceRenameValue}
+          onStartRename={() => setWorkspaceRenameMode(true)}
+          onCancelRename={() => setWorkspaceRenameMode(false)}
+          onShowDeleteConfirm={() => setWorkspaceDeleteConfirm(true)}
+          onCancelDelete={() => setWorkspaceDeleteConfirm(false)}
+          onClose={closeWorkspaceMenu}
+          onRefresh={refreshBoards}
+          setActionLoading={setActionLoading}
+          router={router}
+        />,
+        document.body
+      )}
+
       {/* Create Workspace Modal */}
       {inspectorId && (
         <CreateWorkspaceModal
@@ -949,5 +1053,195 @@ export function Sidebar({ className }: SidebarProps) {
         />
       )}
     </>
+  )
+}
+
+// Workspace Actions Menu Component
+interface WorkspaceActionsMenuProps {
+  menuRef: React.RefObject<HTMLDivElement>
+  menuState: WorkspaceMenuState
+  renameMode: boolean
+  renameValue: string
+  deleteConfirm: boolean
+  actionLoading: boolean
+  renameInputRef: React.RefObject<HTMLInputElement>
+  onRenameValueChange: (value: string) => void
+  onStartRename: () => void
+  onCancelRename: () => void
+  onShowDeleteConfirm: () => void
+  onCancelDelete: () => void
+  onClose: () => void
+  onRefresh: () => void
+  setActionLoading: (loading: boolean) => void
+  router: ReturnType<typeof useRouter>
+}
+
+function WorkspaceActionsMenu({
+  menuRef,
+  menuState,
+  renameMode,
+  renameValue,
+  deleteConfirm,
+  actionLoading,
+  renameInputRef,
+  onRenameValueChange,
+  onStartRename,
+  onCancelRename,
+  onShowDeleteConfirm,
+  onCancelDelete,
+  onClose,
+  onRefresh,
+  setActionLoading,
+  router,
+}: WorkspaceActionsMenuProps) {
+  const updateMutation = useUpdateWorkspace(menuState.workspaceId)
+  const deleteMutation = useDeleteWorkspace()
+
+  const handleOpenInNewTab = () => {
+    window.open(`/workspaces/${menuState.workspaceId}`, '_blank')
+    onClose()
+  }
+
+  const handleRename = async () => {
+    if (!renameValue.trim() || actionLoading) return
+
+    setActionLoading(true)
+    try {
+      await updateMutation.mutateAsync({ name: renameValue.trim() })
+      onRefresh()
+      onClose()
+    } catch (error) {
+      console.error('Error renaming workspace:', error)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (actionLoading) return
+
+    setActionLoading(true)
+    try {
+      await deleteMutation.mutateAsync(menuState.workspaceId)
+      onRefresh()
+      onClose()
+    } catch (error) {
+      console.error('Error deleting workspace:', error)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleGoToSettings = () => {
+    router.push(`/workspaces/${menuState.workspaceId}/settings`)
+    onClose()
+  }
+
+  return (
+    <div
+      ref={menuRef}
+      className="fixed z-[9999] bg-white rounded-lg border border-gray-200 shadow-lg py-1 min-w-[200px]"
+      style={{
+        top: menuState.position.top,
+        left: menuState.position.left,
+      }}
+    >
+      {/* Rename Mode */}
+      {renameMode ? (
+        <div className="px-3 py-2">
+          <div className="flex items-center gap-2">
+            <input
+              ref={renameInputRef}
+              type="text"
+              value={renameValue}
+              onChange={(e) => onRenameValueChange(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleRename()
+                if (e.key === 'Escape') onCancelRename()
+              }}
+              className="flex-1 px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:border-monday-primary"
+              placeholder="Workspace name"
+            />
+            <button
+              onClick={handleRename}
+              disabled={actionLoading || !renameValue.trim()}
+              className="p-1.5 rounded hover:bg-gray-100 text-status-done disabled:opacity-50"
+            >
+              <Check className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onCancelRename}
+              className="p-1.5 rounded hover:bg-gray-100 text-text-tertiary"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      ) : deleteConfirm ? (
+        /* Delete Confirmation */
+        <div className="px-3 py-2">
+          <p className="text-sm text-text-primary mb-3">
+            Delete "{menuState.workspaceName}"? Boards will be moved to default workspace.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={handleDelete}
+              disabled={actionLoading}
+              className="flex-1 px-3 py-1.5 bg-status-stuck text-white text-sm rounded hover:bg-red-600 disabled:opacity-50"
+            >
+              {actionLoading ? 'Deleting...' : 'Delete'}
+            </button>
+            <button
+              onClick={onCancelDelete}
+              className="flex-1 px-3 py-1.5 bg-gray-100 text-text-primary text-sm rounded hover:bg-gray-200"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Main Menu */
+        <>
+          <button
+            onClick={handleOpenInNewTab}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+          >
+            <ExternalLink className="w-4 h-4 text-text-tertiary" />
+            Open in new tab
+          </button>
+
+          {menuState.canEdit && (
+            <button
+              onClick={onStartRename}
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+            >
+              <Pencil className="w-4 h-4 text-text-tertiary" />
+              Rename
+            </button>
+          )}
+
+          <button
+            onClick={handleGoToSettings}
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+          >
+            <Settings className="w-4 h-4 text-text-tertiary" />
+            Settings
+          </button>
+
+          {menuState.canEdit && !menuState.isDefault && (
+            <>
+              <div className="my-1 border-t border-gray-100" />
+              <button
+                onClick={onShowDeleteConfirm}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-status-stuck hover:bg-red-50 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </>
+          )}
+        </>
+      )}
+    </div>
   )
 }

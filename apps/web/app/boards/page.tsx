@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUserBoards } from '@/features/boards/hooks'
 import { Button } from '@/shared/components/ui'
-import { CreateBoardModal } from '@/features/boards/components'
+import { CreateBoardModal, BoardAccessModal } from '@/features/boards/components'
 import { Plus, MoreHorizontal, Trash2, Copy, ExternalLink, Users, Folder, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Board } from '@/features/boards/types/board'
@@ -16,6 +16,7 @@ export default function BoardsPage() {
   const { user } = useAuth()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null)
+  const [accessModalBoard, setAccessModalBoard] = useState<Board | null>(null)
   const { data: boards, isLoading } = useUserBoards(user?.id || '')
 
   // Track the workspace ID that was passed via URL - this persists even after URL is cleared
@@ -145,6 +146,7 @@ export default function BoardsPage() {
                 onClick={() => handleBoardClick(board)}
                 colorClass={getBoardColorClass(board.color)}
                 isOwner={board.owner_id === user?.id}
+                onAccessClick={() => setAccessModalBoard(board)}
               />
             ))}
 
@@ -208,6 +210,17 @@ export default function BoardsPage() {
         onBoardCreated={handleBoardCreated}
         workspaceId={currentWorkspaceId}
       />
+
+      {/* Board Access Modal */}
+      {accessModalBoard && (
+        <BoardAccessModal
+          isOpen={!!accessModalBoard}
+          onClose={() => setAccessModalBoard(null)}
+          boardId={accessModalBoard.id}
+          boardName={accessModalBoard.name}
+          ownerId={accessModalBoard.owner_id}
+        />
+      )}
     </div>
   )
 }
@@ -218,11 +231,13 @@ function BoardCard({
   onClick,
   colorClass,
   isOwner,
+  onAccessClick,
 }: {
   board: Board
   onClick: () => void
   colorClass: string
   isOwner: boolean
+  onAccessClick: () => void
 }) {
   const [showMenu, setShowMenu] = useState(false)
 
@@ -307,6 +322,16 @@ function BoardCard({
           <button className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2">
             <Copy className="w-4 h-4" />
             Duplicate
+          </button>
+          <button
+            onClick={() => {
+              setShowMenu(false)
+              onAccessClick()
+            }}
+            className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
+          >
+            <Users className="w-4 h-4" />
+            Access
           </button>
           <div className="my-1 border-t border-border-light" />
           <button className="w-full px-4 py-2 text-left text-sm text-status-stuck hover:bg-bg-hover flex items-center gap-2">

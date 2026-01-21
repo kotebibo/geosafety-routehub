@@ -406,21 +406,31 @@ export const userBoardsService = {
    * Get board members
    */
   async getBoardMembers(boardId: string): Promise<BoardMember[]> {
-    const { data, error } = await getSupabase()
+    // First get the board members
+    const { data: members, error } = await getSupabase()
       .from('board_members')
-      .select(`
-        *,
-        user:user_id (
-          full_name,
-          email,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('board_id', boardId)
       .order('added_at', { ascending: true })
 
     if (error) throw error
-    return data || []
+    if (!members || members.length === 0) return []
+
+    // Then fetch user details separately (since we don't have FK constraints)
+    const userIds = members.map((m: any) => m.user_id)
+    const { data: users } = await getSupabase()
+      .from('users')
+      .select('id, full_name, email, avatar_url')
+      .in('id', userIds)
+
+    // Create a map for quick lookup
+    const userMap = new Map((users || []).map((u: any) => [u.id, u]))
+
+    // Merge members with user data
+    return members.map((member: any) => ({
+      ...member,
+      user: userMap.get(member.user_id) || null
+    }))
   },
 
   /**
@@ -434,11 +444,14 @@ export const userBoardsService = {
   ): Promise<BoardMember> {
     const { data, error } = await getSupabase()
       .from('board_members')
-      .insert({
+      .upsert({
         board_id: boardId,
         user_id: userId,
         role,
         added_by: addedBy,
+      }, {
+        onConflict: 'board_id,user_id',
+        ignoreDuplicates: false
       })
       .select()
       .single()
