@@ -1,8 +1,9 @@
-import { getSupabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import type { BoardPresence, BoardType } from '@/types/board'
 
-// Use any type for supabase to bypass strict table typings
-const supabase = getSupabase() as any
+// Helper to get supabase client with current auth state
+// IMPORTANT: Must be called inside functions, not at module level
+const getSupabase = () => createClient()
 
 /**
  * Real-time Presence Service
@@ -19,7 +20,7 @@ export const presenceService = {
     isEditing = false,
     editingItemId?: string
   ): Promise<void> {
-    const { error } = await supabase.from('board_presence').upsert(
+    const { error } = await getSupabase().from('board_presence').upsert(
       {
         user_id: userId,
         board_type: boardType,
@@ -96,7 +97,7 @@ export const presenceService = {
    * Clean up stale presence records (older than 5 minutes)
    */
   async cleanupStalePresence(): Promise<void> {
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('board_presence')
       .delete()
       .lt('last_seen', new Date(Date.now() - 5 * 60 * 1000).toISOString())
@@ -203,7 +204,7 @@ export const presenceService = {
         })
       },
       unsubscribe: async () => {
-        await supabase.removeChannel(channel)
+        await getSupabase().removeChannel(channel)
       },
     }
   },

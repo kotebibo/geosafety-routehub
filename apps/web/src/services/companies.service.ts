@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase'
 import type {
   CompanyLocation,
   CompanyLocationInput,
@@ -6,8 +6,9 @@ import type {
   CompanyListItem
 } from '@/types/company'
 
-// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
-const db = supabase as any
+// Helper to get supabase client with current auth state
+// IMPORTANT: Must be called inside functions, not at module level
+const getDb = () => createClient()
 
 export const companiesService = {
   // ============================================
@@ -15,7 +16,7 @@ export const companiesService = {
   // ============================================
   
   getAll: async () => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('companies')
       .select('*')
       .order('name')
@@ -26,7 +27,7 @@ export const companiesService = {
 
   // Get all companies with location count (for lists/pickers)
   getAllWithLocationCount: async (): Promise<CompanyListItem[]> => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('companies_with_location_count')
       .select('*')
       .order('name')
@@ -36,7 +37,7 @@ export const companiesService = {
   },
 
   getById: async (id: string) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('companies')
       .select('*')
       .eq('id', id)
@@ -48,7 +49,7 @@ export const companiesService = {
 
   // Get company with all its locations
   getByIdWithLocations: async (id: string): Promise<CompanyWithLocations> => {
-    const { data: company, error: companyError } = await db
+    const { data: company, error: companyError } = await getDb()
       .from('companies')
       .select('*')
       .eq('id', id)
@@ -56,7 +57,7 @@ export const companiesService = {
     
     if (companyError) throw companyError
 
-    const { data: locations, error: locationsError } = await db
+    const { data: locations, error: locationsError } = await getDb()
       .from('company_locations')
       .select('*')
       .eq('company_id', id)
@@ -76,7 +77,7 @@ export const companiesService = {
   },
 
   getWithServices: async (companyId: string) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('company_services')
       .select(`
         *,
@@ -101,7 +102,7 @@ export const companiesService = {
     priority?: string
     status?: string
   }) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('companies')
       .insert(companyData)
       .select()
@@ -121,7 +122,7 @@ export const companiesService = {
     const companyAddress = primaryLocation?.address || ''
 
     // First create the company with address from primary location
-    const { data: company, error: companyError } = await db
+    const { data: company, error: companyError } = await getDb()
       .from('companies')
       .insert({
         ...companyData,
@@ -141,7 +142,7 @@ export const companiesService = {
         company_id: company.id
       }))
 
-      const { error: locationsError } = await db
+      const { error: locationsError } = await getDb()
         .from('company_locations')
         .insert(locationsWithCompanyId)
       
@@ -152,7 +153,7 @@ export const companiesService = {
   },
 
   update: async (id: string, updates: any) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('companies')
       .update(updates)
       .eq('id', id)
@@ -164,7 +165,7 @@ export const companiesService = {
   },
 
   delete: async (id: string) => {
-    const { error } = await db
+    const { error } = await getDb()
       .from('companies')
       .delete()
       .eq('id', id)
@@ -173,7 +174,7 @@ export const companiesService = {
   },
 
   search: async (searchTerm: string) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('companies')
       .select('*')
       .or(`name.ilike.%${searchTerm}%,address.ilike.%${searchTerm}%`)
@@ -186,7 +187,7 @@ export const companiesService = {
 
   // Search companies with location info
   searchWithLocations: async (searchTerm: string): Promise<CompanyListItem[]> => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('companies_with_location_count')
       .select('*')
       .or(`name.ilike.%${searchTerm}%,primary_location_address.ilike.%${searchTerm}%`)
@@ -204,7 +205,7 @@ export const companiesService = {
   locations: {
     // Get all locations for a company
     getByCompanyId: async (companyId: string): Promise<CompanyLocation[]> => {
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('company_locations')
         .select('*')
         .eq('company_id', companyId)
@@ -217,7 +218,7 @@ export const companiesService = {
 
     // Get a single location by ID
     getById: async (locationId: string): Promise<CompanyLocation> => {
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('company_locations')
         .select('*')
         .eq('id', locationId)
@@ -229,7 +230,7 @@ export const companiesService = {
 
     // Get primary location for a company
     getPrimary: async (companyId: string): Promise<CompanyLocation | null> => {
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('company_locations')
         .select('*')
         .eq('company_id', companyId)
@@ -242,7 +243,7 @@ export const companiesService = {
 
     // Create a new location
     create: async (companyId: string, locationData: CompanyLocationInput): Promise<CompanyLocation> => {
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('company_locations')
         .insert({
           ...locationData,
@@ -257,7 +258,7 @@ export const companiesService = {
 
     // Update a location
     update: async (locationId: string, updates: Partial<CompanyLocationInput>): Promise<CompanyLocation> => {
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('company_locations')
         .update(updates)
         .eq('id', locationId)
@@ -270,7 +271,7 @@ export const companiesService = {
 
     // Delete a location
     delete: async (locationId: string): Promise<void> => {
-      const { error } = await db
+      const { error } = await getDb()
         .from('company_locations')
         .delete()
         .eq('id', locationId)
@@ -280,7 +281,7 @@ export const companiesService = {
 
     // Set a location as primary (will unset others via trigger)
     setPrimary: async (locationId: string): Promise<CompanyLocation> => {
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('company_locations')
         .update({ is_primary: true })
         .eq('id', locationId)
@@ -298,7 +299,7 @@ export const companiesService = {
         company_id: companyId
       }))
 
-      const { data, error } = await db
+      const { data, error } = await getDb()
         .from('company_locations')
         .insert(locationsWithCompanyId)
         .select()
@@ -309,7 +310,7 @@ export const companiesService = {
 
     // Get location count for a company
     getCount: async (companyId: string): Promise<number> => {
-      const { count, error } = await db
+      const { count, error } = await getDb()
         .from('company_locations')
         .select('*', { count: 'exact', head: true })
         .eq('company_id', companyId)

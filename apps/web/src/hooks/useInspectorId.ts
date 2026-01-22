@@ -7,8 +7,8 @@ import { queryKeys } from '@/lib/react-query'
  * Maps Supabase Auth user to inspectors table record
  */
 export function useInspectorId(userEmail: string | undefined) {
-  // Use any type for supabase to bypass strict table typings
-  const supabase = createClient() as any
+  // Create supabase client for this hook
+  const supabase = createClient()
 
   return useQuery({
     queryKey: [...queryKeys.routes.all, 'inspector-id', userEmail],

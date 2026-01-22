@@ -17,7 +17,7 @@ import type { Board } from '@/types/board'
 
 // Helper to get supabase client with current auth state
 // IMPORTANT: Must be called inside functions, not at module level
-const getSupabase = () => createClient() as any
+const getSupabase = () => createClient()
 
 export const workspaceService = {
   // ==================== WORKSPACES ====================

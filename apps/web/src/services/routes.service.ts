@@ -1,11 +1,12 @@
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase'
 
-// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
-const db = supabase as any
+// Helper to get supabase client with current auth state
+// IMPORTANT: Must be called inside functions, not at module level
+const getDb = () => createClient()
 
 export const routesService = {
   getAll: async () => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('routes')
       .select('*')
       .order('date', { ascending: true })
@@ -15,7 +16,7 @@ export const routesService = {
   },
 
   getByInspector: async (inspectorId: string) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('routes')
       .select('*')
       .eq('inspector_id', inspectorId)
@@ -26,7 +27,7 @@ export const routesService = {
   },
 
   getById: async (id: string) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('routes')
       .select(`
         *,
@@ -59,7 +60,7 @@ export const routesService = {
     notes?: string
   }) => {
     // Create the route first
-    const { data: route, error: routeError } = await db
+    const { data: route, error: routeError } = await getDb()
       .from('routes')
       .insert({
         name: routeData.name,
@@ -85,7 +86,7 @@ export const routesService = {
         status: 'pending',
       }))
 
-      const { error: stopsError } = await db
+      const { error: stopsError } = await getDb()
         .from('route_stops')
         .insert(stops)
 
@@ -96,7 +97,7 @@ export const routesService = {
   },
 
   update: async (id: string, updates: any) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('routes')
       .update(updates)
       .eq('id', id)
@@ -108,7 +109,7 @@ export const routesService = {
   },
 
   delete: async (id: string) => {
-    const { error } = await db
+    const { error } = await getDb()
       .from('routes')
       .delete()
       .eq('id', id)
@@ -117,7 +118,7 @@ export const routesService = {
   },
 
   reassign: async (routeId: string, newInspectorId: string) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('routes')
       .update({ inspector_id: newInspectorId })
       .eq('id', routeId)

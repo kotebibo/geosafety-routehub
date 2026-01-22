@@ -5,34 +5,33 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { optimizeRoute, type Location, type OptimizationOptions } from '@geosafety/route-optimizer'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
+import { optimizeRouteSchema, type OptimizeRouteInput } from '@/lib/validations'
 
 export async function POST(request: NextRequest) {
   try {
     // Require admin or dispatcher role to optimize routes
     await requireAdminOrDispatcher();
 
-    const body = await request.json()
-    const { locations, options }: { locations: Location[]; options?: OptimizationOptions } = body
-    
-    // Validate input
-    if (!locations || !Array.isArray(locations) || locations.length === 0) {
-      return NextResponse.json(
-        { error: 'Invalid locations data' },
-        { status: 400 }
-      )
-    }
-    
-    // Validate location format
-    for (const loc of locations) {
-      if (!loc.id || !loc.name || typeof loc.lat !== 'number' || typeof loc.lng !== 'number') {
+    const rawBody = await request.json()
+
+    // Validate input with Zod
+    let body: OptimizeRouteInput
+    try {
+      body = optimizeRouteSchema.parse(rawBody)
+    } catch (error) {
+      if (error instanceof z.ZodError) {
         return NextResponse.json(
-          { error: 'Each location must have id, name, lat, and lng' },
+          { error: 'Validation failed', details: error.issues },
           { status: 400 }
         )
       }
+      throw error
     }
+
+    const { locations, options } = body
     
     // Optimize route (now async for OSRM support)
     const optimized = await optimizeRoute(locations, {

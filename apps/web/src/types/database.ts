@@ -1073,6 +1073,186 @@ export interface Database {
           updated_at?: string | null
         }
       }
+      workspaces: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          owner_id: string
+          color: string | null
+          icon: string | null
+          is_default: boolean | null
+          settings: Json | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          owner_id: string
+          color?: string | null
+          icon?: string | null
+          is_default?: boolean | null
+          settings?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          owner_id?: string
+          color?: string | null
+          icon?: string | null
+          is_default?: boolean | null
+          settings?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      workspace_members: {
+        Row: {
+          workspace_id: string
+          user_id: string
+          role: 'owner' | 'admin' | 'member' | 'guest'
+          added_at: string | null
+        }
+        Insert: {
+          workspace_id: string
+          user_id: string
+          role: 'owner' | 'admin' | 'member' | 'guest'
+          added_at?: string | null
+        }
+        Update: {
+          workspace_id?: string
+          user_id?: string
+          role?: 'owner' | 'admin' | 'member' | 'guest'
+          added_at?: string | null
+        }
+      }
+      custom_roles: {
+        Row: {
+          id: string
+          name: string
+          display_name: string
+          description: string | null
+          color: string | null
+          is_system: boolean | null
+          created_by: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          display_name: string
+          description?: string | null
+          color?: string | null
+          is_system?: boolean | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          display_name?: string
+          description?: string | null
+          color?: string | null
+          is_system?: boolean | null
+          created_by?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      permissions: {
+        Row: {
+          id: string
+          name: string
+          resource: string
+          action: string
+          description: string | null
+          category: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          resource: string
+          action: string
+          description?: string | null
+          category?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          resource?: string
+          action?: string
+          description?: string | null
+          category?: string | null
+          created_at?: string | null
+        }
+      }
+      company_pdp_phases: {
+        Row: {
+          id: string
+          company_id: string
+          phase: number
+          completed_date: string | null
+          notes: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          company_id: string
+          phase: number
+          completed_date?: string | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          company_id?: string
+          phase?: number
+          completed_date?: string | null
+          notes?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      board_activity: {
+        Row: {
+          id: string
+          board_id: string
+          user_id: string | null
+          action: string
+          item_id: string | null
+          details: Json | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          board_id: string
+          user_id?: string | null
+          action: string
+          item_id?: string | null
+          details?: Json | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          board_id?: string
+          user_id?: string | null
+          action?: string
+          item_id?: string | null
+          details?: Json | null
+          created_at?: string | null
+        }
+      }
     }
     Views: {
       pdp_compliance_overview: {

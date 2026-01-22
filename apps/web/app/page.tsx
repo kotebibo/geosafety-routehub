@@ -2,13 +2,13 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { 
-  Building2, 
-  Users, 
-  MapIcon, 
-  Route, 
-  UserCog, 
+import { useEffect, useState, useRef } from 'react';
+import {
+  Building2,
+  Users,
+  MapIcon,
+  Route,
+  UserCog,
   ArrowRight,
   Shield,
   Clock,
@@ -22,6 +22,7 @@ import {
   Smartphone
 } from 'lucide-react';
 import { DEPLOYMENT_CONFIG } from '@/config/features';
+import { statsService, DashboardStats } from '@/services/stats.service';
 
 export default function HomePage() {
   const { user, userRole, loading } = useAuth();
@@ -32,32 +33,55 @@ export default function HomePage() {
     routes: 0,
     inspections: 0
   });
+  const [realStats, setRealStats] = useState<DashboardStats | null>(null);
+  const animationRef = useRef<boolean>(false);
+
+  // Fetch real stats from database
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const data = await statsService.getDashboardStats();
+        setRealStats(data);
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+        // Fallback to zeros if fetch fails
+        setRealStats({ companies: 0, inspectors: 0, routes: 0, inspections: 0 });
+      }
+    }
+    fetchStats();
+  }, []);
 
   useEffect(() => {
     setMounted(true);
-    // Animate stats
+  }, []);
+
+  // Animate stats when real data is loaded
+  useEffect(() => {
+    if (!realStats || animationRef.current) return;
+    animationRef.current = true;
+
     const animateValue = (start: number, end: number, key: keyof typeof stats) => {
       const duration = 2000;
       const range = end - start;
       const startTime = Date.now();
-      
+
       const timer = setInterval(() => {
         const elapsed = Date.now() - startTime;
         const progress = Math.min(elapsed / duration, 1);
         const value = Math.floor(start + range * progress);
         setStats(prev => ({ ...prev, [key]: value }));
-        
+
         if (progress === 1) clearInterval(timer);
       }, 50);
     };
 
     setTimeout(() => {
-      animateValue(0, 216, 'companies');
-      animateValue(0, 12, 'inspectors');
-      animateValue(0, 847, 'routes');
-      animateValue(0, 3429, 'inspections');
+      animateValue(0, realStats.companies, 'companies');
+      animateValue(0, realStats.inspectors, 'inspectors');
+      animateValue(0, realStats.routes, 'routes');
+      animateValue(0, realStats.inspections, 'inspections');
     }, 500);
-  }, []);
+  }, [realStats]);
 
   if (loading || !mounted) {
     return (
@@ -83,7 +107,7 @@ export default function HomePage() {
       label: 'კომპანიების მართვა', 
       icon: Building2, 
       color: 'from-blue-500 to-blue-600',
-      description: '216+ კომპანია',
+      description: realStats ? `${realStats.companies}+ კომპანია` : 'კომპანიების მართვა',
       show: isAdmin || isDispatcher 
     },
     { 

@@ -1,11 +1,11 @@
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase'
 
-// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
-const db = supabase as any
+// Helper to get supabase client with current auth state
+const getDb = () => createClient()
 
 export const assignmentsService = {
   bulkAssign: async (companyServiceIds: string[], inspectorId: string | null) => {
-    const { error } = await db
+    const { error } = await getDb()
       .from('company_services')
       .update({ assigned_inspector_id: inspectorId })
       .in('id', companyServiceIds)
@@ -14,7 +14,7 @@ export const assignmentsService = {
   },
 
   getByServiceType: async (serviceTypeId?: string) => {
-    let query = db
+    let query = getDb()
       .from('company_services')
       .select(`
         *,
@@ -31,7 +31,7 @@ export const assignmentsService = {
       } else {
         // It's a service code name like "personal_data_protection"
         // We need to first get the service type UUID
-        const { data: serviceType, error: stError } = await db
+        const { data: serviceType, error: stError } = await getDb()
           .from('service_types')
           .select('id')
           .eq('name', serviceTypeId)
@@ -53,7 +53,7 @@ export const assignmentsService = {
   },
 
   getStatistics: async () => {
-    const { data: all, error: allError } = await db
+    const { data: all, error: allError } = await getDb()
       .from('company_services')
       .select('id, assigned_inspector_id')
     
@@ -67,7 +67,7 @@ export const assignmentsService = {
   },
 
   getInspectorWorkload: async () => {
-    const { data: inspectors, error: inspError } = await db
+    const { data: inspectors, error: inspError } = await getDb()
       .from('inspectors')
       .select('id, full_name, specialty')
       .eq('status', 'active')
@@ -75,7 +75,7 @@ export const assignmentsService = {
     
     if (inspError) throw inspError
     
-    const { data: assignments, error: assignError } = await db
+    const { data: assignments, error: assignError } = await getDb()
       .from('company_services')
       .select('assigned_inspector_id')
       .not('assigned_inspector_id', 'is', null)

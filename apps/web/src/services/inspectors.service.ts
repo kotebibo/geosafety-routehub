@@ -1,11 +1,12 @@
-import { supabase } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase'
 
-// Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
-const db = supabase as any
+// Helper to get supabase client with current auth state
+// IMPORTANT: Must be called inside functions, not at module level
+const getDb = () => createClient()
 
 export const inspectorsService = {
   getAll: async (includeInactive = true) => {
-    let query = db
+    let query = getDb()
       .from('inspectors')
       .select('*')
 
@@ -20,7 +21,7 @@ export const inspectorsService = {
   },
 
   getActive: async () => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('inspectors')
       .select('*')
       .eq('status', 'active')
@@ -31,7 +32,7 @@ export const inspectorsService = {
   },
 
   getById: async (id: string) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('inspectors')
       .select('*')
       .eq('id', id)
@@ -42,7 +43,7 @@ export const inspectorsService = {
   },
 
   getWithAssignments: async (inspectorId: string) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('company_services')
       .select(`
         *,
@@ -62,7 +63,7 @@ export const inspectorsService = {
     specialty: string
     status: 'active'
   }) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('inspectors')
       .insert(inspectorData)
       .select()
@@ -73,7 +74,7 @@ export const inspectorsService = {
   },
 
   update: async (id: string, updates: any) => {
-    const { data, error } = await db
+    const { data, error } = await getDb()
       .from('inspectors')
       .update(updates)
       .eq('id', id)
@@ -85,7 +86,7 @@ export const inspectorsService = {
   },
 
   delete: async (id: string) => {
-    const { error } = await db
+    const { error } = await getDb()
       .from('inspectors')
       .delete()
       .eq('id', id)

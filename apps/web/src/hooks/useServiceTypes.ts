@@ -25,7 +25,7 @@ export function useServiceTypes() {
   const fetchServiceTypes = async () => {
     try {
       setLoading(true)
-      const supabase = createClient() as any
+      const supabase = createClient()
 
       const { data, error } = await supabase
         .from('service_types')

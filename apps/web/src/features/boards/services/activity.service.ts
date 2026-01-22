@@ -1,10 +1,9 @@
-import { getSupabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import type { ItemUpdate, ItemComment, UpdateType } from '@/types/board'
 
-// Use 'any' type assertion to bypass Supabase generated table typings
-// This is intentional - proper types would require generating Supabase types
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const supabase = getSupabase() as any
+// Helper to get supabase client with current auth state
+// IMPORTANT: Must be called inside functions, not at module level
+const getSupabase = () => createClient()
 
 // Type for update records with joined inspector data from Supabase
 interface UpdateRecord {
@@ -59,7 +58,7 @@ export const activityService = {
     itemId: string,
     limit = 50
   ): Promise<ItemUpdate[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('item_updates')
       .select(`
         *,
@@ -86,7 +85,7 @@ export const activityService = {
    * Get recent updates across all items (for activity feed)
    */
   async getRecentUpdates(limit = 100): Promise<ItemUpdate[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('item_updates')
       .select(`
         *,
@@ -110,7 +109,7 @@ export const activityService = {
    * Get updates by user
    */
   async getUserUpdates(userId: string, limit = 50): Promise<ItemUpdate[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('item_updates')
       .select(`
         *,
@@ -145,7 +144,7 @@ export const activityService = {
     content?: string
     metadata?: Record<string, any>
   }): Promise<ItemUpdate> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('item_updates')
       .insert(update)
       .select(`
@@ -239,7 +238,7 @@ export const activityService = {
     itemId: string
   ): Promise<ItemComment[]> {
     // Fetch all comments for this item in a single query
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('item_comments')
       .select(`
         *,
@@ -294,7 +293,7 @@ export const activityService = {
    * Get replies to a comment
    */
   async getCommentReplies(parentCommentId: string): Promise<ItemComment[]> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('item_comments')
       .select(`
         *,
@@ -326,7 +325,7 @@ export const activityService = {
     mentions?: string[]
     attachments?: string[]
   }): Promise<ItemComment> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('item_comments')
       .insert(comment)
       .select(`
@@ -362,7 +361,7 @@ export const activityService = {
     commentId: string,
     content: string
   ): Promise<ItemComment> {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('item_comments')
       .update({
         content,
@@ -391,13 +390,13 @@ export const activityService = {
    */
   async deleteComment(commentId: string): Promise<void> {
     // Delete all replies first
-    await supabase
+    await getSupabase()
       .from('item_comments')
       .delete()
       .eq('parent_comment_id', commentId)
 
     // Delete the comment
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from('item_comments')
       .delete()
       .eq('id', commentId)
@@ -409,7 +408,7 @@ export const activityService = {
    * Get comment count for an item
    */
   async getCommentCount(itemType: string, itemId: string): Promise<number> {
-    const { count, error } = await supabase
+    const { count, error } = await getSupabase()
       .from('item_comments')
       .select('*', { count: 'exact', head: true })
       .eq('item_type', itemType)
@@ -472,7 +471,7 @@ export const activityService = {
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async unsubscribe(channel: any) {
-    await supabase.removeChannel(channel)
+    await getSupabase().removeChannel(channel)
   },
 
   // ==================== BOARD-WIDE ACTIVITY ====================
@@ -482,7 +481,7 @@ export const activityService = {
    */
   async getBoardUpdates(boardId: string, limit = 100): Promise<ItemUpdate[]> {
     // First, get all board item IDs for this board
-    const { data: boardItems, error: boardItemsError } = await supabase
+    const { data: boardItems, error: boardItemsError } = await getSupabase()
       .from('board_items')
       .select('id')
       .eq('board_id', boardId)
@@ -493,7 +492,7 @@ export const activityService = {
     const boardItemIds = boardItems.map((item: { id: string }) => item.id)
 
     // Then get updates for these items
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from('item_updates')
       .select(`
         *,
@@ -526,7 +525,7 @@ export const activityService = {
     applyRollback: (itemId: string, fieldName: string, oldValue: unknown) => Promise<void>
   ): Promise<ItemUpdate | null> {
     // Get the update to rollback
-    const { data: update, error } = await supabase
+    const { data: update, error } = await getSupabase()
       .from('item_updates')
       .select('*')
       .eq('id', updateId)
