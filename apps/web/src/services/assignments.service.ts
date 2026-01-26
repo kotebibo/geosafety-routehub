@@ -5,8 +5,8 @@ const getDb = () => createClient()
 
 export const assignmentsService = {
   bulkAssign: async (companyServiceIds: string[], inspectorId: string | null) => {
-    const { error } = await getDb()
-      .from('company_services')
+    const { error } = await (getDb()
+      .from('company_services') as any)
       .update({ assigned_inspector_id: inspectorId })
       .in('id', companyServiceIds)
     
@@ -14,8 +14,8 @@ export const assignmentsService = {
   },
 
   getByServiceType: async (serviceTypeId?: string) => {
-    let query = getDb()
-      .from('company_services')
+    let query = (getDb()
+      .from('company_services') as any)
       .select(`
         *,
         company:companies(id, name, address, lat, lng),
@@ -31,8 +31,8 @@ export const assignmentsService = {
       } else {
         // It's a service code name like "personal_data_protection"
         // We need to first get the service type UUID
-        const { data: serviceType, error: stError } = await getDb()
-          .from('service_types')
+        const { data: serviceType, error: stError } = await (getDb()
+          .from('service_types') as any)
           .select('id')
           .eq('name', serviceTypeId)
           .single()
@@ -53,8 +53,8 @@ export const assignmentsService = {
   },
 
   getStatistics: async () => {
-    const { data: all, error: allError } = await getDb()
-      .from('company_services')
+    const { data: all, error: allError } = await (getDb()
+      .from('company_services') as any)
       .select('id, assigned_inspector_id')
     
     if (allError) throw allError

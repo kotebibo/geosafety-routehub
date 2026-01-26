@@ -27,8 +27,8 @@ export const workspaceService = {
    * RLS policies automatically filter based on auth.email()
    */
   async getWorkspaces(): Promise<Workspace[]> {
-    const { data, error } = await getSupabase()
-      .from('workspaces')
+    const { data, error } = await (getSupabase()
+      .from('workspaces') as any)
       .select('*')
       .order('is_default', { ascending: false })
       .order('created_at', { ascending: false })
@@ -41,8 +41,8 @@ export const workspaceService = {
    * Get workspaces with board counts
    */
   async getWorkspacesWithBoardCounts(): Promise<(Workspace & { board_count: number })[]> {
-    const { data, error } = await getSupabase()
-      .from('workspaces')
+    const { data, error } = await (getSupabase()
+      .from('workspaces') as any)
       .select(`
         *,
         boards:boards(count)
@@ -62,8 +62,8 @@ export const workspaceService = {
    * Get a specific workspace by ID
    */
   async getWorkspace(workspaceId: string): Promise<Workspace> {
-    const { data, error } = await getSupabase()
-      .from('workspaces')
+    const { data, error } = await (getSupabase()
+      .from('workspaces') as any)
       .select('*')
       .eq('id', workspaceId)
       .single()
@@ -77,8 +77,8 @@ export const workspaceService = {
    */
   async getWorkspaceWithMembers(workspaceId: string): Promise<WorkspaceWithMembers> {
     // First get the workspace
-    const { data: workspace, error: wsError } = await getSupabase()
-      .from('workspaces')
+    const { data: workspace, error: wsError } = await (getSupabase()
+      .from('workspaces') as any)
       .select('*')
       .eq('id', workspaceId)
       .single()
@@ -86,8 +86,8 @@ export const workspaceService = {
     if (wsError) throw wsError
 
     // Then get members
-    const { data: members, error: memError } = await getSupabase()
-      .from('workspace_members')
+    const { data: members, error: memError } = await (getSupabase()
+      .from('workspace_members') as any)
       .select('*')
       .eq('workspace_id', workspaceId)
       .order('added_at', { ascending: true })
@@ -128,8 +128,8 @@ export const workspaceService = {
    * Get workspace with its boards
    */
   async getWorkspaceWithBoards(workspaceId: string): Promise<WorkspaceWithBoards> {
-    const { data, error } = await getSupabase()
-      .from('workspaces')
+    const { data, error } = await (getSupabase()
+      .from('workspaces') as any)
       .select(`
         *,
         boards:boards(
@@ -164,8 +164,8 @@ export const workspaceService = {
    * Get user's default workspace
    */
   async getDefaultWorkspace(): Promise<Workspace | null> {
-    const { data, error } = await getSupabase()
-      .from('workspaces')
+    const { data, error } = await (getSupabase()
+      .from('workspaces') as any)
       .select('*')
       .eq('is_default', true)
       .single()
@@ -184,8 +184,8 @@ export const workspaceService = {
     input: CreateWorkspaceInput,
     ownerId: string
   ): Promise<Workspace> {
-    const { data, error } = await getSupabase()
-      .from('workspaces')
+    const { data, error } = await (getSupabase()
+      .from('workspaces') as any)
       .insert({
         name: input.name,
         name_ka: input.name_ka,
@@ -226,8 +226,8 @@ export const workspaceService = {
       }
     }
 
-    const { data, error } = await getSupabase()
-      .from('workspaces')
+    const { data, error } = await (getSupabase()
+      .from('workspaces') as any)
       .update(updateData)
       .eq('id', workspaceId)
       .select()
@@ -242,8 +242,8 @@ export const workspaceService = {
    * Note: Cannot delete default workspace (RLS enforces this)
    */
   async deleteWorkspace(workspaceId: string): Promise<void> {
-    const { error } = await getSupabase()
-      .from('workspaces')
+    const { error } = await (getSupabase()
+      .from('workspaces') as any)
       .delete()
       .eq('id', workspaceId)
 
@@ -256,8 +256,8 @@ export const workspaceService = {
    * Get all boards in a workspace
    */
   async getWorkspaceBoards(workspaceId: string): Promise<Board[]> {
-    const { data, error } = await getSupabase()
-      .from('boards')
+    const { data, error } = await (getSupabase()
+      .from('boards') as any)
       .select('*')
       .eq('workspace_id', workspaceId)
       .order('created_at', { ascending: false })
@@ -289,8 +289,8 @@ export const workspaceService = {
     boardId: string,
     workspaceId: string | null
   ): Promise<Board> {
-    const { data, error } = await getSupabase()
-      .from('boards')
+    const { data, error } = await (getSupabase()
+      .from('boards') as any)
       .update({ workspace_id: workspaceId })
       .eq('id', boardId)
       .select()
@@ -305,8 +305,8 @@ export const workspaceService = {
    */
   async archiveBoard(boardId: string): Promise<Board> {
     // Get current board settings
-    const { data: board } = await getSupabase()
-      .from('boards')
+    const { data: board } = await (getSupabase()
+      .from('boards') as any)
       .select('settings')
       .eq('id', boardId)
       .single()
@@ -316,8 +316,8 @@ export const workspaceService = {
       is_archived: true,
     }
 
-    const { data, error } = await getSupabase()
-      .from('boards')
+    const { data, error } = await (getSupabase()
+      .from('boards') as any)
       .update({ settings: newSettings })
       .eq('id', boardId)
       .select()
@@ -331,8 +331,8 @@ export const workspaceService = {
    * Restore an archived board
    */
   async restoreBoard(boardId: string): Promise<Board> {
-    const { data: board } = await getSupabase()
-      .from('boards')
+    const { data: board } = await (getSupabase()
+      .from('boards') as any)
       .select('settings')
       .eq('id', boardId)
       .single()
@@ -342,8 +342,8 @@ export const workspaceService = {
       is_archived: false,
     }
 
-    const { data, error } = await getSupabase()
-      .from('boards')
+    const { data, error } = await (getSupabase()
+      .from('boards') as any)
       .update({ settings: newSettings })
       .eq('id', boardId)
       .select()
@@ -360,8 +360,8 @@ export const workspaceService = {
    */
   async getWorkspaceMembers(workspaceId: string): Promise<WorkspaceMember[]> {
     // Get members
-    const { data: members, error } = await getSupabase()
-      .from('workspace_members')
+    const { data: members, error } = await (getSupabase()
+      .from('workspace_members') as any)
       .select('*')
       .eq('workspace_id', workspaceId)
       .order('added_at', { ascending: true })
@@ -403,8 +403,8 @@ export const workspaceService = {
     role: WorkspaceRole,
     addedBy: string
   ): Promise<WorkspaceMember> {
-    const { data, error } = await getSupabase()
-      .from('workspace_members')
+    const { data, error } = await (getSupabase()
+      .from('workspace_members') as any)
       .insert({
         workspace_id: workspaceId,
         user_id: userId,
@@ -426,8 +426,8 @@ export const workspaceService = {
     userId: string,
     role: WorkspaceRole
   ): Promise<WorkspaceMember> {
-    const { data, error } = await getSupabase()
-      .from('workspace_members')
+    const { data, error } = await (getSupabase()
+      .from('workspace_members') as any)
       .update({ role })
       .eq('workspace_id', workspaceId)
       .eq('user_id', userId)
@@ -446,8 +446,8 @@ export const workspaceService = {
     workspaceId: string,
     userId: string
   ): Promise<void> {
-    const { error } = await getSupabase()
-      .from('workspace_members')
+    const { error } = await (getSupabase()
+      .from('workspace_members') as any)
       .delete()
       .eq('workspace_id', workspaceId)
       .eq('user_id', userId)
@@ -462,8 +462,8 @@ export const workspaceService = {
     workspaceId: string,
     userId: string
   ): Promise<WorkspaceRole | null> {
-    const { data, error } = await getSupabase()
-      .from('workspace_members')
+    const { data, error } = await (getSupabase()
+      .from('workspace_members') as any)
       .select('role')
       .eq('workspace_id', workspaceId)
       .eq('user_id', userId)
@@ -482,8 +482,8 @@ export const workspaceService = {
    * Search workspaces
    */
   async searchWorkspaces(query: string): Promise<Workspace[]> {
-    const { data, error } = await getSupabase()
-      .from('workspaces')
+    const { data, error } = await (getSupabase()
+      .from('workspaces') as any)
       .select('*')
       .or(`name.ilike.%${query}%,name_ka.ilike.%${query}%`)
       .order('is_default', { ascending: false })

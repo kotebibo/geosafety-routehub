@@ -20,7 +20,7 @@ export const presenceService = {
     isEditing = false,
     editingItemId?: string
   ): Promise<void> {
-    const { error } = await getSupabase().from('board_presence').upsert(
+    const { error } = await (getSupabase().from('board_presence') as any).upsert(
       {
         user_id: userId,
         board_type: boardType,
@@ -44,8 +44,7 @@ export const presenceService = {
     boardType: BoardType,
     boardId?: string
   ): Promise<BoardPresence[]> {
-    let query = supabase
-      .from('board_presence')
+    let query = (getSupabase().from('board_presence') as any)
       .select(`
         *,
         inspectors:user_id (
@@ -67,7 +66,7 @@ export const presenceService = {
     return (data || []).map((presence: any) => ({
       ...presence,
       user_name: presence.inspectors?.full_name || presence.inspectors?.email,
-    }))
+    })) as BoardPresence[]
   },
 
   /**
@@ -78,8 +77,7 @@ export const presenceService = {
     boardType: BoardType,
     boardId?: string
   ): Promise<void> {
-    let query = supabase
-      .from('board_presence')
+    let query = (getSupabase().from('board_presence') as any)
       .delete()
       .eq('user_id', userId)
       .eq('board_type', boardType)
@@ -97,8 +95,8 @@ export const presenceService = {
    * Clean up stale presence records (older than 5 minutes)
    */
   async cleanupStalePresence(): Promise<void> {
-    const { error } = await getSupabase()
-      .from('board_presence')
+    const { error } = await (getSupabase()
+      .from('board_presence') as any)
       .delete()
       .lt('last_seen', new Date(Date.now() - 5 * 60 * 1000).toISOString())
 
@@ -118,8 +116,8 @@ export const presenceService = {
       filter += `,board_id=eq.${boardId}`
     }
 
-    return supabase
-      .channel(`presence:${boardType}:${boardId || 'all'}`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (getSupabase().channel(`presence:${boardType}:${boardId || 'all'}`) as any)
       .on(
         'postgres_changes',
         {
@@ -144,7 +142,7 @@ export const presenceService = {
   ) {
     const channelName = `board-presence:${boardType}:${boardId || 'all'}`
 
-    const channel = supabase.channel(channelName, {
+    const channel = getSupabase().channel(channelName, {
       config: {
         presence: {
           key: userId,

@@ -441,8 +441,8 @@ export const activityService = {
     itemId: string,
     callback: (payload: { new: UpdateRecord; old: UpdateRecord | null }) => void
   ) {
-    return supabase
-      .channel(`item-updates:${itemType}:${itemId}`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (getSupabase().channel(`item-updates:${itemType}:${itemId}`) as any)
       .on(
         'postgres_changes',
         {
@@ -464,8 +464,8 @@ export const activityService = {
     itemId: string,
     callback: (payload: { new: CommentRecord; old: CommentRecord | null }) => void
   ) {
-    return supabase
-      .channel(`item-comments:${itemType}:${itemId}`)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (getSupabase().channel(`item-comments:${itemType}:${itemId}`) as any)
       .on(
         'postgres_changes',
         {
@@ -523,8 +523,9 @@ export const activityService = {
 
     return (data || []).map((update: UpdateRecord) => ({
       ...update,
+      item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
-    }))
+    })) as ItemUpdate[]
   },
 
   // ==================== ROLLBACK FUNCTIONALITY ====================
@@ -538,18 +539,20 @@ export const activityService = {
     applyRollback: (itemId: string, fieldName: string, oldValue: unknown) => Promise<void>
   ): Promise<ItemUpdate | null> {
     // Get the update to rollback
-    const { data: update, error } = await getSupabase()
-      .from('item_updates')
+    const { data, error } = await (getSupabase()
+      .from('item_updates') as any)
       .select('*')
       .eq('id', updateId)
       .single()
 
-    if (error || !update) return null
+    if (error || !data) return null
+
+    const update = data as UpdateRecord
 
     // Parse old value if it's JSON
-    let oldValue = update.old_value
+    let oldValue: unknown = update.old_value
     try {
-      oldValue = JSON.parse(update.old_value)
+      oldValue = JSON.parse(update.old_value || '')
     } catch {
       // Keep as string
     }
@@ -572,6 +575,9 @@ export const activityService = {
       metadata: { rollback_of: updateId },
     })
 
-    return update
+    return {
+      ...update,
+      item_type: update.item_type as ItemUpdate['item_type'],
+    } as ItemUpdate
   },
 }

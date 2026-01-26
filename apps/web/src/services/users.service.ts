@@ -67,16 +67,16 @@ export const usersService = {
    * Get all users with their roles
    */
   async getUsers(): Promise<User[]> {
-    const { data: users, error: usersError } = await getSupabase()
-      .from('users')
+    const { data: users, error: usersError } = await (getSupabase()
+      .from('users') as any)
       .select('*')
       .order('created_at', { ascending: false });
 
     if (usersError) throw usersError;
 
     // Get roles for all users
-    const { data: roles, error: rolesError } = await getSupabase()
-      .from('user_roles')
+    const { data: roles, error: rolesError } = await (getSupabase()
+      .from('user_roles') as any)
       .select('*');
 
     if (rolesError) throw rolesError;
@@ -87,15 +87,15 @@ export const usersService = {
       role: roles?.find((r: UserRole) => r.user_id === user.id) || null,
     }));
 
-    return usersWithRoles;
+    return usersWithRoles as User[];
   },
 
   /**
    * Get a single user by ID
    */
   async getUser(userId: string): Promise<User | null> {
-    const { data: user, error: userError } = await getSupabase()
-      .from('users')
+    const { data: user, error: userError } = await (getSupabase()
+      .from('users') as any)
       .select('*')
       .eq('id', userId)
       .single();
@@ -105,21 +105,21 @@ export const usersService = {
       throw userError;
     }
 
-    const { data: role } = await getSupabase()
-      .from('user_roles')
+    const { data: role } = await (getSupabase()
+      .from('user_roles') as any)
       .select('*')
       .eq('user_id', userId)
       .single();
 
-    return { ...user, role };
+    return { ...user, role } as User;
   },
 
   /**
    * Update user profile
    */
   async updateUser(userId: string, updates: Partial<User>): Promise<User> {
-    const { data, error } = await getSupabase()
-      .from('users')
+    const { data, error } = await (getSupabase()
+      .from('users') as any)
       .update({
         full_name: updates.full_name,
         phone: updates.phone,
@@ -131,7 +131,7 @@ export const usersService = {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as User;
   },
 
   /**
@@ -139,16 +139,16 @@ export const usersService = {
    */
   async assignRole(userId: string, roleName: string, inspectorId?: string): Promise<UserRole> {
     // Check if user already has a role
-    const { data: existing } = await getSupabase()
-      .from('user_roles')
+    const { data: existing } = await (getSupabase()
+      .from('user_roles') as any)
       .select('id')
       .eq('user_id', userId)
       .single();
 
     if (existing) {
       // Update existing role
-      const { data, error } = await getSupabase()
-        .from('user_roles')
+      const { data, error } = await (getSupabase()
+        .from('user_roles') as any)
         .update({
           role: roleName,
           inspector_id: inspectorId || null,
@@ -159,11 +159,11 @@ export const usersService = {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as UserRole;
     } else {
       // Create new role assignment
-      const { data, error } = await getSupabase()
-        .from('user_roles')
+      const { data, error } = await (getSupabase()
+        .from('user_roles') as any)
         .insert({
           user_id: userId,
           role: roleName,
@@ -173,7 +173,7 @@ export const usersService = {
         .single();
 
       if (error) throw error;
-      return data;
+      return data as UserRole;
     }
   },
 
@@ -181,8 +181,8 @@ export const usersService = {
    * Remove role from user
    */
   async removeRole(userId: string): Promise<void> {
-    const { error } = await getSupabase()
-      .from('user_roles')
+    const { error } = await (getSupabase()
+      .from('user_roles') as any)
       .delete()
       .eq('user_id', userId);
 
@@ -193,8 +193,8 @@ export const usersService = {
    * Deactivate user
    */
   async deactivateUser(userId: string): Promise<void> {
-    const { error } = await getSupabase()
-      .from('users')
+    const { error } = await (getSupabase()
+      .from('users') as any)
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', userId);
 
@@ -205,8 +205,8 @@ export const usersService = {
    * Activate user
    */
   async activateUser(userId: string): Promise<void> {
-    const { error } = await getSupabase()
-      .from('users')
+    const { error } = await (getSupabase()
+      .from('users') as any)
       .update({ is_active: true, updated_at: new Date().toISOString() })
       .eq('id', userId);
 
@@ -219,8 +219,8 @@ export const usersService = {
    * Get all roles (both system and custom)
    */
   async getRoles(): Promise<CustomRole[]> {
-    const { data: roles, error } = await getSupabase()
-      .from('custom_roles')
+    const { data: roles, error } = await (getSupabase()
+      .from('custom_roles') as any)
       .select('*')
       .order('is_system', { ascending: false })
       .order('name', { ascending: true });
@@ -228,8 +228,8 @@ export const usersService = {
     if (error) throw error;
 
     // Get permissions for each role
-    const { data: rolePermissions } = await getSupabase()
-      .from('role_permissions')
+    const { data: rolePermissions } = await (getSupabase()
+      .from('role_permissions') as any)
       .select('role_name, permission');
 
     // Merge roles with permissions
@@ -240,15 +240,15 @@ export const usersService = {
         .map((rp: RolePermission) => rp.permission),
     }));
 
-    return rolesWithPermissions;
+    return rolesWithPermissions as CustomRole[];
   },
 
   /**
    * Get a single role by name
    */
   async getRole(roleName: string): Promise<CustomRole | null> {
-    const { data: role, error } = await getSupabase()
-      .from('custom_roles')
+    const { data: role, error } = await (getSupabase()
+      .from('custom_roles') as any)
       .select('*')
       .eq('name', roleName)
       .single();
@@ -258,15 +258,15 @@ export const usersService = {
       throw error;
     }
 
-    const { data: permissions } = await getSupabase()
-      .from('role_permissions')
+    const { data: permissions } = await (getSupabase()
+      .from('role_permissions') as any)
       .select('permission')
       .eq('role_name', roleName);
 
     return {
       ...role,
       permissions: (permissions || []).map((p: { permission: string }) => p.permission),
-    };
+    } as CustomRole;
   },
 
   /**
@@ -280,8 +280,8 @@ export const usersService = {
     permissions: string[];
   }): Promise<CustomRole> {
     // Create the role
-    const { data: newRole, error: roleError } = await getSupabase()
-      .from('custom_roles')
+    const { data: newRole, error: roleError } = await (getSupabase()
+      .from('custom_roles') as any)
       .insert({
         name: role.name.toLowerCase().replace(/\s+/g, '_'),
         display_name: role.display_name,
@@ -297,18 +297,18 @@ export const usersService = {
     // Assign permissions
     if (role.permissions.length > 0) {
       const permissionRecords = role.permissions.map(p => ({
-        role_name: newRole.name,
+        role_name: (newRole as CustomRole).name,
         permission: p,
       }));
 
-      const { error: permError } = await getSupabase()
-        .from('role_permissions')
+      const { error: permError } = await (getSupabase()
+        .from('role_permissions') as any)
         .insert(permissionRecords);
 
       if (permError) throw permError;
     }
 
-    return { ...newRole, permissions: role.permissions };
+    return { ...(newRole as CustomRole), permissions: role.permissions };
   },
 
   /**
@@ -321,8 +321,8 @@ export const usersService = {
     permissions?: string[];
   }): Promise<CustomRole> {
     // Update role details
-    const { data: updatedRole, error: roleError } = await getSupabase()
-      .from('custom_roles')
+    const { data: updatedRole, error: roleError } = await (getSupabase()
+      .from('custom_roles') as any)
       .update({
         display_name: updates.display_name,
         description: updates.description,
@@ -339,8 +339,8 @@ export const usersService = {
     // Update permissions if provided
     if (updates.permissions !== undefined) {
       // Remove existing permissions
-      await getSupabase()
-        .from('role_permissions')
+      await (getSupabase()
+        .from('role_permissions') as any)
         .delete()
         .eq('role_name', roleName);
 
@@ -351,13 +351,13 @@ export const usersService = {
           permission: p,
         }));
 
-        await getSupabase()
-          .from('role_permissions')
+        await (getSupabase()
+          .from('role_permissions') as any)
           .insert(permissionRecords);
       }
     }
 
-    return { ...updatedRole, permissions: updates.permissions || [] };
+    return { ...(updatedRole as CustomRole), permissions: updates.permissions || [] };
   },
 
   /**
@@ -365,8 +365,8 @@ export const usersService = {
    */
   async deleteRole(roleName: string): Promise<void> {
     // Check if any users have this role
-    const { data: usersWithRole } = await getSupabase()
-      .from('user_roles')
+    const { data: usersWithRole } = await (getSupabase()
+      .from('user_roles') as any)
       .select('user_id')
       .eq('role', roleName);
 
@@ -375,14 +375,14 @@ export const usersService = {
     }
 
     // Delete permissions first
-    await getSupabase()
-      .from('role_permissions')
+    await (getSupabase()
+      .from('role_permissions') as any)
       .delete()
       .eq('role_name', roleName);
 
     // Delete the role (only if not system role)
-    const { error } = await getSupabase()
-      .from('custom_roles')
+    const { error } = await (getSupabase()
+      .from('custom_roles') as any)
       .delete()
       .eq('name', roleName)
       .eq('is_system', false);
@@ -396,14 +396,14 @@ export const usersService = {
    * Get all available permissions
    */
   async getPermissions(): Promise<Permission[]> {
-    const { data, error } = await getSupabase()
-      .from('permissions')
+    const { data, error } = await (getSupabase()
+      .from('permissions') as any)
       .select('*')
       .order('category', { ascending: true })
       .order('name', { ascending: true });
 
     if (error) throw error;
-    return data || [];
+    return (data || []) as Permission[];
   },
 
   /**
@@ -424,8 +424,8 @@ export const usersService = {
    * Get permissions for a specific role
    */
   async getRolePermissions(roleName: string): Promise<string[]> {
-    const { data, error } = await getSupabase()
-      .from('role_permissions')
+    const { data, error } = await (getSupabase()
+      .from('role_permissions') as any)
       .select('permission')
       .eq('role_name', roleName);
 
@@ -438,8 +438,8 @@ export const usersService = {
    */
   async setRolePermissions(roleName: string, permissions: string[]): Promise<void> {
     // Remove existing permissions
-    await getSupabase()
-      .from('role_permissions')
+    await (getSupabase()
+      .from('role_permissions') as any)
       .delete()
       .eq('role_name', roleName);
 
@@ -450,8 +450,8 @@ export const usersService = {
         permission: p,
       }));
 
-      const { error } = await getSupabase()
-        .from('role_permissions')
+      const { error } = await (getSupabase()
+        .from('role_permissions') as any)
         .insert(records);
 
       if (error) throw error;
@@ -464,8 +464,8 @@ export const usersService = {
    * Get user count for each role
    */
   async getUserCountByRole(): Promise<Record<string, number>> {
-    const { data: roles, error } = await getSupabase()
-      .from('user_roles')
+    const { data: roles, error } = await (getSupabase()
+      .from('user_roles') as any)
       .select('role');
 
     if (error) throw error;
@@ -510,14 +510,14 @@ export const usersService = {
     inactive: number;
     byRole: Record<string, number>;
   }> {
-    const { data: users, error: usersError } = await getSupabase()
-      .from('users')
+    const { data: users, error: usersError } = await (getSupabase()
+      .from('users') as any)
       .select('id, is_active');
 
     if (usersError) throw usersError;
 
-    const { data: roles, error: rolesError } = await getSupabase()
-      .from('user_roles')
+    const { data: roles, error: rolesError } = await (getSupabase()
+      .from('user_roles') as any)
       .select('role');
 
     if (rolesError) throw rolesError;

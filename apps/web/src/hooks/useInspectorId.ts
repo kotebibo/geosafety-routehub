@@ -22,8 +22,8 @@ export function useInspectorId(userEmail: string | undefined) {
         return null
       }
 
-      const { data, error } = await supabase
-        .from('inspectors')
+      const { data, error } = await (supabase
+        .from('inspectors') as any)
         .select('id')
         .eq('email', userEmail)
         .single()
@@ -36,7 +36,7 @@ export function useInspectorId(userEmail: string | undefined) {
         return null
       }
 
-      return data?.id || null
+      return (data as { id: string } | null)?.id || null
     },
     enabled: !!userEmail,
     staleTime: Infinity, // Inspector ID won't change

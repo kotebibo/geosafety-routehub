@@ -6,8 +6,8 @@ const getDb = () => createClient()
 
 export const routesService = {
   getAll: async () => {
-    const { data, error } = await getDb()
-      .from('routes')
+    const { data, error } = await (getDb()
+      .from('routes') as any)
       .select('*')
       .order('date', { ascending: true })
 
@@ -16,8 +16,8 @@ export const routesService = {
   },
 
   getByInspector: async (inspectorId: string) => {
-    const { data, error } = await getDb()
-      .from('routes')
+    const { data, error } = await (getDb()
+      .from('routes') as any)
       .select('*')
       .eq('inspector_id', inspectorId)
       .order('date', { ascending: true })
@@ -27,8 +27,8 @@ export const routesService = {
   },
 
   getById: async (id: string) => {
-    const { data, error } = await getDb()
-      .from('routes')
+    const { data, error } = await (getDb()
+      .from('routes') as any)
       .select(`
         *,
         route_stops (
@@ -60,8 +60,8 @@ export const routesService = {
     notes?: string
   }) => {
     // Create the route first
-    const { data: route, error: routeError } = await getDb()
-      .from('routes')
+    const { data: route, error: routeError } = await (getDb()
+      .from('routes') as any)
       .insert({
         name: routeData.name,
         inspector_id: routeData.inspector_id,
@@ -86,8 +86,8 @@ export const routesService = {
         status: 'pending',
       }))
 
-      const { error: stopsError } = await getDb()
-        .from('route_stops')
+      const { error: stopsError } = await (getDb()
+        .from('route_stops') as any)
         .insert(stops)
 
       if (stopsError) throw stopsError
@@ -97,8 +97,8 @@ export const routesService = {
   },
 
   update: async (id: string, updates: any) => {
-    const { data, error } = await getDb()
-      .from('routes')
+    const { data, error } = await (getDb()
+      .from('routes') as any)
       .update(updates)
       .eq('id', id)
       .select()
@@ -109,8 +109,8 @@ export const routesService = {
   },
 
   delete: async (id: string) => {
-    const { error } = await getDb()
-      .from('routes')
+    const { error } = await (getDb()
+      .from('routes') as any)
       .delete()
       .eq('id', id)
 
@@ -118,8 +118,8 @@ export const routesService = {
   },
 
   reassign: async (routeId: string, newInspectorId: string) => {
-    const { data, error } = await getDb()
-      .from('routes')
+    const { data, error } = await (getDb()
+      .from('routes') as any)
       .update({ inspector_id: newInspectorId })
       .eq('id', routeId)
       .select()

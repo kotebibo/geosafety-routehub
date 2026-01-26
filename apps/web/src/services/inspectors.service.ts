@@ -21,8 +21,8 @@ export const inspectorsService = {
   },
 
   getActive: async () => {
-    const { data, error } = await getDb()
-      .from('inspectors')
+    const { data, error } = await (getDb()
+      .from('inspectors') as any)
       .select('*')
       .eq('status', 'active')
       .order('full_name')
@@ -32,8 +32,8 @@ export const inspectorsService = {
   },
 
   getById: async (id: string) => {
-    const { data, error } = await getDb()
-      .from('inspectors')
+    const { data, error } = await (getDb()
+      .from('inspectors') as any)
       .select('*')
       .eq('id', id)
       .single()
@@ -63,8 +63,8 @@ export const inspectorsService = {
     specialty: string
     status: 'active'
   }) => {
-    const { data, error } = await getDb()
-      .from('inspectors')
+    const { data, error } = await (getDb()
+      .from('inspectors') as any)
       .insert(inspectorData)
       .select()
       .single()
@@ -74,8 +74,8 @@ export const inspectorsService = {
   },
 
   update: async (id: string, updates: any) => {
-    const { data, error } = await getDb()
-      .from('inspectors')
+    const { data, error } = await (getDb()
+      .from('inspectors') as any)
       .update(updates)
       .eq('id', id)
       .select()
@@ -86,8 +86,8 @@ export const inspectorsService = {
   },
 
   delete: async (id: string) => {
-    const { error } = await getDb()
-      .from('inspectors')
+    const { error } = await (getDb()
+      .from('inspectors') as any)
       .delete()
       .eq('id', id)
 

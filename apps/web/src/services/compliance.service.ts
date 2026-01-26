@@ -14,8 +14,8 @@ export const complianceService = {
    * Get compliance status for a specific company
    */
   async getCompanyCompliance(companyId: string) {
-    const { data, error } = await getDb()
-      .from('pdp_compliance_phases')
+    const { data, error } = await (getDb()
+      .from('pdp_compliance_phases') as any)
       .select('*')
       .eq('company_id', companyId)
       .single();
@@ -67,8 +67,8 @@ export const complianceService = {
       complianceData.next_checkup_date = nextCheckup.toISOString().split('T')[0];
     }
 
-    const { data, error } = await getDb()
-      .from('pdp_compliance_phases')
+    const { data, error } = await (getDb()
+      .from('pdp_compliance_phases') as any)
       .insert(complianceData)
       .select()
       .single();
@@ -119,8 +119,8 @@ export const complianceService = {
       }
     }
 
-    const { data, error } = await getDb()
-      .from('pdp_compliance_phases')
+    const { data, error } = await (getDb()
+      .from('pdp_compliance_phases') as any)
       .update(updateData)
       .eq('company_id', companyId)
       .select()
@@ -137,8 +137,8 @@ export const complianceService = {
    * Get all companies with their compliance status
    */
   async getAllCompliance() {
-    const { data, error } = await getDb()
-      .from('pdp_compliance_overview')
+    const { data, error } = await (getDb()
+      .from('pdp_compliance_overview') as any)
       .select('*')
       .order('created_at', { ascending: false });
     
@@ -153,8 +153,8 @@ export const complianceService = {
    * Get companies with pending phases
    */
   async getPendingPhases() {
-    const { data, error } = await getDb()
-      .from('pdp_compliance_overview')
+    const { data, error } = await (getDb()
+      .from('pdp_compliance_overview') as any)
       .select('*')
       .in('compliance_status', ['new', 'in_progress'])
       .order('created_at', { ascending: true });
@@ -173,8 +173,8 @@ export const complianceService = {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + daysAhead);
     
-    const { data, error } = await getDb()
-      .from('pdp_compliance_overview')
+    const { data, error } = await (getDb()
+      .from('pdp_compliance_overview') as any)
       .select('*')
       .eq('compliance_status', 'active')
       .lte('next_checkup_date', futureDate.toISOString().split('T')[0])
@@ -191,8 +191,8 @@ export const complianceService = {
    * Update next checkup date
    */
   async updateCheckupDate(companyId: string, nextDate: string) {
-    const { data, error } = await getDb()
-      .from('pdp_compliance_phases')
+    const { data, error } = await (getDb()
+      .from('pdp_compliance_phases') as any)
       .update({
         next_checkup_date: nextDate,
         updated_at: new Date().toISOString()

@@ -148,7 +148,7 @@ export type UpdateBoardInput = z.infer<typeof updateBoardSchema>
 export const boardItemSchema = z.object({
   name: z.string().min(1, 'Item name is required').max(500),
   group_id: z.string().uuid().optional().nullable(),
-  data: z.record(z.any()).optional(),
+  data: z.record(z.string(), z.any()).optional(),
   status: z.string().max(50).optional().nullable(),
   assigned_to: z.string().uuid().optional().nullable(),
   due_date: z.string().optional().nullable(),

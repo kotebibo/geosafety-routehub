@@ -42,9 +42,10 @@ function toRad(degrees: number): number {
 
 /**
  * Create distance matrix for all locations
- * @param locations Array of locations
+ * @param locations Array of locations with lat/lng
  * @returns 2D array of distances
- */export function createDistanceMatrix(locations: Location[]): number[][] {
+ */
+export function createDistanceMatrix(locations: Array<{ lat: number; lng: number }>): number[][] {
   const n = locations.length;
   const matrix: number[][] = Array(n)
     .fill(0)
@@ -70,10 +71,10 @@ function toRad(degrees: number): number {
 
 /**
  * Calculate total route distance
- * @param route Ordered array of locations
+ * @param route Ordered array of locations with lat/lng
  * @returns Total distance in kilometers
  */
-export function calculateRouteDistance(route: Location[]): number {
+export function calculateRouteDistance(route: Array<{ lat: number; lng: number }>): number {
   let totalDistance = 0;
   
   for (let i = 0; i < route.length - 1; i++) {
