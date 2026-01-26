@@ -36,10 +36,16 @@ const WORKSPACE_COLORS: Record<string, string> = {
 
 export default function WorkspacesPage() {
   const router = useRouter()
-  const { user, userRole } = useAuth()
+  const { user, userRole, loading: authLoading } = useAuth()
   const { data: inspectorId } = useInspectorId(user?.email)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const { data: workspaces, isLoading, refetch } = useWorkspacesWithBoardCounts()
+
+  // Only fetch workspaces after auth is complete to avoid race condition
+  // where query fires before JWT token is available
+  const { data: workspaces, isLoading: workspacesLoading, refetch } = useWorkspacesWithBoardCounts(
+    !authLoading && !!user
+  )
+  const isLoading = authLoading || workspacesLoading
 
   // Check if user is admin
   const isAdmin = userRole?.role === 'admin'

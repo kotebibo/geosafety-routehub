@@ -121,7 +121,7 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { user, userRole } = useAuth()
+  const { user, userRole, loading: authLoading } = useAuth()
   const { data: inspectorId } = useInspectorId(user?.email)
 
   // Use auth user ID for board queries - RLS policies filter by auth.uid()
@@ -136,11 +136,15 @@ export function Sidebar({ className }: SidebarProps) {
   const workspaceMenuRef = React.useRef<HTMLDivElement>(null)
   const workspaceRenameInputRef = React.useRef<HTMLInputElement>(null)
 
+  // Only fetch data after auth is complete to avoid race condition
+  // where query fires before JWT token is available
+  const isAuthReady = !authLoading && !!user
+
   // Fetch all workspaces
-  const { data: workspaces, isLoading: workspacesLoading } = useWorkspaces()
+  const { data: workspaces, isLoading: workspacesLoading } = useWorkspaces(isAuthReady)
 
   // Fetch all user's boards (using auth user ID, not inspector ID)
-  const { data: allBoards, isLoading: allBoardsLoading } = useUserBoards(userId)
+  const { data: allBoards, isLoading: allBoardsLoading } = useUserBoards(isAuthReady ? userId : '')
 
   // Group boards by workspace
   const boardsByWorkspace = React.useMemo(() => {

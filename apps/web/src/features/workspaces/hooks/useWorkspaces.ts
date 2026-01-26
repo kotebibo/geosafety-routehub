@@ -30,23 +30,27 @@ export const workspaceKeys = {
 
 /**
  * Hook to fetch all user's workspaces
+ * @param enabled - Whether to enable the query (default: true). Set to false to wait for auth.
  */
-export function useWorkspaces() {
+export function useWorkspaces(enabled: boolean = true) {
   return useQuery({
     queryKey: workspaceKeys.lists(),
     queryFn: () => workspaceService.getWorkspaces(),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled,
   })
 }
 
 /**
  * Hook to fetch workspaces with board counts
+ * @param enabled - Whether to enable the query (default: true). Set to false to wait for auth.
  */
-export function useWorkspacesWithBoardCounts() {
+export function useWorkspacesWithBoardCounts(enabled: boolean = true) {
   return useQuery({
     queryKey: [...workspaceKeys.lists(), 'withCounts'],
     queryFn: () => workspaceService.getWorkspacesWithBoardCounts(),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled,
   })
 }
 

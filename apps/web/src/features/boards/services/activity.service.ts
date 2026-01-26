@@ -77,8 +77,9 @@ export const activityService = {
     // Map inspector data to user_name
     return (data || []).map((update: UpdateRecord) => ({
       ...update,
+      item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
-    }))
+    })) as ItemUpdate[]
   },
 
   /**
@@ -101,8 +102,9 @@ export const activityService = {
 
     return (data || []).map((update: UpdateRecord) => ({
       ...update,
+      item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
-    }))
+    })) as ItemUpdate[]
   },
 
   /**
@@ -126,8 +128,9 @@ export const activityService = {
 
     return (data || []).map((update: UpdateRecord) => ({
       ...update,
+      item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
-    }))
+    })) as ItemUpdate[]
   },
 
   /**
@@ -144,8 +147,8 @@ export const activityService = {
     content?: string
     metadata?: Record<string, any>
   }): Promise<ItemUpdate> {
-    const { data, error } = await getSupabase()
-      .from('item_updates')
+    const { data, error } = await (getSupabase()
+      .from('item_updates') as any)
       .insert(update)
       .select(`
         *,
@@ -158,10 +161,12 @@ export const activityService = {
 
     if (error) throw error
 
+    const record = data as UpdateRecord
     return {
-      ...data,
-      user_name: data.inspectors?.full_name || data.inspectors?.email,
-    }
+      ...record,
+      item_type: record.item_type as ItemUpdate['item_type'],
+      user_name: record.inspectors?.full_name || record.inspectors?.email,
+    } as ItemUpdate
   },
 
   /**
@@ -238,8 +243,8 @@ export const activityService = {
     itemId: string
   ): Promise<ItemComment[]> {
     // Fetch all comments for this item in a single query
-    const { data, error } = await getSupabase()
-      .from('item_comments')
+    const { data, error } = await (getSupabase()
+      .from('item_comments') as any)
       .select(`
         *,
         inspectors:user_id (
@@ -254,6 +259,8 @@ export const activityService = {
     if (error) throw error
     if (!data || data.length === 0) return []
 
+    const comments = data as CommentRecord[]
+
     // Build comment tree in memory (O(n) instead of N+1 queries)
     // Using any for complex tree structure - proper typing would require recursive types
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -262,16 +269,17 @@ export const activityService = {
     const topLevelComments: any[] = []
 
     // First pass: create map of all comments
-    for (const comment of data) {
+    for (const comment of comments) {
       commentMap.set(comment.id, {
         ...comment,
+        item_type: comment.item_type as ItemComment['item_type'],
         user_name: comment.inspectors?.full_name || comment.inspectors?.email,
         replies: [],
       })
     }
 
     // Second pass: build tree structure
-    for (const comment of data) {
+    for (const comment of comments) {
       const mappedComment = commentMap.get(comment.id)
       if (comment.parent_comment_id) {
         // This is a reply - add to parent's replies
@@ -293,8 +301,8 @@ export const activityService = {
    * Get replies to a comment
    */
   async getCommentReplies(parentCommentId: string): Promise<ItemComment[]> {
-    const { data, error } = await getSupabase()
-      .from('item_comments')
+    const { data, error } = await (getSupabase()
+      .from('item_comments') as any)
       .select(`
         *,
         inspectors:user_id (
@@ -307,10 +315,11 @@ export const activityService = {
 
     if (error) throw error
 
-    return (data || []).map((reply: CommentRecord) => ({
+    return ((data || []) as CommentRecord[]).map((reply: CommentRecord) => ({
       ...reply,
+      item_type: reply.item_type as ItemComment['item_type'],
       user_name: reply.inspectors?.full_name || reply.inspectors?.email,
-    }))
+    })) as ItemComment[]
   },
 
   /**
@@ -325,8 +334,8 @@ export const activityService = {
     mentions?: string[]
     attachments?: string[]
   }): Promise<ItemComment> {
-    const { data, error } = await getSupabase()
-      .from('item_comments')
+    const { data, error } = await (getSupabase()
+      .from('item_comments') as any)
       .insert(comment)
       .select(`
         *,
@@ -348,10 +357,12 @@ export const activityService = {
       content: comment.content.substring(0, 100), // First 100 chars
     })
 
+    const record = data as CommentRecord
     return {
-      ...data,
-      user_name: data.inspectors?.full_name || data.inspectors?.email,
-    }
+      ...record,
+      item_type: record.item_type as ItemComment['item_type'],
+      user_name: record.inspectors?.full_name || record.inspectors?.email,
+    } as ItemComment
   },
 
   /**
@@ -361,8 +372,8 @@ export const activityService = {
     commentId: string,
     content: string
   ): Promise<ItemComment> {
-    const { data, error } = await getSupabase()
-      .from('item_comments')
+    const { data, error } = await (getSupabase()
+      .from('item_comments') as any)
       .update({
         content,
         is_edited: true,
@@ -379,10 +390,12 @@ export const activityService = {
 
     if (error) throw error
 
+    const record = data as CommentRecord
     return {
-      ...data,
-      user_name: data.inspectors?.full_name || data.inspectors?.email,
-    }
+      ...record,
+      item_type: record.item_type as ItemComment['item_type'],
+      user_name: record.inspectors?.full_name || record.inspectors?.email,
+    } as ItemComment
   },
 
   /**
@@ -390,14 +403,14 @@ export const activityService = {
    */
   async deleteComment(commentId: string): Promise<void> {
     // Delete all replies first
-    await getSupabase()
-      .from('item_comments')
+    await (getSupabase()
+      .from('item_comments') as any)
       .delete()
       .eq('parent_comment_id', commentId)
 
     // Delete the comment
-    const { error } = await getSupabase()
-      .from('item_comments')
+    const { error } = await (getSupabase()
+      .from('item_comments') as any)
       .delete()
       .eq('id', commentId)
 
@@ -408,8 +421,8 @@ export const activityService = {
    * Get comment count for an item
    */
   async getCommentCount(itemType: string, itemId: string): Promise<number> {
-    const { count, error } = await getSupabase()
-      .from('item_comments')
+    const { count, error } = await (getSupabase()
+      .from('item_comments') as any)
       .select('*', { count: 'exact', head: true })
       .eq('item_type', itemType)
       .eq('item_id', itemId)

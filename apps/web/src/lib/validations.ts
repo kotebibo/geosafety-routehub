@@ -91,6 +91,33 @@ export const inspectorSchema = z.object({
 
 export type InspectorInput = z.infer<typeof inspectorSchema>
 
+export const createInspectorSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(255),
+  email: z.string().email('Invalid email address').optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  is_active: z.boolean().optional().default(true),
+  vehicle_type: z.string().max(100).optional().nullable(),
+  license_plate: z.string().max(50).optional().nullable(),
+  notes: z.string().max(1000).optional().nullable(),
+})
+
+export type CreateInspectorInput = z.infer<typeof createInspectorSchema>
+
+export const updateInspectorSchema = z.object({
+  full_name: z.string().min(1).max(255).optional(),
+  email: z.string().email().optional().nullable(),
+  phone: z.string().max(50).optional().nullable(),
+  role: z.enum(['admin', 'dispatcher', 'inspector', 'manager']).optional().nullable(),
+  specialty: z.string().max(100).optional().nullable(),
+  zone: z.string().max(100).optional().nullable(),
+  status: z.enum(['active', 'inactive', 'on_leave']).optional().nullable(),
+  vehicle_type: z.string().max(100).optional().nullable(),
+  license_plate: z.string().max(50).optional().nullable(),
+  notes: z.string().max(1000).optional().nullable(),
+})
+
+export type UpdateInspectorInput = z.infer<typeof updateInspectorSchema>
+
 // ==================== ASSIGNMENT SCHEMAS ====================
 
 export const bulkAssignSchema = z.object({

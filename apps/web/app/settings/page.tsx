@@ -43,7 +43,7 @@ const defaultSettings: UserSettings = {
 
 export default function SettingsPage() {
   const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -78,7 +78,7 @@ export default function SettingsPage() {
         .from('users')
         .select('full_name, phone')
         .eq('id', user.id)
-        .single()
+        .single() as { data: { full_name: string | null; phone: string | null } | null }
 
       if (profile) {
         setFullName(profile.full_name || '')
@@ -90,12 +90,12 @@ export default function SettingsPage() {
         .from('user_settings')
         .select('*')
         .eq('user_id', user.id)
-        .single()
+        .single() as { data: { theme?: string; language?: string; notification_settings?: UserSettings['notification_settings'] } | null }
 
       if (userSettings) {
         setSettings({
-          theme: userSettings.theme || 'light',
-          language: userSettings.language || 'ka',
+          theme: (userSettings.theme as UserSettings['theme']) || 'light',
+          language: (userSettings.language as UserSettings['language']) || 'ka',
           notification_settings: userSettings.notification_settings || defaultSettings.notification_settings,
         })
       }
@@ -115,8 +115,8 @@ export default function SettingsPage() {
     try {
       const supabase = createClient()
 
-      const { error } = await supabase
-        .from('users')
+      const { error } = await (supabase
+        .from('users') as any)
         .update({
           full_name: fullName,
           phone: phone,
@@ -143,8 +143,8 @@ export default function SettingsPage() {
     try {
       const supabase = createClient()
 
-      const { error } = await supabase
-        .from('user_settings')
+      const { error } = await (supabase
+        .from('user_settings') as any)
         .upsert({
           user_id: user.id,
           theme: settings.theme,

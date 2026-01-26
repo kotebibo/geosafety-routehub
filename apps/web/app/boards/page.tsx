@@ -13,11 +13,17 @@ import type { Board } from '@/features/boards/types/board'
 export default function BoardsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null)
   const [accessModalBoard, setAccessModalBoard] = useState<Board | null>(null)
-  const { data: boards, isLoading } = useUserBoards(user?.id || '')
+
+  // Only fetch boards after auth is complete to avoid race condition
+  // where query fires before JWT token is available
+  const { data: boards, isLoading: boardsLoading } = useUserBoards(
+    authLoading ? '' : (user?.id || '')
+  )
+  const isLoading = authLoading || boardsLoading
 
   // Track the workspace ID that was passed via URL - this persists even after URL is cleared
   const urlWorkspaceRef = useRef<string | null>(null)
