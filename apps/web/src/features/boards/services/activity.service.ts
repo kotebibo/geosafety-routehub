@@ -3,7 +3,7 @@ import type { ItemUpdate, ItemComment, UpdateType } from '@/types/board'
 
 // Helper to get supabase client with current auth state
 // IMPORTANT: Must be called inside functions, not at module level
-const getSupabase = () => createClient()
+const getSupabase = (): any => createClient()
 
 // Type for update records with joined inspector data from Supabase
 interface UpdateRecord {
@@ -13,14 +13,23 @@ interface UpdateRecord {
   user_id: string
   update_type: UpdateType
   field_name?: string
+  column_id?: string
   old_value?: string
   new_value?: string
   content?: string
   metadata?: Record<string, unknown>
+  source_board_id?: string
+  target_board_id?: string
   created_at: string
   inspectors?: {
     full_name?: string
     email?: string
+  }
+  source_board?: {
+    name?: string
+  }
+  target_board?: {
+    name?: string
   }
 }
 
@@ -65,6 +74,12 @@ export const activityService = {
         inspectors:user_id (
           full_name,
           email
+        ),
+        source_board:source_board_id (
+          name
+        ),
+        target_board:target_board_id (
+          name
         )
       `)
       .eq('item_type', itemType)
@@ -74,11 +89,13 @@ export const activityService = {
 
     if (error) throw error
 
-    // Map inspector data to user_name
+    // Map inspector data and board names
     return (data || []).map((update: UpdateRecord) => ({
       ...update,
       item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
+      source_board_name: update.source_board?.name,
+      target_board_name: update.target_board?.name,
     })) as ItemUpdate[]
   },
 
@@ -93,6 +110,12 @@ export const activityService = {
         inspectors:user_id (
           full_name,
           email
+        ),
+        source_board:source_board_id (
+          name
+        ),
+        target_board:target_board_id (
+          name
         )
       `)
       .order('created_at', { ascending: false })
@@ -104,6 +127,8 @@ export const activityService = {
       ...update,
       item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
+      source_board_name: update.source_board?.name,
+      target_board_name: update.target_board?.name,
     })) as ItemUpdate[]
   },
 
@@ -118,6 +143,12 @@ export const activityService = {
         inspectors:user_id (
           full_name,
           email
+        ),
+        source_board:source_board_id (
+          name
+        ),
+        target_board:target_board_id (
+          name
         )
       `)
       .eq('user_id', userId)
@@ -130,6 +161,8 @@ export const activityService = {
       ...update,
       item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
+      source_board_name: update.source_board?.name,
+      target_board_name: update.target_board?.name,
     })) as ItemUpdate[]
   },
 
@@ -491,9 +524,18 @@ export const activityService = {
 
   /**
    * Get all updates for items in a specific board
+   * Includes resolved column names for proper display
    */
   async getBoardUpdates(boardId: string, limit = 100): Promise<ItemUpdate[]> {
-    // First, get all board item IDs for this board
+    // First, get board info and all board item IDs
+    const { data: board, error: boardError } = await (getSupabase() as any)
+      .from('boards')
+      .select('id, board_type')
+      .eq('id', boardId)
+      .single()
+
+    if (boardError) throw boardError
+
     const { data: boardItems, error: boardItemsError } = await getSupabase()
       .from('board_items')
       .select('id')
@@ -504,6 +546,19 @@ export const activityService = {
 
     const boardItemIds = boardItems.map((item: { id: string }) => item.id)
 
+    // Get column definitions for this board type
+    const { data: columns } = await getSupabase()
+      .from('board_columns')
+      .select('column_id, column_name, column_name_ka')
+      .eq('board_type', board.board_type)
+
+    const columnMap = new Map<string, { name: string; name_ka?: string }>(
+      (columns || []).map((c: { column_id: string; column_name: string; column_name_ka?: string }) => [
+        c.column_id,
+        { name: c.column_name, name_ka: c.column_name_ka }
+      ])
+    )
+
     // Then get updates for these items
     const { data, error } = await getSupabase()
       .from('item_updates')
@@ -512,6 +567,12 @@ export const activityService = {
         inspectors:user_id (
           full_name,
           email
+        ),
+        source_board:source_board_id (
+          name
+        ),
+        target_board:target_board_id (
+          name
         )
       `)
       .in('item_id', boardItemIds)
@@ -521,11 +582,50 @@ export const activityService = {
 
     if (error) throw error
 
-    return (data || []).map((update: UpdateRecord) => ({
-      ...update,
-      item_type: update.item_type as ItemUpdate['item_type'],
-      user_name: update.inspectors?.full_name || update.inspectors?.email,
-    })) as ItemUpdate[]
+    // Map with resolved column names
+    return (data || []).map((update: UpdateRecord) => {
+      const columnInfo = update.column_id ? columnMap.get(update.column_id) : null
+      return {
+        ...update,
+        item_type: update.item_type as ItemUpdate['item_type'],
+        user_name: update.inspectors?.full_name || update.inspectors?.email,
+        column_name: columnInfo?.name || update.column_id,
+        column_name_ka: columnInfo?.name_ka,
+        source_board_name: update.source_board?.name,
+        target_board_name: update.target_board?.name,
+      }
+    }) as ItemUpdate[]
+  },
+
+  /**
+   * Resolve column names for a list of updates
+   * Useful when displaying updates from multiple board types
+   */
+  async resolveColumnNames(
+    updates: ItemUpdate[],
+    boardType: string
+  ): Promise<ItemUpdate[]> {
+    // Get column definitions for this board type
+    const { data: columns } = await getSupabase()
+      .from('board_columns')
+      .select('column_id, column_name, column_name_ka')
+      .eq('board_type', boardType)
+
+    const columnMap = new Map<string, { name: string; name_ka?: string }>(
+      (columns || []).map((c: { column_id: string; column_name: string; column_name_ka?: string }) => [
+        c.column_id,
+        { name: c.column_name, name_ka: c.column_name_ka }
+      ])
+    )
+
+    return updates.map(update => {
+      const columnInfo = update.column_id ? columnMap.get(update.column_id) : null
+      return {
+        ...update,
+        column_name: columnInfo?.name || update.column_id,
+        column_name_ka: columnInfo?.name_ka,
+      }
+    })
   },
 
   // ==================== ROLLBACK FUNCTIONALITY ====================

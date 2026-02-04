@@ -10,6 +10,8 @@ import {
   Edit2,
   Trash2,
   CheckCircle,
+  ArrowRightLeft,
+  Columns,
 } from 'lucide-react'
 import type { ItemUpdate } from '@/types/board'
 
@@ -23,6 +25,8 @@ const UPDATE_TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string;
   comment: { icon: <MessageSquare className="w-4 h-4" />, color: 'text-indigo-600', bg: 'bg-indigo-100' },
   completed: { icon: <CheckCircle className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-100' },
   deleted: { icon: <Trash2 className="w-4 h-4" />, color: 'text-red-600', bg: 'bg-red-100' },
+  column_changed: { icon: <Columns className="w-4 h-4" />, color: 'text-cyan-600', bg: 'bg-cyan-100' },
+  moved_to_board: { icon: <ArrowRightLeft className="w-4 h-4" />, color: 'text-amber-600', bg: 'bg-amber-100' },
 }
 
 // Format relative time
@@ -43,11 +47,14 @@ function formatRelativeTime(dateString: string): string {
 
 // Format update message based on type
 function formatUpdateMessage(update: ItemUpdate): string {
+  // Use resolved column name if available, fall back to field_name or column_id
+  const columnDisplayName = update.column_name || update.field_name || update.column_id
+
   switch (update.update_type) {
     case 'created':
       return 'created this item'
     case 'updated':
-      return update.field_name ? `updated ${update.field_name}` : 'made changes'
+      return columnDisplayName ? `updated ${columnDisplayName}` : 'made changes'
     case 'status_changed':
       return `changed status from "${update.old_value}" to "${update.new_value}"`
     case 'assigned':
@@ -60,6 +67,22 @@ function formatUpdateMessage(update: ItemUpdate): string {
       return 'marked as complete'
     case 'deleted':
       return 'deleted something'
+    case 'column_changed':
+      if (columnDisplayName) {
+        if (update.old_value && update.new_value) {
+          return `changed ${columnDisplayName}`
+        } else if (update.new_value) {
+          return `set ${columnDisplayName}`
+        } else {
+          return `cleared ${columnDisplayName}`
+        }
+      }
+      return 'updated a field'
+    case 'moved_to_board':
+      if (update.source_board_name && update.target_board_name) {
+        return `moved from "${update.source_board_name}" to "${update.target_board_name}"`
+      }
+      return 'moved to another board'
     default:
       return 'made an update'
   }

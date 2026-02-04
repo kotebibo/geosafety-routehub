@@ -7,15 +7,15 @@ import { createClient } from '@/lib/supabase';
 import { PDPCompliancePhase, PDPComplianceOverview } from '@/types/compliance';
 
 // Helper to get supabase client with current auth state
-const getDb = () => createClient();
+const getDb = (): any => createClient();
 
 export const complianceService = {
   /**
    * Get compliance status for a specific company
    */
   async getCompanyCompliance(companyId: string) {
-    const { data, error } = await (getDb()
-      .from('pdp_compliance_phases') as any)
+    const { data, error } = await getDb()
+      .from('pdp_compliance_phases')
       .select('*')
       .eq('company_id', companyId)
       .single();
@@ -67,8 +67,8 @@ export const complianceService = {
       complianceData.next_checkup_date = nextCheckup.toISOString().split('T')[0];
     }
 
-    const { data, error } = await (getDb()
-      .from('pdp_compliance_phases') as any)
+    const { data, error } = await getDb()
+      .from('pdp_compliance_phases')
       .insert(complianceData)
       .select()
       .single();
@@ -119,8 +119,8 @@ export const complianceService = {
       }
     }
 
-    const { data, error } = await (getDb()
-      .from('pdp_compliance_phases') as any)
+    const { data, error } = await getDb()
+      .from('pdp_compliance_phases')
       .update(updateData)
       .eq('company_id', companyId)
       .select()
@@ -137,11 +137,11 @@ export const complianceService = {
    * Get all companies with their compliance status
    */
   async getAllCompliance() {
-    const { data, error } = await (getDb()
-      .from('pdp_compliance_overview') as any)
+    const { data, error } = await getDb()
+      .from('pdp_compliance_overview')
       .select('*')
-      .order('created_at', { ascending: false });
-    
+      .order('created_at', { ascending: false })
+
     if (error) {
       console.error('Error fetching all compliance:', error);
     }
@@ -153,12 +153,12 @@ export const complianceService = {
    * Get companies with pending phases
    */
   async getPendingPhases() {
-    const { data, error } = await (getDb()
-      .from('pdp_compliance_overview') as any)
+    const { data, error } = await getDb()
+      .from('pdp_compliance_overview')
       .select('*')
       .in('compliance_status', ['new', 'in_progress'])
-      .order('created_at', { ascending: true });
-    
+      .order('created_at', { ascending: true })
+
     if (error) {
       console.error('Error fetching pending phases:', error);
     }
@@ -173,13 +173,13 @@ export const complianceService = {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + daysAhead);
     
-    const { data, error } = await (getDb()
-      .from('pdp_compliance_overview') as any)
+    const { data, error } = await getDb()
+      .from('pdp_compliance_overview')
       .select('*')
       .eq('compliance_status', 'active')
       .lte('next_checkup_date', futureDate.toISOString().split('T')[0])
-      .order('next_checkup_date', { ascending: true });
-    
+      .order('next_checkup_date', { ascending: true })
+
     if (error) {
       console.error('Error fetching upcoming checkups:', error);
     }
@@ -191,8 +191,8 @@ export const complianceService = {
    * Update next checkup date
    */
   async updateCheckupDate(companyId: string, nextDate: string) {
-    const { data, error } = await (getDb()
-      .from('pdp_compliance_phases') as any)
+    const { data, error } = await getDb()
+      .from('pdp_compliance_phases')
       .update({
         next_checkup_date: nextDate,
         updated_at: new Date().toISOString()

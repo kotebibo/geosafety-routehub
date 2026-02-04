@@ -679,3 +679,85 @@ export function useSearchBoardItems(boardId: string, query: string) {
     enabled: !!boardId && !!query && query.length >= 2,
   })
 }
+
+// ==================== ITEM TRANSFER BETWEEN BOARDS ====================
+
+/**
+ * Hook to get column mapping between two boards
+ */
+export function useColumnMapping(sourceBoardId: string, targetBoardId: string) {
+  return useQuery({
+    queryKey: [...queryKeys.routes.all, 'column-mapping', sourceBoardId, targetBoardId],
+    queryFn: () => userBoardsService.getColumnMapping(sourceBoardId, targetBoardId),
+    enabled: !!sourceBoardId && !!targetBoardId && sourceBoardId !== targetBoardId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+/**
+ * Hook to move a single item to another board
+ */
+export function useMoveItemToBoard() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      itemId,
+      targetBoardId,
+      columnMapping,
+      options,
+    }: {
+      itemId: string
+      targetBoardId: string
+      columnMapping?: Record<string, string>
+      options?: { preserveUnmapped?: boolean }
+    }) => userBoardsService.moveItemToBoard(itemId, targetBoardId, columnMapping, options),
+    onSuccess: (movedItem, { targetBoardId }) => {
+      // Invalidate both source and target board items
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-items'],
+      })
+      // Invalidate the specific target board
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-items', targetBoardId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to move multiple items to another board
+ */
+export function useMoveItemsToBoard() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      itemIds,
+      targetBoardId,
+      columnMapping,
+      options,
+    }: {
+      itemIds: string[]
+      targetBoardId: string
+      columnMapping?: Record<string, string>
+      options?: { preserveUnmapped?: boolean }
+    }) => userBoardsService.moveItemsToBoard(itemIds, targetBoardId, columnMapping, options),
+    onSuccess: (result, { targetBoardId }) => {
+      // Invalidate board items cache
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-items'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-items', targetBoardId],
+      })
+    },
+  })
+}
+
+/**
+ * Hook to get compatible column types for mapping
+ */
+export function useCompatibleColumnTypes(sourceType: string) {
+  return userBoardsService.getCompatibleColumnTypes(sourceType)
+}

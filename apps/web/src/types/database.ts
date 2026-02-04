@@ -30,6 +30,20 @@ export interface Database {
           assigned_inspector_id: string | null
           assignment_date: string | null
           primary_location_address: string | null
+          // Contract fields (from Monday.com migration)
+          tax_id: string | null
+          contract_start_date: string | null
+          contract_end_date: string | null
+          initial_payment: number | null
+          monthly_payment: number | null
+          payment_method: string | null
+          invoice_frequency: string | null
+          vat_status: string | null
+          invoice_amount: number | null
+          receiving_bank: string | null
+          sales_manager: string | null
+          monday_board_id: string | null
+          monday_item_id: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -53,6 +67,20 @@ export interface Database {
           assigned_inspector_id?: string | null
           assignment_date?: string | null
           primary_location_address?: string | null
+          // Contract fields (from Monday.com migration)
+          tax_id?: string | null
+          contract_start_date?: string | null
+          contract_end_date?: string | null
+          initial_payment?: number | null
+          monthly_payment?: number | null
+          payment_method?: string | null
+          invoice_frequency?: string | null
+          vat_status?: string | null
+          invoice_amount?: number | null
+          receiving_bank?: string | null
+          sales_manager?: string | null
+          monday_board_id?: string | null
+          monday_item_id?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -76,6 +104,20 @@ export interface Database {
           assigned_inspector_id?: string | null
           assignment_date?: string | null
           primary_location_address?: string | null
+          // Contract fields (from Monday.com migration)
+          tax_id?: string | null
+          contract_start_date?: string | null
+          contract_end_date?: string | null
+          initial_payment?: number | null
+          monthly_payment?: number | null
+          payment_method?: string | null
+          invoice_frequency?: string | null
+          vat_status?: string | null
+          invoice_amount?: number | null
+          receiving_bank?: string | null
+          sales_manager?: string | null
+          monday_board_id?: string | null
+          monday_item_id?: string | null
           created_at?: string | null
           updated_at?: string | null
         }

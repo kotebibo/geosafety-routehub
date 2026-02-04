@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireAdminOrDispatcher } from '@/middleware/auth';
+import { updateCompanyServicesSchema } from '@/lib/validations/service-type.schema';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,14 +20,10 @@ export async function POST(request: NextRequest) {
     await requireAdminOrDispatcher();
 
     const body = await request.json();
-    const { companyId, services } = body;
 
-    if (!companyId || !services || !Array.isArray(services)) {
-      return NextResponse.json(
-        { error: 'Company ID and services array required' },
-        { status: 400 }
-      );
-    }
+    // Validate input
+    const validatedData = updateCompanyServicesSchema.parse(body);
+    const { companyId, services } = validatedData;
 
     // Get existing services for this company
     const { data: existingServices } = await supabase
@@ -113,6 +110,12 @@ export async function POST(request: NextRequest) {
     }
     if (error.name === 'ForbiddenError') {
       return NextResponse.json({ error: 'Admin or dispatcher access required' }, { status: 403 });
+    }
+    if (error.name === 'ZodError') {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(

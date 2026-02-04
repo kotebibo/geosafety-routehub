@@ -1,14 +1,16 @@
 'use client'
 
-import React, { useState, useMemo, useRef, useCallback, useEffect } from 'react'
+import React, { useState, useMemo, useRef, useCallback, useEffect, useTransition } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ChevronRight, Plus, MoreHorizontal, Keyboard, GripVertical, Trash2, Palette, Type } from 'lucide-react'
 import { CellRenderer } from './CellRenderer'
+import { MemoizedTableRow } from './MemoizedTableRow'
 import { SortableColumnHeader } from './SortableColumnHeader'
 import { useKeyboardNavigation, KeyboardShortcutsHelp } from '../../hooks/useKeyboardNavigation'
 import { useColumnResize } from '../../hooks/useColumnResize'
 import { useTableScrollbar } from '../../hooks/useTableScrollbar'
+import { useRowWindowing, PlaceholderRow } from '../../hooks/useRowWindowing'
 import type { BoardColumn, BoardItem, BoardGroup, BoardType, BoardPresence, ColumnType } from '../../types/board'
 import { ESSENTIAL_COLUMNS, ALL_COLUMN_TYPES, MONDAY_GROUP_COLORS, DEFAULT_GROUP } from './constants'
 
@@ -63,6 +65,8 @@ interface MondayBoardTableProps {
   onCellEditEnd?: () => void
   // Dynamic grouping by column (from toolbar)
   groupByColumn?: string | null
+  // Virtualization - enable when data exceeds threshold (default 100)
+  virtualizeThreshold?: number
 }
 
 export function MondayBoardTable({
@@ -93,8 +97,25 @@ export function MondayBoardTable({
   onCellEditStart,
   onCellEditEnd,
   groupByColumn,
+  virtualizeThreshold = 100,
 }: MondayBoardTableProps) {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+
+  // useTransition for non-blocking grouping/sorting operations
+  const [isGrouping, startGroupingTransition] = useTransition()
+
+  // Internal state for grouped data (updated via transition)
+  const [internalGroupByColumn, setInternalGroupByColumn] = useState(groupByColumn)
+
+  // Update internal groupBy when prop changes (via transition for smooth UI)
+  useEffect(() => {
+    if (groupByColumn !== internalGroupByColumn) {
+      startGroupingTransition(() => {
+        setInternalGroupByColumn(groupByColumn)
+      })
+    }
+  }, [groupByColumn, internalGroupByColumn])
+
   const [sortConfig, setSortConfig] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null)
   const [showAddColumnPopup, setShowAddColumnPopup] = useState(false)
   const [showAllColumnsModal, setShowAllColumnsModal] = useState(false)
@@ -126,6 +147,17 @@ export function MondayBoardTable({
     handleTrackClick,
     showScrollbar,
   } = useTableScrollbar({ tableContainerRef })
+
+  // Row windowing for scroll performance - DISABLED for now due to visibility calculation issues
+  // TODO: Fix windowing to properly account for group headers and collapsed groups
+  const windowingEnabled = false // Temporarily disabled
+  const { isRowVisible } = useRowWindowing({
+    containerRef: tableContainerRef,
+    totalRows: data.length,
+    enabled: false, // Disabled
+    rowHeight: 36,
+    overscan: 15,
+  })
 
   // Keyboard shortcuts toggle
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false)
@@ -162,6 +194,16 @@ export function MondayBoardTable({
   const flattenedItems = useMemo(() => {
     return data.sort((a, b) => a.position - b.position)
   }, [data])
+
+  // Pre-compute item index Map for O(1) lookups (instead of O(n) findIndex for each row)
+  // This is CRITICAL - without this, rendering 1000 rows does 1000 × 1000 = 1M comparisons
+  const itemIndexMap = useMemo(() => {
+    const map = new Map<string, number>()
+    flattenedItems.forEach((item, index) => {
+      map.set(item.id, index)
+    })
+    return map
+  }, [flattenedItems])
 
   // Keyboard navigation hook
   const {
@@ -200,6 +242,11 @@ export function MondayBoardTable({
   const getUsersEditingCell = useCallback((itemId: string, columnId: string) => {
     return editingUsersMap.get(`${itemId}:${columnId}`) || []
   }, [editingUsersMap])
+
+  // Stable callback for focusing cells (used by memoized rows)
+  const handleFocusCell = useCallback((rowIndex: number, columnIndex: number) => {
+    setFocusedCell({ rowIndex, columnIndex })
+  }, [setFocusedCell])
 
   // Helper to check if item is being edited (any cell) - keep filter for this rare use case
   const getUsersEditingItem = useCallback((itemId: string) => {
@@ -358,8 +405,9 @@ export function MondayBoardTable({
     return columnWidths[col.id] ?? col.width ?? 150
   }, [columnWidths])
 
-  // Columns are already filtered for visibility by the parent
-  const visibleColumns = columns
+  // Memoize visibleColumns to prevent all rows re-rendering during column drag
+  // When activeColumnId changes, the component re-renders, but visibleColumns should stay stable
+  const visibleColumns = useMemo(() => columns, [columns])
 
   // Calculate widths
   const firstColumnWidth = getColumnWidth(visibleColumns[0]) || 250
@@ -415,11 +463,15 @@ export function MondayBoardTable({
     setDraggingItemId(itemId)
   }, [])
 
+  // Track last drag state to avoid redundant state updates (moved up for handleItemDragEnd access)
+  const lastDragStateRef = useRef<{ itemId: string | null; position: 'before' | 'after' | null }>({ itemId: null, position: null })
+
   const handleItemDragEnd = useCallback(() => {
     setDraggingItemId(null)
     setDragOverGroupId(null)
     setDragOverItemId(null)
     setDragOverPosition(null)
+    lastDragStateRef.current = { itemId: null, position: null }
   }, [])
 
   const handleGroupDragOver = useCallback((e: React.DragEvent, groupId: string) => {
@@ -444,14 +496,10 @@ export function MondayBoardTable({
     setDragOverPosition(null)
   }, [onItemMove])
 
-  // Row drag-over handler for within-group reordering
+  // Row drag-over handler for within-group reordering (throttled to prevent excessive re-renders)
   const handleRowDragOver = useCallback((e: React.DragEvent, targetItemId: string, targetGroupId: string) => {
     e.preventDefault()
     e.stopPropagation()
-
-    const sourceGroupId = e.dataTransfer.types.includes('application/x-group-id')
-      ? e.dataTransfer.getData('application/x-group-id')
-      : null
 
     // Only show row indicator if in same group and reordering is enabled
     if (onItemReorder && draggingItemId && draggingItemId !== targetItemId) {
@@ -459,6 +507,12 @@ export function MondayBoardTable({
       const midY = rect.top + rect.height / 2
       const position = e.clientY < midY ? 'before' : 'after'
 
+      // Skip state update if nothing changed (prevents unnecessary re-renders)
+      if (lastDragStateRef.current.itemId === targetItemId && lastDragStateRef.current.position === position) {
+        return
+      }
+
+      lastDragStateRef.current = { itemId: targetItemId, position }
       setDragOverItemId(targetItemId)
       setDragOverPosition(position)
       setDragOverGroupId(targetGroupId)
@@ -484,6 +538,7 @@ export function MondayBoardTable({
       setDragOverGroupId(null)
       setDragOverItemId(null)
       setDragOverPosition(null)
+      lastDragStateRef.current = { itemId: null, position: null }
       return
     }
 
@@ -504,22 +559,24 @@ export function MondayBoardTable({
     setDragOverGroupId(null)
     setDragOverItemId(null)
     setDragOverPosition(null)
+    lastDragStateRef.current = { itemId: null, position: null }
   }, [data, onItemMove, onItemReorder, dragOverPosition, getItemGroupId])
 
   // Group items by group_id or by column value (dynamic grouping)
+  // Uses internalGroupByColumn which is updated via useTransition for smooth UI
   const groupedItems = useMemo(() => {
     // If groupByColumn is set, create dynamic groups based on column values
-    if (groupByColumn) {
-      const column = columns.find(c => c.column_id === groupByColumn)
-      const columnName = column?.column_name || groupByColumn
+    if (internalGroupByColumn) {
+      const column = columns.find(c => c.column_id === internalGroupByColumn)
+      const columnName = column?.column_name || internalGroupByColumn
 
       // Group items by the column value
       const groupsMap = new Map<string, BoardItem[]>()
 
       data.forEach(item => {
-        const value = groupByColumn === 'name'
+        const value = internalGroupByColumn === 'name'
           ? item.name
-          : item.data?.[groupByColumn]
+          : item.data?.[internalGroupByColumn]
 
         // Handle different value types
         let groupKey: string
@@ -571,7 +628,20 @@ export function MondayBoardTable({
     }
 
     // Default grouping by group_id
-    const effectiveGroups = groups.length > 0 ? groups : [DEFAULT_GROUP]
+    // Check if there are items with no group (will be assigned to 'default')
+    const hasUngroupedItems = data.some(item => getItemGroupId(item) === 'default')
+
+    // Build effective groups list
+    let effectiveGroups: typeof groups
+    if (groups.length === 0) {
+      // No database groups - use default group
+      effectiveGroups = [DEFAULT_GROUP]
+    } else if (hasUngroupedItems && !groups.some(g => g.id === 'default')) {
+      // Has ungrouped items but no 'default' group - add it at the end
+      effectiveGroups = [...groups, { ...DEFAULT_GROUP, position: groups.length }]
+    } else {
+      effectiveGroups = groups
+    }
 
     const result = effectiveGroups.map((group) => ({
       group,
@@ -590,7 +660,7 @@ export function MondayBoardTable({
     }))
 
     return result
-  }, [data, groups, columns, sortConfig, groupByColumn])
+  }, [data, groups, columns, sortConfig, internalGroupByColumn, getItemGroupId])
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroups((prev) => {
@@ -753,24 +823,25 @@ export function MondayBoardTable({
 
   return (
     <div className="flex flex-col min-h-[400px] bg-white relative">
-      {/* Scrollable container - hide native scrollbar */}
+      {/* Loading overlay during grouping transition */}
+      {isGrouping && (
+        <div className="absolute inset-0 bg-white/80 z-50 flex items-center justify-center">
+          <div className="flex items-center gap-2 text-gray-500">
+            <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+            <span className="text-sm">Grouping items...</span>
+          </div>
+        </div>
+      )}
+      {/* Scrollable container - handles both horizontal and vertical scrolling */}
       <div
         ref={tableContainerRef}
         className={cn(
-          'flex-1 overflow-x-auto overflow-y-auto',
-          // Hide native horizontal scrollbar
-          '[&::-webkit-scrollbar]:h-0',
-          '[&::-webkit-scrollbar]:w-2',
-          '[&::-webkit-scrollbar-track]:bg-gray-100',
-          '[&::-webkit-scrollbar-thumb]:bg-gray-300',
-          '[&::-webkit-scrollbar-thumb]:rounded-full',
-          'scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'
+          'flex-1 overflow-auto',
+          isGrouping && 'pointer-events-none'
         )}
-        style={{
-          scrollbarWidth: 'thin',
-        }}
       >
-        <div className="pb-4">
+        {/* Inner content - width set explicitly to allow horizontal scrolling */}
+        <div className="pb-4" style={{ width: totalTableWidth, minWidth: totalTableWidth }}>
           {/* Groups */}
           {groupedItems.map(({ group, items }, groupIndex) => {
             const isCollapsed = collapsedGroups.has(group.id)
@@ -950,7 +1021,10 @@ export function MondayBoardTable({
                       items={visibleColumns.slice(1).map(col => col.id)}
                       strategy={horizontalListSortingStrategy}
                     >
-                      <table className="border-collapse" style={{ tableLayout: 'fixed', width: totalTableWidth, minWidth: totalTableWidth }}>
+                      <table
+                      className="border-collapse [&_th[class*='sticky']]:will-change-[left] [&_td[class*='sticky']]:will-change-[left]"
+                      style={{ tableLayout: 'fixed', width: totalTableWidth, minWidth: totalTableWidth }}
+                    >
                     {/* Column widths */}
                     <colgroup>
                       {onSelectionChange && <col style={{ width: checkboxWidth }} />}
@@ -1111,167 +1185,64 @@ export function MondayBoardTable({
                       </tr>
                     </thead>
 
-                    {/* Body */}
+                    {/* Body - using memoized rows with windowing for performance */}
                     <tbody>
                       {items.map((item, itemIndex) => {
-                        const isSelected = selection.has(item.id)
-                        const isLast = itemIndex === items.length - 1 && !onAddItem
-                        // Find the global row index for keyboard navigation
-                        const globalRowIndex = flattenedItems.findIndex(i => i.id === item.id)
+                        // Always compute globalRowIndex (used for editing, focus, etc.)
+                        const globalRowIndex = itemIndexMap.get(item.id) ?? -1
 
-                        const isDragOver = dragOverItemId === item.id
-                        const showDropIndicatorBefore = isDragOver && dragOverPosition === 'before'
-                        const showDropIndicatorAfter = isDragOver && dragOverPosition === 'after'
+                        // Only apply windowing check when enabled (>100 items)
+                        if (windowingEnabled) {
+                          const rowVisible = isRowVisible(globalRowIndex, 0)
+
+                          // Render placeholder for non-visible rows (keeps scroll height correct)
+                          if (!rowVisible) {
+                            return (
+                              <PlaceholderRow
+                                key={item.id}
+                                height={36}
+                                colSpan={visibleColumns.length + (onSelectionChange ? 3 : 2)}
+                              />
+                            )
+                          }
+                        }
 
                         return (
-                          <tr
+                          <MemoizedTableRow
                             key={item.id}
-                            className={cn(
-                              'hover:bg-[#f0f3ff] transition-colors cursor-pointer group/row relative',
-                              isSelected && 'bg-[#e5e9ff]',
-                              draggingItemId === item.id && 'opacity-50',
-                              showDropIndicatorBefore && 'before:absolute before:left-0 before:right-0 before:top-0 before:h-[2px] before:bg-[#0073ea] before:z-20',
-                              showDropIndicatorAfter && 'after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[2px] after:bg-[#0073ea] after:z-20'
-                            )}
-                            onClick={() => onRowClick?.(item)}
-                            draggable={!!(onItemMove || onItemReorder)}
-                            onDragStart={(e) => handleItemDragStart(e, item.id, group.id)}
+                            item={item}
+                            group={group}
+                            visibleColumns={visibleColumns}
+                            isSelected={selection.has(item.id)}
+                            isLast={itemIndex === items.length - 1 && !onAddItem}
+                            globalRowIndex={globalRowIndex}
+                            isDragging={draggingItemId === item.id}
+                            isDragOver={dragOverItemId === item.id}
+                            dragOverPosition={dragOverItemId === item.id ? dragOverPosition : null}
+                            checkboxWidth={checkboxWidth}
+                            colorBarWidth={colorBarWidth}
+                            firstColumnWidth={firstColumnWidth}
+                            addColumnWidth={addColumnWidth}
+                            getColumnWidth={getColumnWidth}
+                            focusedRowIndex={focusedCell?.rowIndex ?? null}
+                            focusedColumnIndex={focusedCell?.columnIndex ?? null}
+                            editingRowIndex={isCellEditing(globalRowIndex, 0) ? globalRowIndex : null}
+                            editingColumnIndex={null}
+                            editingUsersMap={editingUsersMap}
+                            onRowClick={onRowClick}
+                            onCellEdit={onCellEdit}
+                            onCellEditStart={onCellEditStart}
+                            onCellEditEnd={onCellEditEnd}
+                            hasSelectionChange={!!onSelectionChange}
+                            hasItemMove={!!(onItemMove || onItemReorder)}
+                            onRowSelect={handleRowSelect}
+                            onDragStart={handleItemDragStart}
                             onDragEnd={handleItemDragEnd}
-                            onDragOver={(e) => handleRowDragOver(e, item.id, group.id)}
+                            onDragOver={handleRowDragOver}
                             onDragLeave={handleRowDragLeave}
-                            onDrop={(e) => handleRowDrop(e, item.id, group.id)}
-                          >
-                            {/* Sticky cells */}
-                            {onSelectionChange && (
-                              <td
-                                className={cn(
-                                  'sticky left-0 z-10 border border-[#c3c6d4] p-0 align-middle',
-                                  isSelected ? 'bg-[#e5e9ff]' : 'bg-white'
-                                )}
-                                style={{ width: checkboxWidth, height: 36 }}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="flex items-center justify-center h-full">
-                                  {onItemMove && (
-                                    <div className="absolute left-0.5 opacity-0 group-hover/row:opacity-100 cursor-grab active:cursor-grabbing">
-                                      <GripVertical className="w-3 h-3 text-gray-400" />
-                                    </div>
-                                  )}
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={(e) => handleRowSelect(item.id, e.target.checked)}
-                                    className="w-4 h-4 rounded border-gray-300 text-monday-primary focus:ring-monday-primary"
-                                  />
-                                </div>
-                              </td>
-                            )}
-                            <td
-                              className={cn(
-                                'sticky z-10 border border-[#c3c6d4] p-0',
-                                isLast && 'rounded-bl',
-                                onSelectionChange ? '' : 'left-0'
-                              )}
-                              style={{
-                                width: colorBarWidth,
-                                left: onSelectionChange ? checkboxWidth : 0,
-                                backgroundColor: group.color,
-                              }}
-                            />
-                            <td
-                              className={cn(
-                                'sticky z-10 border p-0 align-middle',
-                                isSelected ? 'bg-[#e5e9ff]' : 'bg-white',
-                                isCellFocused(globalRowIndex, 0)
-                                  ? 'border-2 border-[#0073ea] z-20'
-                                  : 'border-[#c3c6d4]'
-                              )}
-                              style={{
-                                width: firstColumnWidth,
-                                left: onSelectionChange ? checkboxWidth + colorBarWidth : colorBarWidth,
-                                height: 36,
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setFocusedCell({ rowIndex: globalRowIndex, columnIndex: 0 })
-                              }}
-                              onDoubleClick={(e) => {
-                                e.stopPropagation()
-                                onRowClick?.(item)
-                              }}
-                            >
-                              {visibleColumns[0] && (
-                                <CellRenderer
-                                  row={item}
-                                  column={visibleColumns[0]}
-                                  value={visibleColumns[0].column_id === 'name'
-                                    ? (item.name ?? 'Unnamed')
-                                    : (item.data?.[visibleColumns[0].column_id] ?? '')}
-                                  isEditing={isCellEditing(globalRowIndex, 0)}
-                                  onEdit={(newValue) => onCellEdit?.(item.id, visibleColumns[0].column_id, newValue)}
-                                />
-                              )}
-                            </td>
-                            {/* Non-sticky cells */}
-                            {visibleColumns.slice(1).map((column, colIndex) => {
-                              const value = item.data?.[column.column_id] ?? item[column.column_id as keyof BoardItem]
-                              const columnIndex = colIndex + 1 // +1 because we skip the first column
-                              const isFocused = isCellFocused(globalRowIndex, columnIndex)
-                              const isCellInEditMode = isCellEditing(globalRowIndex, columnIndex)
-                              const editingUsers = getUsersEditingCell(item.id, column.column_id)
-                              const isBeingEditedByOther = editingUsers.length > 0
-                              return (
-                                <td
-                                  key={`${item.id}-${column.id}`}
-                                  className={cn(
-                                    'border align-middle relative',
-                                    isBeingEditedByOther ? 'p-[2px]' : 'p-0',
-                                    isSelected ? 'bg-[#e5e9ff]' : 'bg-white',
-                                    isBeingEditedByOther && 'ring-2 ring-inset ring-yellow-400',
-                                    isFocused
-                                      ? 'border-2 border-[#0073ea] z-10'
-                                      : 'border-[#c3c6d4]'
-                                  )}
-                                  style={{ width: getColumnWidth(column), height: 36 }}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setFocusedCell({ rowIndex: globalRowIndex, columnIndex })
-                                  }}
-                                  onDoubleClick={(e) => {
-                                    e.stopPropagation()
-                                    onRowClick?.(item)
-                                  }}
-                                  title={isBeingEditedByOther ? `${editingUsers[0].user_name} is editing` : undefined}
-                                >
-                                  {/* Editing indicator */}
-                                  {isBeingEditedByOther && (
-                                    <div className="absolute -top-1 -right-1 z-20 w-4 h-4 rounded-full bg-yellow-400 flex items-center justify-center text-[8px] font-bold text-white shadow-sm">
-                                      {editingUsers[0].user_name.charAt(0).toUpperCase()}
-                                    </div>
-                                  )}
-                                  <CellRenderer
-                                    row={item}
-                                    column={column}
-                                    value={value}
-                                    isEditing={isCellInEditMode}
-                                    onEdit={(newValue) => {
-                                      onCellEditEnd?.()
-                                      onCellEdit?.(item.id, column.column_id, newValue)
-                                    }}
-                                    onEditStart={() => onCellEditStart?.(item.id, column.column_id)}
-                                  />
-                                </td>
-                              )
-                            })}
-                            {/* Empty cell for add column */}
-                            <td
-                              className={cn(
-                                'border border-[#c3c6d4] p-0',
-                                isSelected ? 'bg-[#e5e9ff]' : 'bg-white'
-                              )}
-                              style={{ width: addColumnWidth, height: 36 }}
-                            />
-                          </tr>
+                            onDrop={handleRowDrop}
+                            onFocusCell={handleFocusCell}
+                          />
                         )
                       })}
 
@@ -1357,32 +1328,32 @@ export function MondayBoardTable({
         </div>
       </div>
 
-      {/* Fixed Horizontal Scrollbar - stays at viewport bottom */}
-      {hasHorizontalScroll && (
+      {/* Custom Horizontal Scrollbar - fixed at bottom of viewport, aligned with table */}
+      <div
+        ref={scrollbarRef}
+        className="fixed h-6 bg-gray-100 cursor-pointer z-[100] border-t border-gray-200 rounded-b"
+        style={{
+          left: scrollbarPosition.left,
+          width: scrollbarPosition.width,
+          bottom: Math.max(scrollbarPosition.bottom, 8),
+        }}
+        onClick={handleTrackClick}
+      >
         <div
-          ref={scrollbarRef}
-          className="fixed h-4 bg-gray-100 border-t border-gray-200 cursor-pointer z-[100]"
+          ref={scrollbarThumbRef}
+          className={cn(
+            'absolute top-1 h-2.5 rounded-full transition-colors',
+            hasHorizontalScroll
+              ? cn('bg-gray-400 cursor-grab', isDraggingScrollbar ? 'bg-gray-600 cursor-grabbing' : 'hover:bg-gray-500')
+              : 'bg-gray-300 cursor-default'
+          )}
           style={{
-            left: scrollbarPosition.left,
-            width: scrollbarPosition.width,
-            bottom: scrollbarPosition.bottom,
+            width: hasHorizontalScroll ? `${Math.max(thumbWidthPercent, 10)}%` : '100%',
+            left: hasHorizontalScroll ? `${thumbLeftPercent}%` : '0%',
           }}
-          onClick={handleTrackClick}
-        >
-          <div
-            ref={scrollbarThumbRef}
-            className={cn(
-              'absolute top-1 h-2 bg-gray-400 rounded-full cursor-grab transition-colors',
-              isDraggingScrollbar ? 'bg-gray-500 cursor-grabbing' : 'hover:bg-gray-500'
-            )}
-            style={{
-              width: `${Math.max(thumbWidthPercent, 5)}%`,
-              left: `${thumbLeftPercent}%`,
-            }}
-            onMouseDown={handleScrollbarMouseDown}
-          />
-        </div>
-      )}
+          onMouseDown={hasHorizontalScroll ? handleScrollbarMouseDown : undefined}
+        />
+      </div>
 
       {/* Empty State */}
       {data.length === 0 && !isLoading && (

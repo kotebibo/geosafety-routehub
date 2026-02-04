@@ -8,11 +8,11 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useBoard, useBoardItems, useBoardColumns, useBoardGroups, useCreateBoardGroup, useUpdateBoardGroup, useDeleteBoardGroup, useCreateBoardItem, useUpdateBoardItem, useDuplicateBoardItems, useDeleteBoardItem, useCreateUpdate, useRealtimeBoard, useUndoRedo, type UndoableAction } from '@/features/boards/hooks'
 import { queryKeys } from '@/lib/react-query'
 import { useInspectorId } from '@/hooks/useInspectorId'
-import { MondayBoardTable, ErrorBoundary, BoardPresenceIndicator, BoardToolbar, type SortConfig, type FilterConfig } from '@/features/boards/components'
+import { VirtualizedBoardTable, ErrorBoundary, BoardPresenceIndicator, BoardToolbar, type SortConfig, type FilterConfig } from '@/features/boards/components'
 import { useBoardUpdates } from '@/features/boards/hooks'
 import { Button } from '@/shared/components/ui'
 import { useToast } from '@/components/ui-monday/Toast'
-import { ArrowLeft, Plus, Columns, Search, Download, Upload, Copy, Trash2, Undo2, Redo2, History, FileCheck, Users } from 'lucide-react'
+import { ArrowLeft, Plus, Columns, Search, Download, Upload, Copy, Trash2, Undo2, Redo2, History, FileCheck, Users, ArrowRightLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BoardItem, BoardColumn, BoardGroup, ColumnType } from '@/features/boards/types/board'
 import { boardsService, userBoardsService } from '@/features/boards/services'
@@ -26,6 +26,7 @@ const ImportBoardModal = dynamic(() => import('@/features/boards/components/Impo
 const SaveAsTemplateModal = dynamic(() => import('@/features/boards/components/SaveAsTemplateModal').then(m => ({ default: m.SaveAsTemplateModal })), { ssr: false })
 const ActivityLogPanel = dynamic(() => import('@/features/boards/components/ActivityLog').then(m => ({ default: m.ActivityLogPanel })), { ssr: false })
 const BoardAccessModal = dynamic(() => import('@/features/boards/components/BoardAccessModal').then(m => ({ default: m.BoardAccessModal })), { ssr: false })
+const MoveItemModal = dynamic(() => import('@/features/boards/components/MoveItemModal').then(m => ({ default: m.MoveItemModal })), { ssr: false })
 
 // Lazy-load lookup hooks - only fetch when export is triggered
 const useLookupData = () => {
@@ -107,6 +108,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const [showActivityLog, setShowActivityLog] = useState(false)
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false)
   const [showAccessModal, setShowAccessModal] = useState(false)
+  const [showMoveModal, setShowMoveModal] = useState(false)
 
   const { data: inspectorId } = useInspectorId(user?.email)
 
@@ -1071,6 +1073,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 <Button
                   variant="secondary"
                   size="sm"
+                  onClick={() => setShowMoveModal(true)}
+                >
+                  <ArrowRightLeft className="w-4 h-4 mr-1" />
+                  Move
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={handleDuplicateSelected}
                   disabled={duplicateItems.isPending}
                 >
@@ -1172,8 +1182,8 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         </div>
       </div>
 
-      {/* Scrollable Table Area - ONLY this scrolls */}
-      <div className="flex-1 overflow-auto px-4 md:px-6 py-4">
+      {/* Scrollable Table Area - vertical scroll only, horizontal scroll handled by table */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 md:px-6 py-4">
         {itemsError ? (
           <div className="flex flex-col items-center justify-center py-24 bg-bg-primary rounded-lg border border-border-light">
             <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-red-50">
@@ -1189,13 +1199,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           </div>
         ) : columns && columns.length > 0 ? (
           <ErrorBoundary>
-            <MondayBoardTable
+            <VirtualizedBoardTable
               boardType={board.board_type}
               columns={columns.filter(col => col.is_visible)}
               data={filteredItems || []}
               groups={groups}
-              onCellEdit={handleCellEdit}
+              isLoading={itemsLoading || groupsLoading}
               onRowClick={handleRowClick}
+              onCellEdit={handleCellEdit}
               selection={selection}
               onSelectionChange={setSelection}
               onAddItem={handleAddItem}
@@ -1205,18 +1216,16 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               onGroupCollapseToggle={handleGroupCollapseToggle}
               onDeleteGroup={handleDeleteGroup}
               onColumnResize={handleColumnResize}
-              onColumnReorder={handleTableColumnReorder}
+              onColumnReorder={(cols) => handleTableColumnReorder(cols.map(c => c.id))}
               onQuickAddColumn={handleQuickAddColumn}
               onOpenAddColumnModal={() => setShowAddColumn(true)}
               onColumnRename={handleColumnRename}
               onDeleteColumn={handleDeleteColumn}
               onItemMove={handleItemMove}
               onItemReorder={handleItemReorder}
-              isLoading={itemsLoading || groupsLoading}
               presence={presence}
               onCellEditStart={(itemId, columnId) => setEditing(itemId, columnId)}
               onCellEditEnd={() => setEditing(null)}
-              groupByColumn={groupByColumn}
             />
           </ErrorBoundary>
         ) : (
@@ -1368,6 +1377,24 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           }
         }}
       />
+
+      {/* Move Item Modal */}
+      {showMoveModal && selection.size > 0 && (
+        <MoveItemModal
+          isOpen={showMoveModal}
+          onClose={() => setShowMoveModal(false)}
+          itemIds={Array.from(selection)}
+          sourceBoardId={params.id}
+          onMoveComplete={(movedCount, failedCount) => {
+            if (movedCount > 0) {
+              showToast(`Moved ${movedCount} item(s)${failedCount > 0 ? `, ${failedCount} failed` : ''}`, failedCount > 0 ? 'warning' : 'success')
+              setSelection(new Set())
+            } else {
+              showToast('Failed to move items', 'error')
+            }
+          }}
+        />
+      )}
     </div>
   )
 }

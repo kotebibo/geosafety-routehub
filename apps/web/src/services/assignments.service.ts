@@ -1,12 +1,12 @@
 import { createClient } from '@/lib/supabase'
 
 // Helper to get supabase client with current auth state
-const getDb = () => createClient()
+const getDb = (): any => createClient()
 
 export const assignmentsService = {
   bulkAssign: async (companyServiceIds: string[], inspectorId: string | null) => {
-    const { error } = await (getDb()
-      .from('company_services') as any)
+    const { error } = await getDb()
+      .from('company_services')
       .update({ assigned_inspector_id: inspectorId })
       .in('id', companyServiceIds)
     
@@ -14,8 +14,8 @@ export const assignmentsService = {
   },
 
   getByServiceType: async (serviceTypeId?: string) => {
-    let query = (getDb()
-      .from('company_services') as any)
+    let query = getDb()
+      .from('company_services')
       .select(`
         *,
         company:companies(id, name, address, lat, lng),
@@ -31,12 +31,12 @@ export const assignmentsService = {
       } else {
         // It's a service code name like "personal_data_protection"
         // We need to first get the service type UUID
-        const { data: serviceType, error: stError } = await (getDb()
-          .from('service_types') as any)
+        const { data: serviceType, error: stError } = await getDb()
+          .from('service_types')
           .select('id')
           .eq('name', serviceTypeId)
           .single()
-        
+
         if (stError || !serviceType) {
           console.warn(`Could not find service type with name "${serviceTypeId}". Returning all assignments.`)
           // Don't add any filter - return all
@@ -53,8 +53,8 @@ export const assignmentsService = {
   },
 
   getStatistics: async () => {
-    const { data: all, error: allError } = await (getDb()
-      .from('company_services') as any)
+    const { data: all, error: allError } = await getDb()
+      .from('company_services')
       .select('id, assigned_inspector_id')
     
     if (allError) throw allError

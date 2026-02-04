@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase'
 
 // Helper to get supabase client with current auth state
 // IMPORTANT: Must be called inside functions, not at module level
-const getDb = () => createClient()
+const getDb = (): any => createClient()
 
 export const inspectorsService = {
   getAll: async (includeInactive = true) => {
@@ -21,8 +21,8 @@ export const inspectorsService = {
   },
 
   getActive: async () => {
-    const { data, error } = await (getDb()
-      .from('inspectors') as any)
+    const { data, error } = await getDb()
+      .from('inspectors')
       .select('*')
       .eq('status', 'active')
       .order('full_name')
@@ -32,8 +32,8 @@ export const inspectorsService = {
   },
 
   getById: async (id: string) => {
-    const { data, error } = await (getDb()
-      .from('inspectors') as any)
+    const { data, error } = await getDb()
+      .from('inspectors')
       .select('*')
       .eq('id', id)
       .single()
@@ -63,8 +63,8 @@ export const inspectorsService = {
     specialty: string
     status: 'active'
   }) => {
-    const { data, error } = await (getDb()
-      .from('inspectors') as any)
+    const { data, error } = await getDb()
+      .from('inspectors')
       .insert(inspectorData)
       .select()
       .single()
@@ -74,8 +74,8 @@ export const inspectorsService = {
   },
 
   update: async (id: string, updates: any) => {
-    const { data, error } = await (getDb()
-      .from('inspectors') as any)
+    const { data, error } = await getDb()
+      .from('inspectors')
       .update(updates)
       .eq('id', id)
       .select()
@@ -86,8 +86,8 @@ export const inspectorsService = {
   },
 
   delete: async (id: string) => {
-    const { error } = await (getDb()
-      .from('inspectors') as any)
+    const { error } = await getDb()
+      .from('inspectors')
       .delete()
       .eq('id', id)
 

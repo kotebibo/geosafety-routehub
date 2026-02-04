@@ -68,6 +68,15 @@ export interface BoardItem {
   created_by?: string
   created_at: string
   updated_at: string
+  // Fields for item transfer/history tracking
+  original_board_id?: string // Original board if item was moved
+  move_metadata?: {
+    moved_from_board_id?: string
+    moved_from_board_name?: string
+    moved_at?: string
+    column_mapping_used?: Record<string, string> | null
+    unmapped_data?: Record<string, unknown> | null
+  }
 }
 
 // Board Member
@@ -194,16 +203,23 @@ export interface ColumnConfig {
 // Activity/Update Types
 export interface ItemUpdate {
   id: string
-  item_type: 'route' | 'company' | 'inspector' | 'inspection'
+  item_type: 'route' | 'company' | 'inspector' | 'inspection' | 'board_item'
   item_id: string
   user_id?: string
   user_name?: string
   update_type: UpdateType
   field_name?: string
+  column_id?: string
+  column_name?: string // Resolved column name for display
+  column_name_ka?: string // Georgian column name for display
   old_value?: string
   new_value?: string
   content?: string
   metadata?: Record<string, any>
+  source_board_id?: string
+  target_board_id?: string
+  source_board_name?: string // Resolved board name for display
+  target_board_name?: string // Resolved board name for display
   created_at: string
 }
 
@@ -216,6 +232,8 @@ export type UpdateType =
   | 'reassigned'
   | 'comment'
   | 'completed'
+  | 'column_changed'
+  | 'moved_to_board'
 
 // Comment Types
 export interface ItemComment {

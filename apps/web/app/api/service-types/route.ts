@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { requireAdmin } from '@/middleware/auth';
+import { createServiceTypeSchema, updateServiceTypeSchema } from '@/lib/validations/service-type.schema';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -47,9 +48,12 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
+    // Validate input
+    const validatedData = createServiceTypeSchema.parse(body);
+
     const { data, error } = await supabase
       .from('service_types')
-      .insert(body)
+      .insert(validatedData)
       .select()
       .single();
 
@@ -64,6 +68,12 @@ export async function POST(request: NextRequest) {
     }
     if (error.name === 'ForbiddenError') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+    if (error.name === 'ZodError') {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(
@@ -89,9 +99,12 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Validate input
+    const validatedData = updateServiceTypeSchema.parse(updates);
+
     const { data, error } = await supabase
       .from('service_types')
-      .update(updates)
+      .update(validatedData)
       .eq('id', id)
       .select()
       .single();
@@ -107,6 +120,12 @@ export async function PUT(request: NextRequest) {
     }
     if (error.name === 'ForbiddenError') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+    }
+    if (error.name === 'ZodError') {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(

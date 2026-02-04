@@ -115,8 +115,8 @@ export default function SettingsPage() {
     try {
       const supabase = createClient()
 
-      const { error } = await (supabase
-        .from('users') as any)
+      const { error } = await (supabase as any)
+        .from('users')
         .update({
           full_name: fullName,
           phone: phone,
@@ -143,8 +143,8 @@ export default function SettingsPage() {
     try {
       const supabase = createClient()
 
-      const { error } = await (supabase
-        .from('user_settings') as any)
+      const { error } = await (supabase as any)
+        .from('user_settings')
         .upsert({
           user_id: user.id,
           theme: settings.theme,

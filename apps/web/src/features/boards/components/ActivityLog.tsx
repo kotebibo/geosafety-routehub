@@ -28,12 +28,19 @@ export interface ItemUpdate {
   item_id: string
   user_id?: string
   user_name?: string
-  update_type: 'created' | 'updated' | 'deleted' | 'status_changed' | 'assigned' | 'reassigned' | 'comment' | 'completed'
+  update_type: 'created' | 'updated' | 'deleted' | 'status_changed' | 'assigned' | 'reassigned' | 'comment' | 'completed' | 'column_changed' | 'moved_to_board'
   field_name?: string
+  column_id?: string
+  column_name?: string
+  column_name_ka?: string
   old_value?: string
   new_value?: string
   content?: string
   metadata?: Record<string, any>
+  source_board_id?: string
+  target_board_id?: string
+  source_board_name?: string
+  target_board_name?: string
   created_at: string
 }
 
@@ -81,6 +88,8 @@ function getUpdateTypeLabel(type: ItemUpdate['update_type']): string {
     case 'reassigned': return 'Reassigned'
     case 'comment': return 'Comment'
     case 'completed': return 'Completed'
+    case 'column_changed': return 'Column Changed'
+    case 'moved_to_board': return 'Moved'
     default: return 'Changed'
   }
 }
@@ -96,6 +105,8 @@ function getUpdateTypeColor(type: ItemUpdate['update_type']): string {
     case 'reassigned': return 'bg-orange-100 text-orange-700'
     case 'completed': return 'bg-green-100 text-green-700'
     case 'comment': return 'bg-gray-100 text-gray-700'
+    case 'column_changed': return 'bg-cyan-100 text-cyan-700'
+    case 'moved_to_board': return 'bg-amber-100 text-amber-700'
     default: return 'bg-gray-100 text-gray-700'
   }
 }
@@ -180,10 +191,11 @@ export function ActivityLog({
             {updates.map((update) => {
               const canRollback = showRollback &&
                 onRollback &&
-                update.field_name &&
+                (update.field_name || update.column_id) &&
                 update.old_value !== undefined &&
                 update.update_type !== 'created' &&
-                update.update_type !== 'deleted'
+                update.update_type !== 'deleted' &&
+                update.update_type !== 'moved_to_board'
 
               return (
                 <tr
@@ -223,8 +235,13 @@ export function ActivityLog({
                   {/* Column */}
                   <td className="px-4 py-3">
                     <span className="text-gray-700 font-medium">
-                      {update.metadata?.displayName || update.field_name || '-'}
+                      {update.column_name || update.metadata?.displayName || update.field_name || update.column_id || '-'}
                     </span>
+                    {update.update_type === 'moved_to_board' && update.source_board_name && update.target_board_name && (
+                      <span className="block text-xs text-gray-500 mt-0.5">
+                        {update.source_board_name} → {update.target_board_name}
+                      </span>
+                    )}
                   </td>
 
                   {/* Old Value */}

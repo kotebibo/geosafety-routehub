@@ -44,45 +44,85 @@ export function useTableScrollbar({
   const scrollbarDragStartX = useRef(0)
   const scrollbarDragStartScrollLeft = useRef(0)
 
+  // Track RAF frame to prevent multiple updates per frame
+  const rafRef = useRef<number | null>(null)
+  const lastScrollLeftRef = useRef<number>(0)
+
   // Update scroll info and scrollbar position when table scrolls or resizes
   useEffect(() => {
     const container = tableContainerRef.current
     if (!container) return
 
-    const updateScrollInfo = () => {
-      if (!container) return
+    // Lightweight scroll handler - only updates scrollLeft, uses RAF for batching
+    const handleScroll = () => {
+      // Skip if scrollLeft hasn't changed (vertical scroll)
+      if (container.scrollLeft === lastScrollLeftRef.current) return
+      lastScrollLeftRef.current = container.scrollLeft
 
-      // Calculate where the scrollbar should be positioned
+      // Cancel any pending RAF to avoid stacking
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+      }
+
+      // Batch the state update with RAF
+      rafRef.current = requestAnimationFrame(() => {
+        setScrollInfo(prev => {
+          // Only update if values changed
+          if (prev.scrollLeft === container.scrollLeft &&
+              prev.scrollWidth === container.scrollWidth &&
+              prev.clientWidth === container.clientWidth) {
+            return prev
+          }
+          return {
+            scrollLeft: container.scrollLeft,
+            scrollWidth: container.scrollWidth,
+            clientWidth: container.clientWidth,
+          }
+        })
+      })
+    }
+
+    // Full update including position - only needed on resize/window scroll
+    const updateScrollbarPosition = () => {
       const rect = container.getBoundingClientRect()
       const viewportHeight = window.innerHeight
       const bottom = Math.max(0, viewportHeight - rect.bottom)
-
-      setScrollInfo({
-        scrollLeft: container.scrollLeft,
-        scrollWidth: container.scrollWidth,
-        clientWidth: container.clientWidth,
-      })
 
       setScrollbarPosition({
         left: rect.left,
         width: rect.width,
         bottom: bottom,
       })
+
+      // Also update scroll info
+      setScrollInfo({
+        scrollLeft: container.scrollLeft,
+        scrollWidth: container.scrollWidth,
+        clientWidth: container.clientWidth,
+      })
     }
 
-    updateScrollInfo()
-    container.addEventListener('scroll', updateScrollInfo)
-    window.addEventListener('scroll', updateScrollInfo, true)
-    window.addEventListener('resize', updateScrollInfo)
+    // Initial update
+    updateScrollbarPosition()
+
+    // Scroll only needs lightweight handler
+    container.addEventListener('scroll', handleScroll, { passive: true })
+
+    // Window scroll/resize needs full position update
+    window.addEventListener('scroll', updateScrollbarPosition, true)
+    window.addEventListener('resize', updateScrollbarPosition)
 
     // Use ResizeObserver to detect container size changes
-    const resizeObserver = new ResizeObserver(updateScrollInfo)
+    const resizeObserver = new ResizeObserver(updateScrollbarPosition)
     resizeObserver.observe(container)
 
     return () => {
-      container.removeEventListener('scroll', updateScrollInfo)
-      window.removeEventListener('scroll', updateScrollInfo, true)
-      window.removeEventListener('resize', updateScrollInfo)
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current)
+      }
+      container.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('scroll', updateScrollbarPosition, true)
+      window.removeEventListener('resize', updateScrollbarPosition)
       resizeObserver.disconnect()
     }
   }, [tableContainerRef])
