@@ -56,10 +56,10 @@ export async function GET(request: NextRequest) {
       message: `Found ${duplicateCount} companies sharing ${duplicates.length} coordinate pairs`,
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Coordinate check error:', error);
     return NextResponse.json(
-      { error: 'Failed to check coordinates' },
+      { error: 'Failed to check coordinates', details: error.message },
       { status: 500 }
     );
   }

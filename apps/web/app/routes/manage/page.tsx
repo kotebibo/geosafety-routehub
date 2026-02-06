@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
+import { ComponentErrorBoundary } from '@/shared/components/feedback'
 import { RoutesTable } from '@/features/routes/components'
 import { useRoutes } from '@/features/routes/hooks'
 import { Route as RouteIcon, Calendar, CheckCircle, Plus } from 'lucide-react'
@@ -94,12 +95,14 @@ export default function RoutesManagePage() {
             }}
           />
         ) : (
-          <RoutesTable
-            routes={routes}
-            inspectors={inspectors}
-            onDelete={deleteRoute}
-            onReassign={reassignRoute}
-          />
+          <ComponentErrorBoundary componentName="RoutesTable">
+            <RoutesTable
+              routes={routes}
+              inspectors={inspectors}
+              onDelete={deleteRoute}
+              onReassign={reassignRoute}
+            />
+          </ComponentErrorBoundary>
         )}
       </div>
     </div>

@@ -110,11 +110,8 @@
     - `duplicateBoardItems()` - duplicates multiple items
   - React Query hooks available: `useDuplicateBoard`, `useDuplicateBoardItem`, `useDuplicateBoardItems`
 
-- [ ] **Kanban View** - Mentioned in settings but not implemented
-  - Priority: LOW (can skip for MVP)
-
-- [ ] **Calendar View** - Mentioned in settings but not implemented
-  - Priority: LOW (can skip for MVP)
+- [x] **Kanban View** - REMOVED (not needed for MVP)
+- [x] **Calendar View** - REMOVED (not needed for MVP)
 
 ### 3.3 Notifications
 - [ ] **Basic In-App Notifications**

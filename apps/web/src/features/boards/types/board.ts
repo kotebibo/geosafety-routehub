@@ -44,7 +44,7 @@ export interface Board {
 export interface BoardSettings {
   allowComments: boolean
   allowActivityFeed: boolean
-  defaultView: 'table' | 'kanban' | 'calendar'
+  defaultView: 'table'
   permissions: {
     canEdit: string[]
     canView: string[]
@@ -278,7 +278,7 @@ export interface NotificationSettings {
 }
 
 export interface BoardPreferences {
-  default_view: 'table' | 'kanban' | 'calendar'
+  default_view: 'table'
   rows_per_page: number
   auto_refresh: boolean
   show_activity_feed: boolean

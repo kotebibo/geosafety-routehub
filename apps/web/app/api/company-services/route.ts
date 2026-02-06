@@ -75,7 +75,7 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(
-      { error: error.message },
+      { error: 'Failed to fetch company services', details: error.message },
       { status: 500 }
     );
   }

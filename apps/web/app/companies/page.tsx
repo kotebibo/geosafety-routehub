@@ -3,6 +3,7 @@
 import { useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { PageHeader, LoadingSpinner, StatCard, EmptyState, DataTable } from '@/shared/components/ui'
+import { ComponentErrorBoundary } from '@/shared/components/feedback'
 import type { Column } from '@/shared/components/ui'
 import { useCompanies } from '@/features/companies/hooks'
 import { Building2, Plus, Search, MapPin, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -187,13 +188,15 @@ export default function CompaniesPage() {
           />
         ) : (
           <>
-            <DataTable
-              data={companies}
-              columns={columns}
-              loading={loading}
-              onRowClick={(row) => router.push(`/companies/${row.id}`)}
-              caption="კომპანიების სია"
-            />
+            <ComponentErrorBoundary componentName="CompanyTable">
+              <DataTable
+                data={companies}
+                columns={columns}
+                loading={loading}
+                onRowClick={(row) => router.push(`/companies/${row.id}`)}
+                caption="კომპანიების სია"
+              />
+            </ComponentErrorBoundary>
 
             {/* Pagination Controls */}
             {pagination.totalPages > 1 && (
