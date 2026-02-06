@@ -45,6 +45,7 @@ import {
   KeyRound,
   Folder,
 } from 'lucide-react'
+import { NotificationBell } from '@/shared/components/notifications'
 
 interface SidebarProps {
   className?: string
@@ -551,16 +552,19 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       {/* Logo Section */}
-      <div className="flex-shrink-0 flex items-center h-14 px-4 border-b border-border-light">
+      <div className="flex-shrink-0 flex items-center justify-between h-14 px-4 border-b border-border-light">
         {!collapsed ? (
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm">
-              RH
-            </div>
-            <span className="font-brand font-semibold text-lg text-text-primary">
-              RouteHub
-            </span>
-          </Link>
+          <>
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm">
+                RH
+              </div>
+              <span className="font-brand font-semibold text-lg text-text-primary">
+                RouteHub
+              </span>
+            </Link>
+            <NotificationBell />
+          </>
         ) : (
           <Link href="/" className="flex items-center justify-center w-full">
             <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm">
