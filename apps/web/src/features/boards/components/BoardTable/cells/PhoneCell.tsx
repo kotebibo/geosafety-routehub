@@ -3,12 +3,14 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Phone } from 'lucide-react'
+import { HighlightText } from '@/shared/components/HighlightText'
 
 interface PhoneCellProps {
   value?: string | null
   onEdit?: (value: string) => void
   readOnly?: boolean
   onEditStart?: () => void
+  highlightQuery?: string
 }
 
 // Format Georgian phone number
@@ -37,7 +39,7 @@ function formatPhoneNumber(phone: string): string {
   return phone
 }
 
-export function PhoneCell({ value, onEdit, readOnly = false, onEditStart }: PhoneCellProps) {
+export function PhoneCell({ value, onEdit, readOnly = false, onEditStart, highlightQuery }: PhoneCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -138,7 +140,11 @@ export function PhoneCell({ value, onEdit, readOnly = false, onEditStart }: Phon
           <>
             <Phone className="w-4 h-4 text-[#579bfc] flex-shrink-0" />
             <span className="text-sm text-[#323338] truncate">
-              {formatPhoneNumber(value)}
+              {highlightQuery ? (
+                <HighlightText text={formatPhoneNumber(value)} query={highlightQuery} />
+              ) : (
+                formatPhoneNumber(value)
+              )}
             </span>
           </>
         ) : (

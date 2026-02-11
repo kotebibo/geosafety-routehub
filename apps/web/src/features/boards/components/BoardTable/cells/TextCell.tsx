@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, memo } from 'react'
 import { cn } from '@/lib/utils'
+import { HighlightText } from '@/shared/components/HighlightText'
 import type { CellRendererProps } from '../types'
 
-export const TextCell = memo(function TextCell({ value, onEdit, isEditing: externalIsEditing, onEditStart }: CellRendererProps) {
+export const TextCell = memo(function TextCell({ value, onEdit, isEditing: externalIsEditing, onEditStart, highlightQuery }: CellRendererProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -70,7 +71,15 @@ export const TextCell = memo(function TextCell({ value, onEdit, isEditing: exter
       )}
     >
       <span className="text-[#323338] truncate">
-        {value || <span className="text-[#9699a6]">Empty</span>}
+        {value ? (
+          highlightQuery ? (
+            <HighlightText text={String(value)} query={highlightQuery} />
+          ) : (
+            value
+          )
+        ) : (
+          <span className="text-[#9699a6]">Empty</span>
+        )}
       </span>
     </div>
   )

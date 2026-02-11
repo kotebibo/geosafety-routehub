@@ -44,6 +44,8 @@ import {
   Shield,
   KeyRound,
   Folder,
+  BarChart3,
+  Navigation,
 } from 'lucide-react'
 import { NotificationBell } from '@/shared/components/notifications'
 
@@ -112,7 +114,6 @@ export function Sidebar({ className }: SidebarProps) {
   const [actionLoading, setActionLoading] = React.useState(false)
   const [showCreateWorkspace, setShowCreateWorkspace] = React.useState(false)
   const [expandedWorkspaces, setExpandedWorkspaces] = React.useState<Set<string>>(new Set())
-
   // Workspace menu state
   const [workspaceMenuState, setWorkspaceMenuState] = React.useState<WorkspaceMenuState | null>(null)
   const [workspaceRenameMode, setWorkspaceRenameMode] = React.useState(false)
@@ -147,39 +148,48 @@ export function Sidebar({ className }: SidebarProps) {
   // Fetch all user's boards (using auth user ID, not inspector ID)
   const { data: allBoards, isLoading: allBoardsLoading } = useUserBoards(isAuthReady ? userId : '')
 
-  // Group boards by workspace
-  const boardsByWorkspace = React.useMemo(() => {
-    if (!allBoards || !workspaces) return new Map()
+  // Group boards by workspace, collecting shared boards separately
+  const { boardsByWorkspace, sharedBoards } = React.useMemo(() => {
+    if (!allBoards || !workspaces) return { boardsByWorkspace: new Map(), sharedBoards: [] as any[] }
 
     const grouped = new Map<string, typeof allBoards>()
+    const shared: typeof allBoards = []
 
     // Initialize with all workspaces
     workspaces.forEach((ws: any) => {
       grouped.set(ws.id, [])
     })
 
-    // Group boards
+    // Group boards — boards without a matching workspace go to "shared"
     allBoards.forEach((board: any) => {
       const wsId = board.workspace_id
       if (wsId && grouped.has(wsId)) {
         grouped.get(wsId)!.push(board)
+      } else {
+        shared.push(board)
       }
     })
 
-    return grouped
+    return { boardsByWorkspace: grouped, sharedBoards: shared }
   }, [allBoards, workspaces])
 
   // Auto-expand workspace if current board belongs to it
   React.useEffect(() => {
-    if (pathname.startsWith('/boards/') && allBoards) {
+    if (pathname.startsWith('/boards/') && allBoards && workspaces) {
       const boardId = pathname.split('/')[2]
       const board = allBoards.find((b: any) => b.id === boardId)
-      if (board?.workspace_id) {
+      if (board) {
         const wsId = board.workspace_id
-        setExpandedWorkspaces(prev => new Set([...prev, wsId]))
+        const userWorkspaceIds = new Set(workspaces.map((ws: any) => ws.id))
+        if (wsId && userWorkspaceIds.has(wsId)) {
+          setExpandedWorkspaces(prev => new Set([...prev, wsId]))
+        } else {
+          // Board is in "Shared with me" section
+          setExpandedWorkspaces(prev => new Set([...prev, '__shared__']))
+        }
       }
     }
-  }, [pathname, allBoards])
+  }, [pathname, allBoards, workspaces])
 
   // Toggle workspace expansion
   const toggleWorkspace = (workspaceId: string) => {
@@ -474,6 +484,20 @@ export function Sidebar({ className }: SidebarProps) {
       roles: ['admin', 'dispatcher', 'inspector'],
     },
     {
+      href: '/analytics',
+      label: 'ანალიტიკა',
+      labelEn: 'Analytics',
+      icon: BarChart3,
+      roles: ['admin', 'dispatcher'],
+    },
+    {
+      href: '/tracking',
+      label: 'ტრეკინგი',
+      labelEn: 'Live Tracking',
+      icon: Navigation,
+      roles: ['admin', 'dispatcher'],
+    },
+    {
       href: '/companies',
       label: 'კომპანიები',
       labelEn: 'Companies',
@@ -552,25 +576,27 @@ export function Sidebar({ className }: SidebarProps) {
       )}
     >
       {/* Logo Section */}
-      <div className="flex-shrink-0 flex items-center justify-between h-14 px-4 border-b border-border-light">
+      <div className="flex-shrink-0 flex items-center gap-2 h-14 px-3 border-b border-border-light">
         {!collapsed ? (
           <>
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm">
+            <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                 RH
               </div>
-              <span className="font-brand font-semibold text-lg text-text-primary">
+              <span className="text-lg font-semibold text-text-primary truncate">
                 RouteHub
               </span>
             </Link>
             <NotificationBell />
           </>
         ) : (
-          <Link href="/" className="flex items-center justify-center w-full">
-            <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm">
-              RH
-            </div>
-          </Link>
+          <div className="flex items-center justify-center w-full">
+            <Link href="/" className="flex items-center justify-center">
+              <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm">
+                RH
+              </div>
+            </Link>
+          </div>
         )}
       </div>
 
@@ -785,6 +811,122 @@ export function Sidebar({ className }: SidebarProps) {
                         </div>
                       )
                     })}
+
+                    {/* Shared with me - boards the user has access to but aren't in their workspaces */}
+                    {sharedBoards.length > 0 && (() => {
+                      const activeShared = sharedBoards.filter((b: any) => !b.settings?.is_archived)
+                      const archivedShared = sharedBoards.filter((b: any) => b.settings?.is_archived)
+                      if (activeShared.length === 0 && archivedShared.length === 0) return null
+
+                      const isExpanded = expandedWorkspaces.has('__shared__')
+
+                      return (
+                        <div className="group/workspace">
+                          <div
+                            className={cn(
+                              'flex items-center gap-2 w-full px-3 py-1.5 rounded-md text-sm transition-all',
+                              'hover:bg-bg-hover text-text-primary',
+                              'pl-4'
+                            )}
+                          >
+                            <button
+                              onClick={() => toggleWorkspace('__shared__')}
+                              className="flex items-center gap-2 flex-1 min-w-0"
+                            >
+                              <ChevronRight
+                                className={cn(
+                                  'w-3.5 h-3.5 text-text-tertiary transition-transform flex-shrink-0',
+                                  isExpanded && 'rotate-90'
+                                )}
+                              />
+                              <Users className="w-4 h-4 flex-shrink-0 text-text-tertiary" />
+                              <span className="flex-1 truncate text-left font-medium">
+                                Shared with me
+                              </span>
+                            </button>
+                          </div>
+
+                          {isExpanded && (
+                            <div className="ml-4 pl-4 border-l border-border-light">
+                              {activeShared.map((board: any) => (
+                                <Link
+                                  key={board.id}
+                                  href={`/boards/${board.id}`}
+                                  className={cn(
+                                    'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-all group',
+                                    'hover:bg-bg-hover',
+                                    currentBoardId === board.id
+                                      ? 'bg-bg-selected text-monday-primary'
+                                      : 'text-text-primary'
+                                  )}
+                                >
+                                  <div
+                                    className={cn(
+                                      'w-4 h-4 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
+                                      getBoardColor(board.color)
+                                    )}
+                                  >
+                                    {board.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <span className="flex-1 truncate">{board.name}</span>
+                                  {board.settings?.is_favorite && (
+                                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                                  )}
+                                  <button
+                                    className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
+                                    onClick={(e) => openMenu(e, board.id, board.name, board.color, board.settings?.is_favorite, false)}
+                                  >
+                                    <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
+                                  </button>
+                                </Link>
+                              ))}
+
+                              {archivedShared.length > 0 && (
+                                <>
+                                  <button
+                                    onClick={() => setShowArchived(!showArchived)}
+                                    className="flex items-center gap-2 px-2 py-1 mt-1 text-xs text-text-tertiary hover:text-text-secondary w-full"
+                                  >
+                                    <Archive className="w-3 h-3" />
+                                    <span>Archived ({archivedShared.length})</span>
+                                    <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', !showArchived && '-rotate-90')} />
+                                  </button>
+                                  {showArchived && archivedShared.map((board: any) => (
+                                    <Link
+                                      key={board.id}
+                                      href={`/boards/${board.id}`}
+                                      className={cn(
+                                        'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-all group opacity-50',
+                                        'hover:bg-bg-hover hover:opacity-100',
+                                        currentBoardId === board.id
+                                          ? 'bg-bg-selected text-monday-primary'
+                                          : 'text-text-primary'
+                                      )}
+                                    >
+                                      <div
+                                        className={cn(
+                                          'w-4 h-4 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
+                                          getBoardColor(board.color)
+                                        )}
+                                      >
+                                        {board.name.charAt(0).toUpperCase()}
+                                      </div>
+                                      <span className="flex-1 truncate">{board.name}</span>
+                                      <button
+                                        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
+                                        onClick={(e) => openMenu(e, board.id, board.name, board.color, board.settings?.is_favorite, true)}
+                                      >
+                                        <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
+                                      </button>
+                                    </Link>
+                                  ))}
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })()}
 
                     {/* Create Workspace Button */}
                     <button
@@ -1060,6 +1202,7 @@ export function Sidebar({ className }: SidebarProps) {
           }}
         />
       )}
+
     </>
   )
 }

@@ -20,6 +20,8 @@ export interface CellRendererProps<TData = any> {
   onEdit?: (value: any) => void
   isEditing?: boolean
   onEditStart?: () => void
+  /** Search query for match highlighting in global search results */
+  highlightQuery?: string
 }
 
 export interface HeaderCellProps {

@@ -50,22 +50,20 @@ export function UserPicker({ value, onChange, onClose, placeholder = 'Search peo
   }, [onClose])
 
   const filteredInspectors = inspectors?.filter((inspector) => {
-    const fullName = `${inspector.first_name || ''} ${inspector.last_name || ''}`.toLowerCase()
+    const name = (inspector.full_name || '').toLowerCase()
     const email = (inspector.email || '').toLowerCase()
     const searchLower = search.toLowerCase()
-    return fullName.includes(searchLower) || email.includes(searchLower)
+    return name.includes(searchLower) || email.includes(searchLower)
   }) || []
 
   const selectedInspector = inspectors?.find(i => i.id === value)
 
-  const getInitials = (firstName?: string | null, lastName?: string | null) => {
-    const first = firstName?.charAt(0) || ''
-    const last = lastName?.charAt(0) || ''
+  const getInitials = (fullName?: string | null) => {
+    if (!fullName) return '?'
+    const parts = fullName.trim().split(/\s+/)
+    const first = parts[0]?.charAt(0) || ''
+    const last = parts.length > 1 ? parts[parts.length - 1]?.charAt(0) || '' : ''
     return (first + last).toUpperCase() || '?'
-  }
-
-  const getFullName = (firstName?: string | null, lastName?: string | null) => {
-    return `${firstName || ''} ${lastName || ''}`.trim() || 'Unknown'
   }
 
   const content = (
@@ -134,13 +132,13 @@ export function UserPicker({ value, onChange, onClose, placeholder = 'Search peo
               >
                 {/* Avatar */}
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#0073ea] text-white flex items-center justify-center text-xs font-semibold">
-                  {getInitials(inspector.first_name, inspector.last_name)}
+                  {getInitials(inspector.full_name)}
                 </div>
 
                 {/* Name and Email */}
                 <div className="flex-1 text-left overflow-hidden">
                   <div className="font-medium text-[#323338] truncate">
-                    {getFullName(inspector.first_name, inspector.last_name)}
+                    {inspector.full_name || 'Unknown'}
                   </div>
                   {inspector.email && (
                     <div className="text-xs text-[#9699a6] truncate">

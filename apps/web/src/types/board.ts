@@ -341,6 +341,35 @@ export interface BoardCellProps {
   onCancel: () => void
 }
 
+// Global Search Result (from RPC)
+export interface GlobalSearchResult {
+  item_id: string
+  item_name: string
+  item_status: string | null
+  item_data: Record<string, any>
+  item_board_id: string
+  item_group_id: string | null
+  item_position: number
+  item_assigned_to: string | null
+  item_due_date: string | null
+  item_created_at: string
+  board_name: string
+  board_color: string | null
+  board_icon: string | null
+  board_type: string
+  matched_field: string
+}
+
+// Grouped search results (for rendering as board sections)
+export interface GlobalSearchBoardGroup {
+  boardId: string
+  boardName: string
+  boardColor: string | null
+  boardIcon: string | null
+  boardType: string
+  items: GlobalSearchResult[]
+}
+
 // Toolbar Props
 export interface BoardToolbarProps {
   boardType: BoardType

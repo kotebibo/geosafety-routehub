@@ -2,10 +2,15 @@
 
 import React, { memo } from 'react'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, GripVertical, Trash2, Type } from 'lucide-react'
+import { MoreHorizontal, GripVertical, Trash2, Type, ArrowUp, ArrowDown } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { BoardColumn } from '../../types/board'
+
+export interface SortConfig {
+  column: string
+  direction: 'asc' | 'desc'
+}
 
 export interface SortableColumnHeaderProps {
   column: BoardColumn
@@ -24,6 +29,8 @@ export interface SortableColumnHeaderProps {
   onMenuToggle: (columnId: string | null) => void
   onDeleteColumn: (column: BoardColumn) => void
   menuRef: React.RefObject<HTMLDivElement>
+  sortConfig?: SortConfig | null
+  stickyStyle?: React.CSSProperties
 }
 
 export const SortableColumnHeader = memo(function SortableColumnHeader({
@@ -43,7 +50,11 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
   onMenuToggle,
   onDeleteColumn,
   menuRef,
+  sortConfig,
+  stickyStyle,
 }: SortableColumnHeaderProps) {
+  const isSorted = sortConfig?.column === column.column_id
+  const sortDirection = isSorted ? sortConfig.direction : null
   const {
     attributes,
     listeners,
@@ -57,11 +68,12 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
   })
 
   const style: React.CSSProperties = {
+    ...stickyStyle,
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
     width,
-    zIndex: isDragging ? 50 : undefined,
+    zIndex: isDragging ? 50 : stickyStyle?.zIndex,
   }
 
   return (
@@ -69,13 +81,15 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'relative border text-left px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:bg-[#ecedf0] transition-colors group',
+        'relative bg-[#f5f6f8] border text-left px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:bg-[#ecedf0] transition-colors group',
         isDragging && 'bg-blue-50 shadow-lg',
+        isSorted && 'bg-[#f0f1f3]',
         'border-[#c3c6d4]'
       )}
       onClick={(e) => {
         if ((e.target as HTMLElement).tagName === 'INPUT') return
         if ((e.target as HTMLElement).closest('.drag-handle')) return
+        if ((e.target as HTMLElement).closest('.column-menu-btn')) return
         onSort(column.column_id)
       }}
       onDoubleClick={(e) => {
@@ -84,6 +98,20 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
         onColumnNameDoubleClick(e, column)
       }}
     >
+      {/* Sort indicator - positioned at top center of header cell */}
+      {isSorted ? (
+        <div className="absolute -top-[7px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#c3c6d4] text-[#323338] shadow-sm">
+          {sortDirection === 'asc' ? (
+            <ArrowUp className="w-[10px] h-[10px]" />
+          ) : (
+            <ArrowDown className="w-[10px] h-[10px]" />
+          )}
+        </div>
+      ) : (
+        <div className="absolute -top-[7px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#c3c6d4] text-[#676879] opacity-0 group-hover:opacity-100 transition-opacity">
+          <ArrowUp className="w-[10px] h-[10px]" />
+        </div>
+      )}
       <div className="flex items-center gap-1">
         {/* Drag handle with dnd-kit listeners */}
         {canReorder && !isEditing && (
@@ -120,7 +148,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
                 e.stopPropagation()
                 onMenuToggle(isMenuOpen ? null : column.id)
               }}
-              className="column-menu-btn opacity-0 group-hover:opacity-100 p-0.5 hover:bg-[#c3c6d4] rounded transition-colors"
+              className="column-menu-btn opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto p-0.5 hover:bg-[#c3c6d4] rounded transition-colors"
             >
               <MoreHorizontal className="w-4 h-4 text-[#676879]" />
             </button>

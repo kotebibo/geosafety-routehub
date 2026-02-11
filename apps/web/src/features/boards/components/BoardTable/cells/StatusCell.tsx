@@ -65,14 +65,14 @@ const LEGACY_COLOR_MAP: Record<string, string> = {
 }
 
 // Default status options if column config doesn't specify
-const DEFAULT_STATUS_OPTIONS: StatusOption[] = [
+export const DEFAULT_STATUS_OPTIONS: StatusOption[] = [
   { key: 'not_started', label: 'Not Started', color: 'explosive' },
   { key: 'working_on_it', label: 'Working on it', color: 'working_orange' },
   { key: 'stuck', label: 'Stuck', color: 'stuck_red' },
   { key: 'done', label: 'Done', color: 'grass_green' },
 ]
 
-function getColorInfo(colorKey: string): { hex: string; text: string } {
+export function getColorInfo(colorKey: string): { hex: string; text: string } {
   // Check if it's a legacy color name
   const mappedColor = LEGACY_COLOR_MAP[colorKey]
   if (mappedColor && MONDAY_COLORS[mappedColor]) {

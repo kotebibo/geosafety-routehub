@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect, memo } from 'react'
+import React, { useState, useRef, memo } from 'react'
 import { useInspectors } from '@/hooks/useInspectors'
 import { MultiUserPicker } from '../../MultiUserPicker'
 import { cn } from '@/lib/utils'
@@ -43,9 +43,11 @@ export const PersonCell = memo(function PersonCell({ value, onEdit, readOnly = f
   // Get selected inspectors
   const selectedInspectors = inspectors?.filter(i => selectedIds.includes(i.id)) || []
 
-  const getInitials = (firstName?: string | null, lastName?: string | null) => {
-    const first = firstName?.charAt(0) || ''
-    const last = lastName?.charAt(0) || ''
+  const getInitials = (fullName?: string | null) => {
+    if (!fullName) return '?'
+    const parts = fullName.trim().split(/\s+/)
+    const first = parts[0]?.charAt(0) || ''
+    const last = parts.length > 1 ? parts[parts.length - 1]?.charAt(0) || '' : ''
     return (first + last).toUpperCase() || '?'
   }
 
@@ -78,9 +80,9 @@ export const PersonCell = memo(function PersonCell({ value, onEdit, readOnly = f
               key={inspector.id}
               className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-semibold border-2 border-white"
               style={{ backgroundColor: getAvatarColor(inspector.id) }}
-              title={`${inspector.first_name || ''} ${inspector.last_name || ''}`.trim()}
+              title={inspector.full_name || ''}
             >
-              {getInitials(inspector.first_name, inspector.last_name)}
+              {getInitials(inspector.full_name)}
             </div>
           ))}
           {selectedInspectors.length > 4 && (
@@ -113,9 +115,9 @@ export const PersonCell = memo(function PersonCell({ value, onEdit, readOnly = f
                   key={inspector.id}
                   className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-semibold border-2 border-white"
                   style={{ backgroundColor: getAvatarColor(inspector.id) }}
-                  title={`${inspector.first_name || ''} ${inspector.last_name || ''}`.trim()}
+                  title={inspector.full_name || ''}
                 >
-                  {getInitials(inspector.first_name, inspector.last_name)}
+                  {getInitials(inspector.full_name)}
                 </div>
               ))}
               {selectedInspectors.length > 3 && (

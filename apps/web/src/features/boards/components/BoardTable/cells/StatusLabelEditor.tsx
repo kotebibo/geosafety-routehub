@@ -51,7 +51,7 @@ export function StatusLabelEditor({
   const handleLabelChange = (index: number, newLabel: string) => {
     setOptions(prev => prev.map((opt, i) =>
       i === index
-        ? { ...opt, label: newLabel, key: newLabel.toLowerCase().replace(/\s+/g, '_') }
+        ? { ...opt, label: newLabel }
         : opt
     ))
   }
@@ -82,12 +82,17 @@ export function StatusLabelEditor({
 
   const handleSave = async () => {
     try {
+      // Generate keys from labels at save time (not on every keystroke)
+      const finalOptions = options.map(opt => ({
+        ...opt,
+        key: opt.label.toLowerCase().replace(/\s+/g, '_'),
+      }))
       await updateColumn.mutateAsync({
         columnId: column.id,
         updates: {
           config: {
             ...column.config,
-            options: options,
+            options: finalOptions,
           },
         },
       })
@@ -138,7 +143,7 @@ export function StatusLabelEditor({
               const isEditingColor = editingColorIndex === index
 
               return (
-                <div key={option.key} className="space-y-2">
+                <div key={index} className="space-y-2">
                   {/* Label Row */}
                   <div className="flex items-center gap-3">
                     {/* Color Indicator */}

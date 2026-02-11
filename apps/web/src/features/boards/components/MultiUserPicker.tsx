@@ -71,23 +71,21 @@ export function MultiUserPicker({
   }, [onClose])
 
   const filteredInspectors = inspectors?.filter((inspector) => {
-    const fullName = `${inspector.first_name || ''} ${inspector.last_name || ''}`.toLowerCase()
+    const name = (inspector.full_name || '').toLowerCase()
     const email = (inspector.email || '').toLowerCase()
     const searchLower = search.toLowerCase()
-    return fullName.includes(searchLower) || email.includes(searchLower)
+    return name.includes(searchLower) || email.includes(searchLower)
   }) || []
 
   // Get selected inspectors for display
   const selectedInspectors = inspectors?.filter(i => value.includes(i.id)) || []
 
-  const getInitials = (firstName?: string | null, lastName?: string | null) => {
-    const first = firstName?.charAt(0) || ''
-    const last = lastName?.charAt(0) || ''
+  const getInitials = (fullName?: string | null) => {
+    if (!fullName) return '?'
+    const parts = fullName.trim().split(/\s+/)
+    const first = parts[0]?.charAt(0) || ''
+    const last = parts.length > 1 ? parts[parts.length - 1]?.charAt(0) || '' : ''
     return (first + last).toUpperCase() || '?'
-  }
-
-  const getFullName = (firstName?: string | null, lastName?: string | null) => {
-    return `${firstName || ''} ${lastName || ''}`.trim() || 'Unknown'
   }
 
   const toggleUser = (userId: string) => {
@@ -143,10 +141,10 @@ export function MultiUserPicker({
                 className="w-5 h-5 rounded-full text-white flex items-center justify-center text-[10px] font-semibold"
                 style={{ backgroundColor: getAvatarColor(inspector.id) }}
               >
-                {getInitials(inspector.first_name, inspector.last_name)}
+                {getInitials(inspector.full_name)}
               </div>
               <span className="max-w-[100px] truncate">
-                {getFullName(inspector.first_name, inspector.last_name)}
+                {inspector.full_name || 'Unknown'}
               </span>
               <button
                 onClick={() => removeUser(inspector.id)}
@@ -212,7 +210,7 @@ export function MultiUserPicker({
                     className="flex-shrink-0 w-8 h-8 rounded-full text-white flex items-center justify-center text-xs font-semibold"
                     style={{ backgroundColor: getAvatarColor(inspector.id) }}
                   >
-                    {getInitials(inspector.first_name, inspector.last_name)}
+                    {getInitials(inspector.full_name)}
                   </div>
 
                   {/* Name and Email */}
@@ -221,7 +219,7 @@ export function MultiUserPicker({
                       'font-medium truncate',
                       isSelected ? 'text-blue-700' : 'text-gray-900'
                     )}>
-                      {getFullName(inspector.first_name, inspector.last_name)}
+                      {inspector.full_name || 'Unknown'}
                     </div>
                     {inspector.email && (
                       <div className="text-xs text-gray-500 truncate">

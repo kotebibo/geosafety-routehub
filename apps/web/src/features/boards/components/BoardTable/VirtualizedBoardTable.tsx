@@ -4,8 +4,9 @@ import React, { useRef, useMemo, useState, useCallback, useEffect } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ChevronRight, Plus, MoreHorizontal, Trash2, Palette, Type, GripVertical } from 'lucide-react'
-import { SortableColumnHeader } from './SortableColumnHeader'
+import { SortableColumnHeader, type SortConfig } from './SortableColumnHeader'
 import { CellRenderer } from './CellRenderer'
+import { SummaryCell } from './cells/SummaryCell'
 import { MONDAY_GROUP_COLORS, DEFAULT_GROUP } from './constants'
 import { flattenGroupsForVirtualization, type VirtualRow } from '../../utils/flattenGroupsForVirtualization'
 import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation'
@@ -32,6 +33,7 @@ import {
 const ROW_HEIGHT = 36
 const HEADER_HEIGHT = 48
 const FOOTER_HEIGHT = 36
+const SUMMARY_HEIGHT = 28
 
 interface VirtualizedBoardTableProps {
   boardType: BoardType
@@ -40,6 +42,7 @@ interface VirtualizedBoardTableProps {
   groups?: BoardGroup[]
   isLoading?: boolean
   onRowClick?: (row: BoardItem) => void
+  onRowDoubleClick?: (row: BoardItem) => void
   onCellEdit?: (rowId: string, columnId: string, value: any) => void
   selection?: Set<string>
   onSelectionChange?: (selection: Set<string>) => void
@@ -60,6 +63,12 @@ interface VirtualizedBoardTableProps {
   presence?: BoardPresence[]
   onCellEditStart?: (itemId: string, columnId: string) => void
   onCellEditEnd?: () => void
+  sortConfig?: SortConfig | null
+  onSortChange?: (config: SortConfig | null) => void
+  /** Override the scroll container class. Default uses fixed viewport height for full boards. */
+  scrollContainerClassName?: string
+  /** Search query for match highlighting in global search results */
+  highlightQuery?: string
 }
 
 export function VirtualizedBoardTable({
@@ -69,6 +78,7 @@ export function VirtualizedBoardTable({
   groups = [],
   isLoading = false,
   onRowClick,
+  onRowDoubleClick,
   onCellEdit,
   selection = new Set(),
   onSelectionChange,
@@ -89,9 +99,16 @@ export function VirtualizedBoardTable({
   presence = [],
   onCellEditStart,
   onCellEditEnd,
+  sortConfig,
+  onSortChange,
+  scrollContainerClassName,
+  highlightQuery,
 }: VirtualizedBoardTableProps) {
   // Scroll container ref - THIS is the key difference from the non-virtualized version
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Ref for sticky header group color bar (updated via scroll handler, no re-render)
+  const stickyColorBarRef = useRef<HTMLTableCellElement>(null)
 
   // Collapsed groups state
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
@@ -150,8 +167,25 @@ export function VirtualizedBoardTable({
       headerHeight: HEADER_HEIGHT,
       columnHeaderHeight: ROW_HEIGHT,
       footerHeight: FOOTER_HEIGHT,
+      summaryHeight: SUMMARY_HEIGHT,
+      preserveItemOrder: !!sortConfig,
+      skipColumnHeaders: false,
     })
-  }, [effectiveGroups, data, collapsedGroups])
+  }, [effectiveGroups, data, collapsedGroups, sortConfig])
+
+  // Pre-compute items by group for summary rows
+  const itemsByGroup = useMemo(() => {
+    const map = new Map<string, BoardItem[]>()
+    const firstGroupId = effectiveGroups[0]?.id || 'default'
+    for (const item of data) {
+      const groupId = item.group_id || (item.data as any)?.group_id || firstGroupId
+      if (!map.has(groupId)) {
+        map.set(groupId, [])
+      }
+      map.get(groupId)!.push(item)
+    }
+    return map
+  }, [data, effectiveGroups])
 
   // TanStack Virtual setup
   const rowVirtualizer = useVirtualizer({
@@ -197,6 +231,17 @@ export function VirtualizedBoardTable({
     const columnsWidth = visibleColumns.reduce((sum, col) => sum + getColumnWidth(col), 0)
     return checkboxWidth + colorBarWidth + columnsWidth + addColumnWidth
   }, [visibleColumns, getColumnWidth, onSelectionChange])
+
+  // Sticky column offsets for horizontal scroll
+  const stickyOffsets = useMemo(() => {
+    const checkboxWidth = onSelectionChange ? 40 : 0
+    const colorBarWidth = 6
+    return {
+      checkbox: 0,
+      colorBar: checkboxWidth,
+      firstCol: checkboxWidth + colorBarWidth,
+    }
+  }, [onSelectionChange])
 
   // Handle group collapse toggle
   const handleGroupCollapseToggle = useCallback((groupId: string) => {
@@ -342,10 +387,47 @@ export function VirtualizedBoardTable({
     }
   }, [isResizing, resizingColumnId, columnWidths, onColumnResize])
 
-  // Placeholder sort handler (no-op for now)
-  const handleSort = useCallback((_columnId: string) => {
-    // Sorting not implemented yet
-  }, [])
+  // Update sticky header color bar to match the current group on scroll
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const updateStickyColor = () => {
+      const st = container.scrollTop
+      let currentColor = '#c3c6d4'
+      let accHeight = 0
+
+      for (const vr of virtualRows) {
+        if (vr.type === 'group-header') {
+          currentColor = (vr.data as BoardGroup).color || '#579bfc'
+        }
+        accHeight += vr.height
+        if (accHeight > st + HEADER_HEIGHT) break
+      }
+
+      if (stickyColorBarRef.current) {
+        stickyColorBarRef.current.style.backgroundColor = currentColor
+      }
+    }
+
+    container.addEventListener('scroll', updateStickyColor, { passive: true })
+    updateStickyColor()
+    return () => container.removeEventListener('scroll', updateStickyColor)
+  }, [virtualRows])
+
+  // Sort handler: cycles asc → desc → clear
+  const handleSort = useCallback((columnId: string) => {
+    if (!onSortChange) return
+    if (sortConfig?.column === columnId) {
+      if (sortConfig.direction === 'asc') {
+        onSortChange({ column: columnId, direction: 'desc' })
+      } else {
+        onSortChange(null)
+      }
+    } else {
+      onSortChange({ column: columnId, direction: 'asc' })
+    }
+  }, [sortConfig, onSortChange])
 
   // DnD sensors for column dragging
   const sensors = useSensors(
@@ -492,7 +574,7 @@ export function VirtualizedBoardTable({
       return (
         <div
           key={virtualRow.id}
-          style={style}
+          style={{ ...style, zIndex: 25 }}
           className={cn(
             "group",
             isGroupDragOver && "ring-2 ring-[#0073ea] ring-inset rounded"
@@ -506,7 +588,10 @@ export function VirtualizedBoardTable({
               <tr className="h-9 bg-white">
                 {/* Checkbox column */}
                 {onSelectionChange && (
-                  <td className="w-10 h-9 text-center align-middle">
+                  <td
+                    className="w-10 h-9 text-center align-middle bg-white"
+                    style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                  >
                     <input
                       type="checkbox"
                       className="w-4 h-4 rounded border-gray-300 text-[#0073ea] focus:ring-[#0073ea]"
@@ -516,7 +601,7 @@ export function VirtualizedBoardTable({
                 {/* Color bar */}
                 <td
                   className="p-0 h-9 rounded-tl"
-                  style={{ width: 6, backgroundColor: group.color || '#579bfc' }}
+                  style={{ width: 6, backgroundColor: group.color || '#579bfc', position: 'sticky', left: stickyOffsets.colorBar, zIndex: 2 }}
                 />
                 {/* Group info - spans all data columns */}
                 <td
@@ -639,59 +724,77 @@ export function VirtualizedBoardTable({
     }
 
     if (virtualRow.type === 'column-header') {
-      // Column header row - render column names with drag-and-drop support
-      const headerGroup = virtualRow.data as BoardGroup
+      const colHeaderGroup = virtualRow.data as BoardGroup
       return (
         <div key={virtualRow.id} style={style}>
           <table className="w-full border-collapse" style={{ tableLayout: 'fixed', width: totalTableWidth }}>
             <thead>
               <tr className="bg-[#f5f6f8]">
                 {onSelectionChange && (
-                  <th className="bg-[#f5f6f8] border border-[#c3c6d4] p-0 w-10" />
+                  <th
+                    className="bg-[#f5f6f8] border border-[#c3c6d4] p-0 w-10"
+                    style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                  />
                 )}
                 <th
                   className="bg-[#f5f6f8] border border-[#c3c6d4] p-0"
-                  style={{ width: 6, backgroundColor: headerGroup.color || '#579bfc' }}
+                  style={{ width: 6, backgroundColor: colHeaderGroup.color || '#579bfc', position: 'sticky', left: stickyOffsets.colorBar, zIndex: 2 }}
                 />
-                <SortableContext
-                  items={visibleColumns.map(col => col.id)}
-                  strategy={horizontalListSortingStrategy}
-                >
-                  {visibleColumns.map((col) => (
-                    <SortableColumnHeader
-                      key={col.id}
-                      column={col}
-                      width={getColumnWidth(col)}
-                      isEditing={editingColumnId === col.id}
-                      editingColumnName={editingColumnName}
-                      onColumnNameChange={setEditingColumnName}
-                      onColumnNameSave={handleColumnNameSave}
-                      onColumnNameKeyDown={handleColumnNameKeyDown}
-                      onColumnNameDoubleClick={handleColumnNameDoubleClick}
-                      onSort={handleSort}
-                      onResizeStart={handleResizeStart}
-                      canReorder={true}
-                      editInputRef={editInputRef as React.RefObject<HTMLInputElement>}
-                      isMenuOpen={openMenuColumnId === col.id}
-                      onMenuToggle={handleMenuToggle}
-                      onDeleteColumn={handleDeleteColumnClick}
-                      menuRef={menuRef as React.RefObject<HTMLDivElement>}
-                    />
-                  ))}
-                </SortableContext>
-                <th className="bg-[#f5f6f8] border border-[#c3c6d4] w-10 px-2 py-2">
-                  {onOpenAddColumnModal && (
-                    <button
-                      onClick={onOpenAddColumnModal}
-                      className="p-1 rounded hover:bg-[#c3c6d4] transition-colors"
-                      title="Add column"
-                    >
-                      <Plus className="w-4 h-4 text-[#676879]" />
-                    </button>
-                  )}
-                </th>
+                {visibleColumns.map((col, idx) => (
+                  <th
+                    key={col.id}
+                    className="bg-[#f5f6f8] border border-[#c3c6d4] text-left px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:bg-[#ecedf0] transition-colors"
+                    style={{
+                      width: getColumnWidth(col),
+                      ...(idx === 0 ? { position: 'sticky' as const, left: stickyOffsets.firstCol, zIndex: 2, backgroundColor: '#f5f6f8' } : {}),
+                    }}
+                    onClick={() => handleSort(col.column_id)}
+                  >
+                    {col.column_name}
+                  </th>
+                ))}
+                <th className="bg-[#f5f6f8] border border-[#c3c6d4] w-10 px-2 py-2" />
               </tr>
             </thead>
+          </table>
+        </div>
+      )
+    }
+
+    if (virtualRow.type === 'group-summary') {
+      const summaryGroup = virtualRow.data as BoardGroup
+      const groupItems = itemsByGroup.get(summaryGroup.id) || []
+
+      return (
+        <div key={virtualRow.id} style={style}>
+          <table className="w-full border-collapse" style={{ tableLayout: 'fixed', width: totalTableWidth }}>
+            <tbody>
+              <tr className="h-7">
+                {onSelectionChange && (
+                  <td
+                    className="bg-[#f5f6f8] border border-[#c3c6d4] w-10 h-7"
+                    style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                  />
+                )}
+                <td
+                  className="border border-[#c3c6d4] p-0 h-7"
+                  style={{ width: 6, backgroundColor: summaryGroup.color || '#579bfc', opacity: 0.3, position: 'sticky', left: stickyOffsets.colorBar, zIndex: 2 }}
+                />
+                {visibleColumns.map((col, colIndex) => (
+                  <td
+                    key={`summary-${col.id}`}
+                    className="border border-[#c3c6d4] bg-[#f5f6f8] h-7 p-0"
+                    style={{
+                      width: getColumnWidth(col),
+                      ...(colIndex === 0 ? { position: 'sticky' as const, left: stickyOffsets.firstCol, zIndex: 2 } : {}),
+                    }}
+                  >
+                    <SummaryCell column={col} items={groupItems} />
+                  </td>
+                ))}
+                <td className="border border-[#c3c6d4] bg-[#f5f6f8] w-10 h-7" />
+              </tr>
+            </tbody>
           </table>
         </div>
       )
@@ -709,15 +812,18 @@ export function VirtualizedBoardTable({
                 onClick={() => onAddItem?.(footerGroup.id)}
               >
                 {onSelectionChange && (
-                  <td className="bg-white border border-[#c3c6d4] w-10 h-9" />
+                  <td
+                    className="bg-white border border-[#c3c6d4] w-10 h-9"
+                    style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                  />
                 )}
                 <td
                   className="border border-[#c3c6d4] p-0 rounded-bl h-9"
-                  style={{ width: 6, backgroundColor: footerGroup.color || '#579bfc', opacity: 0.3 }}
+                  style={{ width: 6, backgroundColor: footerGroup.color || '#579bfc', opacity: 0.3, position: 'sticky', left: stickyOffsets.colorBar, zIndex: 2 }}
                 />
                 <td
                   className="bg-white border border-[#c3c6d4] px-3 h-9 text-sm text-[#676879]"
-                  style={{ width: getColumnWidth(visibleColumns[0]) }}
+                  style={{ width: getColumnWidth(visibleColumns[0]), position: 'sticky', left: stickyOffsets.firstCol, zIndex: 2 }}
                 >
                   {onAddItem && (
                     <div className="flex items-center gap-2 h-full">
@@ -769,10 +875,14 @@ export function VirtualizedBoardTable({
                 isDragOver && dragOverPosition === 'after' && 'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#0073ea]'
               )}
               onClick={() => onRowClick?.(item)}
+              onDoubleClick={() => onRowDoubleClick?.(item)}
             >
               {/* Checkbox column */}
               {onSelectionChange && (
-                <td className="bg-white border border-[#c3c6d4] w-10 h-9 text-center">
+                <td
+                  className="bg-white border border-[#c3c6d4] w-10 h-9 text-center"
+                  style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                >
                   <input
                     type="checkbox"
                     checked={selection.has(item.id)}
@@ -794,7 +904,7 @@ export function VirtualizedBoardTable({
               {/* Color bar */}
               <td
                 className="border border-[#c3c6d4] p-0 h-9"
-                style={{ width: 6, backgroundColor: group?.color || '#579bfc' }}
+                style={{ width: 6, backgroundColor: group?.color || '#579bfc', position: 'sticky', left: stickyOffsets.colorBar, zIndex: 2 }}
               />
               {/* Data columns */}
               {visibleColumns.map((col, colIndex) => {
@@ -811,7 +921,10 @@ export function VirtualizedBoardTable({
                       "bg-white border border-[#c3c6d4] px-0 py-0 text-sm h-9 relative",
                       isFocused && !isEditing && "ring-2 ring-inset ring-[#0073ea]"
                     )}
-                    style={{ width: getColumnWidth(col) }}
+                    style={{
+                      width: getColumnWidth(col),
+                      ...(colIndex === 0 ? { position: 'sticky' as const, left: stickyOffsets.firstCol, zIndex: 2 } : {}),
+                    }}
                     onClick={(e) => {
                       e.stopPropagation()
                       setFocusedCell({ rowIndex, columnIndex: colIndex })
@@ -824,6 +937,7 @@ export function VirtualizedBoardTable({
                       isEditing={isEditing}
                       onEdit={(newValue) => handleCellEdit(item.id, col.column_id, newValue)}
                       onEditStart={() => handleCellEditStart(item.id, col.column_id)}
+                      highlightQuery={highlightQuery}
                     />
                   </td>
                 )
@@ -841,8 +955,8 @@ export function VirtualizedBoardTable({
     effectiveGroups,
     handleGroupCollapseToggle,
     onAddItem,
-    onOpenAddColumnModal,
     onRowClick,
+    onRowDoubleClick,
     onSelectionChange,
     onDeleteGroup,
     selection,
@@ -853,6 +967,8 @@ export function VirtualizedBoardTable({
     editingCellId,
     handleCellEdit,
     handleCellEditStart,
+    // Column header (inline uses handleSort only)
+    handleSort,
     // Keyboard navigation
     isCellFocused,
     isCellEditing,
@@ -868,18 +984,8 @@ export function VirtualizedBoardTable({
     handleGroupMenuToggle,
     handleGroupColorChange,
     handleDeleteGroup,
-    // Column editing
-    editingColumnId,
-    editingColumnName,
-    setEditingColumnName,
-    handleColumnNameDoubleClick,
-    handleColumnNameSave,
-    handleColumnNameKeyDown,
-    openMenuColumnId,
-    handleMenuToggle,
-    handleDeleteColumnClick,
-    handleSort,
-    handleResizeStart,
+    // Sticky positioning
+    stickyOffsets,
     // Item drag-and-drop
     draggingItemId,
     dragOverGroupId,
@@ -894,6 +1000,8 @@ export function VirtualizedBoardTable({
     handleGroupDragOver,
     handleGroupDragLeave,
     handleGroupDrop,
+    itemsByGroup,
+    highlightQuery,
   ])
 
   if (isLoading) {
@@ -915,11 +1023,75 @@ export function VirtualizedBoardTable({
         {/* Fixed height scroll container - CRITICAL for virtualization */}
         <div
           ref={scrollContainerRef}
-          className="h-[calc(100vh-200px)] overflow-auto border border-[#e6e9ef] rounded-lg bg-white"
+          className={scrollContainerClassName || "h-[calc(100vh-200px)] overflow-auto border border-[#e6e9ef] rounded-lg bg-white"}
         >
         {/* Horizontal scroll wrapper */}
         <div style={{ minWidth: totalTableWidth }}>
-          {/* Virtualized rows - includes group headers, column headers, items, and footers */}
+          {/* Sticky column header overlay - sits behind group headers (z:10 < group z:25) */}
+          <div style={{ position: 'sticky', top: 0, zIndex: 10, marginBottom: -ROW_HEIGHT }}>
+            <table className="w-full border-collapse" style={{ tableLayout: 'fixed', width: totalTableWidth }}>
+              <thead>
+                <tr className="bg-[#f5f6f8]">
+                  {onSelectionChange && (
+                    <th
+                      className="bg-[#f5f6f8] border border-[#c3c6d4] p-0 w-10"
+                      style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 12 }}
+                    />
+                  )}
+                  <th
+                    ref={stickyColorBarRef}
+                    className="bg-[#f5f6f8] border border-[#c3c6d4] p-0"
+                    style={{ width: 6, backgroundColor: '#c3c6d4', position: 'sticky', left: stickyOffsets.colorBar, zIndex: 12 }}
+                  />
+                  <SortableContext
+                    items={visibleColumns.map(col => col.id)}
+                    strategy={horizontalListSortingStrategy}
+                  >
+                    {visibleColumns.map((col, idx) => (
+                      <SortableColumnHeader
+                        key={col.id}
+                        column={col}
+                        width={getColumnWidth(col)}
+                        isEditing={editingColumnId === col.id}
+                        editingColumnName={editingColumnName}
+                        onColumnNameChange={setEditingColumnName}
+                        onColumnNameSave={handleColumnNameSave}
+                        onColumnNameKeyDown={handleColumnNameKeyDown}
+                        onColumnNameDoubleClick={handleColumnNameDoubleClick}
+                        onSort={handleSort}
+                        onResizeStart={handleResizeStart}
+                        canReorder={true}
+                        editInputRef={editInputRef as React.RefObject<HTMLInputElement>}
+                        isMenuOpen={openMenuColumnId === col.id}
+                        onMenuToggle={handleMenuToggle}
+                        onDeleteColumn={handleDeleteColumnClick}
+                        menuRef={menuRef as React.RefObject<HTMLDivElement>}
+                        sortConfig={sortConfig}
+                        stickyStyle={idx === 0 ? {
+                          position: 'sticky',
+                          left: stickyOffsets.firstCol,
+                          zIndex: 12,
+                        } : undefined}
+                      />
+                    ))}
+                  </SortableContext>
+                  <th className="bg-[#f5f6f8] border border-[#c3c6d4] w-10 px-2 py-2">
+                    {onOpenAddColumnModal && (
+                      <button
+                        onClick={onOpenAddColumnModal}
+                        className="p-1 rounded hover:bg-[#c3c6d4] transition-colors"
+                        title="Add column"
+                      >
+                        <Plus className="w-4 h-4 text-[#676879]" />
+                      </button>
+                    )}
+                  </th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+
+          {/* Virtualized rows - includes group headers, column headers, items, summaries, and footers */}
           <div
             style={{
               height: `${rowVirtualizer.getTotalSize()}px`,

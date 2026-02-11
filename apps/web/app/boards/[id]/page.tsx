@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useMemo, useCallback, lazy, Suspense } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef, lazy, Suspense } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBoard, useBoardItems, useBoardColumns, useBoardGroups, useCreateBoardGroup, useUpdateBoardGroup, useDeleteBoardGroup, useCreateBoardItem, useUpdateBoardItem, useDuplicateBoardItems, useDeleteBoardItem, useCreateUpdate, useRealtimeBoard, useUndoRedo, type UndoableAction } from '@/features/boards/hooks'
@@ -84,14 +84,12 @@ const GROUP_COLORS = [
   '#784bd1', // Royal
 ]
 
-// Default group shown when database has no groups (fallback for new boards)
-// Only ONE default group - users can add more if needed
-const DEFAULT_GROUPS: BoardGroup[] = [
-  { id: 'default', board_id: '', name: 'Items', color: '#579bfc', position: 0 },
-]
+// Default group color palette for auto-created groups
+const DEFAULT_GROUP_COLOR = '#579bfc'
 
 export default function BoardDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -123,13 +121,8 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const { data: columns, refetch: refetchColumns } = useBoardColumns(board?.board_type || 'custom', params.id)
   const { data: dbGroups, isLoading: groupsLoading } = useBoardGroups(params.id)
 
-  // Use database groups or fallback to defaults
-  const groups = useMemo(() => {
-    if (dbGroups && dbGroups.length > 0) {
-      return dbGroups
-    }
-    return DEFAULT_GROUPS.map(g => ({ ...g, board_id: params.id }))
-  }, [dbGroups, params.id])
+  // Use database groups (auto-create effect below ensures at least one exists)
+  const groups = useMemo(() => dbGroups || [], [dbGroups])
 
   const createItem = useCreateBoardItem(params.id)
   const updateItem = useUpdateBoardItem(params.id)
@@ -139,6 +132,41 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const createGroup = useCreateBoardGroup(params.id)
   const updateGroup = useUpdateBoardGroup(params.id)
   const deleteGroup = useDeleteBoardGroup(params.id)
+
+  // Auto-create a default group for boards that have none (migration for existing boards)
+  const hasAutoCreatedGroup = useRef(false)
+  useEffect(() => {
+    if (
+      board &&
+      !groupsLoading &&
+      dbGroups &&
+      dbGroups.length === 0 &&
+      !hasAutoCreatedGroup.current &&
+      !createGroup.isPending
+    ) {
+      hasAutoCreatedGroup.current = true
+      createGroup.mutate({
+        name: 'Items',
+        color: DEFAULT_GROUP_COLOR,
+        position: 0,
+      })
+    }
+  }, [board, groupsLoading, dbGroups, createGroup])
+
+  // Deep-link to specific item from global search (?item=<id>)
+  const deepLinkedItemRef = useRef(false)
+  useEffect(() => {
+    const targetItemId = searchParams.get('item')
+    if (!targetItemId || !items || items.length === 0 || deepLinkedItemRef.current) return
+
+    const targetItem = items.find((item: BoardItem) => item.id === targetItemId)
+    if (targetItem) {
+      deepLinkedItemRef.current = true
+      setSelectedItem(targetItem)
+      // Clean up the URL without triggering a navigation
+      router.replace(`/boards/${params.id}`, { scroll: false })
+    }
+  }, [searchParams, items, params.id, router])
 
   // Undo/Redo system
   const handleUndoAction = useCallback(async (action: UndoableAction) => {
@@ -350,14 +378,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     if (!user || !inspectorId) return
 
     try {
-      // Store group_id in data JSONB until migration 016 is run
-      // After migration, we can use the proper group_id column
       const newItem = await createItem.mutateAsync({
         board_id: params.id,
+        group_id: groupId || groups[0]?.id,
         position: (items?.length || 0) + 1,
-        data: {
-          group_id: groupId || 'default',
-        },
+        data: {},
         name: 'New Item',
         status: 'default',
         priority: 0,
@@ -744,6 +769,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           await updateItem.mutateAsync({
             itemId: item.id,
             updates: {
+              group_id: targetGroup.id,
               data: { ...item.data, group_id: targetGroup.id }
             }
           })
@@ -819,10 +845,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       // Skip if item is already in the target group
       if (currentGroupId === targetGroupId) return
 
-      // Update the item's group_id in the data JSONB
+      // Update the item's group_id column and data JSONB
       await updateItem.mutateAsync({
         itemId,
         updates: {
+          group_id: targetGroupId,
           data: {
             ...currentItem.data,
             group_id: targetGroupId,
@@ -850,12 +877,13 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       const targetItem = items.find(item => item.id === targetItemId)
       if (!draggedItem || !targetItem) return
 
-      // Get the group ID (from data.group_id or group_id column)
-      const targetGroupId = targetItem.group_id || targetItem.data?.group_id || 'default'
+      // Get the group ID (from group_id column or data.group_id fallback)
+      const firstGroupId = groups[0]?.id || 'default'
+      const targetGroupId = targetItem.group_id || targetItem.data?.group_id || firstGroupId
 
       // Get all items in the same group, sorted by position
       const groupItems = items
-        .filter(item => (item.group_id || item.data?.group_id || 'default') === targetGroupId)
+        .filter(item => (item.group_id || item.data?.group_id || firstGroupId) === targetGroupId)
         .sort((a, b) => (a.position || 0) - (b.position || 0))
 
       // Remove the dragged item from its current position
@@ -1226,6 +1254,8 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               presence={presence}
               onCellEditStart={(itemId, columnId) => setEditing(itemId, columnId)}
               onCellEditEnd={() => setEditing(null)}
+              sortConfig={sortConfig}
+              onSortChange={setSortConfig}
             />
           </ErrorBoundary>
         ) : (

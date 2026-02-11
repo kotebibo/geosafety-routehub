@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, memo } from 'react'
 import { cn } from '@/lib/utils'
+import { HighlightText } from '@/shared/components/HighlightText'
 import type { CellRendererProps } from '../types'
 
-export const NumberCell = memo(function NumberCell({ value, onEdit, column, onEditStart }: CellRendererProps) {
+export const NumberCell = memo(function NumberCell({ value, onEdit, column, onEditStart, highlightQuery }: CellRendererProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value?.toString() || '')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -83,7 +84,13 @@ export const NumberCell = memo(function NumberCell({ value, onEdit, column, onEd
       )}
     >
       {value !== null && value !== undefined ? (
-        <span className="text-[#323338] truncate">{formatNumber(value)}</span>
+        <span className="text-[#323338] truncate">
+          {highlightQuery ? (
+            <HighlightText text={String(formatNumber(value) ?? value)} query={highlightQuery} />
+          ) : (
+            formatNumber(value)
+          )}
+        </span>
       ) : (
         <span className="text-[#9699a6]">-</span>
       )}

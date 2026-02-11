@@ -63,7 +63,7 @@ export const CellRenderer = memo(function CellRenderer(props: CellRendererProps)
       return <CheckboxCell value={props.value} onEdit={props.onEdit} onEditStart={props.onEditStart} />
 
     case 'phone':
-      return <PhoneCell value={props.value} onEdit={props.onEdit} onEditStart={props.onEditStart} />
+      return <PhoneCell value={props.value} onEdit={props.onEdit} onEditStart={props.onEditStart} highlightQuery={props.highlightQuery} />
 
     case 'files':
       return <FilesCell value={props.value} onEdit={props.onEdit} itemId={row?.id} onEditStart={props.onEditStart} />
@@ -82,6 +82,7 @@ export const CellRenderer = memo(function CellRenderer(props: CellRendererProps)
     prevProps.value === nextProps.value &&
     prevProps.column.id === nextProps.column.id &&
     prevProps.row?.id === nextProps.row?.id &&
-    prevProps.isEditing === nextProps.isEditing
+    prevProps.isEditing === nextProps.isEditing &&
+    prevProps.highlightQuery === nextProps.highlightQuery
   )
 })

@@ -1301,6 +1301,44 @@ export interface Database {
           created_at?: string | null
         }
       }
+      inspector_location_history: {
+        Row: {
+          id: string
+          inspector_id: string
+          lat: number
+          lng: number
+          accuracy: number | null
+          speed: number | null
+          heading: number | null
+          route_id: string | null
+          recorded_at: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          inspector_id: string
+          lat: number
+          lng: number
+          accuracy?: number | null
+          speed?: number | null
+          heading?: number | null
+          route_id?: string | null
+          recorded_at?: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          inspector_id?: string
+          lat?: number
+          lng?: number
+          accuracy?: number | null
+          speed?: number | null
+          heading?: number | null
+          route_id?: string | null
+          recorded_at?: string
+          created_at?: string | null
+        }
+      }
     }
     Views: {
       pdp_compliance_overview: {

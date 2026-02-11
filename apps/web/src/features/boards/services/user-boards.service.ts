@@ -9,6 +9,7 @@ import type {
   BoardMember,
   BoardTemplate,
   BoardType,
+  GlobalSearchResult,
 } from '@/types/board'
 
 // Helper to get supabase client with current auth state
@@ -73,6 +74,17 @@ export const userBoardsService = {
       .single()
 
     if (error) throw error
+
+    // Create a default group so every board starts with one
+    await (getSupabase() as any)
+      .from('board_groups')
+      .insert({
+        board_id: data.id,
+        name: 'Items',
+        color: '#579bfc',
+        position: 0,
+      })
+
     return data
   },
 
@@ -112,10 +124,17 @@ export const userBoardsService = {
 
     const createdBoard = await this.createBoard(board)
 
-    // Create columns from template - each board gets its own columns
-    const columns = template.default_columns.map((col, index) => ({
+    // Create columns from template - deduplicate by column_id to avoid constraint violations
+    const seenColumnIds = new Set<string>()
+    const uniqueTemplateColumns = template.default_columns.filter((col) => {
+      if (seenColumnIds.has(col.id)) return false
+      seenColumnIds.add(col.id)
+      return true
+    })
+
+    const columns = uniqueTemplateColumns.map((col, index) => ({
       board_type: template.board_type,
-      board_id: createdBoard.id,  // Link columns to this specific board
+      board_id: createdBoard.id,
       column_id: col.id,
       column_name: col.name,
       column_name_ka: col.name_ka,
@@ -126,6 +145,12 @@ export const userBoardsService = {
       width: col.width,
       config: col.config || {},
     }))
+
+    // Remove any pre-existing columns for this board (handles edge cases)
+    await (getSupabase() as any)
+      .from('board_columns')
+      .delete()
+      .eq('board_id', createdBoard.id)
 
     // Insert columns
     const { error: colError } = await (getSupabase() as any)
@@ -566,23 +591,44 @@ export const userBoardsService = {
   ): Promise<BoardTemplate> {
     // First get the board and its columns
     const board = await this.getBoard(boardId)
-    const { data: columns, error: columnsError } = await (getSupabase() as any)
+
+    // Prefer board-specific columns, fall back to board-type columns
+    const { data: boardColumns, error: boardColError } = await (getSupabase() as any)
       .from('board_columns')
       .select('*')
-      .eq('board_type', board.board_type)
+      .eq('board_id', boardId)
       .order('position', { ascending: true })
 
-    if (columnsError) throw columnsError
+    let columns = boardColumns
+    if (boardColError || !columns || columns.length === 0) {
+      // Fallback: get type-level columns (board_id IS NULL)
+      const { data: typeColumns, error: typeColError } = await (getSupabase() as any)
+        .from('board_columns')
+        .select('*')
+        .eq('board_type', board.board_type)
+        .is('board_id', null)
+        .order('position', { ascending: true })
 
-    // Convert columns to BoardColumnConfig format
-    const defaultColumns = (columns || []).map((col: any) => ({
-      id: col.column_id,
-      name: col.column_name,
-      name_ka: col.column_name_ka,
-      type: col.column_type,
-      width: col.width,
-      config: col.config || {},
-    }))
+      if (typeColError) throw typeColError
+      columns = typeColumns
+    }
+
+    // Convert columns to BoardColumnConfig format, deduplicating by column_id
+    const seenIds = new Set<string>()
+    const defaultColumns = (columns || [])
+      .filter((col: any) => {
+        if (seenIds.has(col.column_id)) return false
+        seenIds.add(col.column_id)
+        return true
+      })
+      .map((col: any) => ({
+        id: col.column_id,
+        name: col.column_name,
+        name_ka: col.column_name_ka,
+        type: col.column_type,
+        width: col.width,
+        config: col.config || {},
+      }))
 
     // Create the template
     const { data, error } = await (getSupabase() as any)
@@ -634,6 +680,22 @@ export const userBoardsService = {
       .ilike('name', `%${query}%`)
       .order('position', { ascending: true })
       .limit(50)
+
+    if (error) throw error
+    return data || []
+  },
+
+  /**
+   * Global search across all accessible boards
+   * Searches item names and JSONB data values via RPC
+   */
+  async searchGlobal(query: string, maxPerBoard = 10, maxTotal = 100): Promise<GlobalSearchResult[]> {
+    const { data, error } = await (getSupabase() as any)
+      .rpc('search_board_items_global', {
+        search_query: query,
+        max_per_board: maxPerBoard,
+        max_total: maxTotal,
+      })
 
     if (error) throw error
     return data || []

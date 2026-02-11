@@ -3,11 +3,10 @@ import { createClient } from '@/lib/supabase'
 import { queryKeys } from '@/lib/react-query'
 
 /**
- * Hook to get inspector ID from user email
- * Maps Supabase Auth user to inspectors table record
+ * Hook to get inspector ID for the current authenticated user.
+ * Uses user_roles table (canonical mapping) first, falls back to email lookup.
  */
 export function useInspectorId(userEmail: string | undefined) {
-  // Create supabase client for this hook
   const supabase = createClient()
 
   return useQuery({
@@ -15,13 +14,19 @@ export function useInspectorId(userEmail: string | undefined) {
     queryFn: async () => {
       if (!userEmail) return null
 
-      // Verify we have an active session before querying
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        // No session - user not authenticated yet
-        return null
-      }
+      if (!session) return null
 
+      // Primary: look up via user_roles (canonical user → inspector mapping)
+      const { data: roleData } = await (supabase
+        .from('user_roles') as any)
+        .select('inspector_id')
+        .eq('user_id', session.user.id)
+        .single()
+
+      if (roleData?.inspector_id) return roleData.inspector_id as string
+
+      // Fallback: look up by email in inspectors table
       const { data, error } = await (supabase
         .from('inspectors') as any)
         .select('id')
@@ -29,7 +34,6 @@ export function useInspectorId(userEmail: string | undefined) {
         .single()
 
       if (error) {
-        // PGRST116 means no rows found - this is expected for users without inspector records
         if (error.code !== 'PGRST116') {
           console.error('Error fetching inspector ID:', error)
         }
@@ -39,7 +43,7 @@ export function useInspectorId(userEmail: string | undefined) {
       return (data as { id: string } | null)?.id || null
     },
     enabled: !!userEmail,
-    staleTime: Infinity, // Inspector ID won't change
-    gcTime: Infinity, // React Query v5 renamed cacheTime to gcTime
+    staleTime: Infinity,
+    gcTime: Infinity,
   })
 }

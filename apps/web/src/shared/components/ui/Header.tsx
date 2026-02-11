@@ -8,7 +8,9 @@ import {
   LogOut,
   User,
   ChevronDown,
+  Search,
 } from 'lucide-react'
+import { GlobalSearchModal } from '@/features/boards/components/GlobalSearch'
 
 interface HeaderProps {
   className?: string
@@ -19,6 +21,19 @@ export function Header({ className }: HeaderProps) {
   const router = useRouter()
   const { user, userRole, signOut } = useAuth()
   const [showUserMenu, setShowUserMenu] = React.useState(false)
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false)
+
+  // Global search keyboard shortcut (Ctrl+K / Cmd+K)
+  React.useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsSearchOpen(true)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   // Don't show header on login page
   if (pathname === '/auth/login' || pathname === '/auth/register') {
@@ -77,6 +92,7 @@ export function Header({ className }: HeaderProps) {
   }
 
   return (
+    <>
     <header
       className={cn(
         'sticky top-0 z-30 h-14 bg-bg-primary border-b border-border-light',
@@ -92,7 +108,24 @@ export function Header({ className }: HeaderProps) {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Search Bar */}
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className={cn(
+              'flex items-center gap-2 px-3 py-1.5 rounded-lg',
+              'border border-[#c3c6d4] bg-[#f0f1f3] hover:bg-[#e6e7ea]',
+              'text-[#555766] text-sm transition-colors',
+              'min-w-[200px] lg:min-w-[280px]'
+            )}
+          >
+            <Search className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="flex-1 text-left">Search</span>
+            <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-white border border-[#c3c6d4] text-[10px] text-[#676879] font-mono">
+              Ctrl+K
+            </kbd>
+          </button>
+
           {/* User Menu */}
           {user && (
             <div className="relative">
@@ -172,5 +205,11 @@ export function Header({ className }: HeaderProps) {
         </div>
       </div>
     </header>
+
+    <GlobalSearchModal
+      isOpen={isSearchOpen}
+      onClose={() => setIsSearchOpen(false)}
+    />
+    </>
   )
 }

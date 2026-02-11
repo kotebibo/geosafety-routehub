@@ -24,12 +24,12 @@ export class ForbiddenError extends Error {
 }
 
 /**
- * Get the current session from the request
+ * Create a server-side Supabase client from cookies
  */
-export async function getSession() {
+function createServerSupabase() {
   const cookieStore = cookies()
-  
-  const supabase = createServerClient(
+
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -40,17 +40,26 @@ export async function getSession() {
       },
     }
   )
+}
+
+/**
+ * Get the current session from the request.
+ * Uses getUser() which validates the JWT server-side without needing cookie refresh.
+ */
+export async function getSession() {
+  const supabase = createServerSupabase()
 
   const {
-    data: { session },
+    data: { user },
     error,
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getUser()
 
-  if (error) {
-    throw new UnauthorizedError('Failed to get session')
+  if (error || !user) {
+    return null
   }
 
-  return session
+  // Return a session-like object for backward compatibility
+  return { user }
 }
 
 /**
@@ -70,19 +79,7 @@ export async function requireAuth() {
  * Get user role from database
  */
 async function getUserRole(userId: string): Promise<string | null> {
-  const cookieStore = cookies()
-  
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  const supabase = createServerSupabase()
 
   const { data, error } = await supabase
     .from('user_roles')

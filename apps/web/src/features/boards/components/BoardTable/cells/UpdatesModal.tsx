@@ -3,12 +3,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
-import { MessageSquare, Send, X, Clock, User, Reply, CornerDownRight, AtSign, Trash2, Edit2, Check } from 'lucide-react'
+import { MessageSquare, Send, X, Clock, User, Reply, CornerDownRight, AtSign, Trash2, Edit2, Check, History, ArrowRightLeft, UserCheck, FileEdit, PlusCircle } from 'lucide-react'
 import { activityService } from '@/features/boards/services/activity.service'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInspectorId } from '@/hooks/useInspectorId'
 import { useInspectors } from '@/hooks/useInspectors'
-import type { ItemComment } from '@/types/board'
+import type { ItemComment, ItemUpdate } from '@/types/board'
 
 interface UpdatesModalProps {
   isOpen: boolean
@@ -37,9 +37,12 @@ export function UpdatesModal({
   const { data: inspectorId } = useInspectorId(user?.email ?? undefined)
   const { inspectors } = useInspectors()
 
+  const [activeTab, setActiveTab] = useState<'updates' | 'activity'>('updates')
   const [comments, setComments] = useState<ItemComment[]>([])
+  const [activities, setActivities] = useState<ItemUpdate[]>([])
   const [newComment, setNewComment] = useState('')
   const [loading, setLoading] = useState(false)
+  const [activityLoading, setActivityLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [replyingTo, setReplyingTo] = useState<ItemComment | null>(null)
   const [editingComment, setEditingComment] = useState<ItemComment | null>(null)
@@ -59,24 +62,28 @@ export function UpdatesModal({
   // Filter inspectors for mention suggestions
   const mentionSuggestions: MentionSuggestion[] = inspectors
     ?.filter((inspector) => {
-      const fullName = `${inspector.first_name || ''} ${inspector.last_name || ''}`.toLowerCase()
+      const name = (inspector.full_name || '').toLowerCase()
       const email = (inspector.email || '').toLowerCase()
       const search = mentionSearch.toLowerCase()
-      return fullName.includes(search) || email.includes(search)
+      return name.includes(search) || email.includes(search)
     })
     .map((inspector) => ({
       id: inspector.id,
-      name: `${inspector.first_name || ''} ${inspector.last_name || ''}`.trim() || 'Unknown',
+      name: inspector.full_name || 'Unknown',
       email: inspector.email,
     }))
     .slice(0, 5) || []
 
-  // Load comments when modal opens
+  // Load data when modal opens or tab changes
   useEffect(() => {
     if (isOpen && itemId) {
-      loadComments()
+      if (activeTab === 'updates') {
+        loadComments()
+      } else {
+        loadActivity()
+      }
     }
-  }, [isOpen, itemId])
+  }, [isOpen, itemId, activeTab])
 
   // Close on escape key
   useEffect(() => {
@@ -100,6 +107,51 @@ export function UpdatesModal({
       console.error('Error loading comments:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadActivity = async () => {
+    if (!itemId) return
+    setActivityLoading(true)
+    try {
+      const data = await activityService.getItemUpdates(itemType, itemId)
+      setActivities(data)
+    } catch (error) {
+      console.error('Error loading activity:', error)
+    } finally {
+      setActivityLoading(false)
+    }
+  }
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'created': return <PlusCircle className="w-4 h-4 text-[#00c875]" />
+      case 'updated': return <FileEdit className="w-4 h-4 text-[#0073ea]" />
+      case 'status_changed': return <ArrowRightLeft className="w-4 h-4 text-[#fdab3d]" />
+      case 'assigned':
+      case 'reassigned': return <UserCheck className="w-4 h-4 text-[#a25ddc]" />
+      case 'comment': return <MessageSquare className="w-4 h-4 text-[#579bfc]" />
+      default: return <History className="w-4 h-4 text-[#676879]" />
+    }
+  }
+
+  const getActivityDescription = (update: ItemUpdate) => {
+    const fieldName = update.metadata?.displayName || update.column_name || update.field_name || 'field'
+    switch (update.update_type) {
+      case 'created': return 'created this item'
+      case 'status_changed': return `changed ${fieldName} from "${update.old_value || '-'}" to "${update.new_value || '-'}"`
+      case 'assigned': return update.content || `assigned ${fieldName}`
+      case 'reassigned': return update.content || `reassigned ${fieldName}`
+      case 'comment': return `commented: "${update.content?.substring(0, 60) || ''}${(update.content?.length || 0) > 60 ? '...' : ''}"`
+      case 'updated':
+        if (update.old_value && update.new_value) {
+          return `changed ${fieldName} from "${update.old_value}" to "${update.new_value}"`
+        }
+        if (update.new_value) {
+          return `set ${fieldName} to "${update.new_value}"`
+        }
+        return `updated ${fieldName}`
+      default: return update.content || `updated ${fieldName}`
     }
   }
 
@@ -292,8 +344,46 @@ export function UpdatesModal({
           </button>
         </div>
 
-        {/* Comments List */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8f9fa]">
+        {/* Tab Bar */}
+        <div className="flex border-b border-gray-200 bg-white px-6">
+          <button
+            onClick={() => setActiveTab('updates')}
+            className={cn(
+              'px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2',
+              activeTab === 'updates'
+                ? 'border-[#0073ea] text-[#0073ea]'
+                : 'border-transparent text-[#676879] hover:text-[#323338] hover:border-gray-300'
+            )}
+          >
+            <MessageSquare className="w-4 h-4" />
+            Updates
+            {comments.length > 0 && (
+              <span className="bg-[#e6e9ef] text-[#676879] text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                {comments.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('activity')}
+            className={cn(
+              'px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2',
+              activeTab === 'activity'
+                ? 'border-[#0073ea] text-[#0073ea]'
+                : 'border-transparent text-[#676879] hover:text-[#323338] hover:border-gray-300'
+            )}
+          >
+            <History className="w-4 h-4" />
+            Activity Log
+            {activities.length > 0 && (
+              <span className="bg-[#e6e9ef] text-[#676879] text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+                {activities.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Updates Tab (Comments) */}
+        <div className={cn('flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8f9fa]', activeTab !== 'updates' && 'hidden')}>
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <div className="w-8 h-8 border-3 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
@@ -450,8 +540,57 @@ export function UpdatesModal({
           )}
         </div>
 
-        {/* Reply indicator */}
-        {replyingTo && (
+        {/* Activity Log Tab */}
+        <div className={cn('flex-1 overflow-y-auto p-6 bg-[#f8f9fa]', activeTab !== 'activity' && 'hidden')}>
+          {activityLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <div className="w-8 h-8 border-3 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : activities.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-20 h-20 rounded-full bg-[#e6e9ef] flex items-center justify-center mb-4">
+                <History className="w-10 h-10 text-[#c5c7d0]" />
+              </div>
+              <span className="text-lg font-medium text-[#323338] mb-1">No activity yet</span>
+              <span className="text-sm text-[#676879]">Changes to this item will appear here</span>
+            </div>
+          ) : (
+            <div className="relative">
+              {/* Timeline line */}
+              <div className="absolute left-5 top-0 bottom-0 w-px bg-[#e6e9ef]" />
+
+              <div className="space-y-0">
+                {activities.map((activity) => (
+                  <div key={activity.id} className="relative flex items-start gap-4 py-3 pl-2">
+                    {/* Timeline dot */}
+                    <div className="relative z-10 w-7 h-7 rounded-full bg-white border-2 border-[#e6e9ef] flex items-center justify-center flex-shrink-0">
+                      {getActivityIcon(activity.update_type)}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 pt-0.5">
+                      <div className="text-sm">
+                        <span className="font-medium text-[#323338]">
+                          {activity.user_name || 'System'}
+                        </span>{' '}
+                        <span className="text-[#676879]">
+                          {getActivityDescription(activity)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 mt-1 text-xs text-[#9699a6]">
+                        <Clock className="w-3 h-3" />
+                        {formatTimeAgo(activity.created_at)}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Reply indicator - only show on updates tab */}
+        {activeTab === 'updates' && replyingTo && (
           <div className="px-6 py-2 bg-[#e5f4ff] border-t border-[#0073ea]/20 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-[#0073ea]">
               <CornerDownRight className="w-4 h-4" />
@@ -466,8 +605,8 @@ export function UpdatesModal({
           </div>
         )}
 
-        {/* Input Area */}
-        <div className="p-4 border-t border-gray-200 bg-white relative">
+        {/* Input Area - only show on updates tab */}
+        <div className={cn('p-4 border-t border-gray-200 bg-white relative', activeTab !== 'updates' && 'hidden')}>
           {/* Mention suggestions dropdown */}
           {showMentions && mentionSuggestions.length > 0 && (
             <div

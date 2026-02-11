@@ -7,7 +7,7 @@ import type { BoardItem, BoardGroup } from '../types/board'
 
 export interface VirtualRow {
   id: string
-  type: 'group-header' | 'column-header' | 'item' | 'group-footer'
+  type: 'group-header' | 'column-header' | 'item' | 'group-summary' | 'group-footer'
   data: BoardGroup | BoardItem
   groupId: string
   height: number
@@ -21,6 +21,11 @@ interface FlattenOptions {
   headerHeight?: number
   columnHeaderHeight?: number
   footerHeight?: number
+  summaryHeight?: number
+  /** When true, preserve the order of items as-is (e.g. when a sort is active) */
+  preserveItemOrder?: boolean
+  /** When true, don't emit column-header rows (use with sticky header) */
+  skipColumnHeaders?: boolean
 }
 
 /**
@@ -35,6 +40,9 @@ export function flattenGroupsForVirtualization({
   headerHeight = 48,
   columnHeaderHeight = 36,
   footerHeight = 36,
+  summaryHeight = 28,
+  preserveItemOrder = false,
+  skipColumnHeaders = false,
 }: FlattenOptions): VirtualRow[] {
   const rows: VirtualRow[] = []
 
@@ -75,19 +83,23 @@ export function flattenGroupsForVirtualization({
     // Only add column headers and items if group is NOT collapsed
     if (!collapsedGroups.has(group.id)) {
       // Column header row (column names) - comes after group header
-      rows.push({
-        id: `colheader-${group.id}`,
-        type: 'column-header',
-        data: group,
-        groupId: group.id,
-        height: columnHeaderHeight,
-      })
+      if (!skipColumnHeaders) {
+        rows.push({
+          id: `colheader-${group.id}`,
+          type: 'column-header',
+          data: group,
+          groupId: group.id,
+          height: columnHeaderHeight,
+        })
+      }
 
       const groupItems = itemsByGroup.get(group.id) || []
-      // Sort items by position within group
-      const sortedItems = [...groupItems].sort((a, b) => a.position - b.position)
+      // Sort items by position within group, unless external sort is active
+      const orderedItems = preserveItemOrder
+        ? groupItems
+        : [...groupItems].sort((a, b) => a.position - b.position)
 
-      for (const item of sortedItems) {
+      for (const item of orderedItems) {
         rows.push({
           id: item.id,
           type: 'item',
@@ -97,7 +109,18 @@ export function flattenGroupsForVirtualization({
         })
       }
 
-      // Group footer/summary row (only if group has items or can add items)
+      // Group summary row (aggregates) - only if group has items
+      if (orderedItems.length > 0) {
+        rows.push({
+          id: `summary-${group.id}`,
+          type: 'group-summary',
+          data: group,
+          groupId: group.id,
+          height: summaryHeight,
+        })
+      }
+
+      // Group footer row (add item button)
       rows.push({
         id: `footer-${group.id}`,
         type: 'group-footer',

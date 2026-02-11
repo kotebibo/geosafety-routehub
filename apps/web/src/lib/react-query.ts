@@ -114,6 +114,25 @@ export const queryKeys = {
     all: ['user-settings'] as const,
     detail: (userId: string) => [...queryKeys.userSettings.all, userId] as const,
   },
+
+  // Analytics
+  analytics: {
+    all: ['analytics'] as const,
+    kpis: () => [...queryKeys.analytics.all, 'kpis'] as const,
+    routesByDay: (days: number) => [...queryKeys.analytics.all, 'routesByDay', days] as const,
+    inspectorWorkload: () => [...queryKeys.analytics.all, 'inspectorWorkload'] as const,
+    routeStatus: () => [...queryKeys.analytics.all, 'routeStatus'] as const,
+    topCompanies: (limit: number) => [...queryKeys.analytics.all, 'topCompanies', limit] as const,
+    overdueInspections: () => [...queryKeys.analytics.all, 'overdueInspections'] as const,
+    weeklyDistance: (weeks: number) => [...queryKeys.analytics.all, 'weeklyDistance', weeks] as const,
+  },
+
+  // Tracking
+  tracking: {
+    all: ['tracking'] as const,
+    activeInspectors: () => [...queryKeys.tracking.all, 'active'] as const,
+    history: (inspectorId: string, since: string) => [...queryKeys.tracking.all, 'history', inspectorId, since] as const,
+  },
 } as const
 
 // Helper function to invalidate all related queries when an item changes

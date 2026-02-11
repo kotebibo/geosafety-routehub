@@ -27,4 +27,6 @@ export type {
   ItemUpdate,
   ItemComment,
   UpdateType,
+  GlobalSearchResult,
+  GlobalSearchBoardGroup,
 } from './types/board'

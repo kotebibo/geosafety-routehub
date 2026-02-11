@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react'
 import { useNotifications } from '@/hooks/useNotifications'
@@ -32,7 +33,9 @@ interface NotificationBellProps {
 export function NotificationBell({ className }: NotificationBellProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 })
 
   const {
     notifications,
@@ -44,17 +47,37 @@ export function NotificationBell({ className }: NotificationBellProps) {
     isMarkingAllAsRead,
   } = useNotifications()
 
+  // Calculate dropdown position when opened
+  const updatePosition = useCallback(() => {
+    if (!buttonRef.current) return
+    const rect = buttonRef.current.getBoundingClientRect()
+    setDropdownPos({
+      top: rect.bottom + 8,
+      left: rect.left,
+    })
+  }, [])
+
+  useEffect(() => {
+    if (isOpen) updatePosition()
+  }, [isOpen, updatePosition])
+
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (!isOpen) return
+
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (
+        dropdownRef.current && !dropdownRef.current.contains(target) &&
+        buttonRef.current && !buttonRef.current.contains(target)
+      ) {
         setIsOpen(false)
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  }, [isOpen])
 
   const handleNotificationClick = (notification: Notification) => {
     // Mark as read
@@ -92,11 +115,12 @@ export function NotificationBell({ className }: NotificationBellProps) {
   }
 
   return (
-    <div className={cn('relative', className)} ref={dropdownRef}>
+    <>
       {/* Bell Button */}
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-lg hover:bg-gray-100 transition-colors"
+        className={cn('relative p-2 rounded-lg hover:bg-gray-100 transition-colors', className)}
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5 text-gray-600" />
@@ -107,9 +131,17 @@ export function NotificationBell({ className }: NotificationBellProps) {
         )}
       </button>
 
-      {/* Dropdown */}
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50 overflow-hidden">
+      {/* Dropdown via portal */}
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden"
+          style={{
+            top: dropdownPos.top,
+            left: dropdownPos.left,
+            maxHeight: `calc(100vh - ${dropdownPos.top + 16}px)`,
+          }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
             <h3 className="font-semibold text-gray-900">შეტყობინებები</h3>
@@ -216,8 +248,9 @@ export function NotificationBell({ className }: NotificationBellProps) {
               </button>
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   )
 }
