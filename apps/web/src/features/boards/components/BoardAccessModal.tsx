@@ -48,7 +48,7 @@ export function BoardAccessModal({
   boardName,
   ownerId,
 }: BoardAccessModalProps) {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRole, setSelectedRole] = useState<MemberRole>('viewer')
   const [showAddUser, setShowAddUser] = useState(false)
@@ -70,8 +70,9 @@ export function BoardAccessModal({
   const updateRole = useUpdateBoardMemberRole(boardId)
   const removeMember = useRemoveBoardMember(boardId)
 
-  // Check if current user is owner
+  // Check if current user is owner or admin
   const isCurrentUserOwner = user?.id === ownerId || members.some(m => m.user_id === user?.id && m.role === 'owner')
+  const canManageAccess = isCurrentUserOwner || isAdmin
 
   // Filter users not already members
   const memberUserIds = new Set(members.map(m => m.user_id))
@@ -167,7 +168,7 @@ export function BoardAccessModal({
         {/* Body */}
         <div className="px-6 py-4">
           {/* Add Member Section */}
-          {isCurrentUserOwner && (
+          {canManageAccess && (
             <div className="mb-4">
               {showAddUser ? (
                 <div className="space-y-3">
@@ -305,7 +306,7 @@ export function BoardAccessModal({
                     key={member.user_id}
                     member={member}
                     isOwner={member.user_id === ownerId}
-                    canManage={isCurrentUserOwner && member.user_id !== user?.id}
+                    canManage={canManageAccess && member.user_id !== user?.id}
                     roleDropdownOpen={roleDropdownOpen === member.user_id}
                     onToggleDropdown={(e) => {
                       e.stopPropagation()

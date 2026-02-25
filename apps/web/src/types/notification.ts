@@ -6,6 +6,7 @@ export type NotificationType =
   | 'route_updated'
   | 'item_mention'
   | 'item_comment'
+  | 'announcement_new'
 
 export interface Notification {
   id: string
@@ -34,4 +35,6 @@ export interface NotificationData {
   mentioned_by?: string
   comment_by?: string
   role?: string
+  announcement_id?: string
+  announcement_title?: string
 }

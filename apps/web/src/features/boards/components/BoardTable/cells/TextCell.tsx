@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, memo } from 'react'
 import { cn } from '@/lib/utils'
 import { HighlightText } from '@/shared/components/HighlightText'
+import { OverflowTooltip } from './OverflowTooltip'
 import type { CellRendererProps } from '../types'
 
 export const TextCell = memo(function TextCell({ value, onEdit, isEditing: externalIsEditing, onEditStart, highlightQuery }: CellRendererProps) {
@@ -70,7 +71,7 @@ export const TextCell = memo(function TextCell({ value, onEdit, isEditing: exter
         'cursor-pointer hover:bg-[#f0f3ff]'
       )}
     >
-      <span className="text-[#323338] truncate">
+      <OverflowTooltip text={value ? String(value) : undefined} className="text-[#323338] truncate block">
         {value ? (
           highlightQuery ? (
             <HighlightText text={String(value)} query={highlightQuery} />
@@ -80,7 +81,7 @@ export const TextCell = memo(function TextCell({ value, onEdit, isEditing: exter
         ) : (
           <span className="text-[#9699a6]">Empty</span>
         )}
-      </span>
+      </OverflowTooltip>
     </div>
   )
 })

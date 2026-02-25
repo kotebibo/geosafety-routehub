@@ -77,10 +77,11 @@ export const CellRenderer = memo(function CellRenderer(props: CellRendererProps)
   }
 }, (prevProps, nextProps) => {
   // Custom comparison for optimal memoization
-  // Only re-render if value, column ID, row ID, or editing state changes
+  // Re-render if value, column identity/config, row ID, or editing state changes
   return (
     prevProps.value === nextProps.value &&
     prevProps.column.id === nextProps.column.id &&
+    prevProps.column.config === nextProps.column.config &&
     prevProps.row?.id === nextProps.row?.id &&
     prevProps.isEditing === nextProps.isEditing &&
     prevProps.highlightQuery === nextProps.highlightQuery

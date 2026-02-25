@@ -6,7 +6,8 @@
 
 'use client'
 
-import React, { useState, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useRef, useEffect, useMemo, useLayoutEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { CompanyPicker } from '../../CompanyPicker'
 import { cn } from '@/lib/utils'
 import { Building2, MapPin } from 'lucide-react'
@@ -23,7 +24,8 @@ interface CompanyCellProps {
 export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: CompanyCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
-  
+  const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 })
+
   // Parse value - handle both string (legacy) and object formats
   const parsedValue: CompanyCellValue | null = useMemo(() => {
     if (!value) return null
@@ -35,7 +37,7 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
 
   // Fetch companies with location info
   const { data: companies } = useCompaniesWithLocationCount()
-  
+
   // Fetch locations for selected company (if has location_id or need to show primary)
   const { data: locations } = useCompanyLocations(parsedValue?.company_id)
 
@@ -48,11 +50,11 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
   // Find selected or primary location
   const displayLocation = useMemo(() => {
     if (!locations || locations.length === 0) return null
-    
+
     if (parsedValue?.location_id) {
       return locations.find(loc => loc.id === parsedValue.location_id)
     }
-    
+
     // Return primary location if no specific location selected
     return locations.find(loc => loc.is_primary)
   }, [locations, parsedValue?.location_id])
@@ -60,17 +62,32 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
   // Check if company has multiple locations
   const hasMultipleLocations = (selectedCompany?.location_count || 0) > 1
 
-  useEffect(() => {
-    if (isEditing) {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-          setIsEditing(false)
-        }
-      }
-
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
+  // Calculate picker position when editing starts
+  const updatePickerPosition = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const pickerHeight = 350
+      setPickerPos({
+        top: spaceBelow > pickerHeight ? rect.bottom + 2 : Math.max(8, rect.top - pickerHeight - 2),
+        left: Math.min(rect.left, window.innerWidth - 308),
+      })
     }
+  }, [])
+
+  useLayoutEffect(() => {
+    if (isEditing) {
+      updatePickerPosition()
+    }
+  }, [isEditing, updatePickerPosition])
+
+  // Close picker on scroll so it doesn't float away from the cell
+  useEffect(() => {
+    if (!isEditing) return
+    const handleScroll = () => setIsEditing(false)
+    const scrollParent = containerRef.current?.closest('.overflow-auto, .overflow-y-auto, [style*="overflow"]')
+    scrollParent?.addEventListener('scroll', handleScroll, { passive: true })
+    return () => scrollParent?.removeEventListener('scroll', handleScroll)
   }, [isEditing])
 
   const handleChange = (newValue: CompanyCellValue | null) => {
@@ -98,12 +115,17 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
           <span className="text-sm text-[#9699a6]">აირჩიეთ კომპანია...</span>
         </button>
 
-        {isEditing && (
-          <CompanyPicker
-            value={parsedValue}
-            onChange={handleChange}
-            onClose={() => setIsEditing(false)}
-          />
+        {isEditing && createPortal(
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
+            <CompanyPicker
+              value={parsedValue}
+              onChange={handleChange}
+              onClose={() => setIsEditing(false)}
+              positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
+            />
+          </>,
+          document.body
         )}
       </div>
     )
@@ -157,12 +179,17 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
         </div>
       </button>
 
-      {isEditing && (
-        <CompanyPicker
-          value={parsedValue}
-          onChange={handleChange}
-          onClose={() => setIsEditing(false)}
-        />
+      {isEditing && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
+          <CompanyPicker
+            value={parsedValue}
+            onChange={handleChange}
+            onClose={() => setIsEditing(false)}
+            positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
+          />
+        </>,
+        document.body
       )}
     </div>
   )

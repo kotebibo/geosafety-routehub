@@ -9,6 +9,7 @@
 import React, { useMemo } from 'react'
 import { MapPin } from 'lucide-react'
 import { useCompanyLocations } from '@/hooks/useCompanyLocations'
+import { OverflowTooltip } from './OverflowTooltip'
 import type { CompanyCellValue } from '@/types/company'
 
 interface CompanyAddressCellProps {
@@ -96,9 +97,9 @@ export function CompanyAddressCell({
   return (
     <div className="h-full min-h-[36px] flex items-center gap-2 px-3">
       <MapPin className="w-4 h-4 text-[#676879] flex-shrink-0" />
-      <span className="text-sm text-[#323338] truncate" title={displayAddress}>
+      <OverflowTooltip text={displayAddress} className="text-sm text-[#323338] truncate block">
         {displayAddress}
-      </span>
+      </OverflowTooltip>
     </div>
   )
 }

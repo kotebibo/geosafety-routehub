@@ -1,10 +1,12 @@
 'use client'
 
-import React, { memo } from 'react'
+import React, { memo, useRef, useState, useEffect, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
-import { MoreHorizontal, GripVertical, Trash2, Type, ArrowUp, ArrowDown } from 'lucide-react'
+import { MoreHorizontal, GripVertical, Trash2, Type, ArrowUp, ArrowDown, Clock } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { OverflowTooltip } from './cells/OverflowTooltip'
 import type { BoardColumn } from '../../types/board'
 
 export interface SortConfig {
@@ -28,9 +30,123 @@ export interface SortableColumnHeaderProps {
   isMenuOpen: boolean
   onMenuToggle: (columnId: string | null) => void
   onDeleteColumn: (column: BoardColumn) => void
+  onColumnConfigUpdate?: (columnId: string, config: Record<string, any>) => void
   menuRef: React.RefObject<HTMLDivElement>
   sortConfig?: SortConfig | null
   stickyStyle?: React.CSSProperties
+}
+
+interface ColumnMenuProps {
+  column: BoardColumn
+  isMenuOpen: boolean
+  onMenuToggle: (columnId: string | null) => void
+  onDeleteColumn: (column: BoardColumn) => void
+  onColumnNameDoubleClick: (e: React.MouseEvent, column: BoardColumn) => void
+  onColumnConfigUpdate?: (columnId: string, config: Record<string, any>) => void
+  menuRef: React.RefObject<HTMLDivElement>
+}
+
+function ColumnMenu({ column, isMenuOpen, onMenuToggle, onDeleteColumn, onColumnNameDoubleClick, onColumnConfigUpdate, menuRef }: ColumnMenuProps) {
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
+
+  useLayoutEffect(() => {
+    if (isMenuOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      setMenuPos({
+        top: rect.bottom + 4,
+        left: Math.min(rect.right - 192, window.innerWidth - 200), // 192 = w-48
+      })
+    }
+  }, [isMenuOpen])
+
+  // Close menu on scroll so it doesn't float away from the header
+  useEffect(() => {
+    if (!isMenuOpen) return
+    const handleScroll = () => onMenuToggle(null)
+    const scrollParent = buttonRef.current?.closest('.overflow-auto, .overflow-y-auto, [style*="overflow"]')
+    scrollParent?.addEventListener('scroll', handleScroll, { passive: true })
+    return () => scrollParent?.removeEventListener('scroll', handleScroll)
+  }, [isMenuOpen, onMenuToggle])
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        onClick={(e) => {
+          e.stopPropagation()
+          onMenuToggle(isMenuOpen ? null : column.id)
+        }}
+        className="column-menu-btn opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto p-0.5 hover:bg-[#c3c6d4] rounded transition-colors"
+      >
+        <MoreHorizontal className="w-4 h-4 text-[#676879]" />
+      </button>
+      {isMenuOpen && createPortal(
+        <>
+          <div
+            className="fixed inset-0 z-[9998]"
+            onClick={(e) => {
+              e.stopPropagation()
+              onMenuToggle(null)
+            }}
+          />
+          <div
+            ref={menuRef}
+            style={{ top: menuPos.top, left: menuPos.left }}
+            className="fixed w-48 bg-white rounded-lg shadow-lg border border-border-light z-[9999] py-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onMenuToggle(null)
+                onColumnNameDoubleClick(e as unknown as React.MouseEvent, column)
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-text-primary hover:bg-bg-hover transition-colors"
+            >
+              <Type className="w-4 h-4" />
+              <span>Rename column</span>
+            </button>
+            {/* Due date toggle — only for date columns */}
+            {column.column_type === 'date' && onColumnConfigUpdate && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    const isDueDate = !column.config?.is_due_date
+                    onColumnConfigUpdate(column.id, { ...column.config, is_due_date: isDueDate })
+                    onMenuToggle(null)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-text-primary hover:bg-bg-hover transition-colors"
+                >
+                  <Clock className="w-4 h-4" />
+                  <span className="flex-1">Due date mode</span>
+                  <div className={cn(
+                    'w-8 h-[18px] rounded-full transition-colors flex items-center px-0.5',
+                    column.config?.is_due_date ? 'bg-[#0073ea] justify-end' : 'bg-[#c3c6d4] justify-start'
+                  )}>
+                    <div className="w-3.5 h-3.5 bg-white rounded-full shadow-sm" />
+                  </div>
+                </button>
+              </>
+            )}
+            <div className="border-t border-border-light my-1" />
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDeleteColumn(column)
+              }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Delete column</span>
+            </button>
+          </div>
+        </>,
+        document.body
+      )}
+    </div>
+  )
 }
 
 export const SortableColumnHeader = memo(function SortableColumnHeader({
@@ -49,6 +165,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
   isMenuOpen,
   onMenuToggle,
   onDeleteColumn,
+  onColumnConfigUpdate,
   menuRef,
   sortConfig,
   stickyStyle,
@@ -100,7 +217,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
     >
       {/* Sort indicator - positioned at top center of header cell */}
       {isSorted ? (
-        <div className="absolute -top-[7px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#c3c6d4] text-[#323338] shadow-sm">
+        <div className="absolute top-[1px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#c3c6d4] text-[#323338] shadow-sm">
           {sortDirection === 'asc' ? (
             <ArrowUp className="w-[10px] h-[10px]" />
           ) : (
@@ -108,7 +225,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
           )}
         </div>
       ) : (
-        <div className="absolute -top-[7px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#c3c6d4] text-[#676879] opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-[1px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#c3c6d4] text-[#676879] opacity-0 group-hover:opacity-100 transition-opacity">
           <ArrowUp className="w-[10px] h-[10px]" />
         </div>
       )}
@@ -137,58 +254,22 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
               className="w-full bg-white border border-[#0073ea] rounded px-1 py-0.5 text-xs font-semibold text-[#323338] uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
             />
           ) : (
-            column.column_name
+            <OverflowTooltip text={column.column_name} className="truncate block">
+              {column.column_name}
+            </OverflowTooltip>
           )}
         </span>
         {/* Column menu button */}
         {!isEditing && (
-          <div className="relative">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onMenuToggle(isMenuOpen ? null : column.id)
-              }}
-              className="column-menu-btn opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto p-0.5 hover:bg-[#c3c6d4] rounded transition-colors"
-            >
-              <MoreHorizontal className="w-4 h-4 text-[#676879]" />
-            </button>
-            {isMenuOpen && (
-              <div
-                ref={menuRef}
-                className="absolute top-full right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-border-light z-50 py-1"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* Rename option */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onMenuToggle(null)
-                    // Trigger double-click handler to enter edit mode
-                    onColumnNameDoubleClick(e as unknown as React.MouseEvent, column)
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-text-primary hover:bg-bg-hover transition-colors"
-                >
-                  <Type className="w-4 h-4" />
-                  <span>Rename column</span>
-                </button>
-
-                {/* Divider */}
-                <div className="border-t border-border-light my-1" />
-
-                {/* Delete option */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDeleteColumn(column)
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  <span>Delete column</span>
-                </button>
-              </div>
-            )}
-          </div>
+          <ColumnMenu
+            column={column}
+            isMenuOpen={isMenuOpen}
+            onMenuToggle={onMenuToggle}
+            onDeleteColumn={onDeleteColumn}
+            onColumnNameDoubleClick={onColumnNameDoubleClick}
+            onColumnConfigUpdate={onColumnConfigUpdate}
+            menuRef={menuRef}
+          />
         )}
       </div>
       {/* Resize handle */}

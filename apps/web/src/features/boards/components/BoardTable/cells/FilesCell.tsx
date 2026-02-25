@@ -4,8 +4,9 @@ import React, { useState, useRef, useEffect, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
-import { Paperclip, Upload, X, File, Image, FileText, Download, Trash2, Plus } from 'lucide-react'
+import { Paperclip, Upload, X, File, Image, FileText, Download, Trash2, Plus, Eye } from 'lucide-react'
 import { calculatePopupPosition } from './usePopupPosition'
+import { FilePreviewModal } from './FilePreviewModal'
 
 interface FileAttachment {
   id: string
@@ -62,6 +63,7 @@ export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = fal
   const [isOpen, setIsOpen] = useState(false)
   const [files, setFiles] = useState<FileAttachment[]>(() => parseFilesValue(value))
   const [uploading, setUploading] = useState(false)
+  const [previewIndex, setPreviewIndex] = useState<number | null>(null)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -307,34 +309,51 @@ export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = fal
             </div>
           ) : (
             <div className="space-y-2 max-h-[240px] overflow-y-auto">
-              {files.map((file) => (
+              {files.map((file, index) => (
                 <div
                   key={file.id}
                   className="flex items-center gap-2 p-2 rounded hover:bg-[#f5f6f8] group"
                 >
-                  {/* Thumbnail or Icon */}
-                  {file.type.startsWith('image/') ? (
-                    <div className="w-10 h-10 rounded overflow-hidden bg-[#f5f6f8] flex-shrink-0">
-                      <img
-                        src={file.url}
-                        alt={file.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="w-10 h-10 rounded bg-[#f5f6f8] flex items-center justify-center flex-shrink-0">
-                      {getFileIcon(file.type)}
-                    </div>
-                  )}
+                  {/* Thumbnail or Icon — click to preview */}
+                  <button
+                    onClick={() => { setPreviewIndex(index); setIsOpen(false) }}
+                    className="flex-shrink-0 cursor-pointer"
+                    title="Preview"
+                  >
+                    {file.type.startsWith('image/') ? (
+                      <div className="w-10 h-10 rounded overflow-hidden bg-[#f5f6f8]">
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded bg-[#f5f6f8] flex items-center justify-center">
+                        {getFileIcon(file.type)}
+                      </div>
+                    )}
+                  </button>
 
-                  {/* File Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm text-[#323338] truncate">{file.name}</div>
+                  {/* File Info — click to preview */}
+                  <button
+                    onClick={() => { setPreviewIndex(index); setIsOpen(false) }}
+                    className="flex-1 min-w-0 text-left cursor-pointer"
+                    title="Preview"
+                  >
+                    <div className="text-sm text-[#323338] truncate hover:text-[#0073ea] transition-colors">{file.name}</div>
                     <div className="text-xs text-[#9699a6]">{formatFileSize(file.size)}</div>
-                  </div>
+                  </button>
 
                   {/* Actions */}
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => { setPreviewIndex(index); setIsOpen(false) }}
+                      className="p-1 rounded hover:bg-[#e6e9ef]"
+                      title="Preview"
+                    >
+                      <Eye className="w-4 h-4 text-[#676879]" />
+                    </button>
                     <button
                       onClick={() => handleDownload(file)}
                       className="p-1 rounded hover:bg-[#e6e9ef]"
@@ -368,6 +387,17 @@ export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = fal
           )}
         </div>,
         document.body
+      )}
+
+      {/* File Preview Modal */}
+      {previewIndex !== null && files[previewIndex] && (
+        <FilePreviewModal
+          file={files[previewIndex]}
+          files={files}
+          currentIndex={previewIndex}
+          onNavigate={setPreviewIndex}
+          onClose={() => setPreviewIndex(null)}
+        />
       )}
     </div>
   )

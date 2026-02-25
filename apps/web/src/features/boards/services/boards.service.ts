@@ -38,7 +38,26 @@ export const boardsService = {
       .order('position', { ascending: true })
 
     if (error) throw error
-    return (data || []) as BoardColumn[]
+    const columns = (data || []) as BoardColumn[]
+
+    // Ensure a "name" column exists — older Monday imports may be missing it
+    if (columns.length > 0 && !columns.some(c => c.column_id === 'name')) {
+      const nameColumn: BoardColumn = {
+        id: `${boardId}_name`,
+        board_type: _boardType,
+        column_id: 'name',
+        column_name: 'Name',
+        column_type: 'text',
+        position: -1, // ensures it sorts first
+        width: 200,
+        is_visible: true,
+        is_pinned: false,
+        config: {},
+      }
+      columns.unshift(nameColumn)
+    }
+
+    return columns
   },
 
   /**

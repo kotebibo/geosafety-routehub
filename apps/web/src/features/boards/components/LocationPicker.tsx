@@ -5,7 +5,7 @@
 
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, type CSSProperties } from 'react'
 import { cn } from '@/lib/utils'
 import { Search, X, MapPin, Star, ChevronLeft } from 'lucide-react'
 import type { CompanyLocation } from '@/types/company'
@@ -18,16 +18,19 @@ interface LocationPickerProps {
   onChange: (locationId: string | null) => void
   onBack: () => void
   onClose: () => void
+  /** Fixed position style when rendered via portal */
+  positionStyle?: CSSProperties
 }
 
-export function LocationPicker({ 
-  companyId, 
-  companyName, 
-  locations, 
-  value, 
-  onChange, 
+export function LocationPicker({
+  companyId,
+  companyName,
+  locations,
+  value,
+  onChange,
   onBack,
-  onClose 
+  onClose,
+  positionStyle,
 }: LocationPickerProps) {
   const [search, setSearch] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -47,7 +50,13 @@ export function LocationPicker({
   const primaryLocation = locations.find(loc => loc.is_primary)
 
   return (
-    <div className="absolute top-0 left-0 w-full min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-50 overflow-hidden">
+    <div
+      style={positionStyle}
+      className={cn(
+        'min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
+        positionStyle ? 'fixed w-[300px]' : 'absolute top-0 left-0 w-full'
+      )}
+    >
       {/* Header with back button */}
       <div className="px-3 py-2 border-b border-border-light bg-gray-50">
         <button

@@ -236,7 +236,7 @@ export function BoardTable<TData extends Record<string, any>>({
                   return (
                     <div
                       key={`${row.id}-${column.id}`}
-                      className="border-r border-border-light"
+                      className="border-r border-border-light overflow-hidden"
                       style={{ width: `${column.width}px`, minWidth: `${column.width}px` }}
                       onClick={(e) => e.stopPropagation()}
                     >

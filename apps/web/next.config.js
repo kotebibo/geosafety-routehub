@@ -43,6 +43,7 @@ const nextConfig = {
     const ContentSecurityPolicy = `
       default-src 'self';
       script-src 'self' 'unsafe-eval' 'unsafe-inline' *.supabase.co;
+      worker-src 'self';
       style-src 'self' 'unsafe-inline';
       img-src 'self' blob: data: https:;
       font-src 'self' data:;

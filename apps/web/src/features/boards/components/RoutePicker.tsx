@@ -10,6 +10,8 @@ interface RoutePickerProps {
   onChange: (routeId: string | null) => void
   onClose: () => void
   placeholder?: string
+  /** Fixed position style when rendered via portal */
+  positionStyle?: React.CSSProperties
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -19,7 +21,7 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: '#e2445c',
 }
 
-export function RoutePicker({ value, onChange, onClose, placeholder = 'Search routes...' }: RoutePickerProps) {
+export function RoutePicker({ value, onChange, onClose, placeholder = 'Search routes...', positionStyle }: RoutePickerProps) {
   const [search, setSearch] = useState('')
   const { routes, loading } = useRoutes()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -50,7 +52,13 @@ export function RoutePicker({ value, onChange, onClose, placeholder = 'Search ro
   }
 
   return (
-    <div className="absolute top-0 left-0 w-full min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-50 overflow-hidden">
+    <div
+      style={positionStyle}
+      className={cn(
+        'min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
+        positionStyle ? 'fixed w-[300px]' : 'absolute top-0 left-0 w-full'
+      )}
+    >
       {/* Search Input */}
       <div className="p-2 border-b border-border-light">
         <div className="relative">

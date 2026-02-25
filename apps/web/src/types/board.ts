@@ -1,6 +1,6 @@
 // Monday.com-style Board Types
 
-export type BoardType = 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom'
+export type BoardType = 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom' | 'checkins' | 'data_collection'
 
 export type ColumnType =
   | 'text'

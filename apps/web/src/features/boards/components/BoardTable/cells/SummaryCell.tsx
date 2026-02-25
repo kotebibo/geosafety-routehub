@@ -1,4 +1,5 @@
-import { memo, useMemo, useState } from 'react'
+import { memo, useMemo, useState, useRef, useLayoutEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { MONDAY_COLORS, getColorInfo, DEFAULT_STATUS_OPTIONS, type StatusOption } from './StatusCell'
 import type { BoardColumn } from '@/types/board'
 import type { BoardItem } from '../../../types/board'
@@ -86,6 +87,18 @@ const StatusSummaryCell = memo(function StatusSummaryCell({
   column,
 }: StatusSummaryCellProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const barRef = useRef<HTMLDivElement>(null)
+  const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 })
+
+  useLayoutEffect(() => {
+    if (isHovered && barRef.current) {
+      const rect = barRef.current.getBoundingClientRect()
+      setTooltipPos({
+        top: rect.top - 8, // above the bar, the tooltip will use bottom anchor
+        left: rect.left + rect.width / 2,
+      })
+    }
+  }, [isHovered])
 
   const distribution = useMemo(() => {
     // Resolve status options from column config
@@ -159,7 +172,8 @@ const StatusSummaryCell = memo(function StatusSummaryCell({
 
   return (
     <div
-      className="w-full h-full px-1.5 flex items-center relative"
+      ref={barRef}
+      className="w-full h-full px-1.5 flex items-center"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -177,9 +191,12 @@ const StatusSummaryCell = memo(function StatusSummaryCell({
         ))}
       </div>
 
-      {/* Detailed breakdown popup */}
-      {isHovered && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[9999] bg-white rounded-lg shadow-xl border border-[#e6e9ef] pointer-events-none min-w-[200px]">
+      {/* Detailed breakdown popup - portaled */}
+      {isHovered && createPortal(
+        <div
+          style={{ top: tooltipPos.top, left: tooltipPos.left, transform: 'translate(-50%, -100%)' }}
+          className="fixed z-[9999] bg-white rounded-lg shadow-xl border border-[#e6e9ef] pointer-events-none min-w-[200px]"
+        >
           {/* Header */}
           <div className="px-3 py-2 border-b border-[#e6e9ef]">
             <span className="text-xs font-semibold text-[#323338]">{column.column_name}</span>
@@ -217,7 +234,8 @@ const StatusSummaryCell = memo(function StatusSummaryCell({
           </div>
           {/* Arrow */}
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-white drop-shadow-sm" />
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

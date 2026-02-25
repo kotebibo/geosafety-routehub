@@ -54,7 +54,7 @@ export const trackingService = {
 
     for (const inspector of inspectors) {
       // Get latest location from history
-      const { data: latestLoc } = await supabase
+      const { data: latestLocData } = await supabase
         .from('inspector_location_history')
         .select('lat, lng')
         .eq('inspector_id', inspector.id)
@@ -62,11 +62,12 @@ export const trackingService = {
         .limit(1)
         .single()
         .returns<{ lat: number; lng: number }>()
+      const latestLoc = latestLocData as { lat: number; lng: number } | null
 
       if (!latestLoc) continue
 
       // Get active route for today
-      const { data: route } = await supabase
+      const { data: routeData } = await supabase
         .from('routes')
         .select('id, name, status')
         .eq('inspector_id', inspector.id)
@@ -75,6 +76,7 @@ export const trackingService = {
         .limit(1)
         .single()
         .returns<{ id: string; name: string | null; status: string }>()
+      const route = routeData as { id: string; name: string | null; status: string } | null
 
       let activeRoute: ActiveInspector['active_route'] = null
 

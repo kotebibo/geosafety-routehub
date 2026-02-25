@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import type { CellRendererProps } from '../types'
 import { calculatePopupPosition } from './usePopupPosition'
+import { OverflowTooltip } from './OverflowTooltip'
 
 // Lazy load the heavy editor component (~10KB) - only loaded when user clicks "Edit Labels"
 const StatusLabelEditor = lazy(() => import('./StatusLabelEditor').then(m => ({ default: m.StatusLabelEditor })))
@@ -179,7 +180,7 @@ export const StatusCell = memo(function StatusCell({ value, column, onEdit, onEd
           color: currentColor.text,
         }}
       >
-        {currentOption?.label || 'Select'}
+        <OverflowTooltip text={currentOption?.label} className="truncate px-1 block">{currentOption?.label || 'Select'}</OverflowTooltip>
       </button>
 
       {/* Dropdown Portal */}

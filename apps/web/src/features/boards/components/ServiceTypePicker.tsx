@@ -10,6 +10,8 @@ interface ServiceTypePickerProps {
   onChange: (serviceTypeId: string | null) => void
   onClose: () => void
   placeholder?: string
+  /** Fixed position style when rendered via portal */
+  positionStyle?: React.CSSProperties
 }
 
 // Icon mapping for service types
@@ -40,7 +42,7 @@ const SERVICE_COLORS: Record<string, string> = {
   'radiation': '#bb3354',
 }
 
-export function ServiceTypePicker({ value, onChange, onClose, placeholder = 'Search service types...' }: ServiceTypePickerProps) {
+export function ServiceTypePicker({ value, onChange, onClose, placeholder = 'Search service types...', positionStyle }: ServiceTypePickerProps) {
   const [search, setSearch] = useState('')
   const { serviceTypes, loading } = useServiceTypes()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -65,7 +67,13 @@ export function ServiceTypePicker({ value, onChange, onClose, placeholder = 'Sea
   }
 
   return (
-    <div className="absolute top-0 left-0 w-full min-w-[280px] bg-white rounded-md shadow-lg border border-border-light z-50 overflow-hidden">
+    <div
+      style={positionStyle}
+      className={cn(
+        'min-w-[280px] bg-white rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
+        positionStyle ? 'fixed w-[300px]' : 'absolute top-0 left-0 w-full'
+      )}
+    >
       {/* Search Input */}
       <div className="p-2 border-b border-border-light">
         <div className="relative">

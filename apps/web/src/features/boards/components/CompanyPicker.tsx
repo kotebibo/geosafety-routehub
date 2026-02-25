@@ -26,14 +26,17 @@ interface CompanyPickerProps {
   onClose: () => void
   placeholder?: string
   companies?: Company[]  // Optional: pass companies directly
+  /** Fixed position style when rendered via portal */
+  positionStyle?: React.CSSProperties
 }
 
-export function CompanyPicker({ 
-  value, 
-  onChange, 
-  onClose, 
+export function CompanyPicker({
+  value,
+  onChange,
+  onClose,
   placeholder = 'კომპანიის ძებნა...',
-  companies: propCompanies
+  companies: propCompanies,
+  positionStyle,
 }: CompanyPickerProps) {
   const [search, setSearch] = useState('')
   const [companies, setCompanies] = useState<Company[]>(propCompanies || [])
@@ -127,7 +130,13 @@ export function CompanyPicker({
   if (step === 'location' && selectedCompany) {
     if (loadingLocations) {
       return (
-        <div className="absolute top-0 left-0 w-full min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-50 overflow-hidden">
+        <div
+          style={positionStyle}
+          className={cn(
+            'min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
+            positionStyle ? 'fixed w-[300px]' : 'absolute top-0 left-0 w-full'
+          )}
+        >
           <div className="flex items-center justify-center py-8">
             <div className="w-6 h-6 border-2 border-monday-primary border-t-transparent rounded-full animate-spin" />
           </div>
@@ -144,13 +153,20 @@ export function CompanyPicker({
         onChange={handleLocationSelect}
         onBack={handleBack}
         onClose={onClose}
+        positionStyle={positionStyle}
       />
     )
   }
 
   // Company picker (step 1)
   return (
-    <div className="absolute top-0 left-0 w-full min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-50 overflow-hidden">
+    <div
+      style={positionStyle}
+      className={cn(
+        'min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
+        positionStyle ? 'fixed w-[300px]' : 'absolute top-0 left-0 w-full'
+      )}
+    >
       {/* Search Input */}
       <div className="p-2 border-b border-border-light">
         <div className="relative">

@@ -36,7 +36,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
   // Fetch columns for each board that has results
   const columnQueries = useQueries({
     queries: boardInfos.map(info => ({
-      queryKey: [...queryKeys.boardColumns.byType(info.boardType), info.boardId],
+      queryKey: [...queryKeys.boardColumns.all, 'by-board', info.boardId],
       queryFn: () => boardsService.getColumns(info.boardType, info.boardId),
       staleTime: 5 * 60 * 1000,
       enabled: isOpen && boardInfos.length > 0,

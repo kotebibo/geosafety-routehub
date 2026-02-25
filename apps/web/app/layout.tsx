@@ -4,6 +4,7 @@ import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster, MondayLayout } from '@/shared/components/ui'
 import { ErrorBoundary } from '@/shared/components/feedback'
+import { PWARegister } from '@/shared/components/PWARegister'
 // import { WebVitalsTracker } from '@/components/WebVitalsTracker' // Temporarily disabled
 
 // Monday.com Design System Fonts - optimized for faster initial load
@@ -35,6 +36,10 @@ export const metadata: Metadata = {
   description: 'Professional route optimization and field management system for safety inspectors',
   keywords: ['route optimization', 'field management', 'inspection', 'GeoSafety'],
   authors: [{ name: 'GeoSafety' }],
+  manifest: '/manifest.json',
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
 }
 
 export const viewport: Viewport = {
@@ -57,6 +62,7 @@ export default function RootLayout({
             <MondayLayout>
               {children}
               <Toaster />
+              <PWARegister />
               {/* <WebVitalsTracker /> */}
             </MondayLayout>
           </Providers>

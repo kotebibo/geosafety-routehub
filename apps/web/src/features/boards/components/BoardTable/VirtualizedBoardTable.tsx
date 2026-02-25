@@ -10,6 +10,7 @@ import { SummaryCell } from './cells/SummaryCell'
 import { MONDAY_GROUP_COLORS, DEFAULT_GROUP } from './constants'
 import { flattenGroupsForVirtualization, type VirtualRow } from '../../utils/flattenGroupsForVirtualization'
 import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation'
+import { useToast } from '@/components/ui-monday/Toast'
 import type { BoardColumn, BoardItem, BoardGroup, BoardType, BoardPresence, ColumnType } from '../../types/board'
 
 // @dnd-kit imports
@@ -59,6 +60,7 @@ interface VirtualizedBoardTableProps {
   onQuickAddColumn?: (columnType: ColumnType, afterColumnId?: string) => void
   onOpenAddColumnModal?: () => void
   onColumnRename?: (columnId: string, newName: string) => void
+  onColumnConfigUpdate?: (columnId: string, config: Record<string, any>) => void
   onDeleteColumn?: (columnId: string) => void
   presence?: BoardPresence[]
   onCellEditStart?: (itemId: string, columnId: string) => void
@@ -95,6 +97,7 @@ export function VirtualizedBoardTable({
   onQuickAddColumn,
   onOpenAddColumnModal,
   onColumnRename,
+  onColumnConfigUpdate,
   onDeleteColumn,
   presence = [],
   onCellEditStart,
@@ -125,6 +128,12 @@ export function VirtualizedBoardTable({
   const [openMenuColumnId, setOpenMenuColumnId] = useState<string | null>(null)
   const editInputRef = useRef<HTMLInputElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Toast for copy feedback
+  const { showToast } = useToast()
+  const handleCopy = useCallback(() => {
+    showToast('Copied to clipboard', 'success', 1500)
+  }, [showToast])
 
   // Column resize tracking
   const [isResizing, setIsResizing] = useState(false)
@@ -169,7 +178,7 @@ export function VirtualizedBoardTable({
       footerHeight: FOOTER_HEIGHT,
       summaryHeight: SUMMARY_HEIGHT,
       preserveItemOrder: !!sortConfig,
-      skipColumnHeaders: false,
+      skipColumnHeaders: true,
     })
   }, [effectiveGroups, data, collapsedGroups, sortConfig])
 
@@ -216,6 +225,7 @@ export function VirtualizedBoardTable({
     onSelectionChange,
     selection,
     enabled: true,
+    onCopy: handleCopy,
   })
 
   // Get column width
@@ -603,16 +613,16 @@ export function VirtualizedBoardTable({
                   className="p-0 h-9 rounded-tl"
                   style={{ width: 6, backgroundColor: group.color || '#579bfc', position: 'sticky', left: stickyOffsets.colorBar, zIndex: 2 }}
                 />
-                {/* Group info - spans all data columns */}
+                {/* Group info - sticky first col */}
                 <td
-                  colSpan={visibleColumns.length + 1}
-                  className="h-9 px-3 align-middle"
+                  className="h-9 px-3 align-middle bg-white"
+                  style={{ width: getColumnWidth(visibleColumns[0]), position: 'sticky', left: stickyOffsets.firstCol, zIndex: 2 }}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 whitespace-nowrap">
                     {/* Collapse toggle */}
                     <button
                       onClick={() => handleGroupCollapseToggle(group.id)}
-                      className="p-0.5 hover:bg-[#e6e9ef] rounded transition-colors"
+                      className="p-0.5 hover:bg-[#e6e9ef] rounded transition-colors flex-shrink-0"
                     >
                       {isCollapsed ? (
                         <ChevronRight className="w-4 h-4" style={{ color: group.color || '#579bfc' }} />
@@ -643,12 +653,12 @@ export function VirtualizedBoardTable({
                         {group.name}
                       </span>
                     )}
-                    <span className="text-xs text-[#676879]">
+                    <span className="text-xs text-[#676879] flex-shrink-0">
                       {itemCount} {itemCount === 1 ? 'item' : 'items'}
                     </span>
 
                     {/* Group menu */}
-                    <div className="relative ml-2">
+                    <div className="relative ml-2 flex-shrink-0">
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
@@ -716,6 +726,16 @@ export function VirtualizedBoardTable({
                     </div>
                   </div>
                 </td>
+                {/* Empty cells for remaining columns */}
+                {visibleColumns.slice(1).map((col) => (
+                  <td
+                    key={`group-${group.id}-${col.id}`}
+                    className="h-9 bg-white"
+                    style={{ width: getColumnWidth(col) }}
+                  />
+                ))}
+                {/* Empty cell for add column */}
+                <td className="h-9 bg-white w-10" />
               </tr>
             </tbody>
           </table>
@@ -753,7 +773,17 @@ export function VirtualizedBoardTable({
                     {col.column_name}
                   </th>
                 ))}
-                <th className="bg-[#f5f6f8] border border-[#c3c6d4] w-10 px-2 py-2" />
+                <th className="bg-[#f5f6f8] border border-[#c3c6d4] w-10 px-2 py-2">
+                  {onOpenAddColumnModal && (
+                    <button
+                      onClick={onOpenAddColumnModal}
+                      className="p-1 rounded hover:bg-[#c3c6d4] transition-colors"
+                      title="Add column"
+                    >
+                      <Plus className="w-4 h-4 text-[#676879]" />
+                    </button>
+                  )}
+                </th>
               </tr>
             </thead>
           </table>
@@ -1027,8 +1057,8 @@ export function VirtualizedBoardTable({
         >
         {/* Horizontal scroll wrapper */}
         <div style={{ minWidth: totalTableWidth }}>
-          {/* Sticky column header overlay - sits behind group headers (z:10 < group z:25) */}
-          <div style={{ position: 'sticky', top: 0, zIndex: 10, marginBottom: -ROW_HEIGHT }}>
+          {/* Sticky column header overlay - stays above group headers (z:30 > group z:25) */}
+          <div style={{ position: 'sticky', top: 0, zIndex: 30 }}>
             <table className="w-full border-collapse" style={{ tableLayout: 'fixed', width: totalTableWidth }}>
               <thead>
                 <tr className="bg-[#f5f6f8]">
@@ -1065,6 +1095,7 @@ export function VirtualizedBoardTable({
                         isMenuOpen={openMenuColumnId === col.id}
                         onMenuToggle={handleMenuToggle}
                         onDeleteColumn={handleDeleteColumnClick}
+                        onColumnConfigUpdate={onColumnConfigUpdate}
                         menuRef={menuRef as React.RefObject<HTMLDivElement>}
                         sortConfig={sortConfig}
                         stickyStyle={idx === 0 ? {

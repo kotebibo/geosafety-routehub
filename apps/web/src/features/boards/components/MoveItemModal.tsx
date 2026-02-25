@@ -182,7 +182,7 @@ export function MoveItemModal({
                 </button>
 
                 {showBoardDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto">
                     {boardsLoading ? (
                       <div className="px-4 py-8 text-center text-gray-500">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
@@ -239,7 +239,7 @@ export function MoveItemModal({
                   )}
                 </div>
 
-                <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-64 overflow-y-auto">
+                <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-80 overflow-y-auto">
                   {mappingData.sourceColumns.map((srcCol) => (
                     <div key={srcCol.column_id} className="px-4 py-3 flex items-center gap-3">
                       {/* Source Column */}

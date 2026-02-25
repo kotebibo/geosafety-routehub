@@ -9,6 +9,7 @@ interface KeyboardNavigationOptions {
   onSelectionChange?: (selection: Set<string>) => void
   selection?: Set<string>
   enabled?: boolean
+  onCopy?: () => void
 }
 
 interface FocusedCell {
@@ -24,6 +25,7 @@ export function useKeyboardNavigation({
   onSelectionChange,
   selection = new Set(),
   enabled = true,
+  onCopy,
 }: KeyboardNavigationOptions) {
   const [focusedCell, setFocusedCell] = useState<FocusedCell | null>(null)
   const [isEditing, setIsEditing] = useState(false)
@@ -64,6 +66,54 @@ export function useKeyboardNavigation({
     return { item, column }
   }, [focusedCell, items, visibleColumns])
 
+  // Format cell value as human-readable text for clipboard
+  const formatCellText = useCallback((value: any, column: BoardColumn): string => {
+    if (value == null || value === '') return ''
+
+    switch (column.column_type) {
+      case 'status': {
+        // Look up the label from column config options
+        const options = column.config?.options
+        if (Array.isArray(options)) {
+          const opt = options.find((o: any) => o.key === value)
+          if (opt?.label) return opt.label
+        } else if (options && typeof options === 'object') {
+          const opt = (options as any)[value]
+          if (opt?.label) return opt.label
+        }
+        return String(value)
+      }
+      case 'date': {
+        try {
+          return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value))
+        } catch { return String(value) }
+      }
+      case 'date_range': {
+        const range = typeof value === 'object' ? value : {}
+        const fmt = (d: string) => {
+          try { return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(d)) }
+          catch { return d }
+        }
+        if (range.start && range.end) return `${fmt(range.start)} → ${fmt(range.end)}`
+        if (range.start) return fmt(range.start)
+        if (range.end) return fmt(range.end)
+        return String(value)
+      }
+      case 'checkbox':
+        return value === true || value === 'true' ? 'Yes' : 'No'
+      case 'files': {
+        if (Array.isArray(value)) {
+          return value.map((f: any) => f.name || f.url || '').filter(Boolean).join(', ')
+        }
+        return String(value)
+      }
+      case 'number':
+        return String(value)
+      default:
+        return typeof value === 'object' ? JSON.stringify(value) : String(value)
+    }
+  }, [])
+
   // Copy cell value to clipboard
   const copyCell = useCallback(() => {
     const data = getFocusedData()
@@ -74,19 +124,24 @@ export function useKeyboardNavigation({
       ? item.name
       : item.data?.[column.column_id]
 
-    // Store in internal clipboard
+    // Store in internal clipboard (raw value for paste)
     clipboardRef.current = {
       rowId: item.id,
       columnId: column.column_id,
       value,
     }
 
-    // Also copy to system clipboard as text
-    const textValue = typeof value === 'object' ? JSON.stringify(value) : String(value ?? '')
-    navigator.clipboard?.writeText(textValue).catch(() => {
+    // Copy human-readable text to system clipboard
+    const textValue = column.column_id === 'name'
+      ? String(value ?? '')
+      : formatCellText(value, column)
+
+    navigator.clipboard?.writeText(textValue).then(() => {
+      onCopy?.()
+    }).catch(() => {
       // Clipboard API not available
     })
-  }, [getFocusedData])
+  }, [getFocusedData, formatCellText, onCopy])
 
   // Paste cell value
   const pasteCell = useCallback(async () => {
@@ -380,6 +435,7 @@ export function useKeyboardNavigation({
     onCellEdit,
     onSelectionChange,
     getFocusedData,
+    onCopy,
   ])
 
   // Return utilities for the component

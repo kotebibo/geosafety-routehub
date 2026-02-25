@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { Phone } from 'lucide-react'
 import { HighlightText } from '@/shared/components/HighlightText'
+import { OverflowTooltip } from './OverflowTooltip'
 
 interface PhoneCellProps {
   value?: string | null
@@ -139,13 +140,13 @@ export function PhoneCell({ value, onEdit, readOnly = false, onEditStart, highli
         {value ? (
           <>
             <Phone className="w-4 h-4 text-[#579bfc] flex-shrink-0" />
-            <span className="text-sm text-[#323338] truncate">
+            <OverflowTooltip text={formatPhoneNumber(value)} className="text-sm text-[#323338] truncate block">
               {highlightQuery ? (
                 <HighlightText text={formatPhoneNumber(value)} query={highlightQuery} />
               ) : (
                 formatPhoneNumber(value)
               )}
-            </span>
+            </OverflowTooltip>
           </>
         ) : (
           <span className="text-sm text-[#9699a6]">Add phone...</span>

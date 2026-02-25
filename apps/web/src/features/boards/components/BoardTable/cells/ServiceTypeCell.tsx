@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useServiceTypes } from '@/hooks/useServiceTypes'
 import { ServiceTypePicker } from '../../ServiceTypePicker'
 import { cn } from '@/lib/utils'
@@ -45,6 +46,7 @@ export function ServiceTypeCell({ value, onEdit, readOnly = false, onEditStart }
   const [isEditing, setIsEditing] = useState(false)
   const { serviceTypes } = useServiceTypes()
   const containerRef = useRef<HTMLDivElement>(null)
+  const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 })
 
   const selectedType = serviceTypes?.find(t => t.id === value)
 
@@ -56,17 +58,31 @@ export function ServiceTypeCell({ value, onEdit, readOnly = false, onEditStart }
     return SERVICE_COLORS[inspectorType || ''] || '#579bfc'
   }
 
-  useEffect(() => {
-    if (isEditing) {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-          setIsEditing(false)
-        }
-      }
-
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
+  const updatePickerPosition = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const pickerHeight = 350
+      setPickerPos({
+        top: spaceBelow > pickerHeight ? rect.bottom + 2 : Math.max(8, rect.top - pickerHeight - 2),
+        left: Math.min(rect.left, window.innerWidth - 308),
+      })
     }
+  }, [])
+
+  useLayoutEffect(() => {
+    if (isEditing) {
+      updatePickerPosition()
+    }
+  }, [isEditing, updatePickerPosition])
+
+  // Close picker on scroll so it doesn't float away from the cell
+  useEffect(() => {
+    if (!isEditing) return
+    const handleScroll = () => setIsEditing(false)
+    const scrollParent = containerRef.current?.closest('.overflow-auto, .overflow-y-auto, [style*="overflow"]')
+    scrollParent?.addEventListener('scroll', handleScroll, { passive: true })
+    return () => scrollParent?.removeEventListener('scroll', handleScroll)
   }, [isEditing])
 
   const handleChange = (newValue: string | null) => {
@@ -133,12 +149,17 @@ export function ServiceTypeCell({ value, onEdit, readOnly = false, onEditStart }
         )}
       </button>
 
-      {isEditing && !readOnly && (
-        <ServiceTypePicker
-          value={value}
-          onChange={handleChange}
-          onClose={() => setIsEditing(false)}
-        />
+      {isEditing && !readOnly && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
+          <ServiceTypePicker
+            value={value}
+            onChange={handleChange}
+            onClose={() => setIsEditing(false)}
+            positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
+          />
+        </>,
+        document.body
       )}
     </div>
   )

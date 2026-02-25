@@ -9,16 +9,12 @@ export const DateCell = memo(function DateCell({ value, column, onEdit, onEditSt
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
 
-  // Check if this is a "due date" type column (based on column name)
-  const isDueDateColumn = useMemo(() => {
-    const name = (column?.column_name || column?.column_id || '').toLowerCase()
-    return name.includes('due') || name.includes('deadline') || name.includes('expir') ||
-           name.includes('next') || name.includes('scheduled')
-  }, [column])
+  // Only show overdue/today/upcoming styling when column is configured as a due date
+  const isDueDate = !!column?.config?.is_due_date
 
-  // Calculate date status for highlighting
+  // Calculate date status for highlighting (only for due date columns)
   const dateStatus = useMemo((): DateStatus => {
-    if (!value || !isDueDateColumn) return 'none'
+    if (!value || !isDueDate) return 'none'
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -32,7 +28,7 @@ export const DateCell = memo(function DateCell({ value, column, onEdit, onEditSt
     if (diffDays === 0) return 'today'
     if (diffDays <= 7) return 'upcoming' // Within 7 days
     return 'future'
-  }, [value, isDueDateColumn])
+  }, [value, isDueDate])
 
   const formatDate = (dateString: string) => {
     if (!dateString) return null
@@ -125,10 +121,9 @@ export const DateCell = memo(function DateCell({ value, column, onEdit, onEditSt
   }
 
   const getStatusLabel = () => {
-    if (!isDueDateColumn) return null
     switch (dateStatus) {
       case 'overdue':
-        return <span className="text-[10px] font-medium text-[#d83a52] ml-1">Overdue</span>
+        return null
       case 'today':
         return <span className="text-[10px] font-medium text-[#856404] ml-1">Today</span>
       case 'upcoming':

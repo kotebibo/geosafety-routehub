@@ -1,6 +1,7 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useRoutes } from '@/hooks/useRoutes'
 import { RoutePicker } from '../../RoutePicker'
 import { cn } from '@/lib/utils'
@@ -24,6 +25,7 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
   const [isEditing, setIsEditing] = useState(false)
   const { routes } = useRoutes()
   const containerRef = useRef<HTMLDivElement>(null)
+  const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 })
 
   const selectedRoute = routes?.find(r => r.id === value)
 
@@ -32,17 +34,31 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
     return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   }
 
-  useEffect(() => {
-    if (isEditing) {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-          setIsEditing(false)
-        }
-      }
-
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
+  const updatePickerPosition = useCallback(() => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const pickerHeight = 350
+      setPickerPos({
+        top: spaceBelow > pickerHeight ? rect.bottom + 2 : Math.max(8, rect.top - pickerHeight - 2),
+        left: Math.min(rect.left, window.innerWidth - 308),
+      })
     }
+  }, [])
+
+  useLayoutEffect(() => {
+    if (isEditing) {
+      updatePickerPosition()
+    }
+  }, [isEditing, updatePickerPosition])
+
+  // Close picker on scroll so it doesn't float away from the cell
+  useEffect(() => {
+    if (!isEditing) return
+    const handleScroll = () => setIsEditing(false)
+    const scrollParent = containerRef.current?.closest('.overflow-auto, .overflow-y-auto, [style*="overflow"]')
+    scrollParent?.addEventListener('scroll', handleScroll, { passive: true })
+    return () => scrollParent?.removeEventListener('scroll', handleScroll)
   }, [isEditing])
 
   const handleChange = (newValue: string | null) => {
@@ -110,12 +126,17 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
         )}
       </button>
 
-      {isEditing && !readOnly && (
-        <RoutePicker
-          value={value}
-          onChange={handleChange}
-          onClose={() => setIsEditing(false)}
-        />
+      {isEditing && !readOnly && createPortal(
+        <>
+          <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
+          <RoutePicker
+            value={value}
+            onChange={handleChange}
+            onClose={() => setIsEditing(false)}
+            positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
+          />
+        </>,
+        document.body
       )}
     </div>
   )

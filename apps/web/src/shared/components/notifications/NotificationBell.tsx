@@ -16,6 +16,7 @@ const TYPE_ICONS: Record<NotificationType, string> = {
   route_updated: '🗺️',
   item_mention: '@',
   item_comment: '💬',
+  announcement_new: '📢',
 }
 
 const TYPE_COLORS: Record<NotificationType, string> = {
@@ -24,6 +25,7 @@ const TYPE_COLORS: Record<NotificationType, string> = {
   route_updated: 'bg-purple-100 text-purple-700',
   item_mention: 'bg-amber-100 text-amber-700',
   item_comment: 'bg-gray-100 text-gray-700',
+  announcement_new: 'bg-indigo-100 text-indigo-700',
 }
 
 interface NotificationBellProps {
@@ -108,6 +110,9 @@ export function NotificationBell({ className }: NotificationBellProps) {
         if (data.board_id && data.item_id) {
           router.push(`/boards/${data.board_id}?item=${data.item_id}`)
         }
+        break
+      case 'announcement_new':
+        router.push('/news')
         break
     }
 
