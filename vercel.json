@@ -1,7 +1,7 @@
 {
   "buildCommand": "cd apps/web && npm run build:prod",
   "outputDirectory": "apps/web/.next",
-  "installCommand": "cd apps/web && npm install",
+  "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["fra1"],
   "functions": {
