@@ -4,14 +4,6 @@
   "installCommand": "npm install",
   "framework": "nextjs",
   "regions": ["fra1"],
-  "functions": {
-    "apps/web/app/api/routes/optimize/route.ts": {
-      "maxDuration": 30
-    },
-    "apps/web/app/api/health/route.ts": {
-      "maxDuration": 10
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
