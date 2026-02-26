@@ -22,9 +22,14 @@ import {
   Settings,
   Shield,
   UserMinus,
+  UserPlus,
+  Search,
   ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useQuery } from '@tanstack/react-query'
+import { usersService } from '@/services/users.service'
+import { useAddWorkspaceMember } from '@/features/workspaces/hooks'
 import type { WorkspaceRole } from '@/types/workspace'
 
 // Color options
@@ -50,7 +55,7 @@ export default function WorkspaceSettingsPage() {
   const router = useRouter()
   const params = useParams()
   const workspaceId = params.id as string
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const { data: inspectorId } = useInspectorId(user?.email)
 
   const [activeTab, setActiveTab] = useState<TabType>('general')
@@ -61,6 +66,8 @@ export default function WorkspaceSettingsPage() {
   const [hasChanges, setHasChanges] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [showAddMember, setShowAddMember] = useState(false)
+  const [memberSearchQuery, setMemberSearchQuery] = useState('')
 
   const { data: workspace, isLoading: workspaceLoading } = useWorkspaceWithMembers(workspaceId)
   const { data: members, isLoading: membersLoading } = useWorkspaceMembers(workspaceId)
@@ -68,6 +75,14 @@ export default function WorkspaceSettingsPage() {
   const deleteMutation = useDeleteWorkspace()
   const removeMemberMutation = useRemoveWorkspaceMember(workspaceId)
   const updateRoleMutation = useUpdateWorkspaceMemberRole(workspaceId)
+  const addMemberMutation = useAddWorkspaceMember(workspaceId, user?.id || '')
+
+  // Fetch all users for adding members
+  const { data: allUsers = [], isLoading: loadingUsers } = useQuery({
+    queryKey: ['users', 'all'],
+    queryFn: () => usersService.getUsers(),
+    enabled: showAddMember,
+  })
 
   // Initialize form values when workspace loads
   useState(() => {
@@ -103,6 +118,24 @@ export default function WorkspaceSettingsPage() {
     await updateRoleMutation.mutateAsync({ userId, role })
   }
 
+  const handleAddMember = async (userId: string) => {
+    try {
+      await addMemberMutation.mutateAsync({ userId, role: 'member' })
+      setMemberSearchQuery('')
+      setShowAddMember(false)
+    } catch (error) {
+      console.error('Failed to add member:', error)
+    }
+  }
+
+  // Filter users not already in workspace
+  const memberUserIds = new Set(members?.map(m => m.user_id) || [])
+  const availableUsers = allUsers.filter(u =>
+    !memberUserIds.has(u.id) &&
+    (u.full_name?.toLowerCase().includes(memberSearchQuery.toLowerCase()) ||
+     u.email?.toLowerCase().includes(memberSearchQuery.toLowerCase()))
+  )
+
   if (workspaceLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -131,6 +164,7 @@ export default function WorkspaceSettingsPage() {
   }
 
   const isOwner = workspace.owner_id === inspectorId
+  const canManage = isOwner || isAdmin
 
   return (
     <div className="min-h-screen bg-bg-secondary">
@@ -314,9 +348,95 @@ export default function WorkspaceSettingsPage() {
         {/* Members Tab */}
         {activeTab === 'members' && (
           <div className="bg-bg-primary rounded-lg border border-border-light p-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">
-              Workspace Members ({members?.length || 0})
-            </h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-text-primary">
+                Workspace Members ({members?.length || 0})
+              </h3>
+              {canManage && !showAddMember && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowAddMember(true)}
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Add Member
+                </Button>
+              )}
+            </div>
+
+            {/* Add Member Section */}
+            {showAddMember && canManage && (
+              <div className="mb-6 p-4 border border-border-default rounded-lg bg-bg-secondary">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+                    <input
+                      type="text"
+                      value={memberSearchQuery}
+                      onChange={(e) => setMemberSearchQuery(e.target.value)}
+                      placeholder="Search by name or email..."
+                      autoFocus
+                      className={cn(
+                        'w-full pl-9 pr-4 py-2 rounded-md',
+                        'border border-border-default',
+                        'focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary',
+                        'text-text-primary placeholder-text-tertiary text-sm'
+                      )}
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowAddMember(false)
+                      setMemberSearchQuery('')
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+
+                {memberSearchQuery && (
+                  <div className="border border-border-light rounded-md max-h-48 overflow-y-auto bg-bg-primary">
+                    {loadingUsers ? (
+                      <div className="flex items-center justify-center py-4">
+                        <div className="w-5 h-5 border-2 border-monday-primary border-t-transparent rounded-full animate-spin" />
+                      </div>
+                    ) : availableUsers.length === 0 ? (
+                      <div className="px-4 py-3 text-sm text-text-secondary text-center">
+                        No users found
+                      </div>
+                    ) : (
+                      availableUsers.slice(0, 5).map((u) => (
+                        <button
+                          key={u.id}
+                          onClick={() => handleAddMember(u.id)}
+                          disabled={addMemberMutation.isPending}
+                          className={cn(
+                            'w-full flex items-center gap-3 px-4 py-2',
+                            'hover:bg-bg-hover transition-colors text-left',
+                            'border-b border-border-light last:border-b-0'
+                          )}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-monday-primary flex items-center justify-center text-white text-xs font-semibold">
+                            {u.full_name?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-text-primary truncate">
+                              {u.full_name || 'Unknown'}
+                            </div>
+                            <div className="text-xs text-text-secondary truncate">
+                              {u.email}
+                            </div>
+                          </div>
+                          <UserPlus className="w-4 h-4 text-text-tertiary" />
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {membersLoading ? (
               <div className="py-8 text-center text-text-secondary">

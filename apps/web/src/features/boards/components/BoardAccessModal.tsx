@@ -8,6 +8,7 @@ import { useBoardMembers, useAddBoardMember, useUpdateBoardMemberRole, useRemove
 import { useAuth } from '@/contexts/AuthContext'
 import type { BoardMember } from '@/types/board'
 import { usersService, type User } from '@/services/users.service'
+import { workspaceService } from '@/features/workspaces/services/workspace.service'
 import { useQuery } from '@tanstack/react-query'
 
 interface BoardAccessModalProps {
@@ -16,6 +17,7 @@ interface BoardAccessModalProps {
   boardId: string
   boardName: string
   ownerId: string
+  workspaceId?: string
 }
 
 type MemberRole = 'owner' | 'editor' | 'viewer'
@@ -47,6 +49,7 @@ export function BoardAccessModal({
   boardId,
   boardName,
   ownerId,
+  workspaceId,
 }: BoardAccessModalProps) {
   const { user, isAdmin } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
@@ -63,6 +66,13 @@ export function BoardAccessModal({
     queryKey: ['users', 'all'],
     queryFn: () => usersService.getUsers(),
     enabled: showAddUser,
+  })
+
+  // Fetch workspace members to check if user is already a member
+  const { data: workspaceMembers = [] } = useQuery({
+    queryKey: ['workspaces', workspaceId, 'members'],
+    queryFn: () => workspaceService.getWorkspaceMembers(workspaceId!),
+    enabled: !!workspaceId && showAddUser,
   })
 
   // Mutations
@@ -90,6 +100,19 @@ export function BoardAccessModal({
         role: selectedRole,
         addedBy: user.id,
       })
+
+      // Auto-add to workspace if the board belongs to one
+      if (workspaceId) {
+        const isAlreadyWorkspaceMember = workspaceMembers.some(m => m.user_id === userId)
+        if (!isAlreadyWorkspaceMember) {
+          try {
+            await workspaceService.addWorkspaceMember(workspaceId, userId, 'member', user.id)
+          } catch {
+            // Ignore — user might already be a member via another path
+          }
+        }
+      }
+
       setSearchQuery('')
       setShowAddUser(false)
     } catch (error) {

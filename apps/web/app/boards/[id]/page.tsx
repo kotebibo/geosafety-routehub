@@ -366,6 +366,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           boardId={params.id}
           boardName={board.name}
           ownerId={board.owner_id}
+          workspaceId={board.workspace_id}
         />
       )}
 

@@ -225,6 +225,7 @@ export default function BoardsPage() {
           boardId={accessModalBoard.id}
           boardName={accessModalBoard.name}
           ownerId={accessModalBoard.owner_id}
+          workspaceId={accessModalBoard.workspace_id}
         />
       )}
     </div>
