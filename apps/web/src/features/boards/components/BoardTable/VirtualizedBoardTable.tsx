@@ -228,6 +228,11 @@ export function VirtualizedBoardTable({
     onCopy: handleCopy,
   })
 
+  // Clear focused cell when sort changes to prevent scroll jump
+  useEffect(() => {
+    setFocusedCell(null)
+  }, [sortConfig])
+
   // Get column width
   const getColumnWidth = useCallback((col: BoardColumn) => {
     return columnWidths[col.id] ?? col.width ?? 150
@@ -584,7 +589,7 @@ export function VirtualizedBoardTable({
       return (
         <div
           key={virtualRow.id}
-          style={{ ...style, zIndex: 25 }}
+          style={{ ...style, zIndex: isMenuOpen ? 50 : 2 }}
           className={cn(
             "group",
             isGroupDragOver && "ring-2 ring-[#0073ea] ring-inset rounded"

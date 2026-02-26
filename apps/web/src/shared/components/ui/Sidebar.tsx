@@ -636,6 +636,8 @@ export function Sidebar({ className }: SidebarProps) {
         )}
       </div>
 
+      {/* Scrollable content area */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto scrollbar-thin">
       {/* Main Navigation - Top Section */}
       <div className="flex-shrink-0">
         {/* Primary Navigation */}
@@ -684,8 +686,8 @@ export function Sidebar({ className }: SidebarProps) {
         </nav>
       </div>
 
-      {/* Boards Section - Takes remaining space with scroll */}
-      <div className="flex-1 flex flex-col min-h-0">
+      {/* Boards Section */}
+      <div className="flex flex-col min-h-0">
         {!collapsed ? (
           <div className="flex flex-col h-full px-2">
             {/* Workspace Dropdown Selector */}
@@ -938,6 +940,7 @@ export function Sidebar({ className }: SidebarProps) {
           </div>
         )}
       </div>
+      </div>{/* End scrollable content area */}
 
       {/* Collapse Button */}
       <div className="flex-shrink-0 border-t border-border-light p-2">
