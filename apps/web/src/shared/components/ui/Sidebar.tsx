@@ -687,7 +687,7 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
 
       {/* Boards Section */}
-      <div className="flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col min-h-0">
         {!collapsed ? (
           <div className="flex flex-col h-full px-2">
             {/* Workspace Dropdown Selector */}
@@ -749,7 +749,9 @@ export function Sidebar({ className }: SidebarProps) {
                             </div>
                             <span className="flex-1 truncate text-left">{ws.name}</span>
                             <span className="text-xs text-text-tertiary flex-shrink-0">{boardCount}</span>
-                            <button
+                            <span
+                              role="button"
+                              tabIndex={0}
                               className="p-0.5 hover:bg-gray-200 rounded transition-opacity flex-shrink-0"
                               onClick={(e) => {
                                 e.stopPropagation()
@@ -758,7 +760,7 @@ export function Sidebar({ className }: SidebarProps) {
                               }}
                             >
                               <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
-                            </button>
+                            </span>
                           </button>
                         )
                       })}
@@ -804,7 +806,7 @@ export function Sidebar({ className }: SidebarProps) {
                 </div>
 
                 {/* Flat Board List for Selected Workspace */}
-                <div className="flex-1 overflow-y-auto scrollbar-thin pl-2 ml-1 border-l border-border-light">
+                <div className="pl-2 ml-1 border-l border-border-light">
                   {(() => {
                     const activeBoards = selectedWorkspaceBoards.filter((b: any) => !b.settings?.is_archived)
                     const archivedBoards = selectedWorkspaceBoards.filter((b: any) => b.settings?.is_archived)
