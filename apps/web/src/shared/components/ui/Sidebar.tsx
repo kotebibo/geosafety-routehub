@@ -58,7 +58,7 @@ interface NavItem {
   label: string
   labelEn: string
   icon: React.ComponentType<{ className?: string }>
-  roles: string[]
+  permission: string
 }
 
 // Board color mapping
@@ -123,15 +123,12 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const queryClient = useQueryClient()
-  const { user, userRole, loading: authLoading } = useAuth()
+  const { user, userRole, loading: authLoading, hasPermission } = useAuth()
   const { data: inspectorId } = useInspectorId(user?.email)
 
   // Use auth user ID for board queries - RLS policies filter by auth.uid()
   // This ensures boards show up even if user doesn't have an inspector record
   const userId = user?.id || ''
-
-  // Get the user's role name for filtering nav items
-  const currentUserRole = userRole?.role || 'inspector'
 
   const { unreadCount: unreadNews } = useAnnouncements()
 
@@ -330,7 +327,7 @@ export function Sidebar({ className }: SidebarProps) {
 
     const rect = (e.target as HTMLElement).getBoundingClientRect()
     const isOwner = ownerId === user?.id
-    const isAdmin = currentUserRole === 'admin'
+    const isAdmin = userRole?.role === 'admin'
     setWorkspaceMenuState({
       workspaceId,
       workspaceName,
@@ -503,98 +500,98 @@ export function Sidebar({ className }: SidebarProps) {
       label: 'მთავარი',
       labelEn: 'Home',
       icon: Home,
-      roles: ['admin', 'dispatcher', 'inspector'],
+      permission: 'pages:dashboard',
     },
     {
       href: '/news',
       label: 'სიახლეები',
       labelEn: 'News',
       icon: Megaphone,
-      roles: ['admin', 'dispatcher', 'inspector'],
+      permission: 'pages:news',
     },
     {
       href: '/analytics',
       label: 'ანალიტიკა',
       labelEn: 'Analytics',
       icon: BarChart3,
-      roles: ['admin', 'dispatcher'],
+      permission: 'pages:analytics',
     },
     {
       href: '/tracking',
       label: 'ტრეკინგი',
       labelEn: 'Live Tracking',
       icon: Navigation,
-      roles: ['admin', 'dispatcher'],
+      permission: 'pages:tracking',
     },
     {
       href: '/inspector/checkin',
       label: 'ჩეკ-ინი',
       labelEn: 'Check-in',
       icon: MapPinned,
-      roles: ['admin', 'dispatcher', 'inspector'],
+      permission: 'pages:checkin',
     },
     {
       href: '/admin/checkins',
       label: 'ჩეკ-ინები',
       labelEn: 'Check-ins',
       icon: MapPinned,
-      roles: ['admin', 'dispatcher'],
+      permission: 'pages:checkins_admin',
     },
     {
       href: '/companies',
       label: 'კომპანიები',
       labelEn: 'Companies',
       icon: Building2,
-      roles: ['admin', 'dispatcher'],
+      permission: 'pages:companies',
     },
     {
       href: '/inspectors',
       label: 'ინსპექტორები',
       labelEn: 'Inspectors',
       icon: Users,
-      roles: ['admin', 'dispatcher'],
+      permission: 'pages:inspectors',
     },
     {
       href: '/routes/manage',
       label: 'მარშრუტები',
       labelEn: 'Routes',
       icon: Route,
-      roles: ['admin', 'dispatcher', 'inspector'],
+      permission: 'pages:routes',
     },
     {
       href: '/routes/builder',
       label: 'მარშრუტის შექმნა',
       labelEn: 'Route Builder',
       icon: MapIcon,
-      roles: ['admin', 'dispatcher'],
+      permission: 'pages:route_builder',
     },
     {
       href: '/admin/assignments',
       label: 'დანიშვნები',
       labelEn: 'Assignments',
       icon: UserCog,
-      roles: ['admin', 'dispatcher'],
+      permission: 'pages:assignments',
     },
     {
       href: '/admin/users',
       label: 'მომხმარებლები',
       labelEn: 'User Management',
       icon: Shield,
-      roles: ['admin'],
+      permission: 'pages:user_management',
     },
     {
       href: '/admin/roles',
       label: 'როლები',
       labelEn: 'Roles & Permissions',
       icon: KeyRound,
-      roles: ['admin'],
+      permission: 'pages:roles',
     },
     {
       href: '/settings',
       label: 'პარამეტრები',
       labelEn: 'Settings',
       icon: Settings,
-      roles: ['admin', 'dispatcher', 'inspector'],
+      permission: 'pages:settings',
     },
   ]
 
@@ -644,7 +641,7 @@ export function Sidebar({ className }: SidebarProps) {
         <nav className="py-4 px-2">
           <ul className="space-y-1">
             {navItems
-              .filter((item) => item.roles.includes(currentUserRole))
+              .filter((item) => hasPermission(item.permission))
               .map((item) => {
               const Icon = item.icon
               const isActive = pathname === item.href || pathname.startsWith(item.href + '/')

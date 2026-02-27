@@ -99,33 +99,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Check if it's a custom role and fetch permissions
-      let permissions: string[] = [];
-
+      // Fetch permissions from role_permissions table
       const role = roleData?.role as string;
       const inspectorId = roleData?.inspector_id as string | undefined;
 
-      // For built-in roles, assign default permissions
+      // Admin has wildcard - no need to fetch from DB
+      let permissions: string[] = [];
       if (role === 'admin') {
-        permissions = ['*']; // Admin has all permissions
-      } else if (role === 'dispatcher') {
-        permissions = [
-          'users:read',
-          'routes:read', 'routes:create', 'routes:update',
-          'companies:read', 'companies:create', 'companies:update',
-          'inspectors:read',
-          'inspections:read', 'inspections:create', 'inspections:update',
-          'boards:read', 'boards:create', 'boards:update',
-        ];
-      } else if (role === 'inspector') {
-        permissions = [
-          'routes:read',
-          'companies:read',
-          'inspections:read', 'inspections:create', 'inspections:update:own',
-          'boards:read',
-        ];
+        permissions = ['*'];
       } else {
-        // Custom role - fetch permissions from role_permissions table
+        // For all roles (built-in and custom), fetch from DB
+        // This allows page permissions and any new permissions to work dynamically
         const { data: permData } = await (supabase as any)
           .from('role_permissions')
           .select('permission')

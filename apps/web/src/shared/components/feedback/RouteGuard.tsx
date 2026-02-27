@@ -18,20 +18,29 @@ const ROUTE_CONFIGS: RouteConfig[] = [
   { path: '/auth/signup', requiresAuth: false },
   { path: '/auth/forgot-password', requiresAuth: false },
 
-  // Admin routes - require admin role
-  { path: '/admin', requiresAuth: true, allowedRoles: ['admin'] },
-  { path: '/admin/users', requiresAuth: true, allowedRoles: ['admin'] },
-  { path: '/admin/roles', requiresAuth: true, allowedRoles: ['admin'] },
-  { path: '/admin/service-types', requiresAuth: true, allowedRoles: ['admin'] },
+  // Admin-only setup routes (stay hardcoded, not configurable)
   { path: '/admin/setup-db', requiresAuth: true, allowedRoles: ['admin'] },
   { path: '/admin/setup-pdp', requiresAuth: true, allowedRoles: ['admin'] },
-  { path: '/admin/assignments', requiresAuth: true, allowedRoles: ['admin', 'dispatcher'] },
 
-  // Inspector routes
-  { path: '/inspector', requiresAuth: true, allowedRoles: ['admin', 'dispatcher', 'inspector'] },
+  // Permission-based routes
+  { path: '/admin/users', requiresAuth: true, requiredPermission: 'pages:user_management' },
+  { path: '/admin/roles', requiresAuth: true, requiredPermission: 'pages:roles' },
+  { path: '/admin/service-types', requiresAuth: true, requiredPermission: 'pages:service_types' },
+  { path: '/admin/assignments', requiresAuth: true, requiredPermission: 'pages:assignments' },
+  { path: '/admin/checkins', requiresAuth: true, requiredPermission: 'pages:checkins_admin' },
+  { path: '/analytics', requiresAuth: true, requiredPermission: 'pages:analytics' },
+  { path: '/tracking', requiresAuth: true, requiredPermission: 'pages:tracking' },
+  { path: '/companies', requiresAuth: true, requiredPermission: 'pages:companies' },
+  { path: '/inspectors', requiresAuth: true, requiredPermission: 'pages:inspectors' },
+  { path: '/routes/builder', requiresAuth: true, requiredPermission: 'pages:route_builder' },
+  { path: '/routes/manage', requiresAuth: true, requiredPermission: 'pages:routes' },
+  { path: '/inspector/checkin', requiresAuth: true, requiredPermission: 'pages:checkin' },
+  { path: '/inspector', requiresAuth: true, requiredPermission: 'pages:checkin' },
+  { path: '/news', requiresAuth: true, requiredPermission: 'pages:news' },
+  { path: '/settings', requiresAuth: true, requiredPermission: 'pages:settings' },
 
-  // General authenticated routes
-  { path: '/', requiresAuth: true },
+  // Fallback - dashboard
+  { path: '/', requiresAuth: true, requiredPermission: 'pages:dashboard' },
 ];
 
 function matchRoute(pathname: string): RouteConfig | null {
