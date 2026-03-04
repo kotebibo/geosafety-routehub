@@ -40,18 +40,17 @@ export const presenceService = {
   /**
    * Get all users currently on a board
    */
-  async getBoardPresence(
-    boardType: BoardType,
-    boardId?: string
-  ): Promise<BoardPresence[]> {
+  async getBoardPresence(boardType: BoardType, boardId?: string): Promise<BoardPresence[]> {
     let query = (getSupabase().from('board_presence') as any)
-      .select(`
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
           email
         )
-      `)
+      `
+      )
       .eq('board_type', boardType)
       .gte('last_seen', new Date(Date.now() - 5 * 60 * 1000).toISOString()) // Active in last 5 minutes
 
@@ -72,11 +71,7 @@ export const presenceService = {
   /**
    * Remove user presence (on logout/leave)
    */
-  async removePresence(
-    userId: string,
-    boardType: BoardType,
-    boardId?: string
-  ): Promise<void> {
+  async removePresence(userId: string, boardType: BoardType, boardId?: string): Promise<void> {
     let query = (getSupabase().from('board_presence') as any)
       .delete()
       .eq('user_id', userId)
@@ -95,8 +90,7 @@ export const presenceService = {
    * Clean up stale presence records (older than 5 minutes)
    */
   async cleanupStalePresence(): Promise<void> {
-    const { error } = await (getSupabase()
-      .from('board_presence') as any)
+    const { error } = await (getSupabase().from('board_presence') as any)
       .delete()
       .lt('last_seen', new Date(Date.now() - 5 * 60 * 1000).toISOString())
 
@@ -116,7 +110,6 @@ export const presenceService = {
       filter += `,board_id=eq.${boardId}`
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (getSupabase().channel(`presence:${boardType}:${boardId || 'all'}`) as any)
       .on(
         'postgres_changes',
@@ -169,11 +162,11 @@ export const presenceService = {
             editing_column_id: presence.editing_column_id,
           }))
       })
-      .on('presence', { event: 'join' }, ({ key, newPresences }: { key: string; newPresences: any[] }) => {
-        console.log('User joined:', key, newPresences)
+      .on('presence', { event: 'join' }, (_: { key: string; newPresences: any[] }) => {
+        // User joined board
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }: { key: string; leftPresences: any[] }) => {
-        console.log('User left:', key, leftPresences)
+      .on('presence', { event: 'leave' }, (_: { key: string; leftPresences: any[] }) => {
+        // User left board
       })
       .subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {

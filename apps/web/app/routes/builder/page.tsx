@@ -3,97 +3,100 @@
  * Visual route planning with interactive OpenStreetMap
  */
 
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase/client';
-import dynamic from 'next/dynamic';
-import SaveRouteModal from '@/features/routes/components/SaveRouteModal';
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase/client'
+import dynamic from 'next/dynamic'
+import { SaveRouteModal } from '@/features/routes/components/SaveRouteModal'
 
 // Import map dynamically (client-side only) - Using FIXED version
-const RouteMap = dynamic(() => import('@/features/locations/components/RouteMapFixed'), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <div className="animate-spin text-4xl mb-2">🗺️</div>
-        <p className="text-gray-600">რუკის ჩატვირთვა...</p>
+const RouteMap = dynamic(
+  () => import('@/features/locations/components/RouteMapFixed').then(mod => mod.RouteMapFixed),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="animate-spin text-4xl mb-2">🗺️</div>
+          <p className="text-gray-600">რუკის ჩატვირთვა...</p>
+        </div>
       </div>
-    </div>
-  ),
-});
+    ),
+  }
+)
 
 interface Company {
-  id: string;
-  name: string;
-  address: string;
-  lat: number;
-  lng: number;
-  type?: string;
-  priority?: string;
+  id: string
+  name: string
+  address: string
+  lat: number
+  lng: number
+  type?: string
+  priority?: string
 }
 
 interface RouteStop {
-  company: Company;
-  position: number;
-  distance?: number;
+  company: Company
+  position: number
+  distance?: number
 }
 
 interface OptimizedRouteData {
-  stops: RouteStop[];
-  geometry?: number[][]; // [lng, lat] from OSRM
+  stops: RouteStop[]
+  geometry?: number[][] // [lng, lat] from OSRM
 }
 
 export default function RouteBuilderPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [selectedCompanies, setSelectedCompanies] = useState<Company[]>([]);
-  const [optimizedRoute, setOptimizedRoute] = useState<RouteStop[]>([]);
-  const [routeGeometry, setRouteGeometry] = useState<number[][] | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [hoveredStop, setHoveredStop] = useState<string | null>(null);
-  const [showSaveModal, setShowSaveModal] = useState(false);
-  const [mapKey, setMapKey] = useState(0); // Force re-render key
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [selectedCompanies, setSelectedCompanies] = useState<Company[]>([])
+  const [optimizedRoute, setOptimizedRoute] = useState<RouteStop[]>([])
+  const [routeGeometry, setRouteGeometry] = useState<number[][] | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [hoveredStop, setHoveredStop] = useState<string | null>(null)
+  const [showSaveModal, setShowSaveModal] = useState(false)
+  const [mapKey, setMapKey] = useState(0) // Force re-render key
 
   useEffect(() => {
-    fetchCompanies();
-  }, []);
+    fetchCompanies()
+  }, [])
 
   async function fetchCompanies() {
     const { data } = await supabase
       .from('companies')
       .select('id, name, address, lat, lng, type, priority')
       .eq('status', 'active')
-      .order('name');
-    
-    if (data) setCompanies(data);
+      .order('name')
+
+    if (data) setCompanies(data)
   }
 
   function toggleCompany(company: Company) {
     setSelectedCompanies(prev => {
-      const exists = prev.find(c => c.id === company.id);
+      const exists = prev.find(c => c.id === company.id)
       if (exists) {
-        const newList = prev.filter(c => c.id !== company.id);
+        const newList = prev.filter(c => c.id !== company.id)
         // Also update optimized route if it exists
-        setOptimizedRoute(current => current.filter(stop => stop.company.id !== company.id));
+        setOptimizedRoute(current => current.filter(stop => stop.company.id !== company.id))
         // Force map re-render
-        setMapKey(k => k + 1);
-        return newList;
+        setMapKey(k => k + 1)
+        return newList
       } else {
         // Force map re-render
-        setMapKey(k => k + 1);
-        return [...prev, company];
+        setMapKey(k => k + 1)
+        return [...prev, company]
       }
-    });
+    })
   }
 
   async function optimizeRoute() {
     if (selectedCompanies.length < 2) {
-      alert('აირჩიეთ მინიმუმ 2 კომპანია');
-      return;
+      alert('აირჩიეთ მინიმუმ 2 კომპანია')
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     try {
       // TODO: Re-enable authentication before deployment
@@ -110,7 +113,7 @@ export default function RouteBuilderPage() {
         name: c.name,
         lat: c.lat,
         lng: c.lng,
-      }));
+      }))
 
       const response = await fetch('/api/routes/optimize', {
         method: 'POST',
@@ -123,49 +126,49 @@ export default function RouteBuilderPage() {
           locations,
           options: {
             algorithm: 'hybrid',
-            useRealRoads: true // Enable OSRM
-          }
-        })
-      });
+            useRealRoads: true, // Enable OSRM
+          },
+        }),
+      })
 
-      const result = await response.json();
-      
+      const result = await response.json()
+
       if (result.success) {
         const stops: RouteStop[] = result.route.stops.map((stop: any) => {
-          const company = selectedCompanies.find(c => c.id === stop.id)!;
+          const company = selectedCompanies.find(c => c.id === stop.id)!
           return {
             company,
             position: stop.position,
             distance: stop.distanceFromPrevious,
-          };
-        });
-        
-        setOptimizedRoute(stops);
-        
+          }
+        })
+
+        setOptimizedRoute(stops)
+
         // Store route geometry from OSRM for map
         if (result.route.metadata?.routeGeometry) {
-          setRouteGeometry(result.route.metadata.routeGeometry);
+          setRouteGeometry(result.route.metadata.routeGeometry)
         } else {
-          setRouteGeometry(null);
+          setRouteGeometry(null)
         }
       }
     } catch (error) {
-      console.error('Optimization error:', error);
-      alert('ოპტიმიზაცია ვერ მოხერხდა');
+      console.error('Optimization error:', error)
+      alert('ოპტიმიზაცია ვერ მოხერხდა')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
   async function handleSaveRoute(data: {
-    name: string;
-    date: string;
-    inspectorId?: string;
-    startTime: string;
+    name: string
+    date: string
+    inspectorId?: string
+    startTime: string
   }) {
     if (optimizedRoute.length === 0) {
-      alert('გთხოვთ ჯერ შექმენით მარშრუტი');
-      return;
+      alert('გთხოვთ ჯერ შექმენით მარშრუტი')
+      return
     }
 
     // TODO: Re-enable authentication before deployment
@@ -176,7 +179,7 @@ export default function RouteBuilderPage() {
     //   return;
     // }
 
-    const totalDistance = optimizedRoute.reduce((sum, stop) => sum + (stop.distance || 0), 0);
+    const totalDistance = optimizedRoute.reduce((sum, stop) => sum + (stop.distance || 0), 0)
 
     const response = await fetch('/api/routes/save', {
       method: 'POST',
@@ -199,30 +202,34 @@ export default function RouteBuilderPage() {
           distanceFromPrevious: stop.distance,
         })),
       }),
-    });
+    })
 
-    const result = await response.json();
+    const result = await response.json()
 
     if (result.success) {
-      alert(`✅ მარშრუტი შენახულია!\nID: ${result.route.id}`);
+      alert(`✅ მარშრუტი შენახულია!\nID: ${result.route.id}`)
       // Optionally clear the route
       // setSelectedCompanies([]);
       // setOptimizedRoute([]);
       // setRouteGeometry(null);
     } else {
-      throw new Error(result.error || 'შენახვა ვერ მოხერხდა');
+      throw new Error(result.error || 'შენახვა ვერ მოხერხდა')
     }
   }
 
-  const filteredCompanies = companies.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCompanies = companies.filter(
+    c =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.address.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
-  const displayedRoute: RouteStop[] = optimizedRoute.length > 0 ? optimizedRoute : selectedCompanies.map((c, i) => ({
-    company: c,
-    position: i + 1,
-  }));
+  const displayedRoute: RouteStop[] =
+    optimizedRoute.length > 0
+      ? optimizedRoute
+      : selectedCompanies.map((c, i) => ({
+          company: c,
+          position: i + 1,
+        }))
 
   return (
     <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-50">
@@ -255,7 +262,7 @@ export default function RouteBuilderPage() {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               placeholder="🔍 ძიება..."
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -263,7 +270,7 @@ export default function RouteBuilderPage() {
 
           <div className="flex-1 overflow-y-auto">
             {filteredCompanies.map(company => {
-              const isSelected = selectedCompanies.find(c => c.id === company.id);
+              const isSelected = selectedCompanies.find(c => c.id === company.id)
               return (
                 <div
                   key={company.id}
@@ -271,9 +278,7 @@ export default function RouteBuilderPage() {
                   onMouseEnter={() => setHoveredStop(company.id)}
                   onMouseLeave={() => setHoveredStop(null)}
                   className={`p-4 border-b cursor-pointer transition ${
-                    isSelected 
-                      ? 'bg-blue-50 border-l-4 border-l-blue-600' 
-                      : 'hover:bg-gray-50'
+                    isSelected ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'hover:bg-gray-50'
                   } ${hoveredStop === company.id ? 'bg-gray-100' : ''}`}
                 >
                   <div className="flex items-start justify-between">
@@ -288,7 +293,7 @@ export default function RouteBuilderPage() {
                     )}
                   </div>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
@@ -310,9 +315,7 @@ export default function RouteBuilderPage() {
           <div className="p-4 border-b">
             <h2 className="text-lg font-bold text-gray-900">მარშრუტი</h2>
             {optimizedRoute.length > 0 && (
-              <div className="mt-2 text-sm text-green-600 font-medium">
-                ✅ ოპტიმიზირებული
-              </div>
+              <div className="mt-2 text-sm text-green-600 font-medium">✅ ოპტიმიზირებული</div>
             )}
           </div>
 
@@ -331,8 +334,8 @@ export default function RouteBuilderPage() {
                     onMouseEnter={() => setHoveredStop(stop.company.id)}
                     onMouseLeave={() => setHoveredStop(null)}
                     className={`p-4 rounded-lg border-2 transition ${
-                      hoveredStop === stop.company.id 
-                        ? 'border-blue-500 bg-blue-50' 
+                      hoveredStop === stop.company.id
+                        ? 'border-blue-500 bg-blue-50'
                         : 'border-gray-200 bg-white'
                     }`}
                   >
@@ -344,9 +347,7 @@ export default function RouteBuilderPage() {
                         <div className="font-semibold text-sm text-gray-900">
                           {stop.company.name}
                         </div>
-                        <div className="text-xs text-gray-600 mt-1">
-                          📍 {stop.company.address}
-                        </div>
+                        <div className="text-xs text-gray-600 mt-1">📍 {stop.company.address}</div>
                         {stop.distance && index > 0 && (
                           <div className="text-xs text-blue-600 mt-2">
                             🚗 ~{stop.distance.toFixed(1)} კმ წინა პუნქტიდან
@@ -362,7 +363,11 @@ export default function RouteBuilderPage() {
                     <div className="text-sm font-semibold text-green-800 mb-2">📊 სტატისტიკა</div>
                     <div className="text-xs text-green-700 space-y-1">
                       <div>• სულ ობიექტი: {optimizedRoute.length}</div>
-                      <div>• სრული მანძილი: ~{optimizedRoute.reduce((sum, s) => sum + (s.distance || 0), 0).toFixed(1)} კმ</div>
+                      <div>
+                        • სრული მანძილი: ~
+                        {optimizedRoute.reduce((sum, s) => sum + (s.distance || 0), 0).toFixed(1)}{' '}
+                        კმ
+                      </div>
                       <div>• დაზოგილი: ~15-25%</div>
                     </div>
                   </div>
@@ -373,7 +378,7 @@ export default function RouteBuilderPage() {
 
           {selectedCompanies.length > 0 && (
             <div className="p-4 border-t space-y-2">
-              <button 
+              <button
                 onClick={() => setShowSaveModal(true)}
                 disabled={optimizedRoute.length === 0}
                 className="w-full py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -382,9 +387,9 @@ export default function RouteBuilderPage() {
               </button>
               <button
                 onClick={() => {
-                  setSelectedCompanies([]);
-                  setOptimizedRoute([]);
-                  setRouteGeometry(null);
+                  setSelectedCompanies([])
+                  setOptimizedRoute([])
+                  setRouteGeometry(null)
                 }}
                 className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300"
               >
@@ -403,5 +408,5 @@ export default function RouteBuilderPage() {
         defaultName={`მარშრუტი ${new Date().toLocaleDateString('ka-GE')}`}
       />
     </div>
-  );
+  )
 }

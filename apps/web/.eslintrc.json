@@ -1,0 +1,10 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "no-console": ["warn", { "allow": ["error", "warn"] }],
+    "prefer-const": "warn",
+    "no-var": "error",
+    "react/no-unescaped-entities": "off"
+  },
+  "ignorePatterns": ["scripts/**"]
+}

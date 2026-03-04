@@ -3,51 +3,51 @@
  * Shows all company locations with detailed popups
  */
 
-'use client';
+'use client'
 
-import { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { useEffect, useRef, useState } from 'react'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 // Fix for default marker icons in Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as any)._getIconUrl
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
+})
 
 interface CompanyService {
-  service_type_name: string;
-  service_type_name_ka: string;
-  assigned_inspector_name?: string;
-  priority: string;
-  status: string;
+  service_type_name: string
+  service_type_name_ka: string
+  assigned_inspector_name?: string
+  priority: string
+  status: string
 }
 
 interface Company {
-  id: string;
-  name: string;
-  address: string;
-  lat: number;
-  lng: number;
-  type: string;
-  priority: string;
-  status: string;
-  contact_name?: string;
-  contact_phone?: string;
-  services: CompanyService[];
+  id: string
+  name: string
+  address: string
+  lat: number
+  lng: number
+  type: string
+  priority: string
+  status: string
+  contact_name?: string
+  contact_phone?: string
+  services: CompanyService[]
 }
 
 interface LocationsMapProps {
-  companies: Company[];
+  companies: Company[]
 }
 
-export default function LocationsMap({ companies }: LocationsMapProps) {
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const mapInstance = useRef<L.Map | null>(null);
-  const markersRef = useRef<Map<string, L.Marker>>(new Map());
-  const [isMapReady, setIsMapReady] = useState(false);
+export function LocationsMap({ companies }: LocationsMapProps) {
+  const mapContainer = useRef<HTMLDivElement>(null)
+  const mapInstance = useRef<L.Map | null>(null)
+  const markersRef = useRef<Map<string, L.Marker>>(new Map())
+  const [isMapReady, setIsMapReady] = useState(false)
 
   // Initialize map ONCE
   useEffect(() => {
@@ -55,55 +55,57 @@ export default function LocationsMap({ companies }: LocationsMapProps) {
       const map = L.map(mapContainer.current, {
         center: [41.7151, 44.8271], // Tbilisi center
         zoom: 12,
-      });
+      })
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors',
         maxZoom: 19,
-      }).addTo(map);
+      }).addTo(map)
 
-      mapInstance.current = map;
-      setIsMapReady(true);
+      mapInstance.current = map
+      setIsMapReady(true)
     }
 
     return () => {
       if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-        setIsMapReady(false);
+        mapInstance.current.remove()
+        mapInstance.current = null
+        setIsMapReady(false)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   // Update markers when companies change
   useEffect(() => {
     if (!isMapReady || !mapInstance.current) {
-      return;
+      return
     }
 
-    const map = mapInstance.current;
+    const map = mapInstance.current
 
     // Clear all existing markers
     markersRef.current.forEach(marker => {
-      map.removeLayer(marker);
-    });
-    markersRef.current.clear();
+      map.removeLayer(marker)
+    })
+    markersRef.current.clear()
 
-    const bounds: L.LatLngBoundsExpression = [];
+    const bounds: L.LatLngBoundsExpression = []
 
     // Add marker for each company
-    companies.forEach((company) => {
+    companies.forEach(company => {
       // Validate coordinates
       if (!company.lat || !company.lng || (company.lat === 0 && company.lng === 0)) {
-        return;
+        return
       }
 
       try {
         // Choose marker color based on priority
-        let markerColor = '#3B82F6'; // default blue
-        if (company.priority === 'high') markerColor = '#EF4444'; // red
-        else if (company.priority === 'medium') markerColor = '#F59E0B'; // orange
-        else if (company.priority === 'low') markerColor = '#10B981'; // green
+        let markerColor = '#3B82F6' // default blue
+        if (company.priority === 'high')
+          markerColor = '#EF4444' // red
+        else if (company.priority === 'medium')
+          markerColor = '#F59E0B' // orange
+        else if (company.priority === 'low') markerColor = '#10B981' // green
 
         // Create custom marker
         const icon = L.divIcon({
@@ -131,10 +133,12 @@ export default function LocationsMap({ companies }: LocationsMapProps) {
           `,
           iconSize: [32, 32],
           iconAnchor: [16, 32],
-        });
+        })
 
         // Build services HTML
-        const servicesHtml = company.services.map(service => `
+        const servicesHtml = company.services
+          .map(
+            service => `
           <div style="
             padding: 6px 10px;
             background: #F3F4F6;
@@ -145,11 +149,15 @@ export default function LocationsMap({ companies }: LocationsMapProps) {
             <div style="font-weight: 600; color: #1F2937;">
               🔧 ${service.service_type_name_ka}
             </div>
-            ${service.assigned_inspector_name ? `
+            ${
+              service.assigned_inspector_name
+                ? `
               <div style="color: #6B7280; margin-top: 3px;">
                 👤 ${service.assigned_inspector_name}
               </div>
-            ` : ''}
+            `
+                : ''
+            }
             <div style="
               display: inline-block;
               margin-top: 4px;
@@ -163,7 +171,9 @@ export default function LocationsMap({ companies }: LocationsMapProps) {
               ${service.priority.toUpperCase()}
             </div>
           </div>
-        `).join('');
+        `
+          )
+          .join('')
 
         // Priority badge
         const priorityBadge = `
@@ -179,10 +189,12 @@ export default function LocationsMap({ companies }: LocationsMapProps) {
           ">
             ${company.priority === 'high' ? '🔴 მაღალი' : company.priority === 'medium' ? '🟡 საშუალო' : '🟢 დაბალი'}
           </div>
-        `;
+        `
 
         // Contact info
-        const contactHtml = (company.contact_name || company.contact_phone) ? `
+        const contactHtml =
+          company.contact_name || company.contact_phone
+            ? `
           <div style="
             margin-top: 10px;
             padding-top: 10px;
@@ -193,11 +205,13 @@ export default function LocationsMap({ companies }: LocationsMapProps) {
             ${company.contact_name ? `<div>👤 ${company.contact_name}</div>` : ''}
             ${company.contact_phone ? `<div>📞 ${company.contact_phone}</div>` : ''}
           </div>
-        ` : '';
+        `
+            : ''
 
         const marker = L.marker([company.lat, company.lng], { icon })
           .addTo(map)
-          .bindPopup(`
+          .bindPopup(
+            `
             <div style="padding: 12px; min-width: 280px;">
               <div style="
                 font-weight: bold;
@@ -236,42 +250,40 @@ export default function LocationsMap({ companies }: LocationsMapProps) {
               
               ${contactHtml}
             </div>
-          `, {
-            maxWidth: 350,
-            className: 'custom-popup'
-          });
+          `,
+            {
+              maxWidth: 350,
+              className: 'custom-popup',
+            }
+          )
 
-        markersRef.current.set(company.id, marker);
-        bounds.push([company.lat, company.lng]);
+        markersRef.current.set(company.id, marker)
+        bounds.push([company.lat, company.lng])
       } catch (error) {
-        console.error(`Error creating marker for ${company.name}:`, error);
+        console.error(`Error creating marker for ${company.name}:`, error)
       }
-    });
+    })
 
     // Fit map to show all markers
     if (bounds.length > 0) {
       try {
-        map.fitBounds(bounds, { 
+        map.fitBounds(bounds, {
           padding: [50, 50],
-          maxZoom: 15
-        });
+          maxZoom: 15,
+        })
       } catch (error) {
-        console.error('Error fitting bounds:', error);
+        console.error('Error fitting bounds:', error)
       }
     } else {
       // No markers, center on Tbilisi
-      map.setView([41.7151, 44.8271], 12);
+      map.setView([41.7151, 44.8271], 12)
     }
-
-  }, [companies, isMapReady]);
+  }, [companies, isMapReady])
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <div 
-        ref={mapContainer} 
-        style={{ width: '100%', height: '100%' }}
-      />
-      
+      <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
+
       <style>{`
         .custom-popup .leaflet-popup-content-wrapper {
           border-radius: 12px;
@@ -282,5 +294,5 @@ export default function LocationsMap({ companies }: LocationsMapProps) {
         }
       `}</style>
     </div>
-  );
+  )
 }

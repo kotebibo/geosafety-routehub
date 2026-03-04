@@ -1,165 +1,160 @@
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { Search, Calendar, AlertCircle, User } from 'lucide-react';
+import { useState, useEffect } from 'react'
+import { Search, Calendar, AlertCircle, User } from 'lucide-react'
 
 interface Inspector {
-  id: string;
-  full_name: string;
-  email: string;
-  specialty: string;
-  status: string;
+  id: string
+  full_name: string
+  email: string
+  specialty: string
+  status: string
 }
 
 interface CompanyService {
-  id: string;
-  company_id: string;
-  service_type_id: string;
-  next_inspection_date: string | null;
-  last_inspection_date: string | null;
-  priority: string;
-  status: string;
-  assigned_inspector_id: string | null;
+  id: string
+  company_id: string
+  service_type_id: string
+  next_inspection_date: string | null
+  last_inspection_date: string | null
+  priority: string
+  status: string
+  assigned_inspector_id: string | null
   company: {
-    id: string;
-    name: string;
-    address: string;
-    lat: number;
-    lng: number;
-  };
+    id: string
+    name: string
+    address: string
+    lat: number
+    lng: number
+  }
   service_type: {
-    name: string;
-    name_ka: string;
-  };
+    name: string
+    name_ka: string
+  }
 }
 
 interface InspectorBasedCompanySelectorProps {
-  selectedInspector: string | null;
-  onInspectorChange: (inspectorId: string | null) => void;
-  selectedServices: CompanyService[];
-  onServiceToggle: (service: CompanyService) => void;
+  selectedInspector: string | null
+  onInspectorChange: (inspectorId: string | null) => void
+  selectedServices: CompanyService[]
+  onServiceToggle: (service: CompanyService) => void
 }
 
-export default function InspectorBasedCompanySelector({
+export function InspectorBasedCompanySelector({
   selectedInspector,
   onInspectorChange,
   selectedServices,
   onServiceToggle,
 }: InspectorBasedCompanySelectorProps) {
-  const [inspectors, setInspectors] = useState<Inspector[]>([]);
-  const [companyServices, setCompanyServices] = useState<CompanyService[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('all');
-  const [overdueOnly, setOverdueOnly] = useState(false);
+  const [inspectors, setInspectors] = useState<Inspector[]>([])
+  const [companyServices, setCompanyServices] = useState<CompanyService[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [serviceTypeFilter, setServiceTypeFilter] = useState<string>('all')
+  const [overdueOnly, setOverdueOnly] = useState(false)
 
   // Load all active inspectors on mount
   useEffect(() => {
-    loadInspectors();
-  }, []);
+    loadInspectors()
+  }, [])
 
   // Load companies when inspector changes
   useEffect(() => {
     if (selectedInspector) {
-      loadInspectorCompanies();
+      loadInspectorCompanies()
     } else {
-      setCompanyServices([]);
+      setCompanyServices([])
     }
-  }, [selectedInspector]);
+  }, [selectedInspector])
 
   const loadInspectors = async () => {
     try {
-      const response = await fetch('/api/inspectors?status=active');
-      if (!response.ok) throw new Error('Failed to load inspectors');
-      const data = await response.json();
-      console.log('👥 Inspectors loaded:', data.length);
-      setInspectors(data);
+      const response = await fetch('/api/inspectors?status=active')
+      if (!response.ok) throw new Error('Failed to load inspectors')
+      const data = await response.json()
+      setInspectors(data)
     } catch (error) {
-      console.error('Error loading inspectors:', error);
+      console.error('Error loading inspectors:', error)
     }
-  };
+  }
 
   const loadInspectorCompanies = async () => {
-    if (!selectedInspector) return;
+    if (!selectedInspector) return
 
-    setLoading(true);
+    setLoading(true)
     try {
       const response = await fetch(
         `/api/company-services?inspector_id=${selectedInspector}&status=active`
-      );
-      if (!response.ok) throw new Error('Failed to load companies');
-      const data = await response.json();
-      console.log('🏢 Companies loaded for inspector:', data.length);
-      setCompanyServices(data);
+      )
+      if (!response.ok) throw new Error('Failed to load companies')
+      const data = await response.json()
+      setCompanyServices(data)
     } catch (error) {
-      console.error('Error loading companies:', error);
+      console.error('Error loading companies:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   // Calculate days until inspection
   const getDaysUntilInspection = (nextDate: string | null) => {
-    if (!nextDate) return null;
-    const today = new Date();
-    const next = new Date(nextDate);
-    const diff = Math.floor((next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return diff;
-  };
+    if (!nextDate) return null
+    const today = new Date()
+    const next = new Date(nextDate)
+    const diff = Math.floor((next.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    return diff
+  }
 
   const getUrgencyColor = (days: number | null) => {
-    if (days === null) return 'text-gray-500';
-    if (days < 0) return 'text-red-600';
-    if (days <= 7) return 'text-yellow-600';
-    return 'text-green-600';
-  };
+    if (days === null) return 'text-gray-500'
+    if (days < 0) return 'text-red-600'
+    if (days <= 7) return 'text-yellow-600'
+    return 'text-green-600'
+  }
 
   const getUrgencyBg = (days: number | null) => {
-    if (days === null) return 'bg-gray-50';
-    if (days < 0) return 'bg-red-50 border-red-200';
-    if (days <= 7) return 'bg-yellow-50 border-yellow-200';
-    return 'bg-white';
-  };
+    if (days === null) return 'bg-gray-50'
+    if (days < 0) return 'bg-red-50 border-red-200'
+    if (days <= 7) return 'bg-yellow-50 border-yellow-200'
+    return 'bg-white'
+  }
 
   // Get unique service types from companies
-  const serviceTypes = Array.from(
-    new Set(companyServices.map(s => s.service_type.name_ka))
-  );
+  const serviceTypes = Array.from(new Set(companyServices.map(s => s.service_type.name_ka)))
 
   // Filter company services
   const filteredServices = companyServices.filter(service => {
-    const matchesSearch = 
+    const matchesSearch =
       service.company.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      service.company.address.toLowerCase().includes(searchQuery.toLowerCase());
+      service.company.address.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesServiceType = 
-      serviceTypeFilter === 'all' || 
-      service.service_type.name_ka === serviceTypeFilter;
+    const matchesServiceType =
+      serviceTypeFilter === 'all' || service.service_type.name_ka === serviceTypeFilter
 
-    const days = getDaysUntilInspection(service.next_inspection_date);
-    const matchesOverdue = !overdueOnly || (days !== null && days < 0);
+    const days = getDaysUntilInspection(service.next_inspection_date)
+    const matchesOverdue = !overdueOnly || (days !== null && days < 0)
 
-    return matchesSearch && matchesServiceType && matchesOverdue;
-  });
+    return matchesSearch && matchesServiceType && matchesOverdue
+  })
 
   // Sort by urgency
   const sortedServices = [...filteredServices].sort((a, b) => {
-    const daysA = getDaysUntilInspection(a.next_inspection_date);
-    const daysB = getDaysUntilInspection(b.next_inspection_date);
-    
-    if (daysA !== null && daysA < 0 && (daysB === null || daysB >= 0)) return -1;
-    if (daysB !== null && daysB < 0 && (daysA === null || daysA >= 0)) return 1;
-    
-    if (daysA === null) return 1;
-    if (daysB === null) return -1;
-    return daysA - daysB;
-  });
+    const daysA = getDaysUntilInspection(a.next_inspection_date)
+    const daysB = getDaysUntilInspection(b.next_inspection_date)
+
+    if (daysA !== null && daysA < 0 && (daysB === null || daysB >= 0)) return -1
+    if (daysB !== null && daysB < 0 && (daysA === null || daysA >= 0)) return 1
+
+    if (daysA === null) return 1
+    if (daysB === null) return -1
+    return daysA - daysB
+  })
 
   const isSelected = (service: CompanyService) => {
-    return selectedServices.some(s => s.id === service.id);
-  };
+    return selectedServices.some(s => s.id === service.id)
+  }
 
-  const selectedInspectorData = inspectors.find(i => i.id === selectedInspector);
+  const selectedInspectorData = inspectors.find(i => i.id === selectedInspector)
 
   return (
     <div className="h-full flex flex-col">
@@ -171,10 +166,9 @@ export default function InspectorBasedCompanySelector({
         </label>
         <select
           value={selectedInspector || ''}
-          onChange={(e) => {
-            const value = e.target.value || null;
-            console.log('👤 Inspector changed to:', value);
-            onInspectorChange(value);
+          onChange={e => {
+            const value = e.target.value || null
+            onInspectorChange(value)
           }}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
@@ -218,7 +212,7 @@ export default function InspectorBasedCompanySelector({
                 type="text"
                 placeholder="ძებნა..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -227,12 +221,14 @@ export default function InspectorBasedCompanySelector({
             <div className="flex gap-2">
               <select
                 value={serviceTypeFilter}
-                onChange={(e) => setServiceTypeFilter(e.target.value)}
+                onChange={e => setServiceTypeFilter(e.target.value)}
                 className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg"
               >
                 <option value="all">ყველა სერვისი</option>
                 {serviceTypes.map(type => (
-                  <option key={type} value={type}>{type}</option>
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
                 ))}
               </select>
 
@@ -253,10 +249,13 @@ export default function InspectorBasedCompanySelector({
               <span>სულ: {sortedServices.length}</span>
               <span>არჩეული: {selectedServices.length}</span>
               <span className="text-red-600">
-                გადაცილებული: {sortedServices.filter(s => {
-                  const days = getDaysUntilInspection(s.next_inspection_date);
-                  return days !== null && days < 0;
-                }).length}
+                გადაცილებული:{' '}
+                {
+                  sortedServices.filter(s => {
+                    const days = getDaysUntilInspection(s.next_inspection_date)
+                    return days !== null && days < 0
+                  }).length
+                }
               </span>
             </div>
           </div>
@@ -277,10 +276,10 @@ export default function InspectorBasedCompanySelector({
             ) : (
               <div className="divide-y">
                 {sortedServices.map(service => {
-                  const days = getDaysUntilInspection(service.next_inspection_date);
-                  const urgencyColor = getUrgencyColor(days);
-                  const urgencyBg = getUrgencyBg(days);
-                  const selected = isSelected(service);
+                  const days = getDaysUntilInspection(service.next_inspection_date)
+                  const urgencyColor = getUrgencyColor(days)
+                  const urgencyBg = getUrgencyBg(days)
+                  const selected = isSelected(service)
 
                   return (
                     <div
@@ -296,7 +295,7 @@ export default function InspectorBasedCompanySelector({
                           <h4 className="font-semibold text-gray-900 truncate">
                             {service.company.name}
                           </h4>
-                          
+
                           {/* Address */}
                           <p className="text-sm text-gray-600 truncate">
                             {service.company.address}
@@ -314,12 +313,20 @@ export default function InspectorBasedCompanySelector({
                             <Calendar className="w-4 h-4" />
                             {service.next_inspection_date ? (
                               <>
-                                <span>{new Date(service.next_inspection_date).toLocaleDateString('ka-GE')}</span>
+                                <span>
+                                  {new Date(service.next_inspection_date).toLocaleDateString(
+                                    'ka-GE'
+                                  )}
+                                </span>
                                 {days !== null && (
                                   <span className="font-medium">
-                                    ({days < 0 ? `${Math.abs(days)} დღით გადაცილებული` : 
-                                      days === 0 ? 'დღეს' : 
-                                      `${days} დღეში`})
+                                    (
+                                    {days < 0
+                                      ? `${Math.abs(days)} დღით გადაცილებული`
+                                      : days === 0
+                                        ? 'დღეს'
+                                        : `${days} დღეში`}
+                                    )
                                   </span>
                                 )}
                               </>
@@ -339,7 +346,7 @@ export default function InspectorBasedCompanySelector({
                         )}
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -347,5 +354,5 @@ export default function InspectorBasedCompanySelector({
         </>
       )}
     </div>
-  );
+  )
 }

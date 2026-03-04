@@ -62,14 +62,11 @@ export const activityService = {
   /**
    * Get all updates for a specific item
    */
-  async getItemUpdates(
-    itemType: string,
-    itemId: string,
-    limit = 50
-  ): Promise<ItemUpdate[]> {
+  async getItemUpdates(itemType: string, itemId: string, limit = 50): Promise<ItemUpdate[]> {
     const { data, error } = await getSupabase()
       .from('item_updates')
-      .select(`
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
@@ -81,7 +78,8 @@ export const activityService = {
         target_board:target_board_id (
           name
         )
-      `)
+      `
+      )
       .eq('item_type', itemType)
       .eq('item_id', itemId)
       .order('created_at', { ascending: false })
@@ -105,7 +103,8 @@ export const activityService = {
   async getRecentUpdates(limit = 100): Promise<ItemUpdate[]> {
     const { data, error } = await getSupabase()
       .from('item_updates')
-      .select(`
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
@@ -117,7 +116,8 @@ export const activityService = {
         target_board:target_board_id (
           name
         )
-      `)
+      `
+      )
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -138,7 +138,8 @@ export const activityService = {
   async getUserUpdates(userId: string, limit = 50): Promise<ItemUpdate[]> {
     const { data, error } = await getSupabase()
       .from('item_updates')
-      .select(`
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
@@ -150,7 +151,8 @@ export const activityService = {
         target_board:target_board_id (
           name
         )
-      `)
+      `
+      )
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(limit)
@@ -180,16 +182,17 @@ export const activityService = {
     content?: string
     metadata?: Record<string, any>
   }): Promise<ItemUpdate> {
-    const { data, error } = await (getSupabase()
-      .from('item_updates') as any)
+    const { data, error } = await (getSupabase().from('item_updates') as any)
       .insert(update)
-      .select(`
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
           email
         )
-      `)
+      `
+      )
       .single()
 
     if (error) throw error
@@ -271,20 +274,18 @@ export const activityService = {
   /**
    * Get all comments for an item (optimized: single query with nested replies)
    */
-  async getComments(
-    itemType: string,
-    itemId: string
-  ): Promise<ItemComment[]> {
+  async getComments(itemType: string, itemId: string): Promise<ItemComment[]> {
     // Fetch all comments for this item in a single query
-    const { data, error } = await (getSupabase()
-      .from('item_comments') as any)
-      .select(`
+    const { data, error } = await (getSupabase().from('item_comments') as any)
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
           email
         )
-      `)
+      `
+      )
       .eq('item_type', itemType)
       .eq('item_id', itemId)
       .order('created_at', { ascending: true })
@@ -295,10 +296,7 @@ export const activityService = {
     const comments = data as CommentRecord[]
 
     // Build comment tree in memory (O(n) instead of N+1 queries)
-    // Using any for complex tree structure - proper typing would require recursive types
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const commentMap = new Map<string, any>()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const topLevelComments: any[] = []
 
     // First pass: create map of all comments
@@ -334,15 +332,16 @@ export const activityService = {
    * Get replies to a comment
    */
   async getCommentReplies(parentCommentId: string): Promise<ItemComment[]> {
-    const { data, error } = await (getSupabase()
-      .from('item_comments') as any)
-      .select(`
+    const { data, error } = await (getSupabase().from('item_comments') as any)
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
           email
         )
-      `)
+      `
+      )
       .eq('parent_comment_id', parentCommentId)
       .order('created_at', { ascending: true })
 
@@ -367,16 +366,17 @@ export const activityService = {
     mentions?: string[]
     attachments?: string[]
   }): Promise<ItemComment> {
-    const { data, error } = await (getSupabase()
-      .from('item_comments') as any)
+    const { data, error } = await (getSupabase().from('item_comments') as any)
       .insert(comment)
-      .select(`
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
           email
         )
-      `)
+      `
+      )
       .single()
 
     if (error) throw error
@@ -401,24 +401,22 @@ export const activityService = {
   /**
    * Update a comment
    */
-  async updateComment(
-    commentId: string,
-    content: string
-  ): Promise<ItemComment> {
-    const { data, error } = await (getSupabase()
-      .from('item_comments') as any)
+  async updateComment(commentId: string, content: string): Promise<ItemComment> {
+    const { data, error } = await (getSupabase().from('item_comments') as any)
       .update({
         content,
         is_edited: true,
       })
       .eq('id', commentId)
-      .select(`
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
           email
         )
-      `)
+      `
+      )
       .single()
 
     if (error) throw error
@@ -436,14 +434,10 @@ export const activityService = {
    */
   async deleteComment(commentId: string): Promise<void> {
     // Delete all replies first
-    await (getSupabase()
-      .from('item_comments') as any)
-      .delete()
-      .eq('parent_comment_id', commentId)
+    await (getSupabase().from('item_comments') as any).delete().eq('parent_comment_id', commentId)
 
     // Delete the comment
-    const { error } = await (getSupabase()
-      .from('item_comments') as any)
+    const { error } = await (getSupabase().from('item_comments') as any)
       .delete()
       .eq('id', commentId)
 
@@ -454,8 +448,7 @@ export const activityService = {
    * Get comment count for an item
    */
   async getCommentCount(itemType: string, itemId: string): Promise<number> {
-    const { count, error } = await (getSupabase()
-      .from('item_comments') as any)
+    const { count, error } = await (getSupabase().from('item_comments') as any)
       .select('*', { count: 'exact', head: true })
       .eq('item_type', itemType)
       .eq('item_id', itemId)
@@ -474,7 +467,6 @@ export const activityService = {
     itemId: string,
     callback: (payload: { new: UpdateRecord; old: UpdateRecord | null }) => void
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (getSupabase().channel(`item-updates:${itemType}:${itemId}`) as any)
       .on(
         'postgres_changes',
@@ -497,7 +489,6 @@ export const activityService = {
     itemId: string,
     callback: (payload: { new: CommentRecord; old: CommentRecord | null }) => void
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (getSupabase().channel(`item-comments:${itemType}:${itemId}`) as any)
       .on(
         'postgres_changes',
@@ -515,7 +506,6 @@ export const activityService = {
   /**
    * Unsubscribe from a channel
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async unsubscribe(channel: any) {
     await getSupabase().removeChannel(channel)
   },
@@ -553,16 +543,19 @@ export const activityService = {
       .eq('board_type', board.board_type)
 
     const columnMap = new Map<string, { name: string; name_ka?: string }>(
-      (columns || []).map((c: { column_id: string; column_name: string; column_name_ka?: string }) => [
-        c.column_id,
-        { name: c.column_name, name_ka: c.column_name_ka }
-      ])
+      (columns || []).map(
+        (c: { column_id: string; column_name: string; column_name_ka?: string }) => [
+          c.column_id,
+          { name: c.column_name, name_ka: c.column_name_ka },
+        ]
+      )
     )
 
     // Then get updates for these items
     const { data, error } = await getSupabase()
       .from('item_updates')
-      .select(`
+      .select(
+        `
         *,
         inspectors:user_id (
           full_name,
@@ -574,7 +567,8 @@ export const activityService = {
         target_board:target_board_id (
           name
         )
-      `)
+      `
+      )
       .in('item_id', boardItemIds)
       .eq('item_type', 'board_item')
       .order('created_at', { ascending: false })
@@ -601,10 +595,7 @@ export const activityService = {
    * Resolve column names for a list of updates
    * Useful when displaying updates from multiple board types
    */
-  async resolveColumnNames(
-    updates: ItemUpdate[],
-    boardType: string
-  ): Promise<ItemUpdate[]> {
+  async resolveColumnNames(updates: ItemUpdate[], boardType: string): Promise<ItemUpdate[]> {
     // Get column definitions for this board type
     const { data: columns } = await getSupabase()
       .from('board_columns')
@@ -612,10 +603,12 @@ export const activityService = {
       .eq('board_type', boardType)
 
     const columnMap = new Map<string, { name: string; name_ka?: string }>(
-      (columns || []).map((c: { column_id: string; column_name: string; column_name_ka?: string }) => [
-        c.column_id,
-        { name: c.column_name, name_ka: c.column_name_ka }
-      ])
+      (columns || []).map(
+        (c: { column_id: string; column_name: string; column_name_ka?: string }) => [
+          c.column_id,
+          { name: c.column_name, name_ka: c.column_name_ka },
+        ]
+      )
     )
 
     return updates.map(update => {
@@ -639,8 +632,7 @@ export const activityService = {
     applyRollback: (itemId: string, fieldName: string, oldValue: unknown) => Promise<void>
   ): Promise<ItemUpdate | null> {
     // Get the update to rollback
-    const { data, error } = await (getSupabase()
-      .from('item_updates') as any)
+    const { data, error } = await (getSupabase().from('item_updates') as any)
       .select('*')
       .eq('id', updateId)
       .single()

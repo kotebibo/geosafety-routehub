@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { AuthProvider } from '@/contexts/AuthContext'
-import RouteGuard from '@/components/RouteGuard'
+import { RouteGuard } from '@/components/RouteGuard'
 import { createQueryClient } from '@/lib/react-query'
 import { ToastProvider } from '@/components/ui-monday/Toast'
 
@@ -16,9 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ToastProvider>
-          <RouteGuard>
-            {children}
-          </RouteGuard>
+          <RouteGuard>{children}</RouteGuard>
         </ToastProvider>
       </AuthProvider>
       {/* React Query Devtools - only in development */}
@@ -26,5 +24,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-right" />
       )}
     </QueryClientProvider>
-  );
+  )
 }

@@ -1,45 +1,45 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { X, Save, Calendar, Clock, User } from 'lucide-react';
-import { DEPLOYMENT_CONFIG } from '@/config/features';
-import { FeatureGate } from '@/components/FeatureGate';
+import { useState } from 'react'
+import { X, Save, Calendar, Clock, User } from 'lucide-react'
+import { DEPLOYMENT_CONFIG } from '@/config/features'
+import { FeatureGate } from '@/components/FeatureGate'
 
 interface CompanyService {
-  id: string;
-  company_id: string;
-  service_type_id: string;
+  id: string
+  company_id: string
+  service_type_id: string
   company: {
-    id: string;
-    name: string;
-    lat: number;
-    lng: number;
-  };
+    id: string
+    name: string
+    lat: number
+    lng: number
+  }
 }
 
 interface RouteStop {
   company: {
-    id: string;
-    name: string;
-    lat: number;
-    lng: number;
-  };
-  position: number;
-  distance?: number;
+    id: string
+    name: string
+    lat: number
+    lng: number
+  }
+  position: number
+  distance?: number
 }
 
 interface ServiceAwareSaveModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  route: RouteStop[];
-  routeGeometry?: number[][];
-  serviceTypeId: string;
-  inspectorId: string;
-  selectedServices: CompanyService[];
-  onSaveSuccess: () => void;
+  isOpen: boolean
+  onClose: () => void
+  route: RouteStop[]
+  routeGeometry?: number[][]
+  serviceTypeId: string
+  inspectorId: string
+  selectedServices: CompanyService[]
+  onSaveSuccess: () => void
 }
 
-export default function ServiceAwareSaveModal({
+export function ServiceAwareSaveModal({
   isOpen,
   onClose,
   route,
@@ -49,34 +49,34 @@ export default function ServiceAwareSaveModal({
   selectedServices,
   onSaveSuccess,
 }: ServiceAwareSaveModalProps) {
-  const [name, setName] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [startTime, setStartTime] = useState('08:00');
-  const [saving, setSaving] = useState(false);
+  const [name, setName] = useState('')
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [startTime, setStartTime] = useState('08:00')
+  const [saving, setSaving] = useState(false)
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
-  const totalDistance = route.reduce((sum, stop) => sum + (stop.distance || 0), 0);
+  const totalDistance = route.reduce((sum, stop) => sum + (stop.distance || 0), 0)
 
   const handleSave = async () => {
     if (!name.trim()) {
-      alert('გთხოვთ შეიყვანოთ მარშრუტის სახელი');
-      return;
+      alert('გთხოვთ შეიყვანოთ მარშრუტის სახელი')
+      return
     }
 
-    setSaving(true);
+    setSaving(true)
 
     try {
       // Prepare stops with company service IDs
       const stops = route.map(stop => {
-        const service = selectedServices.find(s => s.company_id === stop.company.id);
+        const service = selectedServices.find(s => s.company_id === stop.company.id)
         return {
           companyId: stop.company.id,
           companyServiceId: service?.id, // Link to specific service
           position: stop.position,
           distanceFromPrevious: stop.distance || 0,
-        };
-      });
+        }
+      })
 
       const response = await fetch('/api/routes/save', {
         method: 'POST',
@@ -92,24 +92,24 @@ export default function ServiceAwareSaveModal({
           routeGeometry,
           stops,
         }),
-      });
+      })
 
-      const result = await response.json();
+      const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to save route');
+        throw new Error(result.error || 'Failed to save route')
       }
 
-      alert('✅ მარშრუტი წარმატებით შეინახა!\n\nინსპექციის თარიღები განახლდა.');
-      onSaveSuccess();
-      onClose();
+      alert('✅ მარშრუტი წარმატებით შეინახა!\n\nინსპექციის თარიღები განახლდა.')
+      onSaveSuccess()
+      onClose()
     } catch (error) {
-      console.error('Save error:', error);
-      alert('❌ შეცდომა მარშრუტის შენახვისას');
+      console.error('Save error:', error)
+      alert('❌ შეცდომა მარშრუტის შენახვისას')
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -122,10 +122,7 @@ export default function ServiceAwareSaveModal({
             </div>
             <h2 className="text-xl font-bold text-gray-900">მარშრუტის შენახვა</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
@@ -140,7 +137,7 @@ export default function ServiceAwareSaveModal({
             <input
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
               placeholder="მაგ: თბილისი - სახანძრო ინსპექცია"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
@@ -155,7 +152,7 @@ export default function ServiceAwareSaveModal({
             <input
               type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={e => setDate(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
@@ -169,7 +166,7 @@ export default function ServiceAwareSaveModal({
             <input
               type="time"
               value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
+              onChange={e => setStartTime(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
@@ -227,5 +224,5 @@ export default function ServiceAwareSaveModal({
         </div>
       </div>
     </div>
-  );
+  )
 }

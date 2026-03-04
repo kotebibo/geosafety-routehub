@@ -1,41 +1,41 @@
-'use client';
+'use client'
 
-import { useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
+import { useEffect } from 'react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Authentication is now enabled
-const DISABLE_AUTH_FOR_DEV = false;
+const DISABLE_AUTH_FOR_DEV = false
 
-export default function RouteGuard({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const { user, loading } = useAuth();
+export function RouteGuard({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const { user, loading } = useAuth()
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/auth/login', '/auth/signup'];
-  const isPublicRoute = publicRoutes.includes(pathname);
+  const publicRoutes = ['/auth/login', '/auth/signup']
+  const isPublicRoute = publicRoutes.includes(pathname)
 
   useEffect(() => {
     // Skip auth checks in dev mode
-    if (DISABLE_AUTH_FOR_DEV) return;
+    if (DISABLE_AUTH_FOR_DEV) return
 
     if (!loading) {
       // If not logged in and trying to access protected route
       if (!user && !isPublicRoute) {
-        router.push(`/auth/login?from=${encodeURIComponent(pathname)}`);
+        router.push(`/auth/login?from=${encodeURIComponent(pathname)}`)
       }
 
       // If logged in and trying to access login page
       if (user && isPublicRoute) {
-        router.push('/');
+        router.push('/')
       }
     }
-  }, [user, loading, pathname, isPublicRoute, router]);
+  }, [user, loading, pathname, isPublicRoute, router])
 
   // Skip auth checks in dev mode
   if (DISABLE_AUTH_FOR_DEV) {
-    return <>{children}</>;
+    return <>{children}</>
   }
 
   // Show loading state
@@ -47,13 +47,13 @@ export default function RouteGuard({ children }: { children: React.ReactNode }) 
           <p className="text-gray-600">იტვირთება...</p>
         </div>
       </div>
-    );
+    )
   }
 
   // Show nothing while redirecting
   if (!user && !isPublicRoute) {
-    return null;
+    return null
   }
 
-  return <>{children}</>;
+  return <>{children}</>
 }

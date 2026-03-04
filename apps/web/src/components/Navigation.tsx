@@ -1,50 +1,58 @@
-'use client';
+'use client'
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Home, 
-  Building2, 
-  Users, 
-  Route, 
-  MapIcon, 
-  LogOut, 
+import Link from 'next/link'
+import { usePathname, useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import {
+  Home,
+  Building2,
+  Users,
+  Route,
+  MapIcon,
+  LogOut,
   Shield,
   UserCog,
-  MapPin
-} from 'lucide-react';
+  MapPin,
+} from 'lucide-react'
 
-export default function Navigation() {
-  const pathname = usePathname();
-  const router = useRouter();
-  const { user, userRole, signOut, loading } = useAuth();
+export function Navigation() {
+  const pathname = usePathname()
+  const router = useRouter()
+  const { user, userRole, signOut, loading } = useAuth()
 
   // Don't show navigation on login page or while loading
   if (pathname === '/auth/login' || loading) {
-    return null;
+    return null
   }
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push('/auth/login');
-  };
+    await signOut()
+    router.push('/auth/login')
+  }
 
   const navItems = [
     { href: '/', label: 'მთავარი', icon: Home, roles: ['admin', 'dispatcher', 'inspector'] },
     { href: '/companies', label: 'კომპანიები', icon: Building2, roles: ['admin', 'dispatcher'] },
     { href: '/inspectors', label: 'ინსპექტორები', icon: Users, roles: ['admin', 'dispatcher'] },
     { href: '/locations', label: 'ლოკაციების რუკა', icon: MapPin, roles: ['admin', 'dispatcher'] },
-    { href: '/admin/assignments', label: 'დანიშვნები', icon: UserCog, roles: ['admin', 'dispatcher'] },
-    { href: '/routes/builder', label: 'მარშრუტის შექმნა', icon: MapIcon, roles: ['admin', 'dispatcher'] },
+    {
+      href: '/admin/assignments',
+      label: 'დანიშვნები',
+      icon: UserCog,
+      roles: ['admin', 'dispatcher'],
+    },
+    {
+      href: '/routes/builder',
+      label: 'მარშრუტის შექმნა',
+      icon: MapIcon,
+      roles: ['admin', 'dispatcher'],
+    },
     { href: '/routes/manage', label: 'მარშრუტები', icon: Route, roles: ['admin', 'dispatcher'] },
     { href: '/inspector/routes', label: 'ჩემი მარშრუტები', icon: Route, roles: ['inspector'] },
-  ];
+  ]
 
   // Filter nav items based on user role
-  const filteredNavItems = navItems.filter(item => 
-    !userRole || item.roles.includes(userRole.role)
-  );
+  const filteredNavItems = navItems.filter(item => !userRole || item.roles.includes(userRole.role))
 
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -54,17 +62,15 @@ export default function Navigation() {
           <div className="flex">
             <Link href="/" className="flex items-center">
               <Shield className="w-8 h-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">
-                RouteHub
-              </span>
+              <span className="ml-2 text-xl font-bold text-gray-900">RouteHub</span>
             </Link>
 
             {user && (
               <div className="hidden md:ml-10 md:flex md:space-x-2">
-                {filteredNavItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = pathname === item.href;
-                  
+                {filteredNavItems.map(item => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href
+
                   return (
                     <Link
                       key={item.href}
@@ -78,7 +84,7 @@ export default function Navigation() {
                       <Icon className="w-4 h-4 mr-2" />
                       {item.label}
                     </Link>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -118,5 +124,5 @@ export default function Navigation() {
         </div>
       </div>
     </nav>
-  );
+  )
 }

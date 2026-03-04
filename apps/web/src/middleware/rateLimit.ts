@@ -53,11 +53,11 @@ function getClientId(request: NextRequest): string {
   const forwarded = request.headers.get('x-forwarded-for')
   const real = request.headers.get('x-real-ip')
   const ip = forwarded?.split(',')[0] || real || 'unknown'
-  
+
   // In production, also consider user ID if authenticated
   // const userId = await getUserIdFromToken(request)
   // return userId || ip
-  
+
   return ip
 }
 
@@ -82,33 +82,34 @@ export function checkRateLimit(
 ): { allowed: boolean; remaining: number; resetTime: number } {
   // Get config for this endpoint
   const pathname = request.nextUrl.pathname
-  const endpointConfig = Object.entries(ENDPOINT_LIMITS)
-    .find(([path]) => pathname.startsWith(path))?.[1] || DEFAULT_CONFIG
-  
+  const endpointConfig =
+    Object.entries(ENDPOINT_LIMITS).find(([path]) => pathname.startsWith(path))?.[1] ||
+    DEFAULT_CONFIG
+
   const finalConfig = { ...endpointConfig, ...config }
   const clientId = getClientId(request)
   const key = `${clientId}:${pathname}`
   const now = Date.now()
-  
+
   // Clean up old entries periodically
   if (Math.random() < 0.01) cleanupStore()
-  
+
   // Get or create rate limit entry
   let entry = rateLimitStore.get(key)
-  
+
   if (!entry || entry.resetTime <= now) {
     entry = {
       count: 0,
       resetTime: now + finalConfig.windowMs,
     }
   }
-  
+
   entry.count++
   rateLimitStore.set(key, entry)
-  
+
   const allowed = entry.count <= finalConfig.maxRequests
   const remaining = Math.max(0, finalConfig.maxRequests - entry.count)
-  
+
   return { allowed, remaining, resetTime: entry.resetTime }
 }
 /**
@@ -119,14 +120,14 @@ export function rateLimitMiddleware(request: NextRequest): NextResponse | null {
   if (!request.nextUrl.pathname.startsWith('/api')) {
     return null
   }
-  
+
   // Skip rate limiting in development
   if (process.env.NODE_ENV === 'development') {
     return null
   }
-  
+
   const { allowed, remaining, resetTime } = checkRateLimit(request)
-  
+
   if (!allowed) {
     return new NextResponse(
       JSON.stringify({
@@ -146,8 +147,6 @@ export function rateLimitMiddleware(request: NextRequest): NextResponse | null {
       }
     )
   }
-  
+
   return null
 }
-
-export default rateLimitMiddleware

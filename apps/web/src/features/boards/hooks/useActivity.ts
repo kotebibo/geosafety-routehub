@@ -43,7 +43,7 @@ export function useCreateUpdate() {
       content?: string
       metadata?: Record<string, any>
     }) => activityService.createUpdate(update),
-    onSuccess: (newUpdate) => {
+    onSuccess: newUpdate => {
       // Invalidate the item's activity
       queryClient.invalidateQueries({
         queryKey: queryKeys.activity.byItem(newUpdate.item_type, newUpdate.item_id),
@@ -60,28 +60,18 @@ export function useCreateUpdate() {
 /**
  * Hook to subscribe to real-time updates
  */
-export function useItemUpdatesSubscription(
-  itemType: string,
-  itemId: string,
-  enabled = true
-) {
+export function useItemUpdatesSubscription(itemType: string, itemId: string, enabled = true) {
   const queryClient = useQueryClient()
 
   useEffect(() => {
     if (!enabled || !itemType || !itemId) return
 
-    const channel = activityService.subscribeToItemUpdates(
-      itemType,
-      itemId,
-      (payload) => {
-        console.log('New update:', payload)
-
-        // Invalidate queries to refetch
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.activity.byItem(itemType, itemId),
-        })
-      }
-    )
+    const channel = activityService.subscribeToItemUpdates(itemType, itemId, payload => {
+      // Invalidate queries to refetch
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.activity.byItem(itemType, itemId),
+      })
+    })
 
     return () => {
       activityService.unsubscribe(channel)
@@ -116,7 +106,7 @@ export function useCreateComment() {
       mentions?: string[]
       attachments?: string[]
     }) => activityService.createComment(comment),
-    onSuccess: (newComment) => {
+    onSuccess: newComment => {
       // Invalidate comments
       queryClient.invalidateQueries({
         queryKey: queryKeys.comments.byItem(newComment.item_type, newComment.item_id),
@@ -166,28 +156,18 @@ export function useDeleteComment(itemType: string, itemId: string) {
 /**
  * Hook to subscribe to real-time comments
  */
-export function useItemCommentsSubscription(
-  itemType: string,
-  itemId: string,
-  enabled = true
-) {
+export function useItemCommentsSubscription(itemType: string, itemId: string, enabled = true) {
   const queryClient = useQueryClient()
 
   useEffect(() => {
     if (!enabled || !itemType || !itemId) return
 
-    const channel = activityService.subscribeToItemComments(
-      itemType,
-      itemId,
-      (payload) => {
-        console.log('Comment change:', payload)
-
-        // Invalidate comments to refetch
-        queryClient.invalidateQueries({
-          queryKey: queryKeys.comments.byItem(itemType, itemId),
-        })
-      }
-    )
+    const channel = activityService.subscribeToItemComments(itemType, itemId, payload => {
+      // Invalidate comments to refetch
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.comments.byItem(itemType, itemId),
+      })
+    })
 
     return () => {
       activityService.unsubscribe(channel)

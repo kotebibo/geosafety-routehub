@@ -9,9 +9,7 @@ export default function DesignSystemTest() {
       <div className="max-w-6xl mx-auto space-y-12">
         {/* Header */}
         <div className="space-y-2">
-          <h1 className="text-h1 font-semibold text-text-primary">
-            Monday.com Design System Test
-          </h1>
+          <h1 className="text-h1 font-semibold text-text-primary">Monday.com Design System Test</h1>
           <p className="text-text-secondary">
             Testing the implementation of Monday.com design tokens and components
           </p>
@@ -24,21 +22,15 @@ export default function DesignSystemTest() {
           </h2>
           <div className="space-y-4">
             <div>
-              <h1 className="text-h1 font-semibold text-text-primary">
-                Heading 1 - Figtree 32px
-              </h1>
+              <h1 className="text-h1 font-semibold text-text-primary">Heading 1 - Figtree 32px</h1>
               <p className="text-text-secondary text-sm">32px, Semibold</p>
             </div>
             <div>
-              <h2 className="text-h2 font-semibold text-text-primary">
-                Heading 2 - Figtree 28px
-              </h2>
+              <h2 className="text-h2 font-semibold text-text-primary">Heading 2 - Figtree 28px</h2>
               <p className="text-text-secondary text-sm">28px, Semibold</p>
             </div>
             <div>
-              <h3 className="text-h3 font-semibold text-text-primary">
-                Heading 3 - Figtree 24px
-              </h3>
+              <h3 className="text-h3 font-semibold text-text-primary">Heading 3 - Figtree 24px</h3>
               <p className="text-text-secondary text-sm">24px, Semibold</p>
             </div>
             <div>
@@ -199,24 +191,9 @@ export default function DesignSystemTest() {
           <div>
             <p className="text-sm text-text-secondary mb-3">Interactive (Click to interact)</p>
             <div className="flex flex-wrap gap-3">
-              <StatusPill
-                status="done"
-                label="Done"
-                interactive
-                onStatusChange={(status) => console.log('Status clicked:', status)}
-              />
-              <StatusPill
-                status="working"
-                label="Working"
-                interactive
-                onStatusChange={(status) => console.log('Status clicked:', status)}
-              />
-              <StatusPill
-                status="stuck"
-                label="Stuck"
-                interactive
-                onStatusChange={(status) => console.log('Status clicked:', status)}
-              />
+              <StatusPill status="done" label="Done" interactive onStatusChange={() => {}} />
+              <StatusPill status="working" label="Working" interactive onStatusChange={() => {}} />
+              <StatusPill status="stuck" label="Stuck" interactive onStatusChange={() => {}} />
             </div>
           </div>
         </section>

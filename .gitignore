@@ -64,3 +64,6 @@ logs/
 
 # Windows artifacts
 nul
+
+# Local utility scripts
+apps/web/scripts/

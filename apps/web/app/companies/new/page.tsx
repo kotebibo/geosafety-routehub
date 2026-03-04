@@ -3,19 +3,19 @@
  * Allows creating a company with multiple locations
  */
 
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Save, X } from 'lucide-react';
-import { companiesService } from '@/services/companies.service';
-import LocationManager from '@/features/companies/components/LocationManager';
-import type { LocationFormData, CompanyLocationInput } from '@/types/company';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Save, X } from 'lucide-react'
+import { companiesService } from '@/services/companies.service'
+import { LocationManager } from '@/features/companies/components/LocationManager'
+import type { LocationFormData, CompanyLocationInput } from '@/types/company'
 
 export default function NewCompanyPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+
   // Company basic info
   const [formData, setFormData] = useState({
     name: '',
@@ -26,27 +26,27 @@ export default function NewCompanyPage() {
     priority: 'medium',
     status: 'active',
     notes: '',
-  });
+  })
 
   // Locations state
-  const [locations, setLocations] = useState<LocationFormData[]>([]);
+  const [locations, setLocations] = useState<LocationFormData[]>([])
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    
+    e.preventDefault()
+
     // Validate: at least one location required
     if (locations.length === 0) {
-      alert('გთხოვთ დაამატოთ მინიმუმ ერთი ლოკაცია');
-      return;
+      alert('გთხოვთ დაამატოთ მინიმუმ ერთი ლოკაცია')
+      return
     }
 
     // Validate: must have a primary location
     if (!locations.some(loc => loc.is_primary)) {
-      alert('გთხოვთ აირჩიოთ მთავარი ლოკაცია');
-      return;
+      alert('გთხოვთ აირჩიოთ მთავარი ლოკაცია')
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     try {
       // Prepare locations for API
@@ -60,7 +60,7 @@ export default function NewCompanyPage() {
         contact_phone: loc.contact_phone || null,
         contact_email: loc.contact_email || null,
         notes: loc.notes || null,
-      }));
+      }))
 
       // Create company with locations
       await companiesService.createWithLocations(
@@ -71,15 +71,15 @@ export default function NewCompanyPage() {
           status: formData.status,
         },
         locationsForApi
-      );
+      )
 
-      alert('კომპანია წარმატებით შეიქმნა!');
-      router.push('/companies');
+      alert('კომპანია წარმატებით შეიქმნა!')
+      router.push('/companies')
     } catch (error: any) {
-      console.error('Error creating company:', error);
-      alert('შეცდომა: ' + error.message);
+      console.error('Error creating company:', error)
+      alert('შეცდომა: ' + error.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -95,28 +95,24 @@ export default function NewCompanyPage() {
           {/* Basic Information */}
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">ძირითადი ინფორმაცია</h2>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  დასახელება *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">დასახელება *</label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ტიპი
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ტიპი</label>
                 <select
                   value={formData.type}
-                  onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                  onChange={e => setFormData({ ...formData, type: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="commercial">კომერციული</option>
@@ -128,12 +124,10 @@ export default function NewCompanyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  პრიორიტეტი
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">პრიორიტეტი</label>
                 <select
                   value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                  onChange={e => setFormData({ ...formData, priority: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="low">დაბალი</option>
@@ -146,10 +140,7 @@ export default function NewCompanyPage() {
 
           {/* Locations Section */}
           <div className="bg-white rounded-lg shadow p-6">
-            <LocationManager
-              locations={locations}
-              onChange={setLocations}
-            />
+            <LocationManager locations={locations} onChange={setLocations} />
           </div>
 
           {/* Contact Information (Company-level, optional) */}
@@ -158,7 +149,7 @@ export default function NewCompanyPage() {
               საკონტაქტო ინფორმაცია
               <span className="text-sm font-normal text-gray-500 ml-2">(არასავალდებულო)</span>
             </h2>
-            
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -167,42 +158,36 @@ export default function NewCompanyPage() {
                 <input
                   type="text"
                   value={formData.contact_name}
-                  onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
+                  onChange={e => setFormData({ ...formData, contact_name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ტელეფონი
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ტელეფონი</label>
                 <input
                   type="tel"
                   value={formData.contact_phone}
-                  onChange={(e) => setFormData({ ...formData, contact_phone: e.target.value })}
+                  onChange={e => setFormData({ ...formData, contact_phone: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ელ. ფოსტა
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ელ. ფოსტა</label>
                 <input
                   type="email"
                   value={formData.contact_email}
-                  onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                  onChange={e => setFormData({ ...formData, contact_email: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  შენიშვნები
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">შენიშვნები</label>
                 <textarea
                   value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   rows={3}
                 />
@@ -220,7 +205,7 @@ export default function NewCompanyPage() {
               <Save size={20} />
               {loading ? 'მიმდინარეობს შენახვა...' : 'შენახვა'}
             </button>
-            
+
             <button
               type="button"
               onClick={() => router.back()}
@@ -233,5 +218,5 @@ export default function NewCompanyPage() {
         </form>
       </div>
     </div>
-  );
+  )
 }

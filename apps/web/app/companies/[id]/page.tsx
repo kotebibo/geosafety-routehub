@@ -8,8 +8,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
-import PDPOnboardingManager from '@/components/PDPOnboardingManager'
-import LocationManager from '@/features/companies/components/LocationManager'
+import { PDPOnboardingManager } from '@/components/PDPOnboardingManager'
+import { LocationManager } from '@/features/companies/components/LocationManager'
 import { useToast } from '@/components/ui-monday/Toast'
 import {
   Save,
@@ -73,7 +73,12 @@ const priorityConfig: Record<string, { label: string; bg: string; text: string; 
 }
 
 const statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  active: { label: 'აქტიური', bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500' },
+  active: {
+    label: 'აქტიური',
+    bg: 'bg-emerald-50',
+    text: 'text-emerald-700',
+    dot: 'bg-emerald-500',
+  },
   inactive: { label: 'არააქტიური', bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' },
   suspended: { label: 'შეჩერებული', bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
 }
@@ -100,15 +105,12 @@ export default function CompanyDetailsPage() {
     try {
       const supabase = createClient()
       const [companyResult, locationsData, servicesResult] = await Promise.all([
-        supabase
-          .from('companies')
-          .select('*')
-          .eq('id', companyId)
-          .single(),
+        supabase.from('companies').select('*').eq('id', companyId).single(),
         companiesService.locations.getByCompanyId(companyId),
         supabase
           .from('company_services')
-          .select(`
+          .select(
+            `
             *,
             service_types (
               name,
@@ -117,7 +119,8 @@ export default function CompanyDetailsPage() {
             inspectors (
               full_name
             )
-          `)
+          `
+          )
           .eq('company_id', companyId),
       ])
 
@@ -150,18 +153,20 @@ export default function CompanyDetailsPage() {
   }, [fetchCompanyData])
 
   function handleStartEditLocations() {
-    setEditableLocations(locations.map(loc => ({
-      id: loc.id,
-      name: loc.name,
-      address: loc.address,
-      lat: loc.lat,
-      lng: loc.lng,
-      is_primary: loc.is_primary,
-      contact_name: loc.contact_name || '',
-      contact_phone: loc.contact_phone || '',
-      contact_email: loc.contact_email || '',
-      notes: loc.notes || '',
-    })))
+    setEditableLocations(
+      locations.map(loc => ({
+        id: loc.id,
+        name: loc.name,
+        address: loc.address,
+        lat: loc.lat,
+        lng: loc.lng,
+        is_primary: loc.is_primary,
+        contact_name: loc.contact_name || '',
+        contact_phone: loc.contact_phone || '',
+        contact_email: loc.contact_email || '',
+        notes: loc.notes || '',
+      }))
+    )
     setEditingLocations(true)
   }
 
@@ -305,7 +310,9 @@ export default function CompanyDetailsPage() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl font-bold text-gray-900 truncate">{company.name}</h1>
-            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}`}>
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}`}
+            >
               <span className={`w-1.5 h-1.5 rounded-full ${status.dot}`} />
               {status.label}
             </span>
@@ -351,14 +358,28 @@ export default function CompanyDetailsPage() {
             </div>
           </div>
         </div>
-        <div className={`border rounded-xl p-4 ${overdueServices.length > 0 ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}>
+        <div
+          className={`border rounded-xl p-4 ${overdueServices.length > 0 ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}
+        >
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${overdueServices.length > 0 ? 'bg-red-100' : 'bg-gray-50'}`}>
-              <AlertTriangle className={`w-5 h-5 ${overdueServices.length > 0 ? 'text-red-600' : 'text-gray-400'}`} />
+            <div
+              className={`w-10 h-10 rounded-lg flex items-center justify-center ${overdueServices.length > 0 ? 'bg-red-100' : 'bg-gray-50'}`}
+            >
+              <AlertTriangle
+                className={`w-5 h-5 ${overdueServices.length > 0 ? 'text-red-600' : 'text-gray-400'}`}
+              />
             </div>
             <div>
-              <p className={`text-2xl font-bold ${overdueServices.length > 0 ? 'text-red-700' : 'text-gray-900'}`}>{overdueServices.length}</p>
-              <p className={`text-xs ${overdueServices.length > 0 ? 'text-red-600' : 'text-gray-500'}`}>ვადაგადაცილებული</p>
+              <p
+                className={`text-2xl font-bold ${overdueServices.length > 0 ? 'text-red-700' : 'text-gray-900'}`}
+              >
+                {overdueServices.length}
+              </p>
+              <p
+                className={`text-xs ${overdueServices.length > 0 ? 'text-red-600' : 'text-gray-500'}`}
+              >
+                ვადაგადაცილებული
+              </p>
             </div>
           </div>
         </div>
@@ -381,7 +402,9 @@ export default function CompanyDetailsPage() {
               icon={<AlertTriangle className="w-4 h-4" />}
               label="პრიორიტეტი"
               badge={
-                <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${priority.bg} ${priority.text}`}>
+                <span
+                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${priority.bg} ${priority.text}`}
+                >
                   <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
                   {priority.label}
                 </span>
@@ -420,7 +443,9 @@ export default function CompanyDetailsPage() {
           </div>
           {company.notes && (
             <div className="mt-5 pt-5 border-t border-gray-100">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">შენიშვნები</p>
+              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+                შენიშვნები
+              </p>
               <p className="text-sm text-gray-700 leading-relaxed">{company.notes}</p>
             </div>
           )}
@@ -451,10 +476,7 @@ export default function CompanyDetailsPage() {
         <div className="p-6">
           {editingLocations ? (
             <div>
-              <LocationManager
-                locations={editableLocations}
-                onChange={setEditableLocations}
-              />
+              <LocationManager locations={editableLocations} onChange={setEditableLocations} />
               <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-100">
                 <button
                   onClick={handleSaveLocations}
@@ -489,7 +511,7 @@ export default function CompanyDetailsPage() {
                   </button>
                 </div>
               ) : (
-                locations.map((location) => (
+                locations.map(location => (
                   <div
                     key={location.id}
                     className={`rounded-lg border p-4 transition-colors ${
@@ -499,10 +521,14 @@ export default function CompanyDetailsPage() {
                     }`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                        location.is_primary ? 'bg-amber-100' : 'bg-gray-100'
-                      }`}>
-                        <MapPin className={`w-4 h-4 ${location.is_primary ? 'text-amber-600' : 'text-gray-500'}`} />
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          location.is_primary ? 'bg-amber-100' : 'bg-gray-100'
+                        }`}
+                      >
+                        <MapPin
+                          className={`w-4 h-4 ${location.is_primary ? 'text-amber-600' : 'text-gray-500'}`}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
@@ -514,7 +540,9 @@ export default function CompanyDetailsPage() {
                           )}
                         </div>
                         <p className="text-sm text-gray-500">{location.address}</p>
-                        {(location.contact_phone || location.contact_email || location.contact_name) && (
+                        {(location.contact_phone ||
+                          location.contact_email ||
+                          location.contact_name) && (
                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
                             {location.contact_name && (
                               <span className="flex items-center gap-1">
@@ -523,13 +551,19 @@ export default function CompanyDetailsPage() {
                               </span>
                             )}
                             {location.contact_phone && (
-                              <a href={`tel:${location.contact_phone}`} className="flex items-center gap-1 hover:text-gray-700">
+                              <a
+                                href={`tel:${location.contact_phone}`}
+                                className="flex items-center gap-1 hover:text-gray-700"
+                              >
                                 <Phone className="w-3 h-3" />
                                 {location.contact_phone}
                               </a>
                             )}
                             {location.contact_email && (
-                              <a href={`mailto:${location.contact_email}`} className="flex items-center gap-1 hover:text-gray-700">
+                              <a
+                                href={`mailto:${location.contact_email}`}
+                                className="flex items-center gap-1 hover:text-gray-700"
+                              >
                                 <Mail className="w-3 h-3" />
                                 {location.contact_email}
                               </a>
@@ -572,8 +606,8 @@ export default function CompanyDetailsPage() {
             <div>
               <PDPOnboardingManager
                 companyId={companyId}
-                onPhaseChange={(phases, currentPhase) => {
-                  console.log('Phases updated:', phases, 'Current phase:', currentPhase)
+                onPhaseChange={() => {
+                  // Phase change handled by PDPOnboardingManager
                 }}
               />
               <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-100">
@@ -616,9 +650,11 @@ export default function CompanyDetailsPage() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {services.map((service) => {
+                  {services.map(service => {
                     const overdue = isOverdue(service.next_inspection_date)
-                    const days = service.next_inspection_date ? daysUntil(service.next_inspection_date) : null
+                    const days = service.next_inspection_date
+                      ? daysUntil(service.next_inspection_date)
+                      : null
                     const sPriority = priorityConfig[service.priority] || priorityConfig.low
 
                     return (
@@ -636,7 +672,9 @@ export default function CompanyDetailsPage() {
                               <h3 className="font-semibold text-gray-900 text-sm">
                                 {service.service_types?.name_ka || service.service_types?.name}
                               </h3>
-                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${sPriority.bg} ${sPriority.text}`}>
+                              <span
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${sPriority.bg} ${sPriority.text}`}
+                              >
                                 <span className={`w-1 h-1 rounded-full ${sPriority.dot}`} />
                                 {sPriority.label}
                               </span>
@@ -660,16 +698,21 @@ export default function CompanyDetailsPage() {
                           <div className="text-right flex-shrink-0">
                             {service.next_inspection_date ? (
                               <div>
-                                <p className={`text-sm font-medium ${overdue ? 'text-red-600' : 'text-gray-900'}`}>
-                                  {new Date(service.next_inspection_date).toLocaleDateString('ka-GE')}
+                                <p
+                                  className={`text-sm font-medium ${overdue ? 'text-red-600' : 'text-gray-900'}`}
+                                >
+                                  {new Date(service.next_inspection_date).toLocaleDateString(
+                                    'ka-GE'
+                                  )}
                                 </p>
-                                <p className={`text-xs mt-0.5 ${overdue ? 'text-red-500' : 'text-gray-400'}`}>
+                                <p
+                                  className={`text-xs mt-0.5 ${overdue ? 'text-red-500' : 'text-gray-400'}`}
+                                >
                                   {overdue
                                     ? `${Math.abs(days!)} დღით ვადაგადაცილებული`
                                     : days === 0
                                       ? 'დღეს'
-                                      : `${days} დღეში`
-                                  }
+                                      : `${days} დღეში`}
                                 </p>
                               </div>
                             ) : (
@@ -698,18 +741,22 @@ export default function CompanyDetailsPage() {
             </span>
           </div>
           <div className="divide-y divide-gray-100">
-            {checkins.map((checkin) => (
+            {checkins.map(checkin => (
               <div key={checkin.id} className="px-6 py-3 flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                  checkin.location_updated
-                    ? 'bg-green-100 text-green-600'
-                    : 'bg-gray-100 text-gray-500'
-                }`}>
+                <div
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    checkin.location_updated
+                      ? 'bg-green-100 text-green-600'
+                      : 'bg-gray-100 text-gray-500'
+                  }`}
+                >
                   <MapPinned className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900">{checkin.inspector_name}</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {checkin.inspector_name}
+                    </span>
                     {checkin.location_name && (
                       <span className="text-xs text-gray-400">— {checkin.location_name}</span>
                     )}
@@ -724,13 +771,15 @@ export default function CompanyDetailsPage() {
                       })}
                     </span>
                     {checkin.distance_from_location != null && (
-                      <span className={`font-medium ${
-                        checkin.distance_from_location < 100
-                          ? 'text-green-600'
-                          : checkin.distance_from_location < 500
-                            ? 'text-amber-600'
-                            : 'text-red-600'
-                      }`}>
+                      <span
+                        className={`font-medium ${
+                          checkin.distance_from_location < 100
+                            ? 'text-green-600'
+                            : checkin.distance_from_location < 500
+                              ? 'text-amber-600'
+                              : 'text-red-600'
+                        }`}
+                      >
                         {checkin.distance_from_location}მ
                       </span>
                     )}
@@ -767,15 +816,14 @@ function InfoField({ icon, label, value, badge, href }: InfoFieldProps) {
         {icon}
         {label}
       </p>
-      {badge || (
-        href ? (
+      {badge ||
+        (href ? (
           <a href={href} className="text-sm font-medium text-[#6161FF] hover:underline">
             {value}
           </a>
         ) : (
           <p className="text-sm font-medium text-gray-900">{value}</p>
-        )
-      )}
+        ))}
     </div>
   )
 }

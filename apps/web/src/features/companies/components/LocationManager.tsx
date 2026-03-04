@@ -6,18 +6,18 @@
 'use client'
 
 import { useState } from 'react'
-import { 
-  Plus, 
-  MapPin, 
-  Star, 
-  Trash2, 
-  Edit2, 
-  Check, 
+import {
+  Plus,
+  MapPin,
+  Star,
+  Trash2,
+  Edit2,
+  Check,
   X,
   Building2,
   Phone,
   Mail,
-  FileText
+  FileText,
 } from 'lucide-react'
 import type { LocationFormData } from '@/types/company'
 
@@ -39,11 +39,7 @@ const emptyLocation: LocationFormData = {
   notes: '',
 }
 
-export default function LocationManager({ 
-  locations, 
-  onChange, 
-  disabled = false 
-}: LocationManagerProps) {
+export function LocationManager({ locations, onChange, disabled = false }: LocationManagerProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editingData, setEditingData] = useState<LocationFormData | null>(null)
   const [isAdding, setIsAdding] = useState(false)
@@ -57,7 +53,7 @@ export default function LocationManager({
     }
 
     const isPrimary = locations.length === 0 ? true : newLocation.is_primary
-    
+
     // If this is primary, unset others
     let updatedLocations = locations
     if (isPrimary) {
@@ -78,22 +74,22 @@ export default function LocationManager({
   // Save edited location
   const handleEditSave = () => {
     if (editingIndex === null || !editingData) return
-    
+
     if (!editingData.name.trim() || !editingData.address.trim()) {
       alert('გთხოვთ შეავსოთ სახელი და მისამართი')
       return
     }
 
     let updatedLocations = [...locations]
-    
+
     // If setting as primary, unset others
     if (editingData.is_primary) {
       updatedLocations = updatedLocations.map((loc, i) => ({
         ...loc,
-        is_primary: i === editingIndex
+        is_primary: i === editingIndex,
       }))
     }
-    
+
     updatedLocations[editingIndex] = editingData
     onChange(updatedLocations)
     setEditingIndex(null)
@@ -115,12 +111,12 @@ export default function LocationManager({
 
     const wasIsPrimary = locations[index].is_primary
     const newLocations = locations.filter((_, i) => i !== index)
-    
+
     // If deleted was primary, make first one primary
     if (wasIsPrimary && newLocations.length > 0) {
       newLocations[0].is_primary = true
     }
-    
+
     onChange(newLocations)
   }
 
@@ -128,7 +124,7 @@ export default function LocationManager({
   const handleSetPrimary = (index: number) => {
     const updatedLocations = locations.map((loc, i) => ({
       ...loc,
-      is_primary: i === index
+      is_primary: i === index,
     }))
     onChange(updatedLocations)
   }
@@ -160,9 +156,7 @@ export default function LocationManager({
           <div
             key={location.id || index}
             className={`border rounded-lg p-4 ${
-              location.is_primary 
-                ? 'border-yellow-400 bg-yellow-50' 
-                : 'border-gray-200 bg-white'
+              location.is_primary ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white'
             }`}
           >
             {editingIndex === index && editingData ? (
@@ -200,7 +194,7 @@ export default function LocationManager({
                     </div>
                   )}
                 </div>
-                
+
                 {!disabled && (
                   <div className="flex items-center gap-1">
                     {!location.is_primary && (
@@ -277,9 +271,9 @@ export default function LocationManager({
 
       {/* Help Text */}
       <p className="text-xs text-gray-500">
-        <Star className="w-3 h-3 inline text-yellow-500 fill-yellow-500" /> მთავარი ლოკაცია 
-        გამოჩნდება როგორც ნაგულისხმევი მისამართი. თუ კომპანიას აქვს მხოლოდ ერთი ლოკაცია, 
-        ის ავტომატურად იქნება მთავარი.
+        <Star className="w-3 h-3 inline text-yellow-500 fill-yellow-500" /> მთავარი ლოკაცია
+        გამოჩნდება როგორც ნაგულისხმევი მისამართი. თუ კომპანიას აქვს მხოლოდ ერთი ლოკაცია, ის
+        ავტომატურად იქნება მთავარი.
       </p>
     </div>
   )
@@ -294,19 +288,23 @@ interface LocationFormProps {
   showPrimaryToggle?: boolean
 }
 
-function LocationForm({ data, onChange, onSave, onCancel, showPrimaryToggle = true }: LocationFormProps) {
+function LocationForm({
+  data,
+  onChange,
+  onSave,
+  onCancel,
+  showPrimaryToggle = true,
+}: LocationFormProps) {
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            სახელი *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">სახელი *</label>
           <input
             type="text"
             value={data.name}
-            onChange={(e) => onChange({ ...data, name: e.target.value })}
+            onChange={e => onChange({ ...data, name: e.target.value })}
             placeholder="მაგ: მთავარი ოფისი, ფილიალი #1"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
@@ -314,13 +312,11 @@ function LocationForm({ data, onChange, onSave, onCancel, showPrimaryToggle = tr
 
         {/* Address */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            მისამართი *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">მისამართი *</label>
           <input
             type="text"
             value={data.address}
-            onChange={(e) => onChange({ ...data, address: e.target.value })}
+            onChange={e => onChange({ ...data, address: e.target.value })}
             placeholder="მაგ: რუსთაველის გამზ. 12"
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
@@ -328,26 +324,22 @@ function LocationForm({ data, onChange, onSave, onCancel, showPrimaryToggle = tr
 
         {/* Contact Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            საკონტაქტო პირი
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">საკონტაქტო პირი</label>
           <input
             type="text"
             value={data.contact_name || ''}
-            onChange={(e) => onChange({ ...data, contact_name: e.target.value })}
+            onChange={e => onChange({ ...data, contact_name: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
         {/* Contact Phone */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            ტელეფონი
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">ტელეფონი</label>
           <input
             type="tel"
             value={data.contact_phone || ''}
-            onChange={(e) => onChange({ ...data, contact_phone: e.target.value })}
+            onChange={e => onChange({ ...data, contact_phone: e.target.value })}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
@@ -355,13 +347,11 @@ function LocationForm({ data, onChange, onSave, onCancel, showPrimaryToggle = tr
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          შენიშვნა
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">შენიშვნა</label>
         <input
           type="text"
           value={data.notes || ''}
-          onChange={(e) => onChange({ ...data, notes: e.target.value })}
+          onChange={e => onChange({ ...data, notes: e.target.value })}
           placeholder="დამატებითი ინფორმაცია"
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
         />
@@ -374,7 +364,7 @@ function LocationForm({ data, onChange, onSave, onCancel, showPrimaryToggle = tr
             <input
               type="checkbox"
               checked={data.is_primary}
-              onChange={(e) => onChange({ ...data, is_primary: e.target.checked })}
+              onChange={e => onChange({ ...data, is_primary: e.target.checked })}
               className="w-4 h-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
             />
             <span className="text-sm text-gray-700">მთავარი ლოკაცია</span>

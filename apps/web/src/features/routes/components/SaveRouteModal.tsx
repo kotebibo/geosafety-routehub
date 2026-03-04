@@ -3,89 +3,76 @@
  * Dialog for saving optimized routes with proper z-index
  */
 
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 interface SaveRouteModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen: boolean
+  onClose: () => void
   onSave: (data: {
-    name: string;
-    date: string;
-    inspectorId?: string;
-    startTime: string;
-  }) => Promise<void>;
-  defaultName?: string;
+    name: string
+    date: string
+    inspectorId?: string
+    startTime: string
+  }) => Promise<void>
+  defaultName?: string
 }
 
-export default function SaveRouteModal({
-  isOpen,
-  onClose,
-  onSave,
-  defaultName = '',
-}: SaveRouteModalProps) {
-  const [name, setName] = useState(defaultName);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [startTime, setStartTime] = useState('09:00');
-  const [saving, setSaving] = useState(false);
-  const [mounted, setMounted] = useState(false);
+export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: SaveRouteModalProps) {
+  const [name, setName] = useState(defaultName)
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [startTime, setStartTime] = useState('09:00')
+  const [saving, setSaving] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
+    setMounted(true)
+    return () => setMounted(false)
+  }, [])
 
   useEffect(() => {
     // Reset form when modal opens with new defaultName
     if (isOpen && defaultName) {
-      setName(defaultName);
-      setDate(new Date().toISOString().split('T')[0]);
-      setStartTime('09:00');
+      setName(defaultName)
+      setDate(new Date().toISOString().split('T')[0])
+      setStartTime('09:00')
     }
-  }, [isOpen, defaultName]);
+  }, [isOpen, defaultName])
 
   const handleSave = async () => {
     if (!name || !date) {
-      alert('გთხოვთ შეავსოთ სახელი და თარიღი');
-      return;
+      alert('გთხოვთ შეავსოთ სახელი და თარიღი')
+      return
     }
 
-    setSaving(true);
+    setSaving(true)
     try {
-      await onSave({ name, date, startTime });
-      onClose();
+      await onSave({ name, date, startTime })
+      onClose()
     } catch (error) {
-      console.error('Save failed:', error);
-      alert('შენახვა ვერ მოხერხდა');
+      console.error('Save failed:', error)
+      alert('შენახვა ვერ მოხერხდა')
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
-  if (!isOpen || !mounted) return null;
+  if (!isOpen || !mounted) return null
 
   const modalContent = (
-    <div 
-      className="fixed inset-0 z-[9999]"
-      style={{ position: 'fixed', zIndex: 9999 }}
-    >
+    <div className="fixed inset-0 z-[9999]" style={{ position: 'fixed', zIndex: 9999 }}>
       {/* Backdrop */}
-      <div 
-        className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      />
-      
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
+
       {/* Modal */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div 
+        <div
           className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md pointer-events-auto"
           style={{ position: 'relative', zIndex: 10000 }}
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-4">
-            მარშრუტის შენახვა
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-4">მარშრუტის შენახვა</h2>
 
           <div className="space-y-4">
             {/* Route Name */}
@@ -96,7 +83,7 @@ export default function SaveRouteModal({
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 placeholder="მაგ: თბილისი - ცენტრი"
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 autoFocus
@@ -105,26 +92,22 @@ export default function SaveRouteModal({
 
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                თარიღი *
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">თარიღი *</label>
               <input
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={e => setDate(e.target.value)}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             {/* Start Time */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                დაწყების დრო
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">დაწყების დრო</label>
               <input
                 type="time"
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                onChange={e => setStartTime(e.target.value)}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -149,8 +132,8 @@ export default function SaveRouteModal({
         </div>
       </div>
     </div>
-  );
+  )
 
   // Use portal to render modal at the root of the document
-  return createPortal(modalContent, document.body);
+  return createPortal(modalContent, document.body)
 }
