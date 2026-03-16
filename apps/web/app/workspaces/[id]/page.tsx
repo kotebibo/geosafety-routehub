@@ -50,8 +50,10 @@ export default function WorkspaceDetailPage() {
   const [showArchived, setShowArchived] = useState(false)
 
   const { data: workspace, isLoading: workspaceLoading } = useWorkspace(workspaceId)
-  const { data: activeBoards, isLoading: activeBoardsLoading } = useActiveWorkspaceBoards(workspaceId)
-  const { data: archivedBoards, isLoading: archivedBoardsLoading } = useArchivedWorkspaceBoards(workspaceId)
+  const { data: activeBoards, isLoading: activeBoardsLoading } =
+    useActiveWorkspaceBoards(workspaceId)
+  const { data: archivedBoards, isLoading: archivedBoardsLoading } =
+    useArchivedWorkspaceBoards(workspaceId)
 
   const archiveMutation = useArchiveBoard()
   const restoreMutation = useRestoreBoard()
@@ -90,9 +92,7 @@ export default function WorkspaceDetailPage() {
   if (!workspace) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <h2 className="text-h3 font-semibold text-text-primary mb-2">
-          Workspace not found
-        </h2>
+        <h2 className="text-h3 font-semibold text-text-primary mb-2">Workspace not found</h2>
         <p className="text-text-secondary mb-6">
           The workspace you're looking for doesn't exist or you don't have access.
         </p>
@@ -131,19 +131,10 @@ export default function WorkspaceDetailPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-h1 font-bold text-text-primary">
-                  {workspace.name}
-                </h1>
-                {workspace.is_default && (
-                  <span className="text-xs px-2 py-0.5 bg-gray-100 text-text-tertiary rounded">
-                    Default
-                  </span>
-                )}
+                <h1 className="text-h1 font-bold text-text-primary">{workspace.name}</h1>
               </div>
               {workspace.description && (
-                <p className="text-text-secondary mt-1">
-                  {workspace.description}
-                </p>
+                <p className="text-text-secondary mt-1">{workspace.description}</p>
               )}
             </div>
           </div>
@@ -155,10 +146,7 @@ export default function WorkspaceDetailPage() {
                 Settings
               </Button>
             </Link>
-            <Button
-              variant="primary"
-              onClick={() => setIsCreateBoardModalOpen(true)}
-            >
+            <Button variant="primary" onClick={() => setIsCreateBoardModalOpen(true)}>
               <Plus className="w-5 h-5 mr-2" />
               Create Board
             </Button>
@@ -178,7 +166,7 @@ export default function WorkspaceDetailPage() {
             </div>
           ) : activeBoards && activeBoards.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {activeBoards.map((board) => (
+              {activeBoards.map(board => (
                 <BoardCard
                   key={board.id}
                   board={board}
@@ -215,10 +203,7 @@ export default function WorkspaceDetailPage() {
               <p className="text-text-secondary text-center max-w-md mb-4">
                 Create your first board to start organizing your work.
               </p>
-              <Button
-                variant="primary"
-                onClick={() => setIsCreateBoardModalOpen(true)}
-              >
+              <Button variant="primary" onClick={() => setIsCreateBoardModalOpen(true)}>
                 <Plus className="w-5 h-5 mr-2" />
                 Create Board
               </Button>
@@ -236,16 +221,13 @@ export default function WorkspaceDetailPage() {
               <Archive className="w-4 h-4" />
               <span className="font-medium">Archived ({archivedBoards.length})</span>
               <ChevronDown
-                className={cn(
-                  'w-4 h-4 transition-transform',
-                  showArchived && 'rotate-180'
-                )}
+                className={cn('w-4 h-4 transition-transform', showArchived && 'rotate-180')}
               />
             </button>
 
             {showArchived && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {archivedBoards.map((board) => (
+                {archivedBoards.map(board => (
                   <BoardCard
                     key={board.id}
                     board={board}
@@ -307,12 +289,10 @@ function BoardCard({
       {/* Content */}
       <div className="p-5 flex flex-col h-full">
         <div className="flex items-start justify-between mb-2">
-          <h3 className="font-semibold text-text-primary line-clamp-2 flex-1 pr-2">
-            {board.name}
-          </h3>
+          <h3 className="font-semibold text-text-primary line-clamp-2 flex-1 pr-2">{board.name}</h3>
 
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation()
               setShowMenu(!showMenu)
             }}
@@ -323,9 +303,7 @@ function BoardCard({
         </div>
 
         {board.description && (
-          <p className="text-sm text-text-tertiary line-clamp-2 mb-3">
-            {board.description}
-          </p>
+          <p className="text-sm text-text-tertiary line-clamp-2 mb-3">{board.description}</p>
         )}
 
         <div className="mt-auto flex items-center justify-between text-xs text-text-tertiary">
@@ -341,9 +319,7 @@ function BoardCard({
             )}
           </div>
 
-          <span>
-            {new Date(board.updated_at).toLocaleDateString()}
-          </span>
+          <span>{new Date(board.updated_at).toLocaleDateString()}</span>
         </div>
       </div>
 
@@ -351,7 +327,7 @@ function BoardCard({
       {showMenu && (
         <div
           className="absolute top-12 right-4 z-10 w-44 bg-bg-primary border border-border-light rounded-md shadow-monday-lg py-1"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           {isArchived ? (
             <button

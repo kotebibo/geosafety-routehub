@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth, requireRole } from '@/middleware/auth'
@@ -45,10 +47,7 @@ async function syncCheckinToBoards(
   locationUpdated: boolean,
   distanceFromLocation: number | null
 ) {
-  const { data: boards } = await supabase
-    .from('boards')
-    .select('id')
-    .eq('board_type', 'checkins')
+  const { data: boards } = await supabase.from('boards').select('id').eq('board_type', 'checkins')
 
   if (!boards || boards.length === 0) return
 
@@ -56,7 +55,11 @@ async function syncCheckinToBoards(
     supabase.from('inspectors').select('full_name').eq('id', checkin.inspector_id).single(),
     supabase.from('companies').select('name').eq('id', checkin.company_id).single(),
     checkin.company_location_id
-      ? supabase.from('company_locations').select('name').eq('id', checkin.company_location_id).single()
+      ? supabase
+          .from('company_locations')
+          .select('name')
+          .eq('id', checkin.company_location_id)
+          .single()
       : Promise.resolve({ data: null }),
   ])
 
@@ -82,7 +85,7 @@ async function syncCheckinToBoards(
     const { error: insertError } = await supabase.from('board_items').insert({
       board_id: board.id,
       group_id: groupId,
-      position: (count || 0),
+      position: count || 0,
       name: `${companyName} — ${inspectorName}`,
       created_by: checkin.inspector_id,
       data: {
@@ -114,10 +117,7 @@ async function syncCheckoutToBoards(
   checkinId: string,
   checkoutData: { checked_out_at: string; lat: number; lng: number; duration_minutes: number }
 ) {
-  const { data: boards } = await supabase
-    .from('boards')
-    .select('id')
-    .eq('board_type', 'checkins')
+  const { data: boards } = await supabase.from('boards').select('id').eq('board_type', 'checkins')
 
   if (!boards || boards.length === 0) return
 
@@ -235,21 +235,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Sync to checkins boards (fire-and-forget, don't block the response)
-    syncCheckinToBoards(checkin, validated, locationUpdated, distanceFromLocation).catch(
-      (err) => console.error('Board sync error:', err)
+    syncCheckinToBoards(checkin, validated, locationUpdated, distanceFromLocation).catch(err =>
+      console.error('Board sync error:', err)
     )
 
-    return NextResponse.json({
-      ...checkin,
-      location_updated: locationUpdated,
-      distance_from_location: distanceFromLocation,
-    }, { status: 201 })
+    return NextResponse.json(
+      {
+        ...checkin,
+        location_updated: locationUpdated,
+        distance_from_location: distanceFromLocation,
+      },
+      { status: 201 }
+    )
   } catch (error: any) {
     if (error.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.issues },
+        { status: 400 }
+      )
     }
     console.error('Check-in error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -323,7 +329,7 @@ export async function PATCH(request: NextRequest) {
       lat: validated.lat,
       lng: validated.lng,
       duration_minutes: durationMinutes,
-    }).catch((err) => console.error('Board checkout sync error:', err))
+    }).catch(err => console.error('Board checkout sync error:', err))
 
     return NextResponse.json(updated)
   } catch (error: any) {
@@ -331,7 +337,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.issues },
+        { status: 400 }
+      )
     }
     console.error('Check-out error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })

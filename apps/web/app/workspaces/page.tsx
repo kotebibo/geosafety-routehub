@@ -5,7 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInspectorId } from '@/hooks/useInspectorId'
-import { useWorkspacesWithBoardCounts, useDeleteWorkspace, useUpdateWorkspace } from '@/features/workspaces/hooks'
+import {
+  useWorkspacesWithBoardCounts,
+  useDeleteWorkspace,
+  useUpdateWorkspace,
+} from '@/features/workspaces/hooks'
 import { CreateWorkspaceModal } from '@/features/workspaces/components'
 import { Button } from '@/shared/components/ui'
 import {
@@ -42,9 +46,11 @@ export default function WorkspacesPage() {
 
   // Only fetch workspaces after auth is complete to avoid race condition
   // where query fires before JWT token is available
-  const { data: workspaces, isLoading: workspacesLoading, refetch } = useWorkspacesWithBoardCounts(
-    !authLoading && !!user
-  )
+  const {
+    data: workspaces,
+    isLoading: workspacesLoading,
+    refetch,
+  } = useWorkspacesWithBoardCounts(!authLoading && !!user)
   const isLoading = authLoading || workspacesLoading
 
   // Check if user is admin
@@ -111,18 +117,11 @@ export default function WorkspacesPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-h1 font-bold text-text-primary mb-2">
-              Workspaces
-            </h1>
-            <p className="text-text-secondary">
-              Organize your boards into workspaces
-            </p>
+            <h1 className="text-h1 font-bold text-text-primary mb-2">Workspaces</h1>
+            <p className="text-text-secondary">Organize your boards into workspaces</p>
           </div>
 
-          <Button
-            variant="primary"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
+          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="w-5 h-5 mr-2" />
             Create Workspace
           </Button>
@@ -135,23 +134,18 @@ export default function WorkspacesPage() {
             <div className="w-24 h-24 rounded-full bg-bg-primary border-2 border-border-light flex items-center justify-center mb-6">
               <Folder className="w-12 h-12 text-text-tertiary" />
             </div>
-            <h2 className="text-h3 font-semibold text-text-primary mb-2">
-              No workspaces yet
-            </h2>
+            <h2 className="text-h3 font-semibold text-text-primary mb-2">No workspaces yet</h2>
             <p className="text-text-secondary text-center max-w-md mb-6">
               Create your first workspace to start organizing your boards by team or project.
             </p>
-            <Button
-              variant="primary"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
+            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="w-5 h-5 mr-2" />
               Create Your First Workspace
             </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {workspaces?.map((workspace) => {
+            {workspaces?.map(workspace => {
               const isOwner = workspace.owner_id === user?.id
               return (
                 <WorkspaceCard
@@ -191,30 +185,22 @@ export default function WorkspacesPage() {
         {workspaces && workspaces.length > 0 && (
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
-              <div className="text-3xl font-bold text-text-primary mb-1">
-                {workspaces.length}
-              </div>
-              <div className="text-text-secondary text-sm">
-                Total Workspaces
-              </div>
+              <div className="text-3xl font-bold text-text-primary mb-1">{workspaces.length}</div>
+              <div className="text-text-secondary text-sm">Total Workspaces</div>
             </div>
 
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">
                 {workspaces.reduce((acc, w) => acc + (w.board_count || 0), 0)}
               </div>
-              <div className="text-text-secondary text-sm">
-                Total Boards
-              </div>
+              <div className="text-text-secondary text-sm">Total Boards</div>
             </div>
 
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">
-                {workspaces.filter(w => w.is_default).length}
+                {workspaces.filter(w => w.owner_id === user?.id).length}
               </div>
-              <div className="text-text-secondary text-sm">
-                Default Workspaces
-              </div>
+              <div className="text-text-secondary text-sm">Owned by You</div>
             </div>
           </div>
         )}
@@ -252,11 +238,10 @@ export default function WorkspacesPage() {
       {deleteWorkspace && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">
-              Delete Workspace
-            </h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">Delete Workspace</h3>
             <p className="text-text-secondary mb-4">
-              This action cannot be undone. All boards in this workspace will be moved to their owner's default workspace.
+              This action cannot be undone. All boards in this workspace will be permanently
+              deleted.
             </p>
             <p className="text-text-secondary mb-4">
               Please type <strong>{deleteWorkspace.name}</strong> to confirm.
@@ -264,7 +249,7 @@ export default function WorkspacesPage() {
             <input
               type="text"
               value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              onChange={e => setDeleteConfirmText(e.target.value)}
               placeholder="Type workspace name"
               className="w-full px-3 py-2 border border-border-default rounded-lg mb-4"
             />
@@ -354,16 +339,11 @@ function WorkspaceCard({
               <h3 className="font-semibold text-text-primary text-lg line-clamp-1">
                 {workspace.name}
               </h3>
-              {workspace.is_default && (
-                <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-text-tertiary rounded">
-                  Default
-                </span>
-              )}
             </div>
           </div>
 
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation()
               setShowMenu(!showMenu)
             }}
@@ -374,9 +354,7 @@ function WorkspaceCard({
         </div>
 
         {workspace.description && (
-          <p className="text-sm text-text-tertiary line-clamp-2 mb-4">
-            {workspace.description}
-          </p>
+          <p className="text-sm text-text-tertiary line-clamp-2 mb-4">{workspace.description}</p>
         )}
 
         <div className="mt-auto flex items-center justify-between text-xs text-text-tertiary">
@@ -387,9 +365,7 @@ function WorkspaceCard({
             </div>
           </div>
 
-          <span>
-            {new Date(workspace.created_at).toLocaleDateString()}
-          </span>
+          <span>{new Date(workspace.created_at).toLocaleDateString()}</span>
         </div>
       </div>
 
@@ -397,7 +373,7 @@ function WorkspaceCard({
       {showMenu && (
         <div
           className="absolute top-16 right-4 z-10 w-48 bg-bg-primary border border-border-light rounded-md shadow-monday-lg py-1"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           <Link
             href={`/workspaces/${workspace.id}`}
@@ -414,7 +390,7 @@ function WorkspaceCard({
             Open in New Tab
           </button>
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation()
               setShowMenu(false)
               onDuplicate()
@@ -426,7 +402,7 @@ function WorkspaceCard({
           </button>
           {canEdit && (
             <button
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation()
                 setShowMenu(false)
                 onRename()
@@ -444,11 +420,11 @@ function WorkspaceCard({
             <Settings className="w-4 h-4" />
             Settings
           </Link>
-          {canEdit && !workspace.is_default && (
+          {canEdit && (
             <>
               <div className="my-1 border-t border-border-light" />
               <button
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation()
                   setShowMenu(false)
                   onDelete()
@@ -496,25 +472,18 @@ function RenameWorkspaceModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
-        <h3 className="text-lg font-semibold text-text-primary mb-4">
-          Rename Workspace
-        </h3>
+        <h3 className="text-lg font-semibold text-text-primary mb-4">Rename Workspace</h3>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={e => onChange(e.target.value)}
             placeholder="Workspace name"
             className="w-full px-3 py-2 border border-border-default rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary"
             autoFocus
           />
           <div className="flex gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClose}
-              className="flex-1"
-            >
+            <Button type="button" variant="ghost" onClick={onClose} className="flex-1">
               Cancel
             </Button>
             <Button

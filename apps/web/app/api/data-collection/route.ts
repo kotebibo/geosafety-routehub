@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth } from '@/middleware/auth'
@@ -100,7 +102,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.issues },
+        { status: 400 }
+      )
     }
     console.error('Data collection error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -130,7 +135,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([])
     }
 
-    const boardIds = boards.map((b) => b.id)
+    const boardIds = boards.map(b => b.id)
 
     const { data, error } = await supabase
       .from('board_items')

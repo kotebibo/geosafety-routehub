@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth, requireAdmin } from '@/middleware/auth'
@@ -15,10 +17,7 @@ const updateAnnouncementSchema = z.object({
   is_published: z.boolean().optional(),
 })
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAuth()
 
@@ -44,10 +43,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAdmin()
     const body = await request.json()
@@ -85,17 +81,11 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAdmin()
 
-    const { error } = await supabase
-      .from('announcements')
-      .delete()
-      .eq('id', params.id)
+    const { error } = await supabase.from('announcements').delete().eq('id', params.id)
 
     if (error) throw error
     return NextResponse.json({ success: true })

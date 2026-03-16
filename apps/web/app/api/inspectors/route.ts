@@ -8,67 +8,63 @@
  * - DELETE: Admin only
  */
 
-import { NextResponse, NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { requireAuth, requireAdmin } from '@/middleware/auth';
-import { createInspectorSchema, updateInspectorSchema } from '@/lib/validations';
+export const dynamic = 'force-dynamic'
+
+import { NextResponse, NextRequest } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { requireAuth, requireAdmin } from '@/middleware/auth'
+import { createInspectorSchema, updateInspectorSchema } from '@/lib/validations'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_KEY!
-);
+)
 
 export async function GET(request: NextRequest) {
   try {
     // Require authentication for reading inspectors
-    await requireAuth();
+    await requireAuth()
 
-    const { searchParams } = new URL(request.url);
-    const statusFilter = searchParams.get('status');
-    
-    let query = supabase
-      .from('inspectors')
-      .select('*')
-      .order('full_name');
+    const { searchParams } = new URL(request.url)
+    const statusFilter = searchParams.get('status')
+
+    let query = supabase.from('inspectors').select('*').order('full_name')
 
     // Filter by status if provided, otherwise get active ones
     if (statusFilter && statusFilter !== 'all') {
-      query = query.eq('status', statusFilter);
+      query = query.eq('status', statusFilter)
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query
 
-    if (error) throw error;
+    if (error) throw error
 
     // Add cache headers - inspector list is relatively stable
     return NextResponse.json(data, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
       },
-    });
+    })
   } catch (error: any) {
-    console.error('Error fetching inspectors:', error);
+    console.error('Error fetching inspectors:', error)
 
     if (error.name === 'UnauthorizedError') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     // Require admin for creating inspectors
-    await requireAdmin();
+    await requireAdmin()
 
-    const body = await request.json();
-    
+    const body = await request.json()
+
     // Validate input
-    const validatedData = createInspectorSchema.parse(body);
+    const validatedData = createInspectorSchema.parse(body)
 
     // Prepare inspector data
     const inspectorData = {
@@ -81,13 +77,13 @@ export async function POST(request: NextRequest) {
       vehicle_type: validatedData.vehicle_type || null,
       license_plate: validatedData.license_plate || null,
       notes: validatedData.notes || null,
-    };
+    }
 
     const { data, error } = await supabase
       .from('inspectors')
       .insert([inspectorData])
       .select()
-      .single();
+      .single()
 
     if (error) {
       // Handle unique constraint violation
@@ -95,128 +91,110 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           { error: 'ინსპექტორი ამ ელ-ფოსტით უკვე არსებობს' },
           { status: 409 }
-        );
+        )
       }
-      throw error;
+      throw error
     }
 
-    return NextResponse.json(data, { status: 201 });
+    return NextResponse.json(data, { status: 201 })
   } catch (error: any) {
-    console.error('Error creating inspector:', error);
-    
+    console.error('Error creating inspector:', error)
+
     if (error.name === 'UnauthorizedError') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    
+
     if (error.name === 'ForbiddenError') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
-    
+
     // Zod validation error
     if (error.name === 'ZodError') {
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },
         { status: 400 }
-      );
+      )
     }
-    
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
     // Require admin for updating inspectors
-    await requireAdmin();
+    await requireAdmin()
 
-    const body = await request.json();
-    const { id, ...updates } = body;
+    const body = await request.json()
+    const { id, ...updates } = body
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Inspector ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Inspector ID is required' }, { status: 400 })
     }
 
     // Validate input (partial validation)
-    const validatedData = updateInspectorSchema.parse(updates);
+    const validatedData = updateInspectorSchema.parse(updates)
 
     const { data, error } = await supabase
       .from('inspectors')
       .update(validatedData)
       .eq('id', id)
       .select()
-      .single();
+      .single()
 
-    if (error) throw error;
+    if (error) throw error
 
-    return NextResponse.json(data);
+    return NextResponse.json(data)
   } catch (error: any) {
-    console.error('Error updating inspector:', error);
-    
+    console.error('Error updating inspector:', error)
+
     if (error.name === 'UnauthorizedError') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    
+
     if (error.name === 'ForbiddenError') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
-    
+
     if (error.name === 'ZodError') {
       return NextResponse.json(
         { error: 'Validation failed', details: error.errors },
         { status: 400 }
-      );
+      )
     }
-    
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
     // Require admin for deleting inspectors
-    await requireAdmin();
+    await requireAdmin()
 
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id')
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Inspector ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Inspector ID is required' }, { status: 400 })
     }
 
-    const { error } = await supabase
-      .from('inspectors')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('inspectors').delete().eq('id', id)
 
-    if (error) throw error;
+    if (error) throw error
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true })
   } catch (error: any) {
-    console.error('Error deleting inspector:', error);
-    
+    console.error('Error deleting inspector:', error)
+
     if (error.name === 'UnauthorizedError') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    
+
     if (error.name === 'ForbiddenError') {
-      return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
-    
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

@@ -4,6 +4,8 @@
  * Protected: Requires authentication (admin/dispatcher)
  */
 
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { optimizeRoute, type Location, type OptimizationOptions } from '@geosafety/route-optimizer'
@@ -13,7 +15,7 @@ import { optimizeRouteSchema, type OptimizeRouteInput } from '@/lib/validations'
 export async function POST(request: NextRequest) {
   try {
     // Require admin or dispatcher role to optimize routes
-    await requireAdminOrDispatcher();
+    await requireAdminOrDispatcher()
 
     const rawBody = await request.json()
 
@@ -32,13 +34,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { locations, options } = body
-    
+
     // Optimize route (now async for OSRM support)
     const optimized = await optimizeRoute(locations, {
       ...options,
       useRealRoads: options?.useRealRoads !== false, // Default true
     })
-    
+
     return NextResponse.json({
       success: true,
       route: optimized,
@@ -50,25 +52,18 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
       },
     })
-    
   } catch (error) {
     console.error('Route optimization error:', error)
-    
+
     // Handle authentication errors
     if (error instanceof Error && error.name === 'UnauthorizedError') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    
+
     if (error instanceof Error && error.name === 'ForbiddenError') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      )
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
-    
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Route optimization failed' },
       { status: 500 }

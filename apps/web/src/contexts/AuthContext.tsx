@@ -1,72 +1,70 @@
-'use client';
+'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase/client';
-import { User } from '@supabase/supabase-js';
+import { createContext, useContext, useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { supabase } from '@/lib/supabase/client'
+import { User } from '@supabase/supabase-js'
 
 interface UserRole {
-  role: 'admin' | 'dispatcher' | 'inspector' | string; // Allow custom roles
-  inspector_id?: string;
-  permissions?: string[]; // For custom role permissions
+  role: 'admin' | 'dispatcher' | 'inspector' | string // Allow custom roles
+  inspector_id?: string
+  permissions?: string[] // For custom role permissions
 }
 
 interface AuthContextType {
-  user: User | null;
-  userRole: UserRole | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithGoogle: () => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
-  isAdmin: boolean;
-  isDispatcher: boolean;
-  isInspector: boolean;
-  hasPermission: (permission: string) => boolean;
-  refreshUserRole: () => Promise<void>;
+  user: User | null
+  userRole: UserRole | null
+  loading: boolean
+  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signInWithGoogle: () => Promise<{ error: any }>
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>
+  signOut: () => Promise<void>
+  isAdmin: boolean
+  isDispatcher: boolean
+  isInspector: boolean
+  hasPermission: (permission: string) => boolean
+  refreshUserRole: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const queryClient = useQueryClient();
-  const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient()
+  const [user, setUser] = useState<User | null>(null)
+  const [userRole, setUserRole] = useState<UserRole | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Check active session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      setUser(session?.user ?? null)
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserRole(session.user.id)
       } else {
-        setLoading(false);
+        setLoading(false)
       }
-    });
+    })
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+      setUser(session?.user ?? null)
       if (session?.user) {
-        fetchUserRole(session.user.id);
+        fetchUserRole(session.user.id)
       } else {
-        setUserRole(null);
-        setLoading(false);
+        setUserRole(null)
+        setLoading(false)
       }
-    });
+    })
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => subscription.unsubscribe()
+  }, [])
 
   const fetchUserRole = async (userId: string) => {
     try {
       // Ensure user profile exists in users table
-      // This replaces the auth.users trigger we can't create
-      // The function also triggers creation of default workspace via trigger on users table
-      const currentUser = (await supabase.auth.getUser()).data.user;
+      const currentUser = (await supabase.auth.getUser()).data.user
       if (currentUser && currentUser.email) {
         try {
           const { error: rpcError } = await (supabase as any).rpc('upsert_user_profile', {
@@ -74,13 +72,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             p_user_email: currentUser.email,
             p_user_full_name: currentUser.user_metadata?.full_name || '',
             p_user_avatar_url: currentUser.user_metadata?.avatar_url || '',
-          });
+          })
           if (rpcError) {
-            console.warn('Failed to upsert user profile:', rpcError.message);
+            console.warn('Failed to upsert user profile:', rpcError.message)
           }
         } catch (err) {
           // Log but don't fail - user can still proceed, workspace might not be created
-          console.warn('Failed to upsert user profile:', err);
+          console.warn('Failed to upsert user profile:', err)
         }
       }
 
@@ -89,34 +87,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('user_roles')
         .select('role, inspector_id')
         .eq('user_id', userId)
-        .single();
+        .single()
 
       if (roleError) {
         // User might not have a role assigned yet
-        console.warn('No role found for user:', roleError.message);
-        setUserRole(null);
-        setLoading(false);
-        return;
+        console.warn('No role found for user:', roleError.message)
+        setUserRole(null)
+        setLoading(false)
+        return
       }
 
       // Fetch permissions from role_permissions table
-      const role = roleData?.role as string;
-      const inspectorId = roleData?.inspector_id as string | undefined;
+      const role = roleData?.role as string
+      const inspectorId = roleData?.inspector_id as string | undefined
 
       // Admin has wildcard - no need to fetch from DB
-      let permissions: string[] = [];
+      let permissions: string[] = []
       if (role === 'admin') {
-        permissions = ['*'];
+        permissions = ['*']
       } else {
         // For all roles (built-in and custom), fetch from DB
         // This allows page permissions and any new permissions to work dynamically
         const { data: permData } = await (supabase as any)
           .from('role_permissions')
           .select('permission')
-          .eq('role_name', role);
+          .eq('role_name', role)
 
         if (permData) {
-          permissions = permData.map((p: { permission: string }) => p.permission);
+          permissions = permData.map((p: { permission: string }) => p.permission)
         }
       }
 
@@ -124,28 +122,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role,
         inspector_id: inspectorId,
         permissions,
-      });
+      })
     } catch (error) {
-      console.error('Error fetching user role:', error);
-      setUserRole(null);
+      console.error('Error fetching user role:', error)
+      setUserRole(null)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const refreshUserRole = async () => {
     if (user) {
-      await fetchUserRole(user.id);
+      await fetchUserRole(user.id)
     }
-  };
+  }
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
-    });
-    return { error };
-  };
+    })
+    return { error }
+  }
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
@@ -153,40 +151,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
-    });
-    return { error };
-  };
+    })
+    return { error }
+  }
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, fullName?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-    });
-    return { error };
-  };
+      options: {
+        data: {
+          full_name: fullName || '',
+        },
+      },
+    })
+    return { error }
+  }
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    queryClient.clear();
-    setUser(null);
-    setUserRole(null);
-  };
+    await supabase.auth.signOut()
+    queryClient.clear()
+    setUser(null)
+    setUserRole(null)
+  }
 
   const hasPermission = (permission: string): boolean => {
-    if (!userRole?.permissions) return false;
+    if (!userRole?.permissions) return false
 
     // Admin has all permissions
-    if (userRole.permissions.includes('*')) return true;
+    if (userRole.permissions.includes('*')) return true
 
     // Check exact permission match
-    if (userRole.permissions.includes(permission)) return true;
+    if (userRole.permissions.includes(permission)) return true
 
     // Check wildcard permissions (e.g., 'routes:*' matches 'routes:create')
-    const [resource, action] = permission.split(':');
-    if (userRole.permissions.includes(`${resource}:*`)) return true;
+    const [resource, action] = permission.split(':')
+    if (userRole.permissions.includes(`${resource}:*`)) return true
 
-    return false;
-  };
+    return false
+  }
 
   const value = {
     user,
@@ -201,15 +204,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isInspector: userRole?.role === 'inspector',
     hasPermission,
     refreshUserRole,
-  };
+  }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth must be used within an AuthProvider')
   }
-  return context;
+  return context
 }

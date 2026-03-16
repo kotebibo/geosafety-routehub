@@ -7,7 +7,7 @@ import type { BoardItem, BoardGroup } from '../types/board'
 
 export interface VirtualRow {
   id: string
-  type: 'group-header' | 'column-header' | 'item' | 'group-summary' | 'group-footer'
+  type: 'group-header' | 'column-header' | 'item' | 'group-summary' | 'group-footer' | 'group-gap'
   data: BoardGroup | BoardItem
   groupId: string
   height: number
@@ -127,6 +127,17 @@ export function flattenGroupsForVirtualization({
         data: group,
         groupId: group.id,
         height: footerHeight,
+      })
+    }
+
+    // Add gap between groups (not after the last group)
+    if (group !== sortedGroups[sortedGroups.length - 1]) {
+      rows.push({
+        id: `gap-${group.id}`,
+        type: 'group-gap',
+        data: group,
+        groupId: group.id,
+        height: 60,
       })
     }
   }

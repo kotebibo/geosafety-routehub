@@ -5,36 +5,38 @@
  * Protected: Requires authentication (admin/dispatcher)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { z } from 'zod';
-import { requireAdminOrDispatcher } from '@/middleware/auth';
-import { saveRouteSchema, type SaveRouteInput } from '@/lib/validations';
+export const dynamic = 'force-dynamic'
+
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
+import { z } from 'zod'
+import { requireAdminOrDispatcher } from '@/middleware/auth'
+import { saveRouteSchema, type SaveRouteInput } from '@/lib/validations'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_KEY!
-);
+)
 
 export async function POST(request: NextRequest) {
   try {
     // Require admin or dispatcher role to save routes
-    await requireAdminOrDispatcher();
+    await requireAdminOrDispatcher()
 
-    const rawBody = await request.json();
+    const rawBody = await request.json()
 
     // Validate input with Zod
-    let body: SaveRouteInput;
+    let body: SaveRouteInput
     try {
-      body = saveRouteSchema.parse(rawBody);
+      body = saveRouteSchema.parse(rawBody)
     } catch (error) {
       if (error instanceof z.ZodError) {
         return NextResponse.json(
           { error: 'Validation failed', details: error.issues },
           { status: 400 }
-        );
+        )
       }
-      throw error;
+      throw error
     }
 
     // Insert route with service_type_id
@@ -53,14 +55,14 @@ export async function POST(request: NextRequest) {
         route_geometry: body.routeGeometry ? JSON.stringify(body.routeGeometry) : null,
       })
       .select()
-      .single();
+      .single()
 
     if (routeError) {
-      console.error('Route insert error:', routeError);
+      console.error('Route insert error:', routeError)
       return NextResponse.json(
         { error: 'Failed to create route', details: routeError.message },
         { status: 500 }
-      );
+      )
     }
 
     // Insert route stops
@@ -71,19 +73,17 @@ export async function POST(request: NextRequest) {
       distance_from_previous_km: stop.distanceFromPrevious || 0,
       duration_from_previous_minutes: stop.durationFromPrevious || null,
       status: 'pending',
-    }));
+    }))
 
-    const { error: stopsError } = await supabase
-      .from('route_stops')
-      .insert(stops);
+    const { error: stopsError } = await supabase.from('route_stops').insert(stops)
 
     if (stopsError) {
-      console.error('Route stops insert error:', stopsError);
-      await supabase.from('routes').delete().eq('id', route.id);
+      console.error('Route stops insert error:', stopsError)
+      await supabase.from('routes').delete().eq('id', route.id)
       return NextResponse.json(
         { error: 'Failed to create route stops', details: stopsError.message },
         { status: 500 }
-      );
+      )
     }
 
     // NEW: Service-aware route saving
@@ -93,17 +93,17 @@ export async function POST(request: NextRequest) {
         .from('service_types')
         .select('default_frequency_days')
         .eq('id', body.serviceTypeId)
-        .single();
+        .single()
 
-      const frequencyDays = serviceType?.default_frequency_days || 90;
+      const frequencyDays = serviceType?.default_frequency_days || 90
 
       // Update company_services for each stop
       for (const stop of body.stops) {
         if (stop.companyServiceId) {
           // Calculate next inspection date
-          const routeDate = new Date(body.date);
-          const nextDate = new Date(routeDate);
-          nextDate.setDate(nextDate.getDate() + frequencyDays);
+          const routeDate = new Date(body.date)
+          const nextDate = new Date(routeDate)
+          nextDate.setDate(nextDate.getDate() + frequencyDays)
 
           // Update company service
           await supabase
@@ -113,20 +113,18 @@ export async function POST(request: NextRequest) {
               next_inspection_date: nextDate.toISOString().split('T')[0],
               assigned_inspector_id: body.inspectorId,
             })
-            .eq('id', stop.companyServiceId);
+            .eq('id', stop.companyServiceId)
 
           // Create placeholder inspection_history record
-          await supabase
-            .from('inspection_history')
-            .insert({
-              company_id: stop.companyId,
-              service_type_id: body.serviceTypeId,
-              inspector_id: body.inspectorId,
-              route_id: route.id,
-              inspection_date: body.date,
-              status: 'in_progress', // Will be updated when route is completed
-              notes: `Route: ${body.name}`,
-            });
+          await supabase.from('inspection_history').insert({
+            company_id: stop.companyId,
+            service_type_id: body.serviceTypeId,
+            inspector_id: body.inspectorId,
+            route_id: route.id,
+            inspection_date: body.date,
+            status: 'in_progress', // Will be updated when route is completed
+            notes: `Route: ${body.name}`,
+          })
         }
       }
     }
@@ -141,29 +139,22 @@ export async function POST(request: NextRequest) {
         totalStops: body.stops.length,
       },
       message: 'Route saved successfully! Inspection dates updated.',
-    });
-
+    })
   } catch (error) {
-    console.error('Save route error:', error);
-    
+    console.error('Save route error:', error)
+
     // Handle authentication errors
     if (error instanceof Error && error.name === 'UnauthorizedError') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    
+
     if (error instanceof Error && error.name === 'ForbiddenError') {
-      return NextResponse.json(
-        { error: 'Insufficient permissions' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
-    
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Failed to save route' },
       { status: 500 }
-    );
+    )
   }
 }

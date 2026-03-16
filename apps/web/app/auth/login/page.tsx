@@ -1,122 +1,123 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { LogIn, UserPlus, AlertCircle, CheckCircle, Chrome } from 'lucide-react';
+import { useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { LogIn, UserPlus, AlertCircle, CheckCircle, Chrome } from 'lucide-react'
 
-type AuthMode = 'login' | 'signup';
+type AuthMode = 'login' | 'signup'
 
 export default function LoginPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const returnUrl = searchParams.get('from') || '/';
-  const { signIn, signUp, signInWithGoogle } = useAuth();
-  const [mode, setMode] = useState<AuthMode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('from') || '/'
+  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const [mode, setMode] = useState<AuthMode>('login')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   const resetForm = () => {
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-    setFullName('');
-    setError('');
-    setSuccess('');
-  };
+    setEmail('')
+    setPassword('')
+    setConfirmPassword('')
+    setFullName('')
+    setError('')
+    setSuccess('')
+  }
 
   const switchMode = (newMode: AuthMode) => {
-    setMode(newMode);
-    resetForm();
-  };
+    setMode(newMode)
+    resetForm()
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+    setLoading(true)
 
     try {
       if (mode === 'signup') {
         // Validate passwords match
         if (password !== confirmPassword) {
-          setError('პაროლები არ ემთხვევა');
-          setLoading(false);
-          return;
+          setError('პაროლები არ ემთხვევა')
+          setLoading(false)
+          return
         }
 
         // Validate password strength
         if (password.length < 6) {
-          setError('პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო');
-          setLoading(false);
-          return;
+          setError('პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო')
+          setLoading(false)
+          return
         }
 
-        const { error } = await signUp(email, password);
+        const { error } = await signUp(email, password, fullName)
 
         if (error) {
           if (error.message.includes('already registered')) {
-            setError('ეს ელ.ფოსტა უკვე რეგისტრირებულია');
+            setError('ეს ელ.ფოსტა უკვე რეგისტრირებულია')
           } else {
-            setError(error.message);
+            setError(error.message)
           }
         } else {
-          setSuccess('რეგისტრაცია წარმატებით დასრულდა! შეამოწმეთ ელ.ფოსტა დასადასტურებლად.');
+          setSuccess('რეგისტრაცია წარმატებით დასრულდა! შეამოწმეთ ელ.ფოსტა დასადასტურებლად.')
           // Clear form but stay on page to show success message
-          setEmail('');
-          setPassword('');
-          setConfirmPassword('');
-          setFullName('');
+          setEmail('')
+          setPassword('')
+          setConfirmPassword('')
+          setFullName('')
         }
       } else {
         // Login mode
-        const { error } = await signIn(email, password);
+        const { error } = await signIn(email, password)
 
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            setError('არასწორი ელ.ფოსტა ან პაროლი');
+            setError('არასწორი ელ.ფოსტა ან პაროლი')
           } else if (error.message.includes('Email not confirmed')) {
-            setError('გთხოვთ დაადასტუროთ ელ.ფოსტა შესვლამდე');
+            setError('გთხოვთ დაადასტუროთ ელ.ფოსტა შესვლამდე')
           } else {
-            setError(error.message);
+            setError(error.message)
           }
         } else {
           // Redirect to the original page or home
-          router.push(returnUrl);
-          router.refresh();
+          router.push(returnUrl)
+          router.refresh()
         }
       }
     } catch (err) {
-      setError(mode === 'signup'
-        ? 'შეცდომა რეგისტრაციისას. გთხოვთ სცადოთ თავიდან.'
-        : 'შეცდომა შესვლისას. გთხოვთ სცადოთ თავიდან.'
-      );
+      setError(
+        mode === 'signup'
+          ? 'შეცდომა რეგისტრაციისას. გთხოვთ სცადოთ თავიდან.'
+          : 'შეცდომა შესვლისას. გთხოვთ სცადოთ თავიდან.'
+      )
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleGoogleSignIn = async () => {
-    setError('');
-    setGoogleLoading(true);
+    setError('')
+    setGoogleLoading(true)
     try {
-      const { error } = await signInWithGoogle();
+      const { error } = await signInWithGoogle()
       if (error) {
-        setError('Google-ით შესვლა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.');
+        setError('Google-ით შესვლა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.')
       }
       // If successful, Supabase will redirect to the callback URL
     } catch (err) {
-      setError('Google-ით შესვლა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.');
+      setError('Google-ით შესვლა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.')
     } finally {
-      setGoogleLoading(false);
+      setGoogleLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -126,9 +127,7 @@ export default function LoginPage() {
           <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
             RH
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">
-            GeoSafety RouteHub
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-900">GeoSafety RouteHub</h2>
           <p className="mt-2 text-sm text-gray-600">
             {mode === 'login' ? 'შესვლა სისტემაში' : 'ახალი ანგარიშის შექმნა'}
           </p>
@@ -193,7 +192,7 @@ export default function LoginPage() {
                   type="text"
                   autoComplete="name"
                   value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  onChange={e => setFullName(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="თქვენი სახელი"
                 />
@@ -212,7 +211,7 @@ export default function LoginPage() {
                 autoComplete="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="your.email@geosafety.ge"
               />
@@ -230,19 +229,20 @@ export default function LoginPage() {
                 autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
                 required
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="••••••••"
               />
-              {mode === 'signup' && (
-                <p className="mt-1 text-xs text-gray-500">მინიმუმ 6 სიმბოლო</p>
-              )}
+              {mode === 'signup' && <p className="mt-1 text-xs text-gray-500">მინიმუმ 6 სიმბოლო</p>}
             </div>
 
             {/* Confirm Password - Only for signup */}
             {mode === 'signup' && (
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                >
                   პაროლის დადასტურება
                 </label>
                 <input
@@ -252,7 +252,7 @@ export default function LoginPage() {
                   autoComplete="new-password"
                   required
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={e => setConfirmPassword(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="••••••••"
                 />
@@ -346,5 +346,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -3,7 +3,7 @@
  * Workspaces group and organize multiple boards
  */
 
-export type WorkspaceRole = 'owner' | 'admin' | 'member' | 'guest'
+export type WorkspaceRole = 'owner' | 'admin' | 'editor' | 'member' | 'guest'
 
 export interface Workspace {
   id: string
@@ -14,7 +14,6 @@ export interface Workspace {
   color?: string
   owner_id: string
   settings: WorkspaceSettings
-  is_default: boolean
   created_at: string
   updated_at: string
 }
@@ -93,6 +92,14 @@ export const WORKSPACE_ROLE_PERMISSIONS = {
     canArchiveBoards: true,
     canViewBoards: true,
   },
+  editor: {
+    canDelete: false,
+    canManageMembers: false,
+    canEditSettings: false,
+    canCreateBoards: true,
+    canArchiveBoards: true,
+    canViewBoards: true,
+  },
   member: {
     canDelete: false,
     canManageMembers: false,
@@ -111,4 +118,4 @@ export const WORKSPACE_ROLE_PERMISSIONS = {
   },
 } as const
 
-export type WorkspacePermissions = typeof WORKSPACE_ROLE_PERMISSIONS[WorkspaceRole]
+export type WorkspacePermissions = (typeof WORKSPACE_ROLE_PERMISSIONS)[WorkspaceRole]

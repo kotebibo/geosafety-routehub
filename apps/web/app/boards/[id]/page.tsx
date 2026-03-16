@@ -12,23 +12,96 @@ import { useBoardHandlers } from '@/features/boards/hooks/useBoardHandlers'
 import { useBoardUndoRedo } from '@/features/boards/hooks/useBoardUndoRedo'
 import { useFilteredItems } from '@/features/boards/hooks/useFilteredItems'
 import { useGroupByColumn } from '@/features/boards/hooks/useGroupByColumn'
-import { VirtualizedBoardTable, ErrorBoundary, BoardToolbar, type SortConfig, type FilterConfig } from '@/features/boards/components'
+import {
+  VirtualizedBoardTable,
+  ErrorBoundary,
+  BoardToolbar,
+  type SortConfig,
+  type FilterConfig,
+} from '@/features/boards/components'
 import { BoardPageSkeleton } from '@/features/boards/components/BoardPageSkeleton'
 import { BoardPageHeader } from '@/features/boards/components/BoardPageHeader'
 import { Button } from '@/shared/components/ui'
 import { useToast } from '@/components/ui-monday/Toast'
-import { ArrowLeft, Search, Download, Upload, Copy, Trash2, ArrowRightLeft } from 'lucide-react'
+import {
+  ArrowLeft,
+  Search,
+  Download,
+  Upload,
+  Copy,
+  Trash2,
+  ArrowRightLeft,
+  FileText,
+} from 'lucide-react'
 import type { BoardItem } from '@/features/boards/types/board'
 
 // Lazy-load heavy components that aren't needed on initial render
-const ColumnConfigPanel = dynamic(() => import('@/features/boards/components/ColumnConfig/ColumnConfigPanel').then(m => ({ default: m.ColumnConfigPanel })), { ssr: false })
-const AddColumnModal = dynamic(() => import('@/features/boards/components/ColumnConfig/AddColumnModal').then(m => ({ default: m.AddColumnModal })), { ssr: false })
-const ItemDetailDrawer = dynamic(() => import('@/features/boards/components/ItemDetail/ItemDetailDrawer').then(m => ({ default: m.ItemDetailDrawer })), { ssr: false })
-const ImportBoardModal = dynamic(() => import('@/features/boards/components/ImportBoardModal').then(m => ({ default: m.ImportBoardModal })), { ssr: false })
-const SaveAsTemplateModal = dynamic(() => import('@/features/boards/components/SaveAsTemplateModal').then(m => ({ default: m.SaveAsTemplateModal })), { ssr: false })
-const ActivityLogPanel = dynamic(() => import('@/features/boards/components/ActivityLog').then(m => ({ default: m.ActivityLogPanel })), { ssr: false })
-const BoardAccessModal = dynamic(() => import('@/features/boards/components/BoardAccessModal').then(m => ({ default: m.BoardAccessModal })), { ssr: false })
-const MoveItemModal = dynamic(() => import('@/features/boards/components/MoveItemModal').then(m => ({ default: m.MoveItemModal })), { ssr: false })
+const ColumnConfigPanel = dynamic(
+  () =>
+    import('@/features/boards/components/ColumnConfig/ColumnConfigPanel').then(m => ({
+      default: m.ColumnConfigPanel,
+    })),
+  { ssr: false }
+)
+const AddColumnModal = dynamic(
+  () =>
+    import('@/features/boards/components/ColumnConfig/AddColumnModal').then(m => ({
+      default: m.AddColumnModal,
+    })),
+  { ssr: false }
+)
+const ItemDetailDrawer = dynamic(
+  () =>
+    import('@/features/boards/components/ItemDetail/ItemDetailDrawer').then(m => ({
+      default: m.ItemDetailDrawer,
+    })),
+  { ssr: false }
+)
+const ImportBoardModal = dynamic(
+  () =>
+    import('@/features/boards/components/ImportBoardModal').then(m => ({
+      default: m.ImportBoardModal,
+    })),
+  { ssr: false }
+)
+const SaveAsTemplateModal = dynamic(
+  () =>
+    import('@/features/boards/components/SaveAsTemplateModal').then(m => ({
+      default: m.SaveAsTemplateModal,
+    })),
+  { ssr: false }
+)
+const ActivityLogPanel = dynamic(
+  () =>
+    import('@/features/boards/components/ActivityLog').then(m => ({ default: m.ActivityLogPanel })),
+  { ssr: false }
+)
+const BoardAccessModal = dynamic(
+  () =>
+    import('@/features/boards/components/BoardAccessModal').then(m => ({
+      default: m.BoardAccessModal,
+    })),
+  { ssr: false }
+)
+const MoveItemModal = dynamic(
+  () =>
+    import('@/features/boards/components/MoveItemModal').then(m => ({ default: m.MoveItemModal })),
+  { ssr: false }
+)
+const GenerateDocumentModal = dynamic(
+  () =>
+    import('@/features/documents/components/GenerateDocumentModal').then(m => ({
+      default: m.GenerateDocumentModal,
+    })),
+  { ssr: false }
+)
+const TemplateManagementModal = dynamic(
+  () =>
+    import('@/features/documents/components/TemplateManagementModal').then(m => ({
+      default: m.TemplateManagementModal,
+    })),
+  { ssr: false }
+)
 
 export default function BoardDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -49,22 +122,51 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false)
   const [showAccessModal, setShowAccessModal] = useState(false)
   const [showMoveModal, setShowMoveModal] = useState(false)
+  const [showGenerateDoc, setShowGenerateDoc] = useState(false)
+  const [showDocTemplates, setShowDocTemplates] = useState(false)
 
   // Data
   const data = useBoardPageData(params.id)
   const {
-    user, inspectorId, board, items, columns, groups,
-    boardLoading, itemsLoading, itemsError, groupsLoading,
-    createItem, updateItem, duplicateItems, deleteItem, createUpdate,
-    createGroup, updateGroup, deleteGroup,
-    refetchColumns, selectedItem, setSelectedItem, fetchLookups,
+    user,
+    inspectorId,
+    board,
+    items,
+    columns,
+    groups,
+    boardLoading,
+    itemsLoading,
+    itemsError,
+    groupsLoading,
+    createItem,
+    updateItem,
+    duplicateItems,
+    deleteItem,
+    createUpdate,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    refetchColumns,
+    selectedItem,
+    setSelectedItem,
+    fetchLookups,
   } = data
 
   // Activity log (deferred fetch)
-  const { data: activityUpdates, isLoading: activityLoading, refetch: refetchActivity } = useBoardUpdates(showActivityLog ? params.id : '')
+  const {
+    data: activityUpdates,
+    isLoading: activityLoading,
+    refetch: refetchActivity,
+  } = useBoardUpdates(showActivityLog ? params.id : '')
 
   // Undo/redo
-  const { canUndo, canRedo, pushAction, undo: performUndo, redo: performRedo } = useBoardUndoRedo({
+  const {
+    canUndo,
+    canRedo,
+    pushAction,
+    undo: performUndo,
+    redo: performRedo,
+  } = useBoardUndoRedo({
     items,
     updateItem,
     updateGroup,
@@ -72,9 +174,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   })
 
   // Real-time collaboration
-  const {
-    presence, isConnected, setEditing, publishItemChange,
-  } = useRealtimeBoard({
+  const { presence, isConnected, setEditing, publishItemChange } = useRealtimeBoard({
     boardId: params.id,
     boardType: board?.board_type || 'custom',
     userId: inspectorId || undefined,
@@ -90,7 +190,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     groupByColumn,
     groups,
     filteredItems,
-    columns,
+    columns
   )
 
   // All event handlers
@@ -101,8 +201,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     columns,
     groups,
     inspectorId,
-    createItem, updateItem, duplicateItems, deleteItem, createUpdate,
-    createGroup, updateGroup, deleteGroup,
+    createItem,
+    updateItem,
+    duplicateItems,
+    deleteItem,
+    createUpdate,
+    createGroup,
+    updateGroup,
+    deleteGroup,
     refetchColumns,
     setSelection,
     setShowAddColumn,
@@ -123,7 +229,9 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <h2 className="text-h3 font-semibold text-text-primary mb-2">Board not found</h2>
-        <p className="text-text-secondary mb-6">The board you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.</p>
+        <p className="text-text-secondary mb-6">
+          The board you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
+        </p>
         <Button variant="primary" onClick={() => router.push('/boards')}>
           <ArrowLeft className="w-5 h-5 mr-2" />
           Back to Boards
@@ -143,6 +251,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         onShowSaveAsTemplate={() => setShowSaveAsTemplate(true)}
         onShowAccessModal={() => setShowAccessModal(true)}
         onShowColumnConfig={() => setShowColumnConfig(true)}
+        onShowDocTemplates={() => setShowDocTemplates(true)}
       />
 
       {/* Fixed Toolbar */}
@@ -154,6 +263,10 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 <span className="text-sm text-text-secondary font-medium">
                   {selection.size} selected
                 </span>
+                <Button variant="secondary" size="sm" onClick={() => setShowGenerateDoc(true)}>
+                  <FileText className="w-4 h-4 mr-1" />
+                  Generate Doc
+                </Button>
                 <Button variant="secondary" size="sm" onClick={() => setShowMoveModal(true)}>
                   <ArrowRightLeft className="w-4 h-4 mr-1" />
                   Move
@@ -184,16 +297,19 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   Clear
                 </button>
               </div>
-            ) : columns && columns.length > 0 && (
-              <BoardToolbar
-                columns={columns}
-                sortConfig={sortConfig}
-                onSortChange={setSortConfig}
-                groupByColumn={groupByColumn}
-                onGroupByChange={setGroupByColumn}
-                filters={filters}
-                onFiltersChange={setFilters}
-              />
+            ) : (
+              columns &&
+              columns.length > 0 && (
+                <BoardToolbar
+                  columns={columns}
+                  sortConfig={sortConfig}
+                  onSortChange={setSortConfig}
+                  groupByColumn={groupByColumn}
+                  onGroupByChange={setGroupByColumn}
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                />
+              )
             )}
           </div>
 
@@ -205,7 +321,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
             {/* Export Button */}
             <div className="relative">
-              <Button variant="secondary" size="sm" onClick={() => setShowExportMenu(!showExportMenu)}>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowExportMenu(!showExportMenu)}
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
@@ -239,28 +359,38 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 type="text"
                 placeholder="Search items..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={e => setSearchQuery(e.target.value)}
                 className="pl-9 pr-4 py-1.5 text-sm border border-border-light rounded-md bg-bg-primary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent w-48"
               />
             </div>
-            <span className="text-sm text-text-secondary">
-              {filteredItems?.length || 0} items
-            </span>
+            <span className="text-sm text-text-secondary">{filteredItems?.length || 0} items</span>
           </div>
         </div>
       </div>
 
-      {/* Scrollable Table Area */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4">
+      {/* Table Area - no page scroll, table handles its own scrolling */}
+      <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-6 py-4">
         {itemsError ? (
           <div className="flex flex-col items-center justify-center py-24 bg-bg-primary rounded-lg border border-border-light">
             <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-red-50">
-              <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              <svg
+                className="w-8 h-8 text-red-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
               </svg>
             </div>
             <h3 className="text-lg font-semibold text-text-primary mb-2">Failed to load items</h3>
-            <p className="text-sm text-text-secondary mb-4">There was an error loading the board items</p>
+            <p className="text-sm text-text-secondary mb-4">
+              There was an error loading the board items
+            </p>
             <Button variant="primary" onClick={() => window.location.reload()}>
               Retry
             </Button>
@@ -284,7 +414,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               onGroupCollapseToggle={handlers.handleGroupCollapseToggle}
               onDeleteGroup={handlers.handleDeleteGroup}
               onColumnResize={handlers.handleColumnResize}
-              onColumnReorder={(cols) => handlers.handleTableColumnReorder(cols.map(c => c.id))}
+              onColumnReorder={cols => handlers.handleTableColumnReorder(cols.map(c => c.id))}
               onQuickAddColumn={handlers.handleQuickAddColumn}
               onOpenAddColumnModal={() => setShowAddColumn(true)}
               onColumnRename={handlers.handleColumnRename}
@@ -316,7 +446,10 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           onClose={() => setShowColumnConfig(false)}
           onUpdateColumn={handlers.handleUpdateColumn}
           onReorderColumns={handlers.handleReorderColumns}
-          onAddColumn={() => { setShowColumnConfig(false); setShowAddColumn(true) }}
+          onAddColumn={() => {
+            setShowColumnConfig(false)
+            setShowAddColumn(true)
+          }}
           onDeleteColumn={handlers.handleDeleteColumn}
         />
       )}
@@ -377,7 +510,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         isLoading={activityLoading}
         onRefresh={() => refetchActivity()}
         showRollback={true}
-        onRollback={async (update) => {
+        onRollback={async update => {
           if (!update.field_name) {
             showToast('Cannot rollback: no field name', 'error')
             return
@@ -395,7 +528,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             }
 
             let oldValue: any = update.old_value
-            try { oldValue = JSON.parse(update.old_value) } catch { /* keep as string */ }
+            try {
+              oldValue = JSON.parse(update.old_value)
+            } catch {
+              /* keep as string */
+            }
 
             if (update.field_name === 'name') {
               await updateItem.mutateAsync({ itemId: update.item_id, updates: { name: oldValue } })
@@ -419,6 +556,30 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         }}
       />
 
+      {showGenerateDoc && selection.size > 0 && items && (
+        <GenerateDocumentModal
+          isOpen={showGenerateDoc}
+          onClose={() => setShowGenerateDoc(false)}
+          boardId={params.id}
+          items={items.filter(item => selection.has(item.id))}
+          onSuccess={() => showToast('Document generated successfully', 'success')}
+        />
+      )}
+
+      {showDocTemplates && board && columns && (
+        <TemplateManagementModal
+          isOpen={showDocTemplates}
+          onClose={() => setShowDocTemplates(false)}
+          boardId={params.id}
+          workspaceId={board.workspace_id}
+          columns={columns.map(c => ({
+            column_id: c.column_id,
+            column_name: c.column_name,
+            column_type: c.column_type,
+          }))}
+        />
+      )}
+
       {showMoveModal && selection.size > 0 && (
         <MoveItemModal
           isOpen={showMoveModal}
@@ -427,7 +588,10 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           sourceBoardId={params.id}
           onMoveComplete={(movedCount, failedCount) => {
             if (movedCount > 0) {
-              showToast(`Moved ${movedCount} item(s)${failedCount > 0 ? `, ${failedCount} failed` : ''}`, failedCount > 0 ? 'warning' : 'success')
+              showToast(
+                `Moved ${movedCount} item(s)${failedCount > 0 ? `, ${failedCount} failed` : ''}`,
+                failedCount > 0 ? 'warning' : 'success'
+              )
               setSelection(new Set())
             } else {
               showToast('Failed to move items', 'error')

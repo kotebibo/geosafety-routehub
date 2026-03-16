@@ -18,8 +18,7 @@ import type { Board } from '@/types/board'
 export const workspaceKeys = {
   all: ['workspaces'] as const,
   lists: () => [...workspaceKeys.all, 'list'] as const,
-  list: (filters?: Record<string, unknown>) =>
-    [...workspaceKeys.lists(), filters] as const,
+  list: (filters?: Record<string, unknown>) => [...workspaceKeys.lists(), filters] as const,
   details: () => [...workspaceKeys.all, 'detail'] as const,
   detail: (id: string) => [...workspaceKeys.details(), id] as const,
   members: (id: string) => [...workspaceKeys.detail(id), 'members'] as const,
@@ -88,25 +87,13 @@ export function useWorkspaceWithBoards(workspaceId: string) {
 }
 
 /**
- * Hook to fetch user's default workspace
- */
-export function useDefaultWorkspace() {
-  return useQuery({
-    queryKey: [...workspaceKeys.all, 'default'],
-    queryFn: () => workspaceService.getDefaultWorkspace(),
-    staleTime: 10 * 60 * 1000, // 10 minutes
-  })
-}
-
-/**
  * Hook to create a workspace
  */
 export function useCreateWorkspace(userId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: CreateWorkspaceInput) =>
-      workspaceService.createWorkspace(input, userId),
+    mutationFn: (input: CreateWorkspaceInput) => workspaceService.createWorkspace(input, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() })
     },
@@ -122,12 +109,9 @@ export function useUpdateWorkspace(workspaceId: string) {
   return useMutation({
     mutationFn: (updates: UpdateWorkspaceInput) =>
       workspaceService.updateWorkspace(workspaceId, updates),
-    onSuccess: (updatedWorkspace) => {
+    onSuccess: updatedWorkspace => {
       // Update specific workspace cache
-      queryClient.setQueryData(
-        workspaceKeys.detail(workspaceId),
-        updatedWorkspace
-      )
+      queryClient.setQueryData(workspaceKeys.detail(workspaceId), updatedWorkspace)
       // Invalidate lists
       queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() })
     },
@@ -141,10 +125,12 @@ export function useDeleteWorkspace() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (workspaceId: string) =>
-      workspaceService.deleteWorkspace(workspaceId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: workspaceKeys.all })
+    mutationFn: (workspaceId: string) => workspaceService.deleteWorkspace(workspaceId),
+    onSuccess: (_data, workspaceId) => {
+      // Remove the deleted workspace's queries from cache instead of
+      // invalidating (which would refetch a now-deleted resource and 406)
+      queryClient.removeQueries({ queryKey: workspaceKeys.detail(workspaceId) })
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.lists() })
     },
   })
 }
@@ -192,17 +178,27 @@ export function useMoveBoardToWorkspace() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      boardId,
-      workspaceId,
-    }: {
-      boardId: string
-      workspaceId: string | null
-    }) => workspaceService.moveBoardToWorkspace(boardId, workspaceId),
+    mutationFn: ({ boardId, workspaceId }: { boardId: string; workspaceId: string | null }) =>
+      workspaceService.moveBoardToWorkspace(boardId, workspaceId),
     onSuccess: () => {
       // Invalidate all workspace boards
       queryClient.invalidateQueries({ queryKey: workspaceKeys.all })
       // Also invalidate boards list
+      queryClient.invalidateQueries({ queryKey: ['routes', 'user-boards'] })
+    },
+  })
+}
+
+/**
+ * Hook to permanently delete a board
+ */
+export function useDeleteBoard() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (boardId: string) => workspaceService.deleteBoard(boardId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: workspaceKeys.all })
       queryClient.invalidateQueries({ queryKey: ['routes', 'user-boards'] })
     },
   })
@@ -292,8 +288,7 @@ export function useRemoveWorkspaceMember(workspaceId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (userId: string) =>
-      workspaceService.removeWorkspaceMember(workspaceId, userId),
+    mutationFn: (userId: string) => workspaceService.removeWorkspaceMember(workspaceId, userId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: workspaceKeys.members(workspaceId),

@@ -3,14 +3,7 @@
 import * as React from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import {
-  ChevronDown,
-  Plus,
-  Settings,
-  Check,
-  Folder,
-  Home,
-} from 'lucide-react'
+import { ChevronDown, Plus, Settings, Check, Folder, Home } from 'lucide-react'
 import { useWorkspaces } from '../hooks/useWorkspaces'
 import type { Workspace } from '@/types/workspace'
 
@@ -50,7 +43,7 @@ export function WorkspaceSwitcher({
 
   const currentWorkspace = React.useMemo(() => {
     if (!workspaces || !currentWorkspaceId) return null
-    return workspaces.find((w) => w.id === currentWorkspaceId)
+    return workspaces.find(w => w.id === currentWorkspaceId)
   }, [workspaces, currentWorkspaceId])
 
   // Close dropdown when clicking outside
@@ -130,10 +123,7 @@ export function WorkspaceSwitcher({
           </>
         )}
         <ChevronDown
-          className={cn(
-            'w-4 h-4 transition-transform flex-shrink-0',
-            isOpen && 'rotate-180'
-          )}
+          className={cn('w-4 h-4 transition-transform flex-shrink-0', isOpen && 'rotate-180')}
         />
       </button>
 
@@ -146,7 +136,7 @@ export function WorkspaceSwitcher({
               <div className="px-3 py-1.5 text-[10px] font-semibold text-text-tertiary uppercase tracking-wider">
                 Workspaces
               </div>
-              {workspaces.map((workspace) => {
+              {workspaces.map(workspace => {
                 const Icon = getWorkspaceIcon(workspace.icon)
                 const isSelected = workspace.id === currentWorkspaceId
 
@@ -170,14 +160,7 @@ export function WorkspaceSwitcher({
                       {workspace.name.charAt(0).toUpperCase()}
                     </div>
                     <span className="flex-1 text-left truncate">{workspace.name}</span>
-                    {workspace.is_default && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-text-tertiary rounded">
-                        Default
-                      </span>
-                    )}
-                    {isSelected && (
-                      <Check className="w-4 h-4 text-monday-primary flex-shrink-0" />
-                    )}
+                    {isSelected && <Check className="w-4 h-4 text-monday-primary flex-shrink-0" />}
                   </button>
                 )
               })}

@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth } from '@/middleware/auth'
@@ -58,17 +60,15 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', validated.inspector_id),
 
-      supabase
-        .from('inspector_location_history')
-        .insert({
-          inspector_id: validated.inspector_id,
-          lat: validated.latitude,
-          lng: validated.longitude,
-          accuracy: validated.accuracy,
-          speed: validated.speed,
-          heading: validated.heading,
-          route_id: validated.route_id,
-        }),
+      supabase.from('inspector_location_history').insert({
+        inspector_id: validated.inspector_id,
+        lat: validated.latitude,
+        lng: validated.longitude,
+        accuracy: validated.accuracy,
+        speed: validated.speed,
+        heading: validated.heading,
+        route_id: validated.route_id,
+      }),
     ])
 
     if (updateResult.error) {
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Basic ${Buffer.from(ablyApiKey).toString('base64')}`,
+            Authorization: `Basic ${Buffer.from(ablyApiKey).toString('base64')}`,
           },
           body: JSON.stringify({
             name: 'location',
@@ -117,7 +117,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 403 })
     }
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: 'Validation failed', details: error.issues }, { status: 400 })
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.issues },
+        { status: 400 }
+      )
     }
     console.error('Location update error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, History, FileCheck, Users, Columns } from 'lucide-react'
+import { ArrowLeft, History, FileCheck, Users, Columns, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/shared/components/ui'
 import { BoardPresenceIndicator } from './BoardPresence'
@@ -17,6 +17,7 @@ interface BoardPageHeaderProps {
   onShowSaveAsTemplate: () => void
   onShowAccessModal: () => void
   onShowColumnConfig: () => void
+  onShowDocTemplates?: () => void
 }
 
 function getBoardColorClass(color?: string) {
@@ -39,6 +40,7 @@ export function BoardPageHeader({
   onShowSaveAsTemplate,
   onShowAccessModal,
   onShowColumnConfig,
+  onShowDocTemplates,
 }: BoardPageHeaderProps) {
   const router = useRouter()
 
@@ -56,10 +58,7 @@ export function BoardPageHeader({
           </button>
 
           <div className="flex items-center gap-2 md:gap-3 flex-wrap">
-            <BoardPresenceIndicator
-              presence={presence}
-              isConnected={isConnected}
-            />
+            <BoardPresenceIndicator presence={presence} isConnected={isConnected} />
 
             <Button variant="secondary" size="sm" onClick={onShowActivityLog}>
               <History className="w-4 h-4 mr-2" />
@@ -76,6 +75,13 @@ export function BoardPageHeader({
               <span className="hidden sm:inline">Access</span>
             </Button>
 
+            {onShowDocTemplates && (
+              <Button variant="secondary" size="sm" onClick={onShowDocTemplates}>
+                <FileText className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Doc Templates</span>
+              </Button>
+            )}
+
             <Button variant="secondary" size="sm" onClick={onShowColumnConfig}>
               <Columns className="w-4 h-4 mr-2" />
               Columns
@@ -85,19 +91,20 @@ export function BoardPageHeader({
 
         {/* Board Title */}
         <div className="flex items-center gap-4">
-          <div className={cn('w-12 h-12 rounded-lg flex items-center justify-center', getBoardColorClass(board.color))}>
+          <div
+            className={cn(
+              'w-12 h-12 rounded-lg flex items-center justify-center',
+              getBoardColorClass(board.color)
+            )}
+          >
             <span className="text-white text-xl font-bold">
               {board.name.charAt(0).toUpperCase()}
             </span>
           </div>
           <div>
-            <h1 className="text-h2 font-bold text-text-primary">
-              {board.name}
-            </h1>
+            <h1 className="text-h2 font-bold text-text-primary">{board.name}</h1>
             {board.description && (
-              <p className="text-sm text-text-tertiary mt-1">
-                {board.description}
-              </p>
+              <p className="text-sm text-text-tertiary mt-1">{board.description}</p>
             )}
           </div>
         </div>

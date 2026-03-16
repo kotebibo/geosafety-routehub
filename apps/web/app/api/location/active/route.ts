@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
@@ -56,13 +58,17 @@ export async function GET(request: NextRequest) {
         lat: latestLoc.lat,
         lng: latestLoc.lng,
         last_location_update: inspector.last_location_update,
-        active_route: route ? {
-          id: route.id,
-          name: route.name,
-          status: route.status,
-          total_stops: (route.route_stops as any[])?.length || 0,
-          completed_stops: (route.route_stops as any[])?.filter((s: any) => s.status === 'completed').length || 0,
-        } : null,
+        active_route: route
+          ? {
+              id: route.id,
+              name: route.name,
+              status: route.status,
+              total_stops: (route.route_stops as any[])?.length || 0,
+              completed_stops:
+                (route.route_stops as any[])?.filter((s: any) => s.status === 'completed').length ||
+                0,
+            }
+          : null,
       })
     }
 

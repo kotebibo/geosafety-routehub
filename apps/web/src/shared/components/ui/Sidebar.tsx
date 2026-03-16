@@ -11,9 +11,7 @@ import { useInspectorId } from '@/hooks/useInspectorId'
 import { useUserBoards } from '@/features/boards/hooks'
 import { userBoardsService } from '@/features/boards/services/user-boards.service'
 import { useQueryClient } from '@tanstack/react-query'
-import {
-  CreateWorkspaceModal,
-} from '@/features/workspaces/components'
+import { CreateWorkspaceModal } from '@/features/workspaces/components'
 import { useWorkspaces, useDeleteWorkspace, useUpdateWorkspace } from '@/features/workspaces/hooks'
 import {
   Home,
@@ -96,7 +94,6 @@ interface BoardMenuState {
 interface WorkspaceMenuState {
   workspaceId: string
   workspaceName: string
-  isDefault?: boolean
   isOwner: boolean
   canEdit: boolean // Owner OR admin
   position: { top: number; left: number }
@@ -115,7 +112,9 @@ export function Sidebar({ className }: SidebarProps) {
   const [selectedWorkspaceId, setSelectedWorkspaceId] = React.useState<string | null>(null)
   const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = React.useState(false)
   // Workspace menu state
-  const [workspaceMenuState, setWorkspaceMenuState] = React.useState<WorkspaceMenuState | null>(null)
+  const [workspaceMenuState, setWorkspaceMenuState] = React.useState<WorkspaceMenuState | null>(
+    null
+  )
   const [workspaceRenameMode, setWorkspaceRenameMode] = React.useState(false)
   const [workspaceRenameValue, setWorkspaceRenameValue] = React.useState('')
   const [workspaceDeleteConfirm, setWorkspaceDeleteConfirm] = React.useState(false)
@@ -149,7 +148,8 @@ export function Sidebar({ className }: SidebarProps) {
 
   // Group boards by workspace, collecting shared boards separately
   const { boardsByWorkspace, sharedBoards } = React.useMemo(() => {
-    if (!allBoards || !workspaces) return { boardsByWorkspace: new Map(), sharedBoards: [] as any[] }
+    if (!allBoards || !workspaces)
+      return { boardsByWorkspace: new Map(), sharedBoards: [] as any[] }
 
     const grouped = new Map<string, typeof allBoards>()
     const shared: typeof allBoards = []
@@ -193,10 +193,9 @@ export function Sidebar({ className }: SidebarProps) {
       }
     }
 
-    // If no workspace selected yet, pick default or first
+    // If no workspace selected yet, pick first
     if (!selectedWorkspaceId) {
-      const defaultWs = workspaces.find((ws: any) => ws.is_default)
-      setSelectedWorkspaceId(defaultWs?.id || workspaces[0]?.id || null)
+      setSelectedWorkspaceId(workspaces[0]?.id || null)
     }
   }, [pathname, allBoards, workspaces])
 
@@ -205,7 +204,10 @@ export function Sidebar({ className }: SidebarProps) {
   // Close workspace dropdown when clicking outside
   React.useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (workspaceDropdownRef.current && !workspaceDropdownRef.current.contains(event.target as Node)) {
+      if (
+        workspaceDropdownRef.current &&
+        !workspaceDropdownRef.current.contains(event.target as Node)
+      ) {
         setWorkspaceDropdownOpen(false)
       }
     }
@@ -229,8 +231,7 @@ export function Sidebar({ className }: SidebarProps) {
     if (selectedWorkspaceId && selectedWorkspaceId !== '__shared__') {
       return selectedWorkspaceId
     }
-    const defaultWs = workspaces?.find((ws: any) => ws.is_default)
-    return defaultWs?.id || null
+    return workspaces?.[0]?.id || null
   }
 
   // Legacy references for boards (for menu actions)
@@ -319,7 +320,6 @@ export function Sidebar({ className }: SidebarProps) {
     e: React.MouseEvent,
     workspaceId: string,
     workspaceName: string,
-    isDefault: boolean,
     ownerId: string
   ) => {
     e.preventDefault()
@@ -331,7 +331,6 @@ export function Sidebar({ className }: SidebarProps) {
     setWorkspaceMenuState({
       workspaceId,
       workspaceName,
-      isDefault,
       isOwner,
       canEdit: isOwner || isAdmin, // Owner OR admin can edit
       position: {
@@ -437,7 +436,7 @@ export function Sidebar({ className }: SidebarProps) {
     try {
       const board = await userBoardsService.getBoard(menuState.boardId)
       await userBoardsService.updateBoard(menuState.boardId, {
-        settings: { ...board.settings, is_favorite: !menuState.isFavorite }
+        settings: { ...board.settings, is_favorite: !menuState.isFavorite },
       })
       refreshBoards()
       closeMenu()
@@ -455,7 +454,7 @@ export function Sidebar({ className }: SidebarProps) {
     try {
       const board = await userBoardsService.getBoard(menuState.boardId)
       await userBoardsService.updateBoard(menuState.boardId, {
-        settings: { ...board.settings, is_archived: !menuState.isArchived }
+        settings: { ...board.settings, is_archived: !menuState.isArchived },
       })
       refreshBoards()
       closeMenu()
@@ -601,561 +600,604 @@ export function Sidebar({ className }: SidebarProps) {
 
   return (
     <>
-    <aside
-      className={cn(
-        'flex flex-col flex-shrink-0 h-screen bg-bg-primary border-r border-border-light transition-all duration-normal',
-        collapsed ? 'w-16' : 'w-72',
-        className
-      )}
-    >
-      {/* Logo Section */}
-      <div className="flex-shrink-0 flex items-center gap-2 h-14 px-3 border-b border-border-light">
-        {!collapsed ? (
-          <>
-            <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
-              <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                RH
-              </div>
-              <span className="text-lg font-semibold text-text-primary truncate">
-                RouteHub
-              </span>
-            </Link>
-            <NotificationBell />
-          </>
-        ) : (
-          <div className="flex items-center justify-center w-full">
-            <Link href="/" className="flex items-center justify-center">
-              <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm">
-                RH
-              </div>
-            </Link>
-          </div>
+      <aside
+        className={cn(
+          'flex flex-col flex-shrink-0 h-screen bg-bg-primary border-r border-border-light transition-all duration-normal',
+          collapsed ? 'w-16' : 'w-72',
+          className
         )}
-      </div>
+      >
+        {/* Logo Section */}
+        <div className="flex-shrink-0 flex items-center gap-2 h-14 px-3 border-b border-border-light">
+          {!collapsed ? (
+            <>
+              <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  RH
+                </div>
+                <span className="text-lg font-semibold text-text-primary truncate">RouteHub</span>
+              </Link>
+              <NotificationBell />
+            </>
+          ) : (
+            <div className="flex items-center justify-center w-full">
+              <Link href="/" className="flex items-center justify-center">
+                <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm">
+                  RH
+                </div>
+              </Link>
+            </div>
+          )}
+        </div>
 
-      {/* Scrollable content area */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-y-auto scrollbar-thin">
-      {/* Main Navigation - Top Section */}
-      <div className="flex-shrink-0">
-        {/* Primary Navigation */}
-        <nav className="py-4 px-2">
-          <ul className="space-y-1">
-            {navItems
-              .filter((item) => hasPermission(item.permission))
-              .map((item) => {
-              const Icon = item.icon
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              const badge = item.href === '/news' && unreadNews > 0 ? unreadNews : 0
+        {/* Scrollable content area */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-y-auto scrollbar-thin">
+          {/* Main Navigation - Top Section */}
+          <div className="flex-shrink-0">
+            {/* Primary Navigation */}
+            <nav className="py-4 px-2">
+              <ul className="space-y-1">
+                {navItems
+                  .filter(item => hasPermission(item.permission))
+                  .map(item => {
+                    const Icon = item.icon
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+                    const badge = item.href === '/news' && unreadNews > 0 ? unreadNews : 0
 
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={cn(
-                      'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast',
-                      'hover:bg-bg-hover',
-                      isActive
-                        ? 'bg-bg-selected text-monday-primary'
-                        : 'text-text-primary hover:text-text-primary',
-                      collapsed && 'justify-center'
-                    )}
-                    title={collapsed ? item.label : undefined}
-                  >
-                    <Icon className="shrink-0 w-5 h-5" />
-                    {!collapsed && (
-                      <>
-                        <span className="truncate flex-1">{item.label}</span>
-                        {badge > 0 && (
-                          <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-semibold text-white bg-red-500 rounded-full">
-                            {badge > 99 ? '99+' : badge}
-                          </span>
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          className={cn(
+                            'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast',
+                            'hover:bg-bg-hover',
+                            isActive
+                              ? 'bg-bg-selected text-monday-primary'
+                              : 'text-text-primary hover:text-text-primary',
+                            collapsed && 'justify-center'
+                          )}
+                          title={collapsed ? item.label : undefined}
+                        >
+                          <Icon className="shrink-0 w-5 h-5" />
+                          {!collapsed && (
+                            <>
+                              <span className="truncate flex-1">{item.label}</span>
+                              {badge > 0 && (
+                                <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-semibold text-white bg-red-500 rounded-full">
+                                  {badge > 99 ? '99+' : badge}
+                                </span>
+                              )}
+                            </>
+                          )}
+                          {collapsed && badge > 0 && (
+                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                          )}
+                        </Link>
+                      </li>
+                    )
+                  })}
+              </ul>
+            </nav>
+          </div>
+
+          {/* Boards Section */}
+          <div className="flex-1 flex flex-col min-h-0">
+            {!collapsed ? (
+              <div className="flex flex-col h-full px-2">
+                {/* Workspace Dropdown Selector */}
+                {workspacesLoading || boardsLoading ? (
+                  <div className="px-3 py-2 text-sm text-text-tertiary">Loading...</div>
+                ) : workspaces && workspaces.length > 0 ? (
+                  <>
+                    <div className="mb-1 relative" ref={workspaceDropdownRef}>
+                      <button
+                        onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
+                        className={cn(
+                          'flex items-center gap-2 w-full px-2.5 py-2 rounded-md text-sm transition-all',
+                          'hover:bg-bg-hover text-text-primary border border-border-medium bg-white',
+                          workspaceDropdownOpen && 'border-monday-primary bg-bg-hover shadow-sm'
                         )}
-                      </>
-                    )}
-                    {collapsed && badge > 0 && (
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-                    )}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </nav>
-      </div>
+                      >
+                        {selectedWorkspaceId === '__shared__' ? (
+                          <Users className="w-4 h-4 flex-shrink-0 text-text-tertiary" />
+                        ) : (
+                          <div className="w-5 h-5 rounded bg-monday-primary flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                            {(selectedWorkspace?.name || 'W').charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <span className="flex-1 truncate text-left font-medium text-[13px]">
+                          {selectedWorkspaceId === '__shared__'
+                            ? 'Shared with me'
+                            : selectedWorkspace?.name || 'Select workspace'}
+                        </span>
+                        <ChevronDown
+                          className={cn(
+                            'w-3.5 h-3.5 text-text-tertiary transition-transform flex-shrink-0',
+                            workspaceDropdownOpen && 'rotate-180'
+                          )}
+                        />
+                      </button>
 
-      {/* Boards Section */}
-      <div className="flex-1 flex flex-col min-h-0">
-        {!collapsed ? (
-          <div className="flex flex-col h-full px-2">
-            {/* Workspace Dropdown Selector */}
-            {workspacesLoading || boardsLoading ? (
-              <div className="px-3 py-2 text-sm text-text-tertiary">
-                Loading...
-              </div>
-            ) : workspaces && workspaces.length > 0 ? (
-              <>
-                <div className="mb-1 relative" ref={workspaceDropdownRef}>
-                  <button
-                    onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
-                    className={cn(
-                      'flex items-center gap-2 w-full px-2.5 py-2 rounded-md text-sm transition-all',
-                      'hover:bg-bg-hover text-text-primary border border-border-medium bg-white',
-                      workspaceDropdownOpen && 'border-monday-primary bg-bg-hover shadow-sm'
-                    )}
-                  >
-                    {selectedWorkspaceId === '__shared__' ? (
-                      <Users className="w-4 h-4 flex-shrink-0 text-text-tertiary" />
-                    ) : (
-                      <div className="w-5 h-5 rounded bg-monday-primary flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-                        {(selectedWorkspace?.name || 'W').charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <span className="flex-1 truncate text-left font-medium text-[13px]">
-                      {selectedWorkspaceId === '__shared__'
-                        ? 'Shared with me'
-                        : selectedWorkspace?.name || 'Select workspace'}
-                    </span>
-                    <ChevronDown
-                      className={cn(
-                        'w-3.5 h-3.5 text-text-tertiary transition-transform flex-shrink-0',
-                        workspaceDropdownOpen && 'rotate-180'
-                      )}
-                    />
-                  </button>
+                      {/* Dropdown Menu */}
+                      {workspaceDropdownOpen && (
+                        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-white rounded-lg border border-monday-primary shadow-lg py-1 max-h-[280px] overflow-y-auto">
+                          {workspaces.map((ws: any) => {
+                            const boardCount = (boardsByWorkspace.get(ws.id) || []).filter(
+                              (b: any) => !b.settings?.is_archived
+                            ).length
+                            return (
+                              <button
+                                key={ws.id}
+                                onClick={() => {
+                                  setSelectedWorkspaceId(ws.id)
+                                  setWorkspaceDropdownOpen(false)
+                                }}
+                                className={cn(
+                                  'flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors',
+                                  'hover:bg-bg-hover',
+                                  selectedWorkspaceId === ws.id &&
+                                    'bg-bg-selected text-monday-primary'
+                                )}
+                              >
+                                <div className="w-5 h-5 rounded bg-monday-primary flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
+                                  {ws.name.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="flex-1 truncate text-left">{ws.name}</span>
+                                <span className="text-xs text-text-tertiary flex-shrink-0">
+                                  {boardCount}
+                                </span>
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  className="p-0.5 hover:bg-gray-200 rounded transition-opacity flex-shrink-0"
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    setWorkspaceDropdownOpen(false)
+                                    openWorkspaceMenu(e, ws.id, ws.name, ws.owner_id)
+                                  }}
+                                >
+                                  <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
+                                </span>
+                              </button>
+                            )
+                          })}
 
-                  {/* Dropdown Menu */}
-                  {workspaceDropdownOpen && (
-                    <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-white rounded-lg border border-monday-primary shadow-lg py-1 max-h-[280px] overflow-y-auto">
-                      {workspaces.map((ws: any) => {
-                        const boardCount = (boardsByWorkspace.get(ws.id) || []).filter((b: any) => !b.settings?.is_archived).length
-                        return (
-                          <button
-                            key={ws.id}
-                            onClick={() => {
-                              setSelectedWorkspaceId(ws.id)
-                              setWorkspaceDropdownOpen(false)
-                            }}
-                            className={cn(
-                              'flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors',
-                              'hover:bg-bg-hover',
-                              selectedWorkspaceId === ws.id && 'bg-bg-selected text-monday-primary'
-                            )}
-                          >
-                            <div className="w-5 h-5 rounded bg-monday-primary flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-                              {ws.name.charAt(0).toUpperCase()}
-                            </div>
-                            <span className="flex-1 truncate text-left">{ws.name}</span>
-                            <span className="text-xs text-text-tertiary flex-shrink-0">{boardCount}</span>
-                            <span
-                              role="button"
-                              tabIndex={0}
-                              className="p-0.5 hover:bg-gray-200 rounded transition-opacity flex-shrink-0"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setWorkspaceDropdownOpen(false)
-                                openWorkspaceMenu(e, ws.id, ws.name, ws.is_default, ws.owner_id)
-                              }}
-                            >
-                              <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
-                            </span>
-                          </button>
-                        )
-                      })}
+                          {/* Shared with me option */}
+                          {sharedBoards.length > 0 && (
+                            <>
+                              <div className="my-1 border-t border-border-light" />
+                              <button
+                                onClick={() => {
+                                  setSelectedWorkspaceId('__shared__')
+                                  setWorkspaceDropdownOpen(false)
+                                }}
+                                className={cn(
+                                  'flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors',
+                                  'hover:bg-bg-hover',
+                                  selectedWorkspaceId === '__shared__' &&
+                                    'bg-bg-selected text-monday-primary'
+                                )}
+                              >
+                                <Users className="w-4 h-4 flex-shrink-0 text-text-tertiary" />
+                                <span className="flex-1 truncate text-left">Shared with me</span>
+                                <span className="text-xs text-text-tertiary flex-shrink-0">
+                                  {sharedBoards.filter((b: any) => !b.settings?.is_archived).length}
+                                </span>
+                              </button>
+                            </>
+                          )}
 
-                      {/* Shared with me option */}
-                      {sharedBoards.length > 0 && (
-                        <>
+                          {/* New workspace option */}
                           <div className="my-1 border-t border-border-light" />
                           <button
                             onClick={() => {
-                              setSelectedWorkspaceId('__shared__')
                               setWorkspaceDropdownOpen(false)
+                              setShowCreateWorkspace(true)
                             }}
-                            className={cn(
-                              'flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors',
-                              'hover:bg-bg-hover',
-                              selectedWorkspaceId === '__shared__' && 'bg-bg-selected text-monday-primary'
-                            )}
+                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-colors"
                           >
-                            <Users className="w-4 h-4 flex-shrink-0 text-text-tertiary" />
-                            <span className="flex-1 truncate text-left">Shared with me</span>
-                            <span className="text-xs text-text-tertiary flex-shrink-0">
-                              {sharedBoards.filter((b: any) => !b.settings?.is_archived).length}
-                            </span>
+                            <Plus className="w-4 h-4" />
+                            <span>New workspace</span>
                           </button>
-                        </>
+                        </div>
                       )}
-
-                      {/* New workspace option */}
-                      <div className="my-1 border-t border-border-light" />
-                      <button
-                        onClick={() => {
-                          setWorkspaceDropdownOpen(false)
-                          setShowCreateWorkspace(true)
-                        }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-colors"
-                      >
-                        <Plus className="w-4 h-4" />
-                        <span>New workspace</span>
-                      </button>
                     </div>
-                  )}
-                </div>
 
-                {/* Flat Board List for Selected Workspace */}
-                <div className="pl-2 ml-1 border-l border-border-light">
-                  {(() => {
-                    const activeBoards = selectedWorkspaceBoards.filter((b: any) => !b.settings?.is_archived)
-                    const archivedBoards = selectedWorkspaceBoards.filter((b: any) => b.settings?.is_archived)
+                    {/* Flat Board List for Selected Workspace */}
+                    <div className="pl-2 ml-1 border-l border-border-light">
+                      {(() => {
+                        const activeBoards = selectedWorkspaceBoards.filter(
+                          (b: any) => !b.settings?.is_archived
+                        )
+                        const archivedBoards = selectedWorkspaceBoards.filter(
+                          (b: any) => b.settings?.is_archived
+                        )
 
-                    return (
-                      <div className="space-y-0.5">
-                        {activeBoards.length > 0 ? (
-                          activeBoards.map((board: any) => (
-                            <Link
-                              key={board.id}
-                              href={`/boards/${board.id}`}
-                              className={cn(
-                                'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all group',
-                                'hover:bg-bg-hover',
-                                currentBoardId === board.id
-                                  ? 'bg-bg-selected text-monday-primary'
-                                  : 'text-text-primary'
-                              )}
-                            >
-                              <div
-                                className={cn(
-                                  'w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
-                                  getBoardColor(board.color)
-                                )}
-                              >
-                                {board.name.charAt(0).toUpperCase()}
-                              </div>
-                              <span className="flex-1 truncate">{board.name}</span>
-                              {board.settings?.is_favorite && (
-                                <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 flex-shrink-0" />
-                              )}
-                              <button
-                                className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
-                                onClick={(e) => openMenu(e, board.id, board.name, board.color, board.settings?.is_favorite, false)}
-                              >
-                                <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
-                              </button>
-                            </Link>
-                          ))
-                        ) : (
-                          <div className="px-2.5 py-3 text-xs text-text-tertiary text-center">
-                            No boards in this workspace
-                          </div>
-                        )}
-
-                        {/* Archived boards toggle */}
-                        {archivedBoards.length > 0 && (
-                          <>
-                            <button
-                              onClick={() => setShowArchived(!showArchived)}
-                              className="flex items-center gap-2 px-2.5 py-1 mt-1 text-xs text-text-tertiary hover:text-text-secondary w-full"
-                            >
-                              <Archive className="w-3 h-3" />
-                              <span>Archived ({archivedBoards.length})</span>
-                              <ChevronDown className={cn('w-3 h-3 ml-auto transition-transform', !showArchived && '-rotate-90')} />
-                            </button>
-                            {showArchived && archivedBoards.map((board: any) => (
-                              <Link
-                                key={board.id}
-                                href={`/boards/${board.id}`}
-                                className={cn(
-                                  'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all group opacity-50',
-                                  'hover:bg-bg-hover hover:opacity-100',
-                                  currentBoardId === board.id
-                                    ? 'bg-bg-selected text-monday-primary'
-                                    : 'text-text-primary'
-                                )}
-                              >
-                                <div
+                        return (
+                          <div className="space-y-0.5">
+                            {activeBoards.length > 0 ? (
+                              activeBoards.map((board: any) => (
+                                <Link
+                                  key={board.id}
+                                  href={`/boards/${board.id}`}
                                   className={cn(
-                                    'w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
-                                    getBoardColor(board.color)
+                                    'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all group',
+                                    'hover:bg-bg-hover',
+                                    currentBoardId === board.id
+                                      ? 'bg-bg-selected text-monday-primary'
+                                      : 'text-text-primary'
                                   )}
                                 >
-                                  {board.name.charAt(0).toUpperCase()}
-                                </div>
-                                <span className="flex-1 truncate">{board.name}</span>
-                                <button
-                                  className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
-                                  onClick={(e) => openMenu(e, board.id, board.name, board.color, board.settings?.is_favorite, true)}
-                                >
-                                  <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
-                                </button>
-                              </Link>
-                            ))}
-                          </>
-                        )}
+                                  <div
+                                    className={cn(
+                                      'w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
+                                      getBoardColor(board.color)
+                                    )}
+                                  >
+                                    {board.name.charAt(0).toUpperCase()}
+                                  </div>
+                                  <span className="flex-1 truncate">{board.name}</span>
+                                  {board.settings?.is_favorite && (
+                                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                                  )}
+                                  <button
+                                    className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
+                                    onClick={e =>
+                                      openMenu(
+                                        e,
+                                        board.id,
+                                        board.name,
+                                        board.color,
+                                        board.settings?.is_favorite,
+                                        false
+                                      )
+                                    }
+                                  >
+                                    <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
+                                  </button>
+                                </Link>
+                              ))
+                            ) : (
+                              <div className="px-2.5 py-3 text-xs text-text-tertiary text-center">
+                                No boards in this workspace
+                              </div>
+                            )}
 
-                        {/* Add Board button */}
-                        {selectedWorkspaceId && selectedWorkspaceId !== '__shared__' && (
-                          <Link
-                            href={`/boards?create=true&workspace=${selectedWorkspaceId}`}
-                            className="flex items-center gap-2 px-2.5 py-1.5 mt-0.5 rounded-md text-xs text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-all"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>Add board</span>
-                          </Link>
-                        )}
-                      </div>
-                    )
-                  })()}
-                </div>
-              </>
+                            {/* Archived boards toggle */}
+                            {archivedBoards.length > 0 && (
+                              <>
+                                <button
+                                  onClick={() => setShowArchived(!showArchived)}
+                                  className="flex items-center gap-2 px-2.5 py-1 mt-1 text-xs text-text-tertiary hover:text-text-secondary w-full"
+                                >
+                                  <Archive className="w-3 h-3" />
+                                  <span>Archived ({archivedBoards.length})</span>
+                                  <ChevronDown
+                                    className={cn(
+                                      'w-3 h-3 ml-auto transition-transform',
+                                      !showArchived && '-rotate-90'
+                                    )}
+                                  />
+                                </button>
+                                {showArchived &&
+                                  archivedBoards.map((board: any) => (
+                                    <Link
+                                      key={board.id}
+                                      href={`/boards/${board.id}`}
+                                      className={cn(
+                                        'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all group opacity-50',
+                                        'hover:bg-bg-hover hover:opacity-100',
+                                        currentBoardId === board.id
+                                          ? 'bg-bg-selected text-monday-primary'
+                                          : 'text-text-primary'
+                                      )}
+                                    >
+                                      <div
+                                        className={cn(
+                                          'w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
+                                          getBoardColor(board.color)
+                                        )}
+                                      >
+                                        {board.name.charAt(0).toUpperCase()}
+                                      </div>
+                                      <span className="flex-1 truncate">{board.name}</span>
+                                      <button
+                                        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
+                                        onClick={e =>
+                                          openMenu(
+                                            e,
+                                            board.id,
+                                            board.name,
+                                            board.color,
+                                            board.settings?.is_favorite,
+                                            true
+                                          )
+                                        }
+                                      >
+                                        <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
+                                      </button>
+                                    </Link>
+                                  ))}
+                              </>
+                            )}
+
+                            {/* Add Board button */}
+                            {selectedWorkspaceId && selectedWorkspaceId !== '__shared__' && (
+                              <Link
+                                href={`/boards?create=true&workspace=${selectedWorkspaceId}`}
+                                className="flex items-center gap-2 px-2.5 py-1.5 mt-0.5 rounded-md text-xs text-text-tertiary hover:text-text-primary hover:bg-bg-hover transition-all"
+                              >
+                                <Plus className="w-3.5 h-3.5" />
+                                <span>Add board</span>
+                              </Link>
+                            )}
+                          </div>
+                        )
+                      })()}
+                    </div>
+                  </>
+                ) : (
+                  <div className="px-3 py-2 text-sm text-text-tertiary">
+                    <p className="mb-2">No workspaces yet</p>
+                    <button
+                      onClick={() => setShowCreateWorkspace(true)}
+                      className="flex items-center gap-2 text-monday-primary hover:underline"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Create workspace</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
-              <div className="px-3 py-2 text-sm text-text-tertiary">
-                <p className="mb-2">No workspaces yet</p>
-                <button
-                  onClick={() => setShowCreateWorkspace(true)}
-                  className="flex items-center gap-2 text-monday-primary hover:underline"
+              /* Collapsed Boards Icon */
+              <div className="px-2 py-1">
+                <Link
+                  href="/boards"
+                  className={cn(
+                    'flex items-center justify-center p-2.5 rounded-md transition-all duration-fast',
+                    'hover:bg-bg-hover',
+                    pathname.startsWith('/boards')
+                      ? 'bg-bg-selected text-monday-primary'
+                      : 'text-text-primary'
+                  )}
+                  title="Boards"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Create workspace</span>
-                </button>
+                  <LayoutDashboard className="w-5 h-5" />
+                </Link>
               </div>
             )}
           </div>
-        ) : (
-          /* Collapsed Boards Icon */
-          <div className="px-2 py-1">
-            <Link
-              href="/boards"
-              className={cn(
-                'flex items-center justify-center p-2.5 rounded-md transition-all duration-fast',
-                'hover:bg-bg-hover',
-                pathname.startsWith('/boards')
-                  ? 'bg-bg-selected text-monday-primary'
-                  : 'text-text-primary'
-              )}
-              title="Boards"
-            >
-              <LayoutDashboard className="w-5 h-5" />
-            </Link>
-          </div>
-        )}
-      </div>
-      </div>{/* End scrollable content area */}
+        </div>
+        {/* End scrollable content area */}
 
-      {/* Collapse Button */}
-      <div className="flex-shrink-0 border-t border-border-light p-2">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
-            'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
-            collapsed && 'justify-center'
-          )}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? (
-            <ChevronRight className="w-5 h-5" />
-          ) : (
-            <>
-              <ChevronLeft className="w-5 h-5" />
-              <span className="truncate">ჩაკეცვა</span>
-            </>
-          )}
-        </button>
-      </div>
-    </aside>
+        {/* Collapse Button */}
+        <div className="flex-shrink-0 border-t border-border-light p-2">
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
+              'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
+              collapsed && 'justify-center'
+            )}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          >
+            {collapsed ? (
+              <ChevronRight className="w-5 h-5" />
+            ) : (
+              <>
+                <ChevronLeft className="w-5 h-5" />
+                <span className="truncate">ჩაკეცვა</span>
+              </>
+            )}
+          </button>
+        </div>
+      </aside>
 
-    {/* Board Actions Menu Portal */}
-    {menuState && typeof document !== 'undefined' && createPortal(
-        <div
-          ref={menuRef}
-          className="fixed z-[9999] bg-white rounded-lg border border-gray-200 shadow-lg py-1 min-w-[200px]"
-          style={{
-            top: menuState.position.top,
-            left: menuState.position.left,
-          }}
-        >
-          {/* Rename Mode */}
-          {renameMode ? (
-            <div className="px-3 py-2">
-              <div className="flex items-center gap-2">
-                <input
-                  ref={renameInputRef}
-                  type="text"
-                  value={renameValue}
-                  onChange={(e) => setRenameValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleRename()
-                    if (e.key === 'Escape') setRenameMode(false)
-                  }}
-                  className="flex-1 px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:border-monday-primary"
-                  placeholder="Board name"
-                />
-                <button
-                  onClick={handleRename}
-                  disabled={actionLoading || !renameValue.trim()}
-                  className="p-1.5 rounded hover:bg-gray-100 text-status-done disabled:opacity-50"
-                >
-                  <Check className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setRenameMode(false)}
-                  className="p-1.5 rounded hover:bg-gray-100 text-text-tertiary"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ) : showColorPicker ? (
-            /* Color Picker */
-            <div className="px-3 py-2">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-text-secondary">Choose color</span>
-                <button
-                  onClick={() => setShowColorPicker(false)}
-                  className="p-1 rounded hover:bg-gray-100 text-text-tertiary"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                {COLOR_OPTIONS.map((color) => (
-                  <button
-                    key={color.value}
-                    onClick={() => handleChangeColor(color.value)}
-                    disabled={actionLoading}
-                    className={cn(
-                      'w-7 h-7 rounded-full transition-transform hover:scale-110',
-                      color.class,
-                      menuState.boardColor === color.value && 'ring-2 ring-offset-2 ring-monday-primary'
-                    )}
-                    title={color.label}
+      {/* Board Actions Menu Portal */}
+      {menuState &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={menuRef}
+            className="fixed z-[9999] bg-white rounded-lg border border-gray-200 shadow-lg py-1 min-w-[200px]"
+            style={{
+              top: menuState.position.top,
+              left: menuState.position.left,
+            }}
+          >
+            {/* Rename Mode */}
+            {renameMode ? (
+              <div className="px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={renameInputRef}
+                    type="text"
+                    value={renameValue}
+                    onChange={e => setRenameValue(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') handleRename()
+                      if (e.key === 'Escape') setRenameMode(false)
+                    }}
+                    className="flex-1 px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:border-monday-primary"
+                    placeholder="Board name"
                   />
-                ))}
+                  <button
+                    onClick={handleRename}
+                    disabled={actionLoading || !renameValue.trim()}
+                    className="p-1.5 rounded hover:bg-gray-100 text-status-done disabled:opacity-50"
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setRenameMode(false)}
+                    className="p-1.5 rounded hover:bg-gray-100 text-text-tertiary"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-            </div>
-          ) : showDeleteConfirm ? (
-            /* Delete Confirmation */
-            <div className="px-3 py-2">
-              <p className="text-sm text-text-primary mb-3">
-                Delete "{menuState.boardName}"? This cannot be undone.
-              </p>
-              <div className="flex gap-2">
+            ) : showColorPicker ? (
+              /* Color Picker */
+              <div className="px-3 py-2">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium text-text-secondary">Choose color</span>
+                  <button
+                    onClick={() => setShowColorPicker(false)}
+                    className="p-1 rounded hover:bg-gray-100 text-text-tertiary"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {COLOR_OPTIONS.map(color => (
+                    <button
+                      key={color.value}
+                      onClick={() => handleChangeColor(color.value)}
+                      disabled={actionLoading}
+                      className={cn(
+                        'w-7 h-7 rounded-full transition-transform hover:scale-110',
+                        color.class,
+                        menuState.boardColor === color.value &&
+                          'ring-2 ring-offset-2 ring-monday-primary'
+                      )}
+                      title={color.label}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : showDeleteConfirm ? (
+              /* Delete Confirmation */
+              <div className="px-3 py-2">
+                <p className="text-sm text-text-primary mb-3">
+                  Delete "{menuState.boardName}"? This cannot be undone.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDelete}
+                    disabled={actionLoading}
+                    className="flex-1 px-3 py-1.5 bg-status-stuck text-white text-sm rounded hover:bg-red-600 disabled:opacity-50"
+                  >
+                    {actionLoading ? 'Deleting...' : 'Delete'}
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(false)}
+                    className="flex-1 px-3 py-1.5 bg-gray-100 text-text-primary text-sm rounded hover:bg-gray-200"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Main Menu */
+              <>
                 <button
-                  onClick={handleDelete}
+                  onClick={handleOpenInNewTab}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4 text-text-tertiary" />
+                  Open in new tab
+                </button>
+
+                <button
+                  onClick={handleStartRename}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+                >
+                  <Pencil className="w-4 h-4 text-text-tertiary" />
+                  Rename
+                </button>
+
+                <button
+                  onClick={handleDuplicate}
                   disabled={actionLoading}
-                  className="flex-1 px-3 py-1.5 bg-status-stuck text-white text-sm rounded hover:bg-red-600 disabled:opacity-50"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
                 >
-                  {actionLoading ? 'Deleting...' : 'Delete'}
+                  <Copy className="w-4 h-4 text-text-tertiary" />
+                  {actionLoading ? 'Duplicating...' : 'Duplicate'}
                 </button>
+
                 <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1 px-3 py-1.5 bg-gray-100 text-text-primary text-sm rounded hover:bg-gray-200"
+                  onClick={() => setShowColorPicker(true)}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
                 >
-                  Cancel
+                  <Palette className="w-4 h-4 text-text-tertiary" />
+                  Change color
                 </button>
-              </div>
-            </div>
-          ) : (
-            /* Main Menu */
-            <>
-              <button
-                onClick={handleOpenInNewTab}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
-              >
-                <ExternalLink className="w-4 h-4 text-text-tertiary" />
-                Open in new tab
-              </button>
 
-              <button
-                onClick={handleStartRename}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
-              >
-                <Pencil className="w-4 h-4 text-text-tertiary" />
-                Rename
-              </button>
+                <div className="my-1 border-t border-gray-100" />
 
-              <button
-                onClick={handleDuplicate}
-                disabled={actionLoading}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <Copy className="w-4 h-4 text-text-tertiary" />
-                {actionLoading ? 'Duplicating...' : 'Duplicate'}
-              </button>
+                <button
+                  onClick={handleExport}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+                >
+                  <Download className="w-4 h-4 text-text-tertiary" />
+                  Export
+                </button>
 
-              <button
-                onClick={() => setShowColorPicker(true)}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
-              >
-                <Palette className="w-4 h-4 text-text-tertiary" />
-                Change color
-              </button>
+                <button
+                  onClick={handleToggleFavorite}
+                  disabled={actionLoading}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <Star
+                    className={cn(
+                      'w-4 h-4',
+                      menuState.isFavorite
+                        ? 'text-yellow-500 fill-yellow-500'
+                        : 'text-text-tertiary'
+                    )}
+                  />
+                  {menuState.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                </button>
 
-              <div className="my-1 border-t border-gray-100" />
+                <div className="my-1 border-t border-gray-100" />
 
-              <button
-                onClick={handleExport}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
-              >
-                <Download className="w-4 h-4 text-text-tertiary" />
-                Export
-              </button>
+                <button
+                  onClick={handleArchive}
+                  disabled={actionLoading}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <Archive className="w-4 h-4 text-text-tertiary" />
+                  {menuState.isArchived ? 'Unarchive' : 'Archive'}
+                </button>
 
-              <button
-                onClick={handleToggleFavorite}
-                disabled={actionLoading}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <Star className={cn('w-4 h-4', menuState.isFavorite ? 'text-yellow-500 fill-yellow-500' : 'text-text-tertiary')} />
-                {menuState.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-              </button>
-
-              <div className="my-1 border-t border-gray-100" />
-
-              <button
-                onClick={handleArchive}
-                disabled={actionLoading}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                <Archive className="w-4 h-4 text-text-tertiary" />
-                {menuState.isArchived ? 'Unarchive' : 'Archive'}
-              </button>
-
-              <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-status-stuck hover:bg-red-50 transition-colors"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
-            </>
-          )}
-        </div>,
-        document.body
-      )}
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-status-stuck hover:bg-red-50 transition-colors"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+              </>
+            )}
+          </div>,
+          document.body
+        )}
 
       {/* Workspace Actions Menu Portal */}
-      {workspaceMenuState && typeof document !== 'undefined' && createPortal(
-        <WorkspaceActionsMenu
-          menuRef={workspaceMenuRef}
-          menuState={workspaceMenuState}
-          renameMode={workspaceRenameMode}
-          renameValue={workspaceRenameValue}
-          deleteConfirm={workspaceDeleteConfirm}
-          actionLoading={actionLoading}
-          renameInputRef={workspaceRenameInputRef}
-          onRenameValueChange={setWorkspaceRenameValue}
-          onStartRename={() => setWorkspaceRenameMode(true)}
-          onCancelRename={() => setWorkspaceRenameMode(false)}
-          onShowDeleteConfirm={() => setWorkspaceDeleteConfirm(true)}
-          onCancelDelete={() => setWorkspaceDeleteConfirm(false)}
-          onClose={closeWorkspaceMenu}
-          onRefresh={refreshBoards}
-          setActionLoading={setActionLoading}
-          router={router}
-        />,
-        document.body
-      )}
+      {workspaceMenuState &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <WorkspaceActionsMenu
+            menuRef={workspaceMenuRef}
+            menuState={workspaceMenuState}
+            renameMode={workspaceRenameMode}
+            renameValue={workspaceRenameValue}
+            deleteConfirm={workspaceDeleteConfirm}
+            actionLoading={actionLoading}
+            renameInputRef={workspaceRenameInputRef}
+            onRenameValueChange={setWorkspaceRenameValue}
+            onStartRename={() => setWorkspaceRenameMode(true)}
+            onCancelRename={() => setWorkspaceRenameMode(false)}
+            onShowDeleteConfirm={() => setWorkspaceDeleteConfirm(true)}
+            onCancelDelete={() => setWorkspaceDeleteConfirm(false)}
+            onClose={closeWorkspaceMenu}
+            onRefresh={refreshBoards}
+            setActionLoading={setActionLoading}
+            router={router}
+          />,
+          document.body
+        )}
 
       {/* Create Workspace Modal */}
       {inspectorId && (
@@ -1163,13 +1205,12 @@ export function Sidebar({ className }: SidebarProps) {
           isOpen={showCreateWorkspace}
           onClose={() => setShowCreateWorkspace(false)}
           userId={inspectorId}
-          onSuccess={(workspaceId) => {
+          onSuccess={workspaceId => {
             handleWorkspaceChange(workspaceId)
             refreshBoards()
           }}
         />
       )}
-
     </>
   )
 }
@@ -1272,8 +1313,8 @@ function WorkspaceActionsMenu({
               ref={renameInputRef}
               type="text"
               value={renameValue}
-              onChange={(e) => onRenameValueChange(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={e => onRenameValueChange(e.target.value)}
+              onKeyDown={e => {
                 if (e.key === 'Enter') handleRename()
                 if (e.key === 'Escape') onCancelRename()
               }}
@@ -1299,7 +1340,8 @@ function WorkspaceActionsMenu({
         /* Delete Confirmation */
         <div className="px-3 py-2">
           <p className="text-sm text-text-primary mb-3">
-            Delete "{menuState.workspaceName}"? Boards will be moved to default workspace.
+            Delete "{menuState.workspaceName}"? All boards in this workspace will be permanently
+            deleted.
           </p>
           <div className="flex gap-2">
             <button
@@ -1346,7 +1388,7 @@ function WorkspaceActionsMenu({
             Settings
           </button>
 
-          {menuState.canEdit && !menuState.isDefault && (
+          {menuState.canEdit && (
             <>
               <div className="my-1 border-t border-gray-100" />
               <button

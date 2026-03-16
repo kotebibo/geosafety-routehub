@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { requireAuth, requireAdmin } from '@/middleware/auth'
@@ -65,8 +67,8 @@ export async function POST(request: NextRequest) {
 
     // Send notifications + emails in background (don't block response)
     if (validated.is_published !== false) {
-      sendNotificationsAndEmails(announcement.id, validated, authorName).catch(
-        (err) => console.error('Background notification/email failed:', err)
+      sendNotificationsAndEmails(announcement.id, validated, authorName).catch(err =>
+        console.error('Background notification/email failed:', err)
       )
     }
 
@@ -102,7 +104,7 @@ async function sendNotificationsAndEmails(
   if (error || !users?.length) return
 
   // Create in-app notifications
-  const notificationPromises = users.map((user) =>
+  const notificationPromises = users.map(user =>
     supabase.rpc('create_notification', {
       p_user_id: user.id,
       p_type: 'announcement_new',
@@ -118,7 +120,7 @@ async function sendNotificationsAndEmails(
   await Promise.allSettled(notificationPromises)
 
   // Send email
-  const emails = users.map((u) => u.email).filter(Boolean)
+  const emails = users.map(u => u.email).filter(Boolean)
   if (emails.length > 0) {
     const { text, html } = generateAnnouncementEmail({
       title: input.title,
@@ -127,11 +129,8 @@ async function sendNotificationsAndEmails(
       author_name: authorName,
     })
 
-    const subjectPrefix = input.priority === 'urgent'
-      ? '🚨 სასწრაფო: '
-      : input.priority === 'important'
-        ? '⚠️ '
-        : ''
+    const subjectPrefix =
+      input.priority === 'urgent' ? '🚨 სასწრაფო: ' : input.priority === 'important' ? '⚠️ ' : ''
 
     await sendEmail({
       to: emails,
