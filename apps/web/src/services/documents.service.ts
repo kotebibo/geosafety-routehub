@@ -19,14 +19,12 @@ export const documentsService = {
   },
 
   getTemplate: async (templateId: string): Promise<DocumentTemplate> => {
-    const { data, error } = await getDb()
-      .from('document_templates')
-      .select('*')
-      .eq('id', templateId)
-      .single()
-
-    if (error) throw error
-    return data as DocumentTemplate
+    const response = await fetch(`/api/documents/templates/${templateId}`)
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error || 'Failed to fetch template')
+    }
+    return response.json()
   },
 
   uploadTemplate: async (
