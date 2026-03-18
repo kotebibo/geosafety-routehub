@@ -33,7 +33,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'noreply@geosafety.ge',
+      from: process.env.SMTP_FROM || 'noreply@routehub.app',
       to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
       subject: options.subject,
       text: options.text,
@@ -52,13 +52,10 @@ export function generateAnnouncementEmail(announcement: {
   priority: string
   author_name: string
 }) {
-  const priorityPrefix = announcement.priority === 'urgent'
-    ? '🚨 '
-    : announcement.priority === 'important'
-      ? '⚠️ '
-      : ''
+  const priorityPrefix =
+    announcement.priority === 'urgent' ? '🚨 ' : announcement.priority === 'important' ? '⚠️ ' : ''
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://routehub.geosafety.ge'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://routehub.vercel.app'
 
   const text = [
     `${priorityPrefix}${announcement.title}`,
@@ -85,7 +82,7 @@ export function generateAnnouncementEmail(announcement: {
     </div>
     <div style="padding:16px;text-align:center;font-size:12px;color:#9ca3af;">
       <p>გამოაქვეყნა: ${announcement.author_name}</p>
-      <p>GeoSafety RouteHub</p>
+      <p>RouteHub</p>
     </div>
   </div>
 </body></html>`

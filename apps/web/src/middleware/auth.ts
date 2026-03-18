@@ -1,6 +1,6 @@
 /**
  * Authentication Middleware
- * 
+ *
  * Provides authentication and authorization functions for API routes
  */
 
@@ -34,7 +34,7 @@ function createServerSupabase() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
-        storageKey: 'geosafety-auth',
+        storageKey: 'routehub-auth',
       },
       cookies: {
         get(name: string) {
@@ -70,11 +70,11 @@ export async function getSession() {
  */
 export async function requireAuth() {
   const session = await getSession()
-  
+
   if (!session) {
     throw new UnauthorizedError('Authentication required')
   }
-  
+
   return session
 }
 
@@ -109,7 +109,7 @@ export async function requireRole(role: string | string[]) {
   }
 
   const requiredRoles = Array.isArray(role) ? role : [role]
-  
+
   if (!requiredRoles.includes(userRole)) {
     throw new ForbiddenError(`Required role: ${requiredRoles.join(' or ')}. Your role: ${userRole}`)
   }
@@ -160,25 +160,16 @@ export function withAuth(
       return await handler(req)
     } catch (error) {
       if (error instanceof UnauthorizedError) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 401 }
-        )
+        return NextResponse.json({ error: error.message }, { status: 401 })
       }
-      
+
       if (error instanceof ForbiddenError) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 403 }
-        )
+        return NextResponse.json({ error: error.message }, { status: 403 })
       }
 
       // Generic error
       console.error('API Error:', error)
-      return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
   }
 }

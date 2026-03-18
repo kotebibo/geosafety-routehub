@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
-import { useEffect, useState, useRef } from 'react';
+import { useAuth } from '@/contexts/AuthContext'
+import Link from 'next/link'
+import { useEffect, useState, useRef } from 'react'
 import {
   Building2,
   Users,
@@ -19,69 +19,69 @@ import {
   Zap,
   BarChart3,
   Globe,
-  Smartphone
-} from 'lucide-react';
-import { DEPLOYMENT_CONFIG } from '@/config/features';
-import { statsService, DashboardStats } from '@/services/stats.service';
+  Smartphone,
+} from 'lucide-react'
+import { DEPLOYMENT_CONFIG } from '@/config/features'
+import { statsService, DashboardStats } from '@/services/stats.service'
 
 export default function HomePage() {
-  const { user, userRole, loading } = useAuth();
-  const [mounted, setMounted] = useState(false);
+  const { user, userRole, loading } = useAuth()
+  const [mounted, setMounted] = useState(false)
   const [stats, setStats] = useState({
     companies: 0,
     inspectors: 0,
     routes: 0,
-    inspections: 0
-  });
-  const [realStats, setRealStats] = useState<DashboardStats | null>(null);
-  const animationRef = useRef<boolean>(false);
+    inspections: 0,
+  })
+  const [realStats, setRealStats] = useState<DashboardStats | null>(null)
+  const animationRef = useRef<boolean>(false)
 
   // Fetch real stats from database
   useEffect(() => {
     async function fetchStats() {
       try {
-        const data = await statsService.getDashboardStats();
-        setRealStats(data);
+        const data = await statsService.getDashboardStats()
+        setRealStats(data)
       } catch (error) {
-        console.error('Failed to fetch stats:', error);
+        console.error('Failed to fetch stats:', error)
         // Fallback to zeros if fetch fails
-        setRealStats({ companies: 0, inspectors: 0, routes: 0, inspections: 0 });
+        setRealStats({ companies: 0, inspectors: 0, routes: 0, inspections: 0 })
       }
     }
-    fetchStats();
-  }, []);
+    fetchStats()
+  }, [])
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   // Animate stats when real data is loaded
   useEffect(() => {
-    if (!realStats || animationRef.current) return;
-    animationRef.current = true;
+    if (!realStats || animationRef.current) return
+    animationRef.current = true
 
     const animateValue = (start: number, end: number, key: keyof typeof stats) => {
-      const duration = 2000;
-      const range = end - start;
-      const startTime = Date.now();
+      const duration = 2000
+      const range = end - start
+      const startTime = Date.now()
 
       const timer = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const value = Math.floor(start + range * progress);
-        setStats(prev => ({ ...prev, [key]: value }));
+        const elapsed = Date.now() - startTime
+        const progress = Math.min(elapsed / duration, 1)
+        const value = Math.floor(start + range * progress)
+        setStats(prev => ({ ...prev, [key]: value }))
 
-        if (progress === 1) clearInterval(timer);
-      }, 50);
-    };
+        if (progress === 1) clearInterval(timer)
+      }, 50)
+    }
 
     setTimeout(() => {
-      animateValue(0, realStats.companies, 'companies');
-      animateValue(0, realStats.inspectors, 'inspectors');
-      animateValue(0, realStats.routes, 'routes');
-      animateValue(0, realStats.inspections, 'inspections');
-    }, 500);
-  }, [realStats]);
+      animateValue(0, realStats.companies, 'companies')
+      animateValue(0, realStats.inspectors, 'inspectors')
+      animateValue(0, realStats.routes, 'routes')
+      animateValue(0, realStats.inspections, 'inspections')
+    }, 500)
+  }, [realStats])
 
   if (loading || !mounted) {
     return (
@@ -94,86 +94,86 @@ export default function HomePage() {
           <p className="mt-4 text-gray-600 animate-pulse">იტვირთება...</p>
         </div>
       </div>
-    );
+    )
   }
 
-  const isAdmin = userRole?.role === 'admin';
-  const isDispatcher = userRole?.role === 'dispatcher';
-  const isInspector = userRole?.role === 'inspector';
+  const isAdmin = userRole?.role === 'admin'
+  const isDispatcher = userRole?.role === 'dispatcher'
+  const isInspector = userRole?.role === 'inspector'
 
   const quickLinks = [
-    { 
-      href: '/companies', 
-      label: 'კომპანიების მართვა', 
-      icon: Building2, 
+    {
+      href: '/companies',
+      label: 'კომპანიების მართვა',
+      icon: Building2,
       color: 'from-blue-500 to-blue-600',
       description: realStats ? `${realStats.companies}+ კომპანია` : 'კომპანიების მართვა',
-      show: isAdmin || isDispatcher 
+      show: isAdmin || isDispatcher,
     },
-    { 
-      href: '/inspectors', 
-      label: 'ინსპექტორები', 
-      icon: Users, 
+    {
+      href: '/inspectors',
+      label: 'ინსპექტორები',
+      icon: Users,
       color: 'from-green-500 to-green-600',
       description: 'გუნდის მართვა',
-      show: isAdmin || isDispatcher 
+      show: isAdmin || isDispatcher,
     },
-    { 
-      href: '/admin/assignments', 
-      label: 'დანიშვნები', 
-      icon: UserCog, 
+    {
+      href: '/admin/assignments',
+      label: 'დანიშვნები',
+      icon: UserCog,
       color: 'from-purple-500 to-purple-600',
       description: 'სამუშაოს განაწილება',
-      show: isAdmin || isDispatcher 
+      show: isAdmin || isDispatcher,
     },
-    { 
-      href: '/routes/builder', 
-      label: 'მარშრუტის შექმნა', 
-      icon: MapIcon, 
+    {
+      href: '/routes/builder',
+      label: 'მარშრუტის შექმნა',
+      icon: MapIcon,
       color: 'from-indigo-500 to-indigo-600',
       description: 'ოპტიმიზაცია',
-      show: isAdmin || isDispatcher 
+      show: isAdmin || isDispatcher,
     },
-    { 
-      href: '/routes/manage', 
-      label: 'მარშრუტების მართვა', 
-      icon: Route, 
+    {
+      href: '/routes/manage',
+      label: 'მარშრუტების მართვა',
+      icon: Route,
       color: 'from-orange-500 to-orange-600',
       description: 'ყველა მარშრუტი',
-      show: isAdmin || isDispatcher 
+      show: isAdmin || isDispatcher,
     },
-    { 
-      href: '/inspector/routes', 
-      label: 'ჩემი მარშრუტები', 
-      icon: Navigation, 
+    {
+      href: '/inspector/routes',
+      label: 'ჩემი მარშრუტები',
+      icon: Navigation,
       color: 'from-teal-500 to-teal-600',
       description: 'დღევანდელი გეგმა',
-      show: isInspector 
+      show: isInspector,
     },
-  ].filter(link => link.show);
+  ].filter(link => link.show)
 
   const features = [
     {
       icon: Shield,
       title: 'უსაფრთხოება',
-      description: 'Row-Level Security და მონაცემთა სრული დაცვა'
+      description: 'Row-Level Security და მონაცემთა სრული დაცვა',
     },
     {
       icon: Zap,
       title: 'სისწრაფე',
-      description: 'ოპტიმიზებული მარშრუტები რეალურ დროში'
+      description: 'ოპტიმიზებული მარშრუტები რეალურ დროში',
     },
     {
       icon: Globe,
       title: 'ორენოვანი',
-      description: 'ქართული და ინგლისური ინტერფეისი'
+      description: 'ქართული და ინგლისური ინტერფეისი',
     },
     {
       icon: Smartphone,
       title: 'მობილური',
-      description: 'მუშაობს ნებისმიერ მოწყობილობაზე'
-    }
-  ];
+      description: 'მუშაობს ნებისმიერ მოწყობილობაზე',
+    },
+  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -185,28 +185,28 @@ export default function HomePage() {
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
           <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <div className="inline-flex items-center px-4 py-2 bg-blue-100 rounded-full mb-6">
               <Activity className="w-4 h-4 mr-2 text-blue-600 animate-pulse" />
               <span className="text-sm font-medium text-blue-800">სისტემა აქტიურია</span>
             </div>
-            
+
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 animate-fade-in">
-              {DEPLOYMENT_CONFIG.isSingleServiceMode 
-                ? DEPLOYMENT_CONFIG.appNameFull 
-                : 'GeoSafety RouteHub'}
+              {DEPLOYMENT_CONFIG.isSingleServiceMode ? DEPLOYMENT_CONFIG.appNameFull : 'RouteHub'}
             </h1>
-            
+
             <p className="text-xl md:text-2xl text-gray-600 mb-4 animate-fade-in animation-delay-200">
               მარშრუტების ოპტიმიზაციისა და მართვის პლატფორმა
             </p>
-            
+
             {user && (
               <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg animate-fade-in animation-delay-400">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-gray-700">გამარჯობა, <strong>{user.email}</strong></span>
+                <span className="text-gray-700">
+                  გამარჯობა, <strong>{user.email}</strong>
+                </span>
               </div>
             )}
           </div>
@@ -224,7 +224,7 @@ export default function HomePage() {
             <div className="text-3xl font-bold text-gray-900">{stats.companies}</div>
             <div className="text-sm text-gray-600">კომპანიები</div>
           </div>
-          
+
           <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between mb-2">
               <Users className="w-8 h-8 text-green-500" />
@@ -233,7 +233,7 @@ export default function HomePage() {
             <div className="text-3xl font-bold text-gray-900">{stats.inspectors}</div>
             <div className="text-sm text-gray-600">ინსპექტორები</div>
           </div>
-          
+
           <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between mb-2">
               <Route className="w-8 h-8 text-purple-500" />
@@ -242,7 +242,7 @@ export default function HomePage() {
             <div className="text-3xl font-bold text-gray-900">{stats.routes}</div>
             <div className="text-sm text-gray-600">მარშრუტები</div>
           </div>
-          
+
           <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
             <div className="flex items-center justify-between mb-2">
               <CheckCircle className="w-8 h-8 text-orange-500" />
@@ -256,23 +256,29 @@ export default function HomePage() {
         {/* Quick Links */}
         {quickLinks.length > 0 && (
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">სწრაფი მოქმედებები</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              სწრაფი მოქმედებები
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {quickLinks.map((link, index) => {
-                const Icon = link.icon;
+                const Icon = link.icon
                 return (
                   <Link
                     key={link.href}
                     href={link.href}
                     className="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
                     style={{
-                      animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`
+                      animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`,
                     }}
                   >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${link.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                    <div
+                      className={`absolute inset-0 bg-gradient-to-br ${link.color} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}
+                    ></div>
                     <div className="relative p-6">
                       <div className="flex items-center justify-between mb-4">
-                        <div className={`p-3 bg-gradient-to-br ${link.color} rounded-xl text-white shadow-lg`}>
+                        <div
+                          className={`p-3 bg-gradient-to-br ${link.color} rounded-xl text-white shadow-lg`}
+                        >
                           <Icon className="w-8 h-8" />
                         </div>
                         <ArrowRight className="w-6 h-6 text-gray-400 group-hover:text-white transform group-hover:translate-x-2 transition-all duration-300" />
@@ -285,7 +291,7 @@ export default function HomePage() {
                       </p>
                     </div>
                   </Link>
-                );
+                )
               })}
             </div>
           </div>
@@ -293,16 +299,18 @@ export default function HomePage() {
 
         {/* Features Grid */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">პლატფორმის უპირატესობები</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            პლატფორმის უპირატესობები
+          </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {features.map((feature, index) => {
-              const Icon = feature.icon;
+              const Icon = feature.icon
               return (
                 <div
                   key={index}
                   className="bg-white rounded-xl p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                   style={{
-                    animation: `fadeIn 0.5s ease-out ${index * 0.1 + 0.5}s both`
+                    animation: `fadeIn 0.5s ease-out ${index * 0.1 + 0.5}s both`,
                   }}
                 >
                   <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl mb-4">
@@ -311,7 +319,7 @@ export default function HomePage() {
                   <h3 className="font-bold text-gray-900 mb-2">{feature.title}</h3>
                   <p className="text-sm text-gray-600">{feature.description}</p>
                 </div>
-              );
+              )
             })}
           </div>
         </div>
@@ -319,9 +327,7 @@ export default function HomePage() {
         {/* Call to Action */}
         {!user && (
           <div className="text-center py-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              მზად ხართ დასაწყებად?
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">მზად ხართ დასაწყებად?</h2>
             <p className="text-lg text-gray-600 mb-8">
               შეუერთდით ასობით კომპანიას, რომლებიც უკვე იყენებენ RouteHub-ს
             </p>
@@ -348,9 +354,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <p className="text-sm text-gray-600">
-                © 2025 GeoSafety RouteHub. ყველა უფლება დაცულია.
-              </p>
+              <p className="text-sm text-gray-600">© 2025 RouteHub. ყველა უფლება დაცულია.</p>
             </div>
             <div className="flex gap-6">
               <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
@@ -383,14 +387,25 @@ export default function HomePage() {
         }
 
         @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
         }
 
         @keyframes blob {
-          0%, 100% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
+          0%,
+          100% {
+            transform: translate(0px, 0px) scale(1);
+          }
+          33% {
+            transform: translate(30px, -50px) scale(1.1);
+          }
+          66% {
+            transform: translate(-20px, 20px) scale(0.9);
+          }
         }
 
         .animate-blob {
@@ -420,5 +435,5 @@ export default function HomePage() {
         }
       `}</style>
     </div>
-  );
+  )
 }

@@ -3,59 +3,59 @@
 @tailwind utilities;
 
 /* ============================================
-   MONDAY.COM DESIGN SYSTEM - GEOSAFETY ROUTEHUB
+   MONDAY.COM DESIGN SYSTEM - ROUTEHUB
    ============================================ */
 
 @layer base {
   :root {
     /* ========== CORE BRAND COLORS ========== */
-    --monday-primary: #6161FF;
-    --monday-primary-hover: #5353E0;
-    --monday-primary-active: #4545CC;
-    --monday-primary-disabled: #B3B3FF;
-    --monday-dark: #181B34;
-    --monday-white: #FFFFFF;
+    --monday-primary: #6161ff;
+    --monday-primary-hover: #5353e0;
+    --monday-primary-active: #4545cc;
+    --monday-primary-disabled: #b3b3ff;
+    --monday-dark: #181b34;
+    --monday-white: #ffffff;
 
     /* ========== STATUS COLORS ========== */
-    --status-done: #00D748;
-    --status-working: #FFCA00;
-    --status-stuck: #FF3D57;
-    --status-default: #C4C4C4;
+    --status-done: #00d748;
+    --status-working: #ffca00;
+    --status-stuck: #ff3d57;
+    --status-default: #c4c4c4;
 
     /* RouteHub-specific statuses */
-    --status-enroute: #0086C0;
-    --status-arrived: #9CD326;
-    --status-inspecting: #FFA500;
-    --status-delayed: #FF6900;
+    --status-enroute: #0086c0;
+    --status-arrived: #9cd326;
+    --status-inspecting: #ffa500;
+    --status-delayed: #ff6900;
 
     /* ========== SEMANTIC COLORS ========== */
-    --color-primary: #6161FF;
-    --color-success: #00C875;
-    --color-warning: #FFCA00;
-    --color-error: #FF3D57;
-    --color-info: #0086C0;
+    --color-primary: #6161ff;
+    --color-success: #00c875;
+    --color-warning: #ffca00;
+    --color-error: #ff3d57;
+    --color-info: #0086c0;
 
     /* ========== BACKGROUNDS ========== */
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F7F7F7;
-    --bg-tertiary: #EBEBEB;
-    --bg-hover: #F0F3FF;
-    --bg-selected: #E5E9FF;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f7f7;
+    --bg-tertiary: #ebebeb;
+    --bg-hover: #f0f3ff;
+    --bg-selected: #e5e9ff;
     --bg-overlay: rgba(41, 47, 76, 0.7);
 
     /* ========== BORDERS ========== */
-    --border-light: #E6E9EF;
-    --border-medium: #D0D4E4;
-    --border-strong: #B0B7D1;
-    --border-focus: #6161FF;
+    --border-light: #e6e9ef;
+    --border-medium: #d0d4e4;
+    --border-strong: #b0b7d1;
+    --border-focus: #6161ff;
 
     /* ========== TEXT ========== */
     --text-primary: #323338;
     --text-secondary: #676879;
-    --text-tertiary: #9699A6;
-    --text-disabled: #C5C7D0;
-    --text-inverse: #FFFFFF;
-    --text-link: #0073EA;
+    --text-tertiary: #9699a6;
+    --text-disabled: #c5c7d0;
+    --text-inverse: #ffffff;
+    --text-link: #0073ea;
 
     /* ========== SHADOWS ========== */
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
@@ -113,35 +113,35 @@
     --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     /* ========== EXTENDED COLOR PALETTE ========== */
-    --color-grass-green: #00C875;
-    --color-bright-green: #9CD326;
-    --color-forest: #00A06E;
-    --color-bright-blue: #0086C0;
-    --color-dark-blue: #2B76E5;
-    --color-royal: #3D57FF;
-    --color-navy: #181B34;
-    --color-purple: #A25DDC;
-    --color-dark-purple: #7E3B8A;
-    --color-berry: #E2445C;
-    --color-pink: #FF7575;
-    --color-hot-pink: #FF5AC4;
-    --color-orange: #FDB52C;
-    --color-dark-orange: #FF6900;
-    --color-peach: #FFADAD;
-    --color-yellow: #FFCA00;
-    --color-gold: #FFD700;
-    --color-gray: #C4C4C4;
-    --color-light-gray: #E6E6E6;
-    --color-dark-gray: #7F7F7F;
+    --color-grass-green: #00c875;
+    --color-bright-green: #9cd326;
+    --color-forest: #00a06e;
+    --color-bright-blue: #0086c0;
+    --color-dark-blue: #2b76e5;
+    --color-royal: #3d57ff;
+    --color-navy: #181b34;
+    --color-purple: #a25ddc;
+    --color-dark-purple: #7e3b8a;
+    --color-berry: #e2445c;
+    --color-pink: #ff7575;
+    --color-hot-pink: #ff5ac4;
+    --color-orange: #fdb52c;
+    --color-dark-orange: #ff6900;
+    --color-peach: #ffadad;
+    --color-yellow: #ffca00;
+    --color-gold: #ffd700;
+    --color-gray: #c4c4c4;
+    --color-light-gray: #e6e6e6;
+    --color-dark-gray: #7f7f7f;
     --color-charcoal: #434343;
 
     /* ========== ROUTE-SPECIFIC ========== */
-    --route-not-started: #C4C4C4;
-    --route-planned: #0086C0;
-    --route-active: #FFCA00;
-    --route-completed: #00D748;
-    --route-cancelled: #FF3D57;
-    --route-paused: #A25DDC;
+    --route-not-started: #c4c4c4;
+    --route-planned: #0086c0;
+    --route-active: #ffca00;
+    --route-completed: #00d748;
+    --route-cancelled: #ff3d57;
+    --route-paused: #a25ddc;
 
     /* ========== LEGACY COMPATIBILITY ========== */
     /* Keep existing Radix UI variables for compatibility */
@@ -169,16 +169,16 @@
 
   /* Dark mode (optional - Phase 2) */
   .dark {
-    --bg-primary: #1F1F1F;
-    --bg-secondary: #2A2A2A;
+    --bg-primary: #1f1f1f;
+    --bg-secondary: #2a2a2a;
     --bg-tertiary: #353535;
-    --bg-hover: #3A3A3A;
-    --bg-selected: #2B3A5F;
-    --text-primary: #E0E0E0;
-    --text-secondary: #A0A0A0;
+    --bg-hover: #3a3a3a;
+    --bg-selected: #2b3a5f;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
     --text-tertiary: #707070;
-    --border-light: #3A3A3A;
-    --border-medium: #4A4A4A;
+    --border-light: #3a3a3a;
+    --border-medium: #4a4a4a;
 
     /* Keep legacy dark mode */
     --background: 222.2 84% 4.9%;
@@ -295,7 +295,8 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -346,13 +347,21 @@
 }
 
 @keyframes shake {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateX(0);
   }
-  10%, 30%, 50%, 70%, 90% {
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
     transform: translateX(-4px);
   }
-  20%, 40%, 60%, 80% {
+  20%,
+  40%,
+  60%,
+  80% {
     transform: translateX(4px);
   }
 }

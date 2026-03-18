@@ -1,6 +1,6 @@
 /**
  * Feature Flags Configuration
- * 
+ *
  * Control which features are enabled in the application.
  * This allows us to launch with only Personal Data Protection Service
  * and easily enable other services in the future.
@@ -19,29 +19,29 @@ export const SERVICES = {
 export const FEATURE_FLAGS = {
   // SERVICE FEATURES
   // Set to true to enable, false to hide from UI
-  ENABLE_PERSONAL_DATA_PROTECTION: true,  // ✅ ENABLED for launch
-  ENABLE_FIRE_SAFETY: false,              // 🔒 DISABLED (future)
-  ENABLE_LABOR_SAFETY: false,             // 🔒 DISABLED (future)
-  ENABLE_FOOD_SAFETY: false,              // 🔒 DISABLED (future)
-  ENABLE_ENVIRONMENTAL: false,            // 🔒 DISABLED (future)
-  
+  ENABLE_PERSONAL_DATA_PROTECTION: true, // ✅ ENABLED for launch
+  ENABLE_FIRE_SAFETY: false, // 🔒 DISABLED (future)
+  ENABLE_LABOR_SAFETY: false, // 🔒 DISABLED (future)
+  ENABLE_FOOD_SAFETY: false, // 🔒 DISABLED (future)
+  ENABLE_ENVIRONMENTAL: false, // 🔒 DISABLED (future)
+
   // MULTI-SERVICE FEATURES
   // These will be needed when we have multiple services
-  ENABLE_SERVICE_SELECTOR: false,         // Show service type dropdown
-  ENABLE_SERVICE_FILTERING: false,        // Filter by service type
-  ENABLE_MULTI_SERVICE_ROUTES: false,     // Routes with multiple service types
-  
+  ENABLE_SERVICE_SELECTOR: false, // Show service type dropdown
+  ENABLE_SERVICE_FILTERING: false, // Filter by service type
+  ENABLE_MULTI_SERVICE_ROUTES: false, // Routes with multiple service types
+
   // UI FEATURES
-  ENABLE_ANALYTICS_DASHBOARD: true,       // Analytics page
-  ENABLE_INSPECTOR_APP: true,             // Inspector mobile view
-  ENABLE_ROUTE_OPTIMIZATION: true,        // Route optimization
-  ENABLE_COMPANY_ASSIGNMENTS: true,       // Assign companies to inspectors
-  
+  ENABLE_ANALYTICS_DASHBOARD: true, // Analytics page
+  ENABLE_INSPECTOR_APP: true, // Inspector mobile view
+  ENABLE_ROUTE_OPTIMIZATION: true, // Route optimization
+  ENABLE_COMPANY_ASSIGNMENTS: true, // Assign companies to inspectors
+
   // ADVANCED FEATURES (Future)
-  ENABLE_BULK_OPERATIONS: false,          // Bulk company operations
-  ENABLE_ADVANCED_FILTERS: false,         // Advanced filtering
-  ENABLE_CUSTOM_REPORTS: false,           // Custom report generation
-  ENABLE_API_ACCESS: false,               // External API access
+  ENABLE_BULK_OPERATIONS: false, // Bulk company operations
+  ENABLE_ADVANCED_FILTERS: false, // Advanced filtering
+  ENABLE_CUSTOM_REPORTS: false, // Custom report generation
+  ENABLE_API_ACCESS: false, // External API access
 } as const
 
 // Helper function to check if a feature is enabled
@@ -118,18 +118,18 @@ export const DEPLOYMENT_CONFIG = {
   isSingleServiceMode: true,
   primaryService: SERVICES.PERSONAL_DATA_PROTECTION,
   primaryServiceName: SERVICE_NAMES[SERVICES.PERSONAL_DATA_PROTECTION].ka,
-  
+
   // Brand name (can be customized per service)
-  appName: 'GeoSafety RouteHub',
-  appNameFull: 'GeoSafety RouteHub - პერსონალურ მონაცემთა დაცვის სამსახური',
-  
+  appName: 'RouteHub',
+  appNameFull: 'RouteHub - პერსონალურ მონაცემთა დაცვის სამსახური',
+
   // Hide/show UI elements
-  showServiceSelector: false,           // Hide service dropdown
-  showServiceInCompanyList: false,      // Hide service column
-  showServiceInRoutes: false,           // Hide service in route cards
-  showMultiServiceDashboard: false,     // Hide multi-service analytics
+  showServiceSelector: false, // Hide service dropdown
+  showServiceInCompanyList: false, // Hide service column
+  showServiceInRoutes: false, // Hide service in route cards
+  showMultiServiceDashboard: false, // Hide multi-service analytics
 }
 
 // Type exports
 export type FeatureFlag = keyof typeof FEATURE_FLAGS
-export type ServiceType = typeof SERVICES[keyof typeof SERVICES]
+export type ServiceType = (typeof SERVICES)[keyof typeof SERVICES]

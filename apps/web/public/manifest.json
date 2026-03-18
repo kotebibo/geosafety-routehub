@@ -1,5 +1,5 @@
 {
-  "name": "GeoSafety RouteHub",
+  "name": "RouteHub",
   "short_name": "RouteHub",
   "description": "Route optimization and field management for safety inspectors",
   "start_url": "/",

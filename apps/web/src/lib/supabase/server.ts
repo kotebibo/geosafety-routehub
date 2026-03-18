@@ -1,6 +1,6 @@
 /**
  * Server-side Supabase Client
- * 
+ *
  * Creates a Supabase client for use in API routes and server components
  * Uses cookies for authentication
  */
@@ -16,7 +16,7 @@ export function createServerClient() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       auth: {
-        storageKey: 'geosafety-auth',
+        storageKey: 'routehub-auth',
       },
       cookies: {
         get(name: string) {

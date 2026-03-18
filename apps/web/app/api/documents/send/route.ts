@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     const fileBuffer = Buffer.from(await fileData.arrayBuffer())
 
     // Build email HTML
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://routehub.geosafety.ge'
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://routehub.vercel.app'
     const messageHtml = message
       ? `<p style="color:#374151;line-height:1.6;white-space:pre-wrap;">${message}</p>`
       : ''
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 <body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f3f4f6;">
   <div style="max-width:600px;margin:0 auto;padding:24px;">
     <div style="background:#6161FF;color:white;padding:24px;border-radius:12px 12px 0 0;">
-      <h1 style="margin:0;font-size:20px;">GeoSafety RouteHub</h1>
+      <h1 style="margin:0;font-size:20px;">RouteHub</h1>
     </div>
     <div style="background:white;padding:24px;border:1px solid #e5e7eb;border-top:none;">
       <h2 style="margin:0 0 16px;color:#111;">${subject}</h2>
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       </p>
     </div>
     <div style="padding:16px;text-align:center;font-size:12px;color:#9ca3af;">
-      <p>GeoSafety RouteHub</p>
+      <p>RouteHub</p>
     </div>
   </div>
 </body></html>`
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'noreply@geosafety.ge',
+      from: process.env.SMTP_FROM || 'noreply@routehub.app',
       to: to.join(', '),
       subject,
       text,

@@ -32,10 +32,10 @@ const georgian = Noto_Sans_Georgian({
 })
 
 export const metadata: Metadata = {
-  title: 'GeoSafety RouteHub - Intelligent Route Optimization',
+  title: 'RouteHub - Intelligent Route Optimization',
   description: 'Professional route optimization and field management system for safety inspectors',
-  keywords: ['route optimization', 'field management', 'inspection', 'GeoSafety'],
-  authors: [{ name: 'GeoSafety' }],
+  keywords: ['route optimization', 'field management', 'inspection', 'RouteHub'],
+  authors: [{ name: 'RouteHub' }],
   manifest: '/manifest.json',
   other: {
     'mobile-web-app-capable': 'yes',
@@ -49,11 +49,7 @@ export const viewport: Viewport = {
   themeColor: '#6161FF', // Monday.com primary color
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${figtree.variable} ${poppins.variable} ${georgian.variable} font-product`}>

@@ -8,7 +8,7 @@ export function createClient() {
     {
       auth: {
         flowType: 'pkce',
-        storageKey: 'geosafety-auth',
+        storageKey: 'routehub-auth',
       },
     }
   )

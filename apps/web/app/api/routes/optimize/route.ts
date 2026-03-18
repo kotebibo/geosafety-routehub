@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { optimizeRoute, type Location, type OptimizationOptions } from '@geosafety/route-optimizer'
+import { optimizeRoute, type Location, type OptimizationOptions } from '@routehub/route-optimizer'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { optimizeRouteSchema, type OptimizeRouteInput } from '@/lib/validations'
 

@@ -1,10 +1,11 @@
-# GeoSafety RouteHub - Development Standards
+# RouteHub - Development Standards
 
-This document defines coding standards and patterns for the GeoSafety RouteHub project. All new code must follow these conventions.
+This document defines coding standards and patterns for the RouteHub project. All new code must follow these conventions.
 
 ## Communication Style
 
 Be direct and honest. No fluff, no excessive praise, no sugar-coating:
+
 - Give honest assessments even if unflattering
 - Say "this won't work" or "this is a bad idea" when true
 - Skip phrases like "Great question!" or "You're absolutely right!"
@@ -35,6 +36,7 @@ apps/web/
 ## Component Patterns
 
 ### Function Declaration
+
 Use named function exports (not arrow functions for components):
 
 ```typescript
@@ -54,6 +56,7 @@ export default MyComponent
 ```
 
 ### Props Interface Naming
+
 Always name props interfaces as `{ComponentName}Props`:
 
 ```typescript
@@ -72,6 +75,7 @@ interface Props {
 ```
 
 ### Exports
+
 Use **named exports** for all components. Reserve default exports only for Next.js pages:
 
 ```typescript
@@ -86,6 +90,7 @@ export default function DataTable() { ... }
 ```
 
 ### Component Structure Order
+
 Organize component internals in this order:
 
 ```typescript
@@ -118,6 +123,7 @@ export function MyComponent({ prop1 }: MyComponentProps) {
 ## Hook Patterns
 
 ### Return Type
+
 Always return an object with named properties:
 
 ```typescript
@@ -141,6 +147,7 @@ return [data, setData]
 ```
 
 ### Loading & Error State
+
 Use consistent loading/error pattern:
 
 ```typescript
@@ -170,6 +177,7 @@ export function useData() {
 ## Service Patterns
 
 ### Structure
+
 Use object literal pattern with async methods:
 
 ```typescript
@@ -197,6 +205,7 @@ export class MyService { ... }
 ```
 
 ### Error Handling
+
 Services should **throw** errors, not return them:
 
 ```typescript
@@ -210,6 +219,7 @@ return { data, error }
 ```
 
 ### Location
+
 Services live in `src/services/`. Feature-level `services/index.ts` re-exports from root:
 
 ```typescript
@@ -220,6 +230,7 @@ export { companiesService } from '@/services/companies.service'
 ## API Route Patterns
 
 ### Response Format
+
 Use `NextResponse.json()` with consistent structure:
 
 ```typescript
@@ -237,6 +248,7 @@ return NextResponse.json(
 ```
 
 ### Error Response Structure
+
 ```typescript
 // Standard error (400, 401, 403, 404, 500)
 { error: string }
@@ -250,6 +262,7 @@ return NextResponse.json(
 ```
 
 ### Validation
+
 Always use Zod for request validation:
 
 ```typescript
@@ -278,23 +291,24 @@ export async function POST(request: NextRequest) {
 ```
 
 ### Authentication
+
 Use auth middleware at the start of protected routes:
 
 ```typescript
 import { requireAuth, requireAdmin, requireAdminOrDispatcher } from '@/middleware/auth'
 
 export async function GET() {
-  await requireAuth()  // Any authenticated user
+  await requireAuth() // Any authenticated user
   // ...
 }
 
 export async function POST() {
-  await requireAdmin()  // Admin only
+  await requireAdmin() // Admin only
   // ...
 }
 
 export async function PUT() {
-  await requireAdminOrDispatcher()  // Admin or dispatcher
+  await requireAdminOrDispatcher() // Admin or dispatcher
   // ...
 }
 ```
@@ -302,6 +316,7 @@ export async function PUT() {
 ## Type Patterns
 
 ### Interface vs Type
+
 - Use `interface` for object shapes
 - Use `type` for unions, primitives, and mapped types
 
@@ -322,6 +337,7 @@ type UserWithPosts = User & { posts: Post[] }
 ```
 
 ### Naming Conventions
+
 - No `I` prefix for interfaces
 - Use `Props` suffix for component props
 - Use descriptive names
@@ -339,6 +355,7 @@ interface Props { ... }  // Too generic
 ```
 
 ### Location
+
 - Shared types: `src/types/{domain}.ts`
 - Component-specific props: Define in component file
 - Feature-specific types: `src/features/{feature}/types/`
@@ -346,6 +363,7 @@ interface Props { ... }  // Too generic
 ## Import Patterns
 
 ### Path Aliases
+
 Always use `@/` alias for imports:
 
 ```typescript
@@ -359,6 +377,7 @@ import { Button } from '../../../shared/components/ui'
 ```
 
 ### Import Order
+
 1. React/Next.js imports
 2. Third-party libraries
 3. Internal absolute imports (`@/`)
@@ -383,6 +402,7 @@ import type { Company } from '@/types/company'
 ## Barrel Exports
 
 ### Feature Index Files
+
 Each feature should have an `index.ts` that exports public API:
 
 ```typescript
@@ -394,6 +414,7 @@ export type { Company, CompanyInput } from './types'
 ```
 
 ### Component Index Files
+
 ```typescript
 // src/features/companies/components/index.ts
 export { CompanyList } from './CompanyList'
@@ -404,6 +425,7 @@ export { CompanyForm } from './CompanyForm'
 ## Testing
 
 ### Test Location
+
 Tests live in `src/__tests__/` with structure mirroring source:
 
 ```
@@ -416,11 +438,13 @@ src/__tests__/
 ```
 
 ### Naming
+
 Test files use `.test.ts` or `.test.tsx` suffix.
 
 ## Git Commit Messages
 
 Follow conventional commits:
+
 ```
 feat: add company locations support
 fix: resolve date picker timezone issue

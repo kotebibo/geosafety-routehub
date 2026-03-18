@@ -1,4 +1,4 @@
-// Company and Location Types for GeoSafety RouteHub
+// Company and Location Types for RouteHub
 
 export interface CompanyLocation {
   id: string
@@ -48,7 +48,7 @@ export interface CompanyWithLocations {
 // For board cell values - stores both company and location selection
 export interface CompanyCellValue {
   company_id: string
-  location_id?: string | null  // null = use primary location
+  location_id?: string | null // null = use primary location
 }
 
 // Helper type for companies list with location info
@@ -63,7 +63,7 @@ export interface CompanyListItem {
 
 // Form state for creating/editing locations
 export interface LocationFormData {
-  id?: string  // undefined for new locations
+  id?: string // undefined for new locations
   name: string
   address: string
   lat?: number | null

@@ -20,23 +20,16 @@ export function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="h-16 border-b bg-white flex items-center px-4 gap-4">
       {/* Menu Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onMenuClick}
-        className="lg:hidden"
-      >
+      <Button variant="ghost" size="icon" onClick={onMenuClick} className="lg:hidden">
         <Menu className="h-5 w-5" />
       </Button>
 
       {/* Logo */}
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-geosafety-blue rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold">G</span>
+        <div className="w-8 h-8 bg-monday-primary rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold">RH</span>
         </div>
-        <h1 className="text-xl font-semibold hidden sm:block">
-          GeoSafety RouteHub
-        </h1>
+        <h1 className="text-xl font-semibold hidden sm:block">RouteHub</h1>
       </div>
 
       {/* Search Bar */}
@@ -73,9 +66,7 @@ export function Header({ onMenuClick }: HeaderProps) {
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem>Help & Support</DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">
-              Sign out
-            </DropdownMenuItem>
+            <DropdownMenuItem className="text-red-600">Sign out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
