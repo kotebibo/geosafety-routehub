@@ -67,3 +67,8 @@ nul
 
 # Local utility scripts
 apps/web/scripts/
+
+# Data exports (Monday.com, geocoding, etc.)
+apps/web/*.json
+!apps/web/package.json
+!apps/web/tsconfig.json

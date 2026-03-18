@@ -13,6 +13,7 @@ import { userBoardsService } from '@/features/boards/services/user-boards.servic
 import { useQueryClient } from '@tanstack/react-query'
 import { CreateWorkspaceModal } from '@/features/workspaces/components'
 import { useWorkspaces, useDeleteWorkspace, useUpdateWorkspace } from '@/features/workspaces/hooks'
+import { WORKSPACE_ROLE_PERMISSIONS } from '@/types/workspace'
 import {
   Home,
   Building2,
@@ -94,8 +95,8 @@ interface BoardMenuState {
 interface WorkspaceMenuState {
   workspaceId: string
   workspaceName: string
-  isOwner: boolean
-  canEdit: boolean // Owner OR admin
+  canEditSettings: boolean
+  canDelete: boolean
   position: { top: number; left: number }
 }
 
@@ -320,19 +321,23 @@ export function Sidebar({ className }: SidebarProps) {
     e: React.MouseEvent,
     workspaceId: string,
     workspaceName: string,
-    ownerId: string
+    workspaceRole?: string
   ) => {
     e.preventDefault()
     e.stopPropagation()
 
     const rect = (e.target as HTMLElement).getBoundingClientRect()
-    const isOwner = ownerId === user?.id
-    const isAdmin = userRole?.role === 'admin'
+    // Use workspace-level role to determine permissions
+    // App-level admins get owner permissions
+    const isAppAdmin = userRole?.role === 'admin'
+    const effectiveRole = isAppAdmin ? 'owner' : workspaceRole || 'guest'
+    const perms =
+      WORKSPACE_ROLE_PERMISSIONS[effectiveRole as keyof typeof WORKSPACE_ROLE_PERMISSIONS]
     setWorkspaceMenuState({
       workspaceId,
       workspaceName,
-      isOwner,
-      canEdit: isOwner || isAdmin, // Owner OR admin can edit
+      canEditSettings: perms.canEditSettings,
+      canDelete: perms.canDelete,
       position: {
         top: rect.top,
         left: rect.right + 8,
@@ -753,7 +758,7 @@ export function Sidebar({ className }: SidebarProps) {
                                   onClick={e => {
                                     e.stopPropagation()
                                     setWorkspaceDropdownOpen(false)
-                                    openWorkspaceMenu(e, ws.id, ws.name, ws.owner_id)
+                                    openWorkspaceMenu(e, ws.id, ws.name, ws.current_user_role)
                                   }}
                                 >
                                   <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
@@ -1370,7 +1375,7 @@ function WorkspaceActionsMenu({
             Open in new tab
           </button>
 
-          {menuState.canEdit && (
+          {menuState.canEditSettings && (
             <button
               onClick={onStartRename}
               className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
@@ -1388,7 +1393,7 @@ function WorkspaceActionsMenu({
             Settings
           </button>
 
-          {menuState.canEdit && (
+          {menuState.canDelete && (
             <>
               <div className="my-1 border-t border-gray-100" />
               <button

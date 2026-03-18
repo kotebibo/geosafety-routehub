@@ -128,6 +128,7 @@ DROP POLICY IF EXISTS "Users can read inspections" ON public.inspections;
 DROP POLICY IF EXISTS "Users with permission can create inspections" ON public.inspections;
 DROP POLICY IF EXISTS "Users can update own inspections" ON public.inspections;
 DROP POLICY IF EXISTS "Admins can delete inspections" ON public.inspections;
+DROP POLICY IF EXISTS "Authenticated users can create boards" ON public.boards;
 
 -- Now we can safely drop and recreate has_permission
 DROP FUNCTION IF EXISTS public.has_permission(TEXT);

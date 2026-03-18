@@ -27,4 +27,5 @@ BEGIN
         AND wm.role IN ('owner', 'admin', 'editor')
     );
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE
+SET search_path = public;

@@ -11,7 +11,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Stores column settings per board type
 -- ================================================
 CREATE TABLE IF NOT EXISTS public.board_columns (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     board_type VARCHAR(50) NOT NULL CHECK (board_type IN ('routes', 'companies', 'inspectors', 'inspections')),
     column_id VARCHAR(100) NOT NULL,
     column_name VARCHAR(255) NOT NULL,
@@ -36,7 +36,7 @@ CREATE INDEX idx_board_columns_position ON public.board_columns(board_type, posi
 -- Allows users to save their preferred board configurations
 -- ================================================
 CREATE TABLE IF NOT EXISTS public.board_views (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES public.inspectors(id) ON DELETE CASCADE,
     board_type VARCHAR(50) NOT NULL CHECK (board_type IN ('routes', 'companies', 'inspectors', 'inspections')),
     view_name VARCHAR(255) NOT NULL,
@@ -63,7 +63,7 @@ WHERE is_default = true;
 -- Tracks all changes to items for activity feed
 -- ================================================
 CREATE TABLE IF NOT EXISTS public.item_updates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     item_type VARCHAR(50) NOT NULL CHECK (item_type IN ('route', 'company', 'inspector', 'inspection', 'board_item')),
     item_id UUID NOT NULL,
     user_id UUID REFERENCES public.inspectors(id) ON DELETE SET NULL,
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS public.user_settings (
 -- Comments on board items
 -- ================================================
 CREATE TABLE IF NOT EXISTS public.item_comments (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     item_type VARCHAR(50) NOT NULL CHECK (item_type IN ('route', 'company', 'inspector', 'inspection', 'board_item')),
     item_id UUID NOT NULL,
     user_id UUID NOT NULL REFERENCES public.inspectors(id) ON DELETE CASCADE,

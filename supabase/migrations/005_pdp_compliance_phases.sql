@@ -12,7 +12,7 @@ CREATE TYPE compliance_status AS ENUM (
 
 -- Create table for tracking phase completions
 CREATE TABLE IF NOT EXISTS pdp_compliance_phases (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   
   -- Compliance tracking

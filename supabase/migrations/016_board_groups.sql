@@ -8,7 +8,7 @@
 -- Stores group definitions for each board
 -- ================================================
 CREATE TABLE IF NOT EXISTS public.board_groups (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     board_id UUID NOT NULL REFERENCES public.boards(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
     color VARCHAR(50) DEFAULT '#579bfc', -- Hex color code

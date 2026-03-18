@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Workspace } from '@/types/workspace'
+import { WORKSPACE_ROLE_PERMISSIONS } from '@/types/workspace'
 
 // Workspace color mapping
 const WORKSPACE_COLORS: Record<string, string> = {
@@ -53,8 +54,7 @@ export default function WorkspacesPage() {
   } = useWorkspacesWithBoardCounts(!authLoading && !!user)
   const isLoading = authLoading || workspacesLoading
 
-  // Check if user is admin
-  const isAdmin = userRole?.role === 'admin'
+  const isAppAdmin = userRole?.role === 'admin'
 
   // Workspace action states
   const [renameWorkspace, setRenameWorkspace] = useState<Workspace | null>(null)
@@ -146,14 +146,18 @@ export default function WorkspacesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {workspaces?.map(workspace => {
-              const isOwner = workspace.owner_id === user?.id
+              const effectiveRole = isAppAdmin
+                ? 'owner'
+                : (workspace as any).current_user_role || 'guest'
+              const perms =
+                WORKSPACE_ROLE_PERMISSIONS[effectiveRole as keyof typeof WORKSPACE_ROLE_PERMISSIONS]
               return (
                 <WorkspaceCard
                   key={workspace.id}
                   workspace={workspace}
                   onClick={() => handleWorkspaceClick(workspace)}
                   colorClass={getWorkspaceColorClass(workspace.color)}
-                  canEdit={isOwner || isAdmin}
+                  canEdit={perms.canEditSettings}
                   onRename={() => handleRename(workspace)}
                   onDuplicate={() => handleDuplicate(workspace)}
                   onDelete={() => setDeleteWorkspace(workspace)}

@@ -5,6 +5,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { workspaceService } from '../services/workspace.service'
+import { useAuth } from '@/contexts/AuthContext'
 import type {
   Workspace,
   WorkspaceMember,
@@ -12,6 +13,7 @@ import type {
   CreateWorkspaceInput,
   UpdateWorkspaceInput,
 } from '@/types/workspace'
+import { WORKSPACE_ROLE_PERMISSIONS } from '@/types/workspace'
 import type { Board } from '@/types/board'
 
 // Query key factory for workspaces
@@ -306,6 +308,36 @@ export function useUserWorkspaceRole(workspaceId: string, userId: string) {
     queryFn: () => workspaceService.getUserWorkspaceRole(workspaceId, userId),
     enabled: !!workspaceId && !!userId,
   })
+}
+
+// ==================== PERMISSIONS ====================
+
+/**
+ * Hook to get the current user's resolved permissions for a workspace.
+ *
+ * Combines two sources of authority:
+ * 1. The user's workspace-level role (owner/admin/editor/member/guest)
+ * 2. The app-level isAdmin flag (superadmins get full access everywhere)
+ *
+ * Returns the permission object from WORKSPACE_ROLE_PERMISSIONS so components
+ * can do: `if (permissions.canManageMembers) { ... }`
+ */
+export function useWorkspacePermissions(workspaceId: string) {
+  const { user, isAdmin: isAppAdmin } = useAuth()
+  const { data: workspaceRole, isLoading } = useUserWorkspaceRole(workspaceId, user?.id || '')
+
+  // App-level admins get owner-level permissions everywhere
+  if (isAppAdmin) {
+    return { permissions: WORKSPACE_ROLE_PERMISSIONS.owner, role: workspaceRole, isLoading }
+  }
+
+  // Use the workspace role to look up permissions, default to guest if not loaded yet
+  const effectiveRole = workspaceRole || 'guest'
+  return {
+    permissions: WORKSPACE_ROLE_PERMISSIONS[effectiveRole],
+    role: workspaceRole,
+    isLoading,
+  }
 }
 
 // ==================== SEARCH ====================

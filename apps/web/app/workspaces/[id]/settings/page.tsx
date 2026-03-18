@@ -1,10 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import {
   useWorkspaceWithMembers,
   useUpdateWorkspace,
@@ -17,6 +16,7 @@ import {
   useDeleteBoard,
   useArchiveBoard,
   useRestoreBoard,
+  useWorkspacePermissions,
 } from '@/features/workspaces/hooks'
 import { Button } from '@/shared/components/ui'
 import {
@@ -64,8 +64,8 @@ export default function WorkspaceSettingsPage() {
   const router = useRouter()
   const params = useParams()
   const workspaceId = params.id as string
-  const { user, isAdmin } = useAuth()
-  const { data: inspectorId } = useInspectorId(user?.email)
+  const { user } = useAuth()
+  const { permissions } = useWorkspacePermissions(workspaceId)
 
   const [activeTab, setActiveTab] = useState<TabType>('general')
   const [name, setName] = useState('')
@@ -103,14 +103,14 @@ export default function WorkspaceSettingsPage() {
   })
 
   // Initialize form values when workspace loads
-  useState(() => {
+  useEffect(() => {
     if (workspace) {
       setName(workspace.name)
       setDescription(workspace.description || '')
       setColor(workspace.color || 'blue')
       setAllowBoardCreation(workspace.settings?.allowBoardCreation ?? true)
     }
-  })
+  }, [workspace])
 
   const handleSave = async () => {
     await updateMutation.mutateAsync({
@@ -195,8 +195,11 @@ export default function WorkspaceSettingsPage() {
     )
   }
 
-  const isOwner = workspace.owner_id === user?.id
-  const canManage = isOwner || isAdmin
+  // Derived from useWorkspacePermissions — respects workspace role + app-level admin
+  const canManageMembers = permissions.canManageMembers
+  const canEditSettings = permissions.canEditSettings
+  const canArchiveBoards = permissions.canArchiveBoards
+  const canDelete = permissions.canDelete
 
   return (
     <div className="min-h-screen bg-bg-secondary">
@@ -253,7 +256,7 @@ export default function WorkspaceSettingsPage() {
               <LayoutDashboard className="w-4 h-4 inline mr-2" />
               Boards
             </button>
-            {canManage && (
+            {canDelete && (
               <button
                 onClick={() => setActiveTab('danger')}
                 className={cn(
@@ -386,7 +389,7 @@ export default function WorkspaceSettingsPage() {
               <h3 className="text-lg font-semibold text-text-primary">
                 Workspace Members ({members?.length || 0})
               </h3>
-              {canManage && !showAddMember && (
+              {canManageMembers && !showAddMember && (
                 <Button variant="primary" size="sm" onClick={() => setShowAddMember(true)}>
                   <UserPlus className="w-4 h-4 mr-2" />
                   Add Member
@@ -395,7 +398,7 @@ export default function WorkspaceSettingsPage() {
             </div>
 
             {/* Add Member Section */}
-            {showAddMember && canManage && (
+            {showAddMember && canManageMembers && (
               <div className="mb-6 p-4 border border-border-default rounded-lg bg-bg-secondary">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="relative flex-1">
@@ -492,7 +495,7 @@ export default function WorkspaceSettingsPage() {
                         <span className="px-2 py-1 bg-monday-primary/10 text-monday-primary text-xs font-medium rounded">
                           Owner
                         </span>
-                      ) : canManage ? (
+                      ) : canManageMembers ? (
                         <>
                           <select
                             value={member.role}
@@ -564,7 +567,7 @@ export default function WorkspaceSettingsPage() {
                       </div>
                     </div>
 
-                    {canManage && (
+                    {canArchiveBoards && (
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleArchiveBoard(board.id)}
@@ -613,7 +616,7 @@ export default function WorkspaceSettingsPage() {
                           </div>
                         </div>
 
-                        {canManage && (
+                        {canArchiveBoards && (
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleRestoreBoard(board.id)}
@@ -677,7 +680,7 @@ export default function WorkspaceSettingsPage() {
         )}
 
         {/* Danger Zone Tab */}
-        {activeTab === 'danger' && canManage && (
+        {activeTab === 'danger' && canDelete && (
           <div className="bg-bg-primary rounded-lg border border-status-stuck/30 p-6">
             <h3 className="text-lg font-semibold text-status-stuck mb-2">Danger Zone</h3>
             <p className="text-text-secondary mb-6">

@@ -8,7 +8,7 @@
 -- Stores user-created boards (instances of board types)
 -- ================================================
 CREATE TABLE IF NOT EXISTS public.boards (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id UUID NOT NULL REFERENCES public.inspectors(id) ON DELETE CASCADE,
     board_type VARCHAR(50) NOT NULL CHECK (board_type IN ('routes', 'companies', 'inspectors', 'inspections', 'custom')),
     name VARCHAR(255) NOT NULL,
@@ -42,7 +42,7 @@ CREATE INDEX idx_boards_public ON public.boards(is_public) WHERE is_public = tru
 -- Stores the actual items/rows in each board
 -- ================================================
 CREATE TABLE IF NOT EXISTS public.board_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     board_id UUID NOT NULL REFERENCES public.boards(id) ON DELETE CASCADE,
     position INTEGER NOT NULL DEFAULT 0, -- For manual ordering
 
@@ -89,7 +89,7 @@ CREATE INDEX idx_board_members_user ON public.board_members(user_id);
 -- Pre-defined board templates users can use
 -- ================================================
 CREATE TABLE IF NOT EXISTS public.board_templates (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     name_ka VARCHAR(255),
     description TEXT,

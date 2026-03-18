@@ -26,7 +26,7 @@
     "re-geocode": "cd apps/web && tsx ../../scripts/re-geocode.ts",
     "seed:services": "cd apps/web && tsx ../../scripts/seed-service-types.ts",
     "migrate:services": "cd apps/web && tsx ../../scripts/migrate-to-services.ts",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "devDependencies": {
     "@types/node": "^20.19.19",

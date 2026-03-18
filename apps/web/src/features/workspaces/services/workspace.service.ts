@@ -26,34 +26,52 @@ export const workspaceService = {
    * Get all workspaces accessible to the user
    * RLS policies automatically filter based on auth.email()
    */
-  async getWorkspaces(): Promise<Workspace[]> {
+  async getWorkspaces(): Promise<(Workspace & { current_user_role?: WorkspaceRole })[]> {
     const { data, error } = await (getSupabase().from('workspaces') as any)
-      .select('*')
+      .select('*, workspace_members!inner(role, user_id)')
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data || []
+
+    // Extract the current user's role from the joined workspace_members
+    // RLS ensures we only see our own membership rows
+    return (data || []).map((w: any) => {
+      const myMembership = w.workspace_members?.[0]
+      const { workspace_members, ...workspace } = w
+      return {
+        ...workspace,
+        current_user_role: myMembership?.role || null,
+      }
+    })
   },
 
   /**
    * Get workspaces with board counts
    */
-  async getWorkspacesWithBoardCounts(): Promise<(Workspace & { board_count: number })[]> {
+  async getWorkspacesWithBoardCounts(): Promise<
+    (Workspace & { board_count: number; current_user_role?: WorkspaceRole })[]
+  > {
     const { data, error } = await (getSupabase().from('workspaces') as any)
       .select(
         `
         *,
-        boards:boards(count)
+        boards:boards(count),
+        workspace_members!inner(role, user_id)
       `
       )
       .order('created_at', { ascending: false })
 
     if (error) throw error
 
-    return (data || []).map((w: any) => ({
-      ...w,
-      board_count: w.boards?.[0]?.count || 0,
-    }))
+    return (data || []).map((w: any) => {
+      const myMembership = w.workspace_members?.[0]
+      const { workspace_members, ...workspace } = w
+      return {
+        ...workspace,
+        board_count: w.boards?.[0]?.count || 0,
+        current_user_role: myMembership?.role || null,
+      }
+    })
   },
 
   /**
