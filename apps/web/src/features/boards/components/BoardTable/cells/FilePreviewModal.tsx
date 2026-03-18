@@ -1,9 +1,9 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
-import { X, Download, ChevronLeft, ChevronRight, FileText, AlertTriangle } from 'lucide-react'
+import { X, Download, ChevronLeft, ChevronRight, FileText } from 'lucide-react'
 
 interface FilePreviewModalProps {
   file: {
@@ -18,14 +18,18 @@ interface FilePreviewModalProps {
   currentIndex?: number
 }
 
-export function FilePreviewModal({ file, onClose, files, onNavigate, currentIndex = 0 }: FilePreviewModalProps) {
-  const [docxHtml, setDocxHtml] = useState<string | null>(null)
-  const [docxLoading, setDocxLoading] = useState(false)
-  const [docxError, setDocxError] = useState<string | null>(null)
-
-  const isDocx = file?.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+export function FilePreviewModal({
+  file,
+  onClose,
+  files,
+  onNavigate,
+  currentIndex = 0,
+}: FilePreviewModalProps) {
+  const isDocx =
+    file?.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
     file?.name.endsWith('.docx')
   const isDoc = file?.type === 'application/msword' || file?.name.endsWith('.doc')
+  const isOfficeDoc = isDocx || isDoc
   const isPdf = file?.type === 'application/pdf' || file?.name.endsWith('.pdf')
   const isImage = file?.type.startsWith('image/')
 
@@ -33,50 +37,15 @@ export function FilePreviewModal({ file, onClose, files, onNavigate, currentInde
   const hasPrev = canNavigate && currentIndex > 0
   const hasNext = canNavigate && currentIndex < (files?.length ?? 0) - 1
 
-  // Load docx content
-  useEffect(() => {
-    if (!file || !isDocx) {
-      setDocxHtml(null)
-      setDocxError(null)
-      return
-    }
-
-    let cancelled = false
-    setDocxLoading(true)
-    setDocxError(null)
-
-    async function loadDocx() {
-      try {
-        const response = await fetch(file!.url)
-        if (!response.ok) throw new Error('Failed to fetch file')
-        const arrayBuffer = await response.arrayBuffer()
-        const mammoth = await import('mammoth')
-        const result = await mammoth.convertToHtml({ arrayBuffer })
-        if (!cancelled) {
-          setDocxHtml(result.value)
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setDocxError('Failed to load document preview')
-          console.error('DOCX preview error:', err)
-        }
-      } finally {
-        if (!cancelled) {
-          setDocxLoading(false)
-        }
-      }
-    }
-
-    loadDocx()
-    return () => { cancelled = true }
-  }, [file, isDocx])
-
   // Keyboard navigation
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape') onClose()
-    if (e.key === 'ArrowLeft' && hasPrev) onNavigate?.(currentIndex - 1)
-    if (e.key === 'ArrowRight' && hasNext) onNavigate?.(currentIndex + 1)
-  }, [onClose, hasPrev, hasNext, currentIndex, onNavigate])
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+      if (e.key === 'ArrowLeft' && hasPrev) onNavigate?.(currentIndex - 1)
+      if (e.key === 'ArrowRight' && hasNext) onNavigate?.(currentIndex + 1)
+    },
+    [onClose, hasPrev, hasNext, currentIndex, onNavigate]
+  )
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown)
@@ -107,63 +76,17 @@ export function FilePreviewModal({ file, onClose, files, onNavigate, currentInde
     }
 
     if (isPdf) {
+      return <iframe src={file.url} className="w-full h-full border-0 rounded" title={file.name} />
+    }
+
+    if (isOfficeDoc) {
+      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`
       return (
         <iframe
-          src={file.url}
+          src={officeViewerUrl}
           className="w-full h-full border-0 rounded"
           title={file.name}
         />
-      )
-    }
-
-    if (isDocx) {
-      if (docxLoading) {
-        return (
-          <div className="flex flex-col items-center justify-center h-full gap-3">
-            <div className="w-8 h-8 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-[#676879]">Loading document...</span>
-          </div>
-        )
-      }
-      if (docxError) {
-        return (
-          <div className="flex flex-col items-center justify-center h-full gap-3">
-            <AlertTriangle className="w-8 h-8 text-[#fdab3d]" />
-            <span className="text-sm text-[#676879]">{docxError}</span>
-            <button
-              onClick={handleDownload}
-              className="px-4 py-2 text-sm bg-[#0073ea] text-white rounded-md hover:bg-[#0060b9] transition-colors"
-            >
-              Download instead
-            </button>
-          </div>
-        )
-      }
-      if (docxHtml) {
-        return (
-          <div className="h-full overflow-auto p-8 bg-white">
-            <div
-              className="max-w-[800px] mx-auto prose prose-sm"
-              dangerouslySetInnerHTML={{ __html: docxHtml }}
-            />
-          </div>
-        )
-      }
-    }
-
-    if (isDoc) {
-      return (
-        <div className="flex flex-col items-center justify-center h-full gap-3">
-          <FileText className="w-12 h-12 text-[#676879]" />
-          <span className="text-sm text-[#676879]">.doc format preview not supported</span>
-          <span className="text-xs text-[#9699a6]">Only .docx files can be previewed. Download to view this file.</span>
-          <button
-            onClick={handleDownload}
-            className="px-4 py-2 text-sm bg-[#0073ea] text-white rounded-md hover:bg-[#0060b9] transition-colors"
-          >
-            Download file
-          </button>
-        </div>
       )
     }
 
@@ -185,7 +108,9 @@ export function FilePreviewModal({ file, onClose, files, onNavigate, currentInde
   return createPortal(
     <div
       className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+      onClick={e => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
       {/* Modal */}
       <div className="relative w-[90vw] h-[90vh] max-w-[1200px] bg-[#f5f6f8] rounded-xl shadow-2xl flex flex-col overflow-hidden">
