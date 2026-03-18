@@ -47,7 +47,7 @@ const nextConfig = {
       style-src 'self' 'unsafe-inline';
       img-src 'self' blob: data: https:;
       font-src 'self' data:;
-      connect-src 'self' *.supabase.co wss://*.supabase.co https://api.mapbox.com *.ably.io wss://*.ably.io;
+      connect-src 'self' *.supabase.co wss://*.supabase.co https://api.mapbox.com *.ably.io wss://*.ably.io *.ably.net wss://*.ably.net *.ably-realtime.com;
       frame-ancestors 'none';
       base-uri 'self';
       form-action 'self';
