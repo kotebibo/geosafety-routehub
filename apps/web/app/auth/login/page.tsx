@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { LogIn, UserPlus, AlertCircle, CheckCircle, Chrome } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { LogIn, UserPlus, AlertCircle, CheckCircle, Globe } from 'lucide-react'
 
 type AuthMode = 'login' | 'signup'
 
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get('from') || '/'
   const { signIn, signUp, signInWithGoogle } = useAuth()
+  const { t, language, setLanguage } = useLanguage()
   const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -44,16 +46,14 @@ export default function LoginPage() {
 
     try {
       if (mode === 'signup') {
-        // Validate passwords match
         if (password !== confirmPassword) {
-          setError('პაროლები არ ემთხვევა')
+          setError(t('login.passwordsMismatch'))
           setLoading(false)
           return
         }
 
-        // Validate password strength
         if (password.length < 6) {
-          setError('პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო')
+          setError(t('login.passwordTooShort'))
           setLoading(false)
           return
         }
@@ -62,42 +62,35 @@ export default function LoginPage() {
 
         if (error) {
           if (error.message.includes('already registered')) {
-            setError('ეს ელ.ფოსტა უკვე რეგისტრირებულია')
+            setError(t('login.alreadyRegistered'))
           } else {
             setError(error.message)
           }
         } else {
-          setSuccess('რეგისტრაცია წარმატებით დასრულდა! შეამოწმეთ ელ.ფოსტა დასადასტურებლად.')
-          // Clear form but stay on page to show success message
+          setSuccess(t('login.registrationSuccess'))
           setEmail('')
           setPassword('')
           setConfirmPassword('')
           setFullName('')
         }
       } else {
-        // Login mode
         const { error } = await signIn(email, password)
 
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            setError('არასწორი ელ.ფოსტა ან პაროლი')
+            setError(t('login.invalidCredentials'))
           } else if (error.message.includes('Email not confirmed')) {
-            setError('გთხოვთ დაადასტუროთ ელ.ფოსტა შესვლამდე')
+            setError(t('login.emailNotConfirmed'))
           } else {
             setError(error.message)
           }
         } else {
-          // Redirect to the original page or home
           router.push(returnUrl)
           router.refresh()
         }
       }
     } catch (err) {
-      setError(
-        mode === 'signup'
-          ? 'შეცდომა რეგისტრაციისას. გთხოვთ სცადოთ თავიდან.'
-          : 'შეცდომა შესვლისას. გთხოვთ სცადოთ თავიდან.'
-      )
+      setError(mode === 'signup' ? t('login.signupError') : t('login.signinError'))
     } finally {
       setLoading(false)
     }
@@ -109,11 +102,10 @@ export default function LoginPage() {
     try {
       const { error } = await signInWithGoogle()
       if (error) {
-        setError('Google-ით შესვლა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.')
+        setError(t('login.googleError'))
       }
-      // If successful, Supabase will redirect to the callback URL
     } catch (err) {
-      setError('Google-ით შესვლა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.')
+      setError(t('login.googleError'))
     } finally {
       setGoogleLoading(false)
     }
@@ -122,14 +114,25 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
+        {/* Language Toggle */}
+        <div className="flex justify-end">
+          <button
+            onClick={() => setLanguage(language === 'ka' ? 'en' : 'ka')}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+          >
+            <Globe className="w-4 h-4" />
+            {language === 'ka' ? 'English' : 'ქართული'}
+          </button>
+        </div>
+
         {/* Header */}
         <div className="text-center">
           <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
             RH
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">RouteHub</h2>
+          <h2 className="text-3xl font-bold text-gray-900">{t('login.title')}</h2>
           <p className="mt-2 text-sm text-gray-600">
-            {mode === 'login' ? 'შესვლა სისტემაში' : 'ახალი ანგარიშის შექმნა'}
+            {mode === 'login' ? t('login.loginToSystem') : t('login.createAccount')}
           </p>
         </div>
 
@@ -145,7 +148,7 @@ export default function LoginPage() {
             }`}
           >
             <LogIn className="w-4 h-4" />
-            შესვლა
+            {t('login.signIn')}
           </button>
           <button
             type="button"
@@ -157,7 +160,7 @@ export default function LoginPage() {
             }`}
           >
             <UserPlus className="w-4 h-4" />
-            რეგისტრაცია
+            {t('login.signUp')}
           </button>
         </div>
 
@@ -184,7 +187,7 @@ export default function LoginPage() {
             {mode === 'signup' && (
               <div>
                 <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                  სახელი და გვარი
+                  {t('login.fullName')}
                 </label>
                 <input
                   id="fullName"
@@ -194,7 +197,7 @@ export default function LoginPage() {
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="თქვენი სახელი"
+                  placeholder={t('login.fullNamePlaceholder')}
                 />
               </div>
             )}
@@ -202,7 +205,7 @@ export default function LoginPage() {
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                ელ.ფოსტა
+                {t('login.email')}
               </label>
               <input
                 id="email"
@@ -220,7 +223,7 @@ export default function LoginPage() {
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                პაროლი
+                {t('login.password')}
               </label>
               <input
                 id="password"
@@ -233,7 +236,9 @@ export default function LoginPage() {
                 className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="••••••••"
               />
-              {mode === 'signup' && <p className="mt-1 text-xs text-gray-500">მინიმუმ 6 სიმბოლო</p>}
+              {mode === 'signup' && (
+                <p className="mt-1 text-xs text-gray-500">{t('login.minChars')}</p>
+              )}
             </div>
 
             {/* Confirm Password - Only for signup */}
@@ -243,7 +248,7 @@ export default function LoginPage() {
                   htmlFor="confirmPassword"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
-                  პაროლის დადასტურება
+                  {t('login.confirmPassword')}
                 </label>
                 <input
                   id="confirmPassword"
@@ -269,12 +274,12 @@ export default function LoginPage() {
             {mode === 'login' ? (
               <>
                 <LogIn className="w-5 h-5" />
-                {loading ? 'შესვლა...' : 'შესვლა'}
+                {loading ? t('login.signingIn') : t('login.signIn')}
               </>
             ) : (
               <>
                 <UserPlus className="w-5 h-5" />
-                {loading ? 'რეგისტრაცია...' : 'რეგისტრაცია'}
+                {loading ? t('login.signingUp') : t('login.signUp')}
               </>
             )}
           </button>
@@ -285,7 +290,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gray-50 text-gray-500">ან</span>
+              <span className="px-2 bg-gray-50 text-gray-500">{t('login.orContinueWith')}</span>
             </div>
           </div>
 
@@ -314,7 +319,7 @@ export default function LoginPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            {googleLoading ? 'Google-ით შესვლა...' : 'Google-ით შესვლა'}
+            {googleLoading ? t('login.signingInWithGoogle') : t('login.signInWithGoogle')}
           </button>
         </form>
 
@@ -322,24 +327,24 @@ export default function LoginPage() {
         <div className="text-center text-sm text-gray-600">
           {mode === 'login' ? (
             <p>
-              არ გაქვთ ანგარიში?{' '}
+              {t('login.noAccount')}{' '}
               <button
                 type="button"
                 onClick={() => switchMode('signup')}
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                დარეგისტრირდით
+                {t('login.registerNow')}
               </button>
             </p>
           ) : (
             <p>
-              უკვე გაქვთ ანგარიში?{' '}
+              {t('login.alreadyHaveAccount')}{' '}
               <button
                 type="button"
                 onClick={() => switchMode('login')}
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                შესვლა
+                {t('login.signIn')}
               </button>
             </p>
           )}

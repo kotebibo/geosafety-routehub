@@ -4,6 +4,7 @@ import * as React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/contexts/LanguageContext'
 import {
   Home,
   Building2,
@@ -16,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LayoutDashboard,
+  Globe,
 } from 'lucide-react'
 
 interface SidebarProps {
@@ -24,8 +26,7 @@ interface SidebarProps {
 
 interface NavItem {
   href: string
-  label: string
-  labelEn: string
+  labelKey: string
   icon: React.ComponentType<{ className?: string }>
   roles: string[]
 }
@@ -33,6 +34,7 @@ interface NavItem {
 export function Sidebar({ className }: SidebarProps) {
   const [collapsed, setCollapsed] = React.useState(false)
   const pathname = usePathname()
+  const { language, setLanguage, t } = useLanguage()
 
   // Don't show sidebar on login page
   if (pathname === '/auth/login' || pathname === '/auth/register') {
@@ -40,70 +42,50 @@ export function Sidebar({ className }: SidebarProps) {
   }
 
   const navItems: NavItem[] = [
-    {
-      href: '/',
-      label: 'მთავარი',
-      labelEn: 'Home',
-      icon: Home,
-      roles: ['admin', 'dispatcher', 'officer'],
-    },
+    { href: '/', labelKey: 'nav.home', icon: Home, roles: ['admin', 'dispatcher', 'officer'] },
     {
       href: '/boards',
-      label: 'დაფები',
-      labelEn: 'Boards',
+      labelKey: 'nav.boards',
       icon: LayoutDashboard,
       roles: ['admin', 'dispatcher'],
     },
     {
       href: '/companies',
-      label: 'კომპანიები',
-      labelEn: 'Companies',
+      labelKey: 'nav.companies',
       icon: Building2,
       roles: ['admin', 'dispatcher'],
     },
-    {
-      href: '/inspectors',
-      label: 'ოფიცრები',
-      labelEn: 'Officers',
-      icon: Users,
-      roles: ['admin', 'dispatcher'],
-    },
-    {
-      href: '/locations',
-      label: 'ლოკაციები',
-      labelEn: 'Locations',
-      icon: MapPin,
-      roles: ['admin', 'dispatcher'],
-    },
+    { href: '/inspectors', labelKey: 'nav.officers', icon: Users, roles: ['admin', 'dispatcher'] },
+    { href: '/locations', labelKey: 'nav.locations', icon: MapPin, roles: ['admin', 'dispatcher'] },
     {
       href: '/routes',
-      label: 'მარშრუტები',
-      labelEn: 'Routes',
+      labelKey: 'nav.routes',
       icon: Route,
       roles: ['admin', 'dispatcher', 'officer'],
     },
     {
       href: '/routes/builder',
-      label: 'მარშრუტის შექმნა',
-      labelEn: 'Route Builder',
+      labelKey: 'nav.routeBuilder',
       icon: MapIcon,
       roles: ['admin', 'dispatcher'],
     },
     {
       href: '/admin/assignments',
-      label: 'დანიშვნები',
-      labelEn: 'Assignments',
+      labelKey: 'nav.assignments',
       icon: UserCog,
       roles: ['admin', 'dispatcher'],
     },
     {
       href: '/settings',
-      label: 'პარამეტრები',
-      labelEn: 'Settings',
+      labelKey: 'nav.settings',
       icon: Settings,
       roles: ['admin', 'dispatcher', 'officer'],
     },
   ]
+
+  const toggleLanguage = () => {
+    setLanguage(language === 'ka' ? 'en' : 'ka')
+  }
 
   return (
     <aside
@@ -150,10 +132,10 @@ export function Sidebar({ className }: SidebarProps) {
                       : 'text-text-primary hover:text-text-primary',
                     collapsed && 'justify-center'
                   )}
-                  title={collapsed ? item.label : undefined}
+                  title={collapsed ? t(item.labelKey) : undefined}
                 >
-                  <Icon className={cn('shrink-0', collapsed ? 'w-5 h-5' : 'w-5 h-5')} />
-                  {!collapsed && <span className="truncate">{item.label}</span>}
+                  <Icon className="shrink-0 w-5 h-5" />
+                  {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
                 </Link>
               </li>
             )
@@ -161,8 +143,25 @@ export function Sidebar({ className }: SidebarProps) {
         </ul>
       </nav>
 
-      {/* Collapse Button */}
-      <div className="border-t border-border-light p-2">
+      {/* Bottom Section */}
+      <div className="border-t border-border-light p-2 space-y-1">
+        {/* Language Toggle */}
+        <button
+          onClick={toggleLanguage}
+          className={cn(
+            'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
+            'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
+            collapsed && 'justify-center'
+          )}
+          title={collapsed ? (language === 'ka' ? 'English' : 'ქართული') : undefined}
+        >
+          <Globe className="w-5 h-5 shrink-0" />
+          {!collapsed && (
+            <span className="truncate">{language === 'ka' ? 'English' : 'ქართული'}</span>
+          )}
+        </button>
+
+        {/* Collapse Button */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
@@ -177,7 +176,7 @@ export function Sidebar({ className }: SidebarProps) {
           ) : (
             <>
               <ChevronLeft className="w-5 h-5" />
-              <span className="truncate">ჩაკეცვა</span>
+              <span className="truncate">{t('nav.collapse')}</span>
             </>
           )}
         </button>

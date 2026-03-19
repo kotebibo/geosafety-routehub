@@ -1,12 +1,14 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Building2, Users, MapIcon, Route, UserCog, ArrowRight, Navigation } from 'lucide-react'
 
 export default function HomePage() {
   const { user, userRole, loading } = useAuth()
+  const { t } = useLanguage()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -21,7 +23,7 @@ export default function HomePage() {
             <div className="w-24 h-24 border-4 border-blue-200 rounded-full animate-pulse"></div>
             <div className="absolute inset-0 w-24 h-24 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div>
           </div>
-          <p className="mt-4 text-gray-600 animate-pulse">იტვირთება...</p>
+          <p className="mt-4 text-gray-600 animate-pulse">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -34,50 +36,50 @@ export default function HomePage() {
   const quickLinks = [
     {
       href: '/companies',
-      label: 'კომპანიების მართვა',
+      labelKey: 'home.companyManagement',
       icon: Building2,
       color: 'from-blue-500 to-blue-600',
-      description: 'კომპანიების მართვა',
+      descriptionKey: 'home.companyManagement',
       show: isAdmin || isDispatcher,
     },
     {
       href: '/inspectors',
-      label: 'ოფიცრები',
+      labelKey: 'home.officers',
       icon: Users,
       color: 'from-green-500 to-green-600',
-      description: 'გუნდის მართვა',
+      descriptionKey: 'home.teamManagement',
       show: isAdmin || isDispatcher,
     },
     {
       href: '/admin/assignments',
-      label: 'დანიშვნები',
+      labelKey: 'home.assignments',
       icon: UserCog,
       color: 'from-purple-500 to-purple-600',
-      description: 'სამუშაოს განაწილება',
+      descriptionKey: 'home.workDistribution',
       show: isAdmin || isDispatcher,
     },
     {
       href: '/routes/builder',
-      label: 'მარშრუტის შექმნა',
+      labelKey: 'home.createRoute',
       icon: MapIcon,
       color: 'from-indigo-500 to-indigo-600',
-      description: 'ოპტიმიზაცია',
+      descriptionKey: 'home.optimization',
       show: isAdmin || isDispatcher,
     },
     {
       href: '/routes/manage',
-      label: 'მარშრუტების მართვა',
+      labelKey: 'home.manageRoutes',
       icon: Route,
       color: 'from-orange-500 to-orange-600',
-      description: 'ყველა მარშრუტი',
+      descriptionKey: 'home.allRoutes',
       show: isAdmin || isDispatcher,
     },
     {
       href: '/inspector/routes',
-      label: 'ჩემი მარშრუტები',
+      labelKey: 'home.myRoutes',
       icon: Navigation,
       color: 'from-teal-500 to-teal-600',
-      description: 'დღევანდელი გეგმა',
+      descriptionKey: 'home.todaysPlan',
       show: isOfficer,
     },
   ].filter(link => link.show)
@@ -96,18 +98,18 @@ export default function HomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 animate-fade-in">
-              RouteHub
+              {t('home.title')}
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-600 mb-4 animate-fade-in animation-delay-200">
-              მარშრუტების ოპტიმიზაციისა და მართვის პლატფორმა
+              {t('home.subtitle')}
             </p>
 
             {user && (
               <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg animate-fade-in animation-delay-400">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span className="text-gray-700">
-                  გამარჯობა, <strong>{user.email}</strong>
+                  {t('home.greeting')}, <strong>{user.email}</strong>
                 </span>
               </div>
             )}
@@ -120,7 +122,7 @@ export default function HomePage() {
         {quickLinks.length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-              სწრაფი მოქმედებები
+              {t('home.quickActions')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {quickLinks.map((link, index) => {
@@ -147,10 +149,10 @@ export default function HomePage() {
                         <ArrowRight className="w-6 h-6 text-gray-400 group-hover:text-white transform group-hover:translate-x-2 transition-all duration-300" />
                       </div>
                       <h3 className="text-lg font-bold text-gray-900 group-hover:text-white mb-1 transition-colors duration-300">
-                        {link.label}
+                        {t(link.labelKey)}
                       </h3>
                       <p className="text-sm text-gray-600 group-hover:text-white/90 transition-colors duration-300">
-                        {link.description}
+                        {t(link.descriptionKey)}
                       </p>
                     </div>
                   </Link>
@@ -163,22 +165,20 @@ export default function HomePage() {
         {/* Call to Action */}
         {!user && (
           <div className="text-center py-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">მზად ხართ დასაწყებად?</h2>
-            <p className="text-lg text-gray-600 mb-8">
-              შეუერთდით ასობით კომპანიას, რომლებიც უკვე იყენებენ RouteHub-ს
-            </p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('home.readyToStart')}</h2>
+            <p className="text-lg text-gray-600 mb-8">{t('home.joinCompanies')}</p>
             <div className="flex gap-4 justify-center">
               <Link
                 href="/auth/login"
                 className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300"
               >
-                შესვლა
+                {t('home.signIn')}
               </Link>
               <Link
                 href="/auth/register"
                 className="px-8 py-3 bg-white text-blue-600 font-semibold rounded-xl border-2 border-blue-600 hover:bg-blue-50 transform hover:scale-105 transition-all duration-300"
               >
-                რეგისტრაცია
+                {t('home.register')}
               </Link>
             </div>
           </div>
@@ -190,20 +190,20 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <p className="text-sm text-gray-600">© 2025 RouteHub. ყველა უფლება დაცულია.</p>
+              <p className="text-sm text-gray-600">{t('home.copyright')}</p>
             </div>
             <div className="flex gap-6">
               <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
-                შესახებ
+                {t('home.about')}
               </a>
               <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
-                დოკუმენტაცია
+                {t('home.documentation')}
               </a>
               <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
-                მხარდაჭერა
+                {t('home.support')}
               </a>
               <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
-                კონტაქტი
+                {t('home.contact')}
               </a>
             </div>
           </div>
