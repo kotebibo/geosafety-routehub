@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
@@ -166,7 +160,7 @@ export interface Database {
           email: string
           full_name: string
           phone: string | null
-          role: 'admin' | 'dispatcher' | 'inspector' | 'manager' | null
+          role: 'admin' | 'dispatcher' | 'officer' | 'manager' | null
           specialty: string | null
           certifications: string[] | null
           certification_expiry_dates: Json | null
@@ -185,7 +179,7 @@ export interface Database {
           email: string
           full_name: string
           phone?: string | null
-          role?: 'admin' | 'dispatcher' | 'inspector' | 'manager' | null
+          role?: 'admin' | 'dispatcher' | 'officer' | 'manager' | null
           specialty?: string | null
           certifications?: string[] | null
           certification_expiry_dates?: Json | null
@@ -204,7 +198,7 @@ export interface Database {
           email?: string
           full_name?: string
           phone?: string | null
-          role?: 'admin' | 'dispatcher' | 'inspector' | 'manager' | null
+          role?: 'admin' | 'dispatcher' | 'officer' | 'manager' | null
           specialty?: string | null
           certifications?: string[] | null
           certification_expiry_dates?: Json | null
@@ -592,7 +586,7 @@ export interface Database {
         Row: {
           id: string
           owner_id: string
-          board_type: 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom'
+          board_type: 'routes' | 'companies' | 'officers' | 'inspections' | 'custom'
           name: string
           name_ka: string | null
           description: string | null
@@ -608,7 +602,7 @@ export interface Database {
         Insert: {
           id?: string
           owner_id: string
-          board_type: 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom'
+          board_type: 'routes' | 'companies' | 'officers' | 'inspections' | 'custom'
           name: string
           name_ka?: string | null
           description?: string | null
@@ -624,7 +618,7 @@ export interface Database {
         Update: {
           id?: string
           owner_id?: string
-          board_type?: 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom'
+          board_type?: 'routes' | 'companies' | 'officers' | 'inspections' | 'custom'
           name?: string
           name_ka?: string | null
           description?: string | null

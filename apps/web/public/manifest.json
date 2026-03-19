@@ -1,7 +1,7 @@
 {
   "name": "RouteHub",
   "short_name": "RouteHub",
-  "description": "Route optimization and field management for safety inspectors",
+  "description": "Route optimization and field management for safety officers",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

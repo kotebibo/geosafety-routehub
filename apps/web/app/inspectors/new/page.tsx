@@ -1,28 +1,28 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save } from 'lucide-react';
-import Link from 'next/link';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, Save } from 'lucide-react'
+import Link from 'next/link'
 
 export default function NewInspectorPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     phone: '',
     specialty: '',
-    role: 'inspector',
+    role: 'officer',
     zone: '',
     status: 'active',
     working_hours_start: '08:00',
     working_hours_end: '17:00',
-  });
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
 
     try {
       const payload = {
@@ -31,25 +31,25 @@ export default function NewInspectorPage() {
           start: formData.working_hours_start,
           end: formData.working_hours_end,
         },
-      };
+      }
 
       const response = await fetch('/api/inspectors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
-      });
+      })
 
-      if (!response.ok) throw new Error('Failed to create inspector');
+      if (!response.ok) throw new Error('Failed to create inspector')
 
-      alert('ინსპექტორი წარმატებით შეიქმნა!');
-      router.push('/inspectors');
+      alert('ოფიცერი წარმატებით შეიქმნა!')
+      router.push('/inspectors')
     } catch (error) {
-      console.error('Error creating inspector:', error);
-      alert('შეცდომა ინსპექტორის შექმნისას');
+      console.error('Error creating inspector:', error)
+      alert('შეცდომა ოფიცრის შექმნისას')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -61,9 +61,9 @@ export default function NewInspectorPage() {
             className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            უკან ინსპექტორებზე
+            უკან ოფიცრებზე
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">ახალი ინსპექტორი</h1>
+          <h1 className="text-3xl font-bold text-gray-900">ახალი ოფიცერი</h1>
         </div>
 
         {/* Form */}
@@ -80,47 +80,41 @@ export default function NewInspectorPage() {
                   type="text"
                   required
                   value={formData.full_name}
-                  onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                  onChange={e => setFormData({ ...formData, full_name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="მაგ: გიორგი მელაძე"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ელ-ფოსტა *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ელ-ფოსტა *</label>
                 <input
                   type="email"
                   required
                   value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="giorgi@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ტელეფონი
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ტელეფონი</label>
                 <input
                   type="tel"
                   value={formData.phone}
-                  onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="+995 555 123 456"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  ზონა
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">ზონა</label>
                 <input
                   type="text"
                   value={formData.zone}
-                  onChange={(e) => setFormData({...formData, zone: e.target.value})}
+                  onChange={e => setFormData({ ...formData, zone: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="მაგ: ვაკე-საბურთალო"
                 />
@@ -133,13 +127,11 @@ export default function NewInspectorPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">სპეციალობა და როლი</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  სპეციალობა *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">სპეციალობა *</label>
                 <select
                   required
                   value={formData.specialty}
-                  onChange={(e) => setFormData({...formData, specialty: e.target.value})}
+                  onChange={e => setFormData({ ...formData, specialty: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">აირჩიეთ სპეციალობა</option>
@@ -155,16 +147,14 @@ export default function NewInspectorPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  როლი *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">როლი *</label>
                 <select
                   required
                   value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  onChange={e => setFormData({ ...formData, role: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="inspector">ინსპექტორი</option>
+                  <option value="officer">ოფიცერი</option>
                   <option value="dispatcher">დისპეტჩერი</option>
                   <option value="manager">მენეჯერი</option>
                   <option value="admin">ადმინისტრატორი</option>
@@ -178,27 +168,23 @@ export default function NewInspectorPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">სამუშაო საათები</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  დაწყება *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">დაწყება *</label>
                 <input
                   type="time"
                   required
                   value={formData.working_hours_start}
-                  onChange={(e) => setFormData({...formData, working_hours_start: e.target.value})}
+                  onChange={e => setFormData({ ...formData, working_hours_start: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  დასრულება *
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">დასრულება *</label>
                 <input
                   type="time"
                   required
                   value={formData.working_hours_end}
-                  onChange={(e) => setFormData({...formData, working_hours_end: e.target.value})}
+                  onChange={e => setFormData({ ...formData, working_hours_end: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -210,7 +196,7 @@ export default function NewInspectorPage() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">სტატუსი</h2>
             <select
               value={formData.status}
-              onChange={(e) => setFormData({...formData, status: e.target.value})}
+              onChange={e => setFormData({ ...formData, status: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="active">აქტიური</option>
@@ -233,11 +219,11 @@ export default function NewInspectorPage() {
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5 mr-2" />
-              {loading ? 'შენახვა...' : 'ინსპექტორის შექმნა'}
+              {loading ? 'შენახვა...' : 'ოფიცრის შექმნა'}
             </button>
           </div>
         </form>
       </div>
     </div>
-  );
+  )
 }

@@ -4,14 +4,7 @@ import * as React from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
-import {
-  Search,
-  Bell,
-  HelpCircle,
-  LogOut,
-  User,
-  ChevronDown,
-} from 'lucide-react'
+import { Search, Bell, HelpCircle, LogOut, User, ChevronDown } from 'lucide-react'
 
 interface HeaderProps {
   className?: string
@@ -41,19 +34,19 @@ export function Header({ className }: HeaderProps) {
 
     const breadcrumbMap: Record<string, string> = {
       companies: 'კომპანიები',
-      inspectors: 'ინსპექტორები',
+      inspectors: 'ოფიცრები',
       locations: 'ლოკაციები',
       routes: 'მარშრუტები',
       builder: 'მარშრუტის შექმნა',
       manage: 'მართვა',
       admin: 'ადმინისტრაცია',
       assignments: 'დანიშვნები',
-      inspector: 'ინსპექტორი',
+      inspector: 'ოფიცერი',
       settings: 'პარამეტრები',
       boards: 'დაფები',
     }
 
-    return segments.map((seg) => breadcrumbMap[seg] || seg).join(' / ')
+    return segments.map(seg => breadcrumbMap[seg] || seg).join(' / ')
   }
 
   const getRoleBadge = () => {
@@ -62,19 +55,14 @@ export function Header({ className }: HeaderProps) {
     const roleMap: Record<string, { label: string; color: string }> = {
       admin: { label: 'ადმინისტრატორი', color: 'bg-[var(--color-purple)] text-white' },
       dispatcher: { label: 'დისპეტჩერი', color: 'bg-[var(--color-bright-blue)] text-white' },
-      inspector: { label: 'ინსპექტორი', color: 'bg-[var(--color-grass-green)] text-white' },
+      officer: { label: 'ოფიცერი', color: 'bg-[var(--color-grass-green)] text-white' },
     }
 
     const role = roleMap[userRole.role]
     if (!role) return null
 
     return (
-      <span
-        className={cn(
-          'text-xs px-2 py-0.5 rounded-full font-medium',
-          role.color
-        )}
-      >
+      <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', role.color)}>
         {role.label}
       </span>
     )
@@ -82,17 +70,12 @@ export function Header({ className }: HeaderProps) {
 
   return (
     <header
-      className={cn(
-        'sticky top-0 z-30 h-14 bg-bg-primary border-b border-border-light',
-        className
-      )}
+      className={cn('sticky top-0 z-30 h-14 bg-bg-primary border-b border-border-light', className)}
     >
       <div className="flex items-center justify-between h-full px-4 gap-4">
         {/* Left: Breadcrumb */}
         <div className="flex items-center gap-3 flex-1 min-w-0">
-          <h1 className="text-lg font-semibold text-text-primary truncate">
-            {getBreadcrumb()}
-          </h1>
+          <h1 className="text-lg font-semibold text-text-primary truncate">{getBreadcrumb()}</h1>
         </div>
 
         {/* Center: Search */}
@@ -103,7 +86,7 @@ export function Header({ className }: HeaderProps) {
               type="text"
               placeholder="ძებნა..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className={cn(
                 'w-full pl-10 pr-4 py-2 rounded-md text-sm',
                 'bg-bg-secondary border border-border-light',
@@ -169,10 +152,7 @@ export function Header({ className }: HeaderProps) {
               {showUserMenu && (
                 <>
                   {/* Backdrop */}
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowUserMenu(false)}
-                  />
+                  <div className="fixed inset-0 z-40" onClick={() => setShowUserMenu(false)} />
 
                   {/* Menu */}
                   <div className="absolute right-0 top-full mt-2 w-64 bg-bg-primary rounded-lg shadow-monday-lg border border-border-light z-50">

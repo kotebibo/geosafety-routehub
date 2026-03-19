@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 import { PageHeader, LoadingSpinner } from '@/shared/components/ui'
-import { AssignmentStatCards, CompanyAssignmentTable, InspectorWorkloadPanel } from '@/features/assignments/components'
+import {
+  AssignmentStatCards,
+  CompanyAssignmentTable,
+  InspectorWorkloadPanel,
+} from '@/features/assignments/components'
 import { useCompanyAssignments } from '@/features/assignments/hooks'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
 
@@ -10,16 +14,9 @@ export default function AssignmentsPage() {
   // For now, use 'all' to avoid UUID issues
   // TODO: Get actual UUID for personal_data_protection service type from database
   const [selectedServiceType, setSelectedServiceType] = useState('all')
-  
-  const {
-    assignments,
-    serviceTypes,
-    inspectorWorkload,
-    stats,
-    loading,
-    error,
-    handleBulkAssign,
-  } = useCompanyAssignments(selectedServiceType)
+
+  const { assignments, serviceTypes, inspectorWorkload, stats, loading, error, handleBulkAssign } =
+    useCompanyAssignments(selectedServiceType)
 
   if (loading) {
     return <LoadingSpinner message="კომპანიების ჩატვირთვა..." />
@@ -43,16 +40,10 @@ export default function AssignmentsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader 
-        title="კომპანიების დანიშვნა"
-        description="მიანიჭეთ კომპანიები ინსპექტორებს"
-      />
+      <PageHeader title="კომპანიების დანიშვნა" description="მიანიჭეთ კომპანიები ოფიცრებს" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <AssignmentStatCards 
-          stats={stats}
-          inspectorCount={inspectorWorkload.length}
-        />
+        <AssignmentStatCards stats={stats} inspectorCount={inspectorWorkload.length} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">

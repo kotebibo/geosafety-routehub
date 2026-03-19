@@ -135,7 +135,7 @@ export async function requireAdminOrDispatcher() {
  * Require inspector role
  */
 export async function requireInspector() {
-  return requireRole('inspector')
+  return requireRole('officer')
 }
 
 /**

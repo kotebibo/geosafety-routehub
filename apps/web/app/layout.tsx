@@ -33,7 +33,7 @@ const georgian = Noto_Sans_Georgian({
 
 export const metadata: Metadata = {
   title: 'RouteHub - Intelligent Route Optimization',
-  description: 'Professional route optimization and field management system for safety inspectors',
+  description: 'Professional route optimization and field management system for safety officers',
   keywords: ['route optimization', 'field management', 'inspection', 'RouteHub'],
   authors: [{ name: 'RouteHub' }],
   manifest: '/manifest.json',

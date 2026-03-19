@@ -13,7 +13,8 @@ export default function InspectorTrackingPage() {
   const { data: inspectorId, isLoading: inspectorLoading } = useInspectorId(user?.email)
 
   const currentRole = userRole?.role || ''
-  const isAllowed = currentRole === 'inspector' || currentRole === 'admin' || currentRole === 'dispatcher'
+  const isAllowed =
+    currentRole === 'officer' || currentRole === 'admin' || currentRole === 'dispatcher'
 
   useEffect(() => {
     if (!authLoading && !isAllowed) {

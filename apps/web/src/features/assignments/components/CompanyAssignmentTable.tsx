@@ -36,17 +36,15 @@ export function CompanyAssignmentTable({
   assignments,
   serviceTypes,
   inspectors,
-  onBulkAssign
+  onBulkAssign,
 }: CompanyAssignmentTableProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState('all')
   const [assigningTo, setAssigningTo] = useState<string>('')
   const [isAssigning, setIsAssigning] = useState(false)
 
-  const filteredAssignments = useMemo(() =>
-    filter === 'all'
-      ? assignments
-      : assignments.filter(a => a.service_type.id === filter),
+  const filteredAssignments = useMemo(
+    () => (filter === 'all' ? assignments : assignments.filter(a => a.service_type.id === filter)),
     [assignments, filter]
   )
 
@@ -75,52 +73,48 @@ export function CompanyAssignmentTable({
     }
   }
 
-  const columns = useMemo<Column<CompanyAssignment>[]>(() => [
-    {
-      id: 'company',
-      header: 'კომპანია',
-      accessorFn: (row) => row.company?.name,
-      sortable: true,
-      cell: ({ value }) => (
-        <span className="font-medium text-gray-900">{value as string}</span>
-      ),
-    },
-    {
-      id: 'address',
-      header: 'მისამართი',
-      accessorFn: (row) => row.company?.address,
-      sortable: true,
-      cell: ({ value }) => (
-        <span className="text-gray-600">{value as string}</span>
-      ),
-    },
-    {
-      id: 'service',
-      header: 'სერვისი',
-      accessorFn: (row) => row.service_type?.name_ka,
-      sortable: true,
-      cell: ({ value }) => (
-        <span className="text-gray-600">{(value as string) || 'N/A'}</span>
-      ),
-    },
-    {
-      id: 'inspector',
-      header: 'ინსპექტორი',
-      accessorFn: (row) => row.assigned_inspector?.full_name,
-      sortable: true,
-      cell: ({ row }) => (
-        row.assigned_inspector ? (
-          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-            {row.assigned_inspector.full_name}
-          </span>
-        ) : (
-          <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-            არადანიშნული
-          </span>
-        )
-      ),
-    },
-  ], [])
+  const columns = useMemo<Column<CompanyAssignment>[]>(
+    () => [
+      {
+        id: 'company',
+        header: 'კომპანია',
+        accessorFn: row => row.company?.name,
+        sortable: true,
+        cell: ({ value }) => <span className="font-medium text-gray-900">{value as string}</span>,
+      },
+      {
+        id: 'address',
+        header: 'მისამართი',
+        accessorFn: row => row.company?.address,
+        sortable: true,
+        cell: ({ value }) => <span className="text-gray-600">{value as string}</span>,
+      },
+      {
+        id: 'service',
+        header: 'სერვისი',
+        accessorFn: row => row.service_type?.name_ka,
+        sortable: true,
+        cell: ({ value }) => <span className="text-gray-600">{(value as string) || 'N/A'}</span>,
+      },
+      {
+        id: 'inspector',
+        header: 'ოფიცერი',
+        accessorFn: row => row.assigned_inspector?.full_name,
+        sortable: true,
+        cell: ({ row }) =>
+          row.assigned_inspector ? (
+            <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+              {row.assigned_inspector.full_name}
+            </span>
+          ) : (
+            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+              არადანიშნული
+            </span>
+          ),
+      },
+    ],
+    []
+  )
 
   return (
     <div className="bg-white rounded-lg border">
@@ -133,7 +127,7 @@ export function CompanyAssignmentTable({
               <span className="font-medium">ფილტრი:</span>
               <select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value)}
+                onChange={e => setFilter(e.target.value)}
                 className="px-3 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">ყველა სერვისი</option>
@@ -148,9 +142,7 @@ export function CompanyAssignmentTable({
 
           <div className="text-sm text-gray-600">
             {selected.size > 0 && (
-              <span className="font-medium text-blue-600">
-                {selected.size} არჩეული
-              </span>
+              <span className="font-medium text-blue-600">{selected.size} არჩეული</span>
             )}
           </div>
         </div>
@@ -161,7 +153,7 @@ export function CompanyAssignmentTable({
             <Users className="w-5 h-5 text-blue-600" />
             <select
               value={assigningTo}
-              onChange={(e) => setAssigningTo(e.target.value)}
+              onChange={e => setAssigningTo(e.target.value)}
               className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">აირჩიეთ ინსპექტორი...</option>
@@ -190,12 +182,8 @@ export function CompanyAssignmentTable({
         selectable
         selectedRows={selected}
         onSelectionChange={setSelected}
-        getRowId={(row) => row.id}
-        emptyState={
-          <div className="text-center text-gray-500">
-            კომპანიები არ მოიძებნა
-          </div>
-        }
+        getRowId={row => row.id}
+        emptyState={<div className="text-center text-gray-500">კომპანიები არ მოიძებნა</div>}
         caption="კომპანიების დანიშვნების სია"
         className="rounded-t-none border-t-0"
       />

@@ -369,7 +369,7 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false })
 
     // Inspectors only see their own
-    if (userRole.role === 'inspector') {
+    if (userRole.role === 'officer') {
       if (!userRole.inspector_id) {
         return NextResponse.json([])
       }

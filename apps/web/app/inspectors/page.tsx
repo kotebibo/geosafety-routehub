@@ -8,16 +8,10 @@ import { Users, UserCheck, UserX, Plus } from 'lucide-react'
 
 export default function InspectorsPage() {
   const router = useRouter()
-  const {
-    inspectors,
-    loading,
-    error,
-    deleteInspector,
-    updateInspectorStatus,
-  } = useInspectors()
+  const { inspectors, loading, error, deleteInspector, updateInspectorStatus } = useInspectors()
 
   if (loading) {
-    return <LoadingSpinner message="ინსპექტორების ჩატვირთვა..." />
+    return <LoadingSpinner message="ოფიცრების ჩატვირთვა..." />
   }
 
   if (error) {
@@ -42,10 +36,10 @@ export default function InspectorsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeader
-        title="ინსპექტორები"
-        description="ყველა რეგისტრირებული ინსპექტორი"
+        title="ოფიცრები"
+        description="ყველა რეგისტრირებული ოფიცერი"
         action={{
-          label: 'ახალი ინსპექტორი',
+          label: 'ახალი ოფიცერი',
           onClick: () => router.push('/inspectors/new'),
           icon: <Plus className="w-5 h-5" />,
         }}
@@ -54,12 +48,7 @@ export default function InspectorsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <StatCard
-            label="სულ ინსპექტორები"
-            value={inspectors.length}
-            icon={Users}
-            color="blue"
-          />
+          <StatCard label="სულ ოფიცრები" value={inspectors.length} icon={Users} color="blue" />
           <StatCard
             label="აქტიური"
             value={activeInspectors.length}
@@ -78,10 +67,10 @@ export default function InspectorsPage() {
         {inspectors.length === 0 ? (
           <EmptyState
             icon={<Users className="w-16 h-16" />}
-            title="ინსპექტორები არ არის"
-            description="დაამატეთ პირველი ინსპექტორი"
+            title="ოფიცრები არ არის"
+            description="დაამატეთ პირველი ოფიცერი"
             action={{
-              label: 'ახალი ინსპექტორი',
+              label: 'ახალი ოფიცერი',
               onClick: () => router.push('/inspectors/new'),
             }}
           />

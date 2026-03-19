@@ -1,10 +1,4 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export interface Database {
   public: {
@@ -77,7 +71,7 @@ export interface Database {
           email: string
           full_name: string
           phone: string | null
-          role: 'admin' | 'dispatcher' | 'inspector' | 'manager' | null
+          role: 'admin' | 'dispatcher' | 'officer' | 'manager' | null
           certifications: Json | null
           vehicle_id: string | null
           working_hours: Json | null
@@ -93,7 +87,7 @@ export interface Database {
           email: string
           full_name: string
           phone?: string | null
-          role?: 'admin' | 'dispatcher' | 'inspector' | 'manager' | null
+          role?: 'admin' | 'dispatcher' | 'officer' | 'manager' | null
           certifications?: Json | null
           vehicle_id?: string | null
           working_hours?: Json | null
@@ -109,7 +103,7 @@ export interface Database {
           email?: string
           full_name?: string
           phone?: string | null
-          role?: 'admin' | 'dispatcher' | 'inspector' | 'manager' | null
+          role?: 'admin' | 'dispatcher' | 'officer' | 'manager' | null
           certifications?: Json | null
           vehicle_id?: string | null
           working_hours?: Json | null

@@ -32,7 +32,8 @@ export default function TrackingPage() {
     }
 
     const since = new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString() // Last 8 hours
-    trackingService.getLocationHistory(selectedInspectorId, since)
+    trackingService
+      .getLocationHistory(selectedInspectorId, since)
       .then(points => setLocationTrail(points.map(p => ({ lat: p.lat, lng: p.lng }))))
       .catch(err => console.error('Failed to load trail:', err))
   }, [selectedInspectorId])
@@ -64,8 +65,10 @@ export default function TrackingPage() {
         {inspectors.length === 0 && !isLoading && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="bg-white/90 rounded-lg px-6 py-4 text-center shadow-sm">
-              <p className="text-gray-600 text-sm">No active inspectors in the last 30 minutes</p>
-              <p className="text-gray-400 text-xs mt-1">Inspectors will appear here when they start tracking</p>
+              <p className="text-gray-600 text-sm">No active officers in the last 30 minutes</p>
+              <p className="text-gray-400 text-xs mt-1">
+                Officers will appear here when they start tracking
+              </p>
             </div>
           </div>
         )}

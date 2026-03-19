@@ -2,86 +2,16 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
-import { useEffect, useState, useRef } from 'react'
-import {
-  Building2,
-  Users,
-  MapIcon,
-  Route,
-  UserCog,
-  ArrowRight,
-  Shield,
-  Clock,
-  TrendingUp,
-  Activity,
-  Navigation,
-  CheckCircle,
-  Zap,
-  BarChart3,
-  Globe,
-  Smartphone,
-} from 'lucide-react'
-import { DEPLOYMENT_CONFIG } from '@/config/features'
-import { statsService, DashboardStats } from '@/services/stats.service'
+import { useEffect, useState } from 'react'
+import { Building2, Users, MapIcon, Route, UserCog, ArrowRight, Navigation } from 'lucide-react'
 
 export default function HomePage() {
   const { user, userRole, loading } = useAuth()
   const [mounted, setMounted] = useState(false)
-  const [stats, setStats] = useState({
-    companies: 0,
-    inspectors: 0,
-    routes: 0,
-    inspections: 0,
-  })
-  const [realStats, setRealStats] = useState<DashboardStats | null>(null)
-  const animationRef = useRef<boolean>(false)
-
-  // Fetch real stats from database
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const data = await statsService.getDashboardStats()
-        setRealStats(data)
-      } catch (error) {
-        console.error('Failed to fetch stats:', error)
-        // Fallback to zeros if fetch fails
-        setRealStats({ companies: 0, inspectors: 0, routes: 0, inspections: 0 })
-      }
-    }
-    fetchStats()
-  }, [])
 
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  // Animate stats when real data is loaded
-  useEffect(() => {
-    if (!realStats || animationRef.current) return
-    animationRef.current = true
-
-    const animateValue = (start: number, end: number, key: keyof typeof stats) => {
-      const duration = 2000
-      const range = end - start
-      const startTime = Date.now()
-
-      const timer = setInterval(() => {
-        const elapsed = Date.now() - startTime
-        const progress = Math.min(elapsed / duration, 1)
-        const value = Math.floor(start + range * progress)
-        setStats(prev => ({ ...prev, [key]: value }))
-
-        if (progress === 1) clearInterval(timer)
-      }, 50)
-    }
-
-    setTimeout(() => {
-      animateValue(0, realStats.companies, 'companies')
-      animateValue(0, realStats.inspectors, 'inspectors')
-      animateValue(0, realStats.routes, 'routes')
-      animateValue(0, realStats.inspections, 'inspections')
-    }, 500)
-  }, [realStats])
 
   if (loading || !mounted) {
     return (
@@ -99,7 +29,7 @@ export default function HomePage() {
 
   const isAdmin = userRole?.role === 'admin'
   const isDispatcher = userRole?.role === 'dispatcher'
-  const isInspector = userRole?.role === 'inspector'
+  const isOfficer = userRole?.role === 'officer'
 
   const quickLinks = [
     {
@@ -107,12 +37,12 @@ export default function HomePage() {
       label: 'კომპანიების მართვა',
       icon: Building2,
       color: 'from-blue-500 to-blue-600',
-      description: realStats ? `${realStats.companies}+ კომპანია` : 'კომპანიების მართვა',
+      description: 'კომპანიების მართვა',
       show: isAdmin || isDispatcher,
     },
     {
       href: '/inspectors',
-      label: 'ინსპექტორები',
+      label: 'ოფიცრები',
       icon: Users,
       color: 'from-green-500 to-green-600',
       description: 'გუნდის მართვა',
@@ -148,32 +78,9 @@ export default function HomePage() {
       icon: Navigation,
       color: 'from-teal-500 to-teal-600',
       description: 'დღევანდელი გეგმა',
-      show: isInspector,
+      show: isOfficer,
     },
   ].filter(link => link.show)
-
-  const features = [
-    {
-      icon: Shield,
-      title: 'უსაფრთხოება',
-      description: 'Row-Level Security და მონაცემთა სრული დაცვა',
-    },
-    {
-      icon: Zap,
-      title: 'სისწრაფე',
-      description: 'ოპტიმიზებული მარშრუტები რეალურ დროში',
-    },
-    {
-      icon: Globe,
-      title: 'ორენოვანი',
-      description: 'ქართული და ინგლისური ინტერფეისი',
-    },
-    {
-      icon: Smartphone,
-      title: 'მობილური',
-      description: 'მუშაობს ნებისმიერ მოწყობილობაზე',
-    },
-  ]
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -188,13 +95,8 @@ export default function HomePage() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <div className="inline-flex items-center px-4 py-2 bg-blue-100 rounded-full mb-6">
-              <Activity className="w-4 h-4 mr-2 text-blue-600 animate-pulse" />
-              <span className="text-sm font-medium text-blue-800">სისტემა აქტიურია</span>
-            </div>
-
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 animate-fade-in">
-              {DEPLOYMENT_CONFIG.isSingleServiceMode ? DEPLOYMENT_CONFIG.appNameFull : 'RouteHub'}
+              RouteHub
             </h1>
 
             <p className="text-xl md:text-2xl text-gray-600 mb-4 animate-fade-in animation-delay-200">
@@ -213,47 +115,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Stats Section */}
+      {/* Quick Links */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
-            <div className="flex items-center justify-between mb-2">
-              <Building2 className="w-8 h-8 text-blue-500" />
-              <TrendingUp className="w-4 h-4 text-green-500" />
-            </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.companies}</div>
-            <div className="text-sm text-gray-600">კომპანიები</div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
-            <div className="flex items-center justify-between mb-2">
-              <Users className="w-8 h-8 text-green-500" />
-              <Activity className="w-4 h-4 text-green-500" />
-            </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.inspectors}</div>
-            <div className="text-sm text-gray-600">ინსპექტორები</div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
-            <div className="flex items-center justify-between mb-2">
-              <Route className="w-8 h-8 text-purple-500" />
-              <BarChart3 className="w-4 h-4 text-green-500" />
-            </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.routes}</div>
-            <div className="text-sm text-gray-600">მარშრუტები</div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-6 transform hover:scale-105 transition-all duration-300">
-            <div className="flex items-center justify-between mb-2">
-              <CheckCircle className="w-8 h-8 text-orange-500" />
-              <Clock className="w-4 h-4 text-blue-500" />
-            </div>
-            <div className="text-3xl font-bold text-gray-900">{stats.inspections}</div>
-            <div className="text-sm text-gray-600">ინსპექციები</div>
-          </div>
-        </div>
-
-        {/* Quick Links */}
         {quickLinks.length > 0 && (
           <div className="mb-12">
             <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
@@ -296,33 +159,6 @@ export default function HomePage() {
             </div>
           </div>
         )}
-
-        {/* Features Grid */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            პლატფორმის უპირატესობები
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {features.map((feature, index) => {
-              const Icon = feature.icon
-              return (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl p-6 text-center hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                  style={{
-                    animation: `fadeIn 0.5s ease-out ${index * 0.1 + 0.5}s both`,
-                  }}
-                >
-                  <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl mb-4">
-                    <Icon className="w-7 h-7 text-blue-600" />
-                  </div>
-                  <h3 className="font-bold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-sm text-gray-600">{feature.description}</p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
 
         {/* Call to Action */}
         {!user && (

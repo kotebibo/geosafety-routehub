@@ -17,7 +17,7 @@ const formatDateTime = (dateStr: string): string => {
 
 export interface ItemUpdate {
   id: string
-  item_type: 'route' | 'company' | 'inspector' | 'inspection' | 'board_item'
+  item_type: 'route' | 'company' | 'officer' | 'inspection' | 'board_item'
   item_id: string
   user_id?: string
   user_name?: string

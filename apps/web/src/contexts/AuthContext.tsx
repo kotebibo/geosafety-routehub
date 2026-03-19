@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase/client'
 import { User } from '@supabase/supabase-js'
 
 interface UserRole {
-  role: 'admin' | 'dispatcher' | 'inspector' | string // Allow custom roles
+  role: 'admin' | 'dispatcher' | 'officer' | string // Allow custom roles
   inspector_id?: string
   permissions?: string[] // For custom role permissions
 }
@@ -21,7 +21,7 @@ interface AuthContextType {
   signOut: () => Promise<void>
   isAdmin: boolean
   isDispatcher: boolean
-  isInspector: boolean
+  isOfficer: boolean
   hasPermission: (permission: string) => boolean
   refreshUserRole: () => Promise<void>
 }
@@ -201,7 +201,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     isAdmin: userRole?.role === 'admin',
     isDispatcher: userRole?.role === 'dispatcher',
-    isInspector: userRole?.role === 'inspector',
+    isOfficer: userRole?.role === 'officer',
     hasPermission,
     refreshUserRole,
   }

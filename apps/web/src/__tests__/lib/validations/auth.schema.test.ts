@@ -129,7 +129,7 @@ describe('signUpSchema', () => {
   it('should accept optional role', () => {
     const data = {
       ...validSignUp,
-      role: 'inspector' as const,
+      role: 'officer' as const,
     }
 
     const result = signUpSchema.safeParse(data)

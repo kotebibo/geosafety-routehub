@@ -47,7 +47,9 @@ export default function DataCollectionPage() {
   const [submitting, setSubmitting] = useState(false)
 
   // GPS state
-  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number; accuracy: number } | null>(
+    null
+  )
   const [gpsLoading, setGpsLoading] = useState(false)
   const [gpsError, setGpsError] = useState<string | null>(null)
 
@@ -56,7 +58,8 @@ export default function DataCollectionPage() {
   const [loadingRecent, setLoadingRecent] = useState(true)
 
   const currentRole = userRole?.role || ''
-  const isAllowed = currentRole === 'inspector' || currentRole === 'admin' || currentRole === 'dispatcher'
+  const isAllowed =
+    currentRole === 'officer' || currentRole === 'admin' || currentRole === 'dispatcher'
 
   // Auth guard
   useEffect(() => {
@@ -96,7 +99,7 @@ export default function DataCollectionPage() {
     setGpsError(null)
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         setGpsCoords({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -104,7 +107,7 @@ export default function DataCollectionPage() {
         })
         setGpsLoading(false)
       },
-      (error) => {
+      error => {
         const messages: Record<number, string> = {
           1: 'GPS წვდომა უარყოფილია. გთხოვთ ჩართოთ ლოკაციის წვდომა.',
           2: 'GPS სიგნალი ვერ მოიძებნა.',
@@ -167,7 +170,8 @@ export default function DataCollectionPage() {
     }
   }, [skCode, companyName, services, gpsCoords, notes, showToast])
 
-  const canSubmit = skCode.trim() && companyName.trim() && services.trim() && gpsCoords && !submitting
+  const canSubmit =
+    skCode.trim() && companyName.trim() && services.trim() && gpsCoords && !submitting
 
   // Loading state
   if (authLoading || inspectorLoading) {
@@ -206,7 +210,7 @@ export default function DataCollectionPage() {
           <input
             type="text"
             value={skCode}
-            onChange={(e) => setSkCode(e.target.value)}
+            onChange={e => setSkCode(e.target.value)}
             placeholder="საიდენტიფიკაციო კოდი..."
             className="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
           />
@@ -222,7 +226,7 @@ export default function DataCollectionPage() {
           <input
             type="text"
             value={companyName}
-            onChange={(e) => setCompanyName(e.target.value)}
+            onChange={e => setCompanyName(e.target.value)}
             placeholder="კომპანიის სახელი..."
             className="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
           />
@@ -237,7 +241,7 @@ export default function DataCollectionPage() {
           </div>
           <textarea
             value={services}
-            onChange={(e) => setServices(e.target.value)}
+            onChange={e => setServices(e.target.value)}
             placeholder="რა მომსახურებას ვუწევთ..."
             rows={3}
             className="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
@@ -263,9 +267,7 @@ export default function DataCollectionPage() {
                   <span>Lat: {gpsCoords.lat.toFixed(6)}</span>
                   <span>Lng: {gpsCoords.lng.toFixed(6)}</span>
                 </div>
-                <p className="text-xs text-green-600 mt-1">
-                  სიზუსტე: ±{gpsCoords.accuracy}მ
-                </p>
+                <p className="text-xs text-green-600 mt-1">სიზუსტე: ±{gpsCoords.accuracy}მ</p>
               </div>
               <button
                 type="button"
@@ -315,7 +317,7 @@ export default function DataCollectionPage() {
           </div>
           <textarea
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={e => setNotes(e.target.value)}
             placeholder="დამატებითი შენიშვნები..."
             rows={3}
             maxLength={2000}
@@ -354,7 +356,7 @@ export default function DataCollectionPage() {
 
           {loadingRecent ? (
             <div className="p-4 space-y-3">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3].map(i => (
                 <div key={i} className="animate-pulse flex items-center gap-3">
                   <div className="w-8 h-8 bg-gray-100 rounded-lg" />
                   <div className="flex-1">
@@ -370,15 +372,13 @@ export default function DataCollectionPage() {
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {recentEntries.map((entry) => (
+              {recentEntries.map(entry => (
                 <div key={entry.id} className="px-4 py-3 flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-[#6161FF]/10 flex items-center justify-center flex-shrink-0">
                     <Building2 className="w-4 h-4 text-[#6161FF]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {entry.name}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900 truncate">{entry.name}</p>
                     <div className="flex items-center gap-2 text-xs text-gray-400">
                       {entry.data?.sk_code && (
                         <span className="font-mono">{entry.data.sk_code}</span>

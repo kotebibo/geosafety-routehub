@@ -1,6 +1,13 @@
 // Monday.com-style Board Types
 
-export type BoardType = 'routes' | 'companies' | 'inspectors' | 'inspections' | 'custom' | 'checkins' | 'data_collection'
+export type BoardType =
+  | 'routes'
+  | 'companies'
+  | 'inspectors'
+  | 'inspections'
+  | 'custom'
+  | 'checkins'
+  | 'data_collection'
 
 export type ColumnType =
   | 'text'
@@ -121,12 +128,7 @@ export interface BoardColumnConfig {
   config?: Record<string, any>
 }
 
-export type StatusType =
-  | 'working_on_it'
-  | 'stuck'
-  | 'done'
-  | 'pending'
-  | 'default'
+export type StatusType = 'working_on_it' | 'stuck' | 'done' | 'pending' | 'default'
 
 // Board Column Configuration
 export interface BoardColumn {
@@ -205,7 +207,7 @@ export interface ColumnConfig {
 // Activity/Update Types
 export interface ItemUpdate {
   id: string
-  item_type: 'route' | 'company' | 'inspector' | 'inspection'
+  item_type: 'route' | 'company' | 'officer' | 'inspection'
   item_id: string
   user_id?: string
   user_name?: string
@@ -231,7 +233,7 @@ export type UpdateType =
 // Comment Types
 export interface ItemComment {
   id: string
-  item_type: 'route' | 'company' | 'inspector' | 'inspection'
+  item_type: 'route' | 'company' | 'officer' | 'inspection'
   item_id: string
   user_id: string
   user_name?: string

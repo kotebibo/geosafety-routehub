@@ -87,24 +87,27 @@ export default function AdminCheckinsPage() {
     )
   }
 
-  const todayCount = checkins.filter((c) => {
+  const todayCount = checkins.filter(c => {
     const today = new Date().toISOString().slice(0, 10)
     return c.created_at.startsWith(today)
   }).length
 
-  const locationUpdatedCount = checkins.filter((c) => c.location_updated).length
-  const activeCount = checkins.filter((c) => !c.checked_out_at).length
-  const completedWithDuration = checkins.filter((c) => c.duration_minutes != null && c.duration_minutes > 0)
-  const avgDuration = completedWithDuration.length > 0
-    ? Math.round(completedWithDuration.reduce((sum, c) => sum + (c.duration_minutes || 0), 0) / completedWithDuration.length)
-    : null
+  const locationUpdatedCount = checkins.filter(c => c.location_updated).length
+  const activeCount = checkins.filter(c => !c.checked_out_at).length
+  const completedWithDuration = checkins.filter(
+    c => c.duration_minutes != null && c.duration_minutes > 0
+  )
+  const avgDuration =
+    completedWithDuration.length > 0
+      ? Math.round(
+          completedWithDuration.reduce((sum, c) => sum + (c.duration_minutes || 0), 0) /
+            completedWithDuration.length
+        )
+      : null
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeader
-        title="ჩეკ-ინების ისტორია"
-        description="ინსპექტორების ლოკაციის ჩეკ-ინები"
-      />
+      <PageHeader title="ჩეკ-ინების ისტორია" description="ოფიცრების ლოკაციის ჩეკ-ინები" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats */}
@@ -187,7 +190,7 @@ export default function AdminCheckinsPage() {
                 <input
                   type="date"
                   value={filters.fromDate}
-                  onChange={(e) => setFilters((f) => ({ ...f, fromDate: e.target.value }))}
+                  onChange={e => setFilters(f => ({ ...f, fromDate: e.target.value }))}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30"
                 />
               </div>
@@ -196,7 +199,7 @@ export default function AdminCheckinsPage() {
                 <input
                   type="date"
                   value={filters.toDate}
-                  onChange={(e) => setFilters((f) => ({ ...f, toDate: e.target.value }))}
+                  onChange={e => setFilters(f => ({ ...f, toDate: e.target.value }))}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30"
                 />
               </div>
@@ -204,7 +207,9 @@ export default function AdminCheckinsPage() {
             <div className="flex justify-end mt-3">
               <button
                 type="button"
-                onClick={() => setFilters({ fromDate: '', toDate: '', companyId: '', inspectorId: '' })}
+                onClick={() =>
+                  setFilters({ fromDate: '', toDate: '', companyId: '', inspectorId: '' })
+                }
                 className="text-sm text-gray-500 hover:text-gray-700 mr-3"
               >
                 გასუფთავება
@@ -225,7 +230,7 @@ export default function AdminCheckinsPage() {
           {loading ? (
             <div className="p-6">
               <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map((i) => (
+                {[1, 2, 3, 4, 5].map(i => (
                   <div key={i} className="animate-pulse flex items-center gap-4">
                     <div className="w-8 h-8 bg-gray-100 rounded-lg" />
                     <div className="flex-1 space-y-1.5">
@@ -243,25 +248,41 @@ export default function AdminCheckinsPage() {
                 <MapPinned className="w-7 h-7 text-gray-400" />
               </div>
               <h3 className="text-base font-semibold text-gray-900 mb-1">ჩეკ-ინები არ მოიძებნა</h3>
-              <p className="text-sm text-gray-500">ინსპექტორების ჩეკ-ინები გამოჩნდება აქ</p>
+              <p className="text-sm text-gray-500">ოფიცრების ჩეკ-ინები გამოჩნდება აქ</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-100 bg-gray-50/50">
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">ჩეკ-ინი</th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">ჩეკ-აუთი</th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">ხანგრძლივობა</th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">ინსპექტორი</th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">კომპანია</th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">ლოკაცია</th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">მანძილი</th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">სტატუსი</th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                      ჩეკ-ინი
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                      ჩეკ-აუთი
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                      ხანგრძლივობა
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                      ოფიცერი
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                      კომპანია
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                      ლოკაცია
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                      მანძილი
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                      სტატუსი
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {checkins.map((checkin) => (
+                  {checkins.map(checkin => (
                     <tr key={checkin.id} className="hover:bg-gray-50/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="text-sm text-gray-900">
@@ -296,13 +317,15 @@ export default function AdminCheckinsPage() {
                       </td>
                       <td className="px-4 py-3">
                         {checkin.duration_minutes != null ? (
-                          <span className={`text-sm font-medium ${
-                            checkin.duration_minutes < 60
-                              ? 'text-green-600'
-                              : checkin.duration_minutes < 180
-                                ? 'text-amber-600'
-                                : 'text-red-600'
-                          }`}>
+                          <span
+                            className={`text-sm font-medium ${
+                              checkin.duration_minutes < 60
+                                ? 'text-green-600'
+                                : checkin.duration_minutes < 180
+                                  ? 'text-amber-600'
+                                  : 'text-red-600'
+                            }`}
+                          >
                             {formatDuration(checkin.duration_minutes)}
                           </span>
                         ) : (
@@ -327,13 +350,15 @@ export default function AdminCheckinsPage() {
                       </td>
                       <td className="px-4 py-3">
                         {checkin.distance_from_location != null ? (
-                          <span className={`text-sm font-medium ${
-                            checkin.distance_from_location < 100
-                              ? 'text-green-600'
-                              : checkin.distance_from_location < 500
-                                ? 'text-amber-600'
-                                : 'text-red-600'
-                          }`}>
+                          <span
+                            className={`text-sm font-medium ${
+                              checkin.distance_from_location < 100
+                                ? 'text-green-600'
+                                : checkin.distance_from_location < 500
+                                  ? 'text-amber-600'
+                                  : 'text-red-600'
+                            }`}
+                          >
                             {checkin.distance_from_location}მ
                           </span>
                         ) : (
@@ -347,7 +372,10 @@ export default function AdminCheckinsPage() {
                             GPS განახლდა
                           </span>
                         ) : checkin.notes ? (
-                          <span className="text-xs text-gray-500 max-w-[120px] truncate block" title={checkin.notes}>
+                          <span
+                            className="text-xs text-gray-500 max-w-[120px] truncate block"
+                            title={checkin.notes}
+                          >
                             {checkin.notes}
                           </span>
                         ) : (

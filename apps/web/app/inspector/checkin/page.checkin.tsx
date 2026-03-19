@@ -68,7 +68,9 @@ export default function InspectorCheckinPage() {
   const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null)
   const [loadingLocations, setLoadingLocations] = useState(false)
 
-  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number; accuracy: number } | null>(
+    null
+  )
   const [gpsLoading, setGpsLoading] = useState(false)
   const [gpsError, setGpsError] = useState<string | null>(null)
 
@@ -81,13 +83,18 @@ export default function InspectorCheckinPage() {
   // Active check-in (unclosed) state
   const [activeCheckin, setActiveCheckin] = useState<LocationCheckin | null>(null)
   const [elapsedDisplay, setElapsedDisplay] = useState('')
-  const [checkoutGps, setCheckoutGps] = useState<{ lat: number; lng: number; accuracy: number } | null>(null)
+  const [checkoutGps, setCheckoutGps] = useState<{
+    lat: number
+    lng: number
+    accuracy: number
+  } | null>(null)
   const [checkoutGpsLoading, setCheckoutGpsLoading] = useState(false)
   const [checkoutGpsError, setCheckoutGpsError] = useState<string | null>(null)
   const [checkingOut, setCheckingOut] = useState(false)
 
   const currentRole = userRole?.role || ''
-  const isAllowed = currentRole === 'inspector' || currentRole === 'admin' || currentRole === 'dispatcher'
+  const isAllowed =
+    currentRole === 'officer' || currentRole === 'admin' || currentRole === 'dispatcher'
 
   // Auth guard
   useEffect(() => {
@@ -119,7 +126,7 @@ export default function InspectorCheckinPage() {
 
   // Detect active check-in from recent checkins
   useEffect(() => {
-    const active = recentCheckins.find((c) => !c.checked_out_at)
+    const active = recentCheckins.find(c => !c.checked_out_at)
     setActiveCheckin(active || null)
   }, [recentCheckins])
 
@@ -149,7 +156,7 @@ export default function InspectorCheckinPage() {
     setCheckoutGpsError(null)
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         setCheckoutGps({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -157,7 +164,7 @@ export default function InspectorCheckinPage() {
         })
         setCheckoutGpsLoading(false)
       },
-      (error) => {
+      error => {
         const messages: Record<number, string> = {
           1: 'GPS წვდომა უარყოფილია.',
           2: 'GPS სიგნალი ვერ მოიძებნა.',
@@ -245,7 +252,7 @@ export default function InspectorCheckinPage() {
       setSearching(true)
       try {
         const results = await companiesService.searchWithLocations(value)
-        setSearchResults(results.map((c) => ({ id: c.id, name: c.name })))
+        setSearchResults(results.map(c => ({ id: c.id, name: c.name })))
         setShowDropdown(true)
       } catch {
         setSearchResults([])
@@ -256,30 +263,33 @@ export default function InspectorCheckinPage() {
   }, [])
 
   // Select company → load its locations
-  const handleSelectCompany = useCallback(async (company: CompanySearchResult) => {
-    setSelectedCompany(company)
-    setSearchQuery(company.name)
-    setShowDropdown(false)
-    setSelectedLocationId(null)
-    setLoadingLocations(true)
+  const handleSelectCompany = useCallback(
+    async (company: CompanySearchResult) => {
+      setSelectedCompany(company)
+      setSearchQuery(company.name)
+      setShowDropdown(false)
+      setSelectedLocationId(null)
+      setLoadingLocations(true)
 
-    try {
-      const locs = await companiesService.locations.getByCompanyId(company.id)
-      setLocations(locs)
-      // Auto-select primary location
-      const primary = locs.find((l) => l.is_primary)
-      if (primary) {
-        setSelectedLocationId(primary.id)
-      } else if (locs.length === 1) {
-        setSelectedLocationId(locs[0].id)
+      try {
+        const locs = await companiesService.locations.getByCompanyId(company.id)
+        setLocations(locs)
+        // Auto-select primary location
+        const primary = locs.find(l => l.is_primary)
+        if (primary) {
+          setSelectedLocationId(primary.id)
+        } else if (locs.length === 1) {
+          setSelectedLocationId(locs[0].id)
+        }
+      } catch {
+        setLocations([])
+        showToast('ლოკაციების ჩატვირთვა ვერ მოხერხდა', 'error')
+      } finally {
+        setLoadingLocations(false)
       }
-    } catch {
-      setLocations([])
-      showToast('ლოკაციების ჩატვირთვა ვერ მოხერხდა', 'error')
-    } finally {
-      setLoadingLocations(false)
-    }
-  }, [showToast])
+    },
+    [showToast]
+  )
 
   // Clear selected company
   const handleClearCompany = useCallback(() => {
@@ -301,7 +311,7 @@ export default function InspectorCheckinPage() {
     setGpsError(null)
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         setGpsCoords({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
@@ -309,7 +319,7 @@ export default function InspectorCheckinPage() {
         })
         setGpsLoading(false)
       },
-      (error) => {
+      error => {
         const messages: Record<number, string> = {
           1: 'GPS წვდომა უარყოფილია. გთხოვთ ჩართოთ ლოკაციის წვდომა.',
           2: 'GPS სიგნალი ვერ მოიძებნა.',
@@ -460,7 +470,8 @@ export default function InspectorCheckinPage() {
             {checkoutGps ? (
               <div className="bg-white/60 rounded-lg px-3 py-2 text-xs text-green-700 flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-green-600" />
-                GPS: {checkoutGps.lat.toFixed(6)}, {checkoutGps.lng.toFixed(6)} (±{checkoutGps.accuracy}მ)
+                GPS: {checkoutGps.lat.toFixed(6)}, {checkoutGps.lng.toFixed(6)} (±
+                {checkoutGps.accuracy}მ)
               </div>
             ) : (
               <button
@@ -523,7 +534,9 @@ export default function InspectorCheckinPage() {
             <div className="flex items-center justify-between bg-[#6161FF]/5 border border-[#6161FF]/20 rounded-lg px-3 py-2.5">
               <div className="flex items-center gap-2 min-w-0">
                 <Building2 className="w-4 h-4 text-[#6161FF] flex-shrink-0" />
-                <span className="text-sm font-medium text-gray-900 truncate">{selectedCompany.name}</span>
+                <span className="text-sm font-medium text-gray-900 truncate">
+                  {selectedCompany.name}
+                </span>
               </div>
               <button
                 type="button"
@@ -540,7 +553,7 @@ export default function InspectorCheckinPage() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
+                  onChange={e => handleSearchChange(e.target.value)}
                   placeholder="კომპანიის სახელი..."
                   className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
                 />
@@ -551,7 +564,7 @@ export default function InspectorCheckinPage() {
 
               {showDropdown && searchResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-20">
-                  {searchResults.map((company) => (
+                  {searchResults.map(company => (
                     <button
                       key={company.id}
                       type="button"
@@ -565,11 +578,14 @@ export default function InspectorCheckinPage() {
                 </div>
               )}
 
-              {showDropdown && searchQuery.length >= 2 && searchResults.length === 0 && !searching && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20">
-                  <p className="text-sm text-gray-500 text-center">კომპანია ვერ მოიძებნა</p>
-                </div>
-              )}
+              {showDropdown &&
+                searchQuery.length >= 2 &&
+                searchResults.length === 0 &&
+                !searching && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20">
+                    <p className="text-sm text-gray-500 text-center">კომპანია ვერ მოიძებნა</p>
+                  </div>
+                )}
             </div>
           )}
         </div>
@@ -588,10 +604,12 @@ export default function InspectorCheckinPage() {
                 <span>იტვირთება...</span>
               </div>
             ) : locations.length === 0 ? (
-              <p className="text-sm text-gray-500 py-1">ლოკაციები არ მოიძებნა (GPS ჩეკ-ინი კომპანიაზე)</p>
+              <p className="text-sm text-gray-500 py-1">
+                ლოკაციები არ მოიძებნა (GPS ჩეკ-ინი კომპანიაზე)
+              </p>
             ) : (
               <div className="space-y-2">
-                {locations.map((loc) => (
+                {locations.map(loc => (
                   <button
                     key={loc.id}
                     type="button"
@@ -652,9 +670,7 @@ export default function InspectorCheckinPage() {
                   <span>Lat: {gpsCoords.lat.toFixed(6)}</span>
                   <span>Lng: {gpsCoords.lng.toFixed(6)}</span>
                 </div>
-                <p className="text-xs text-green-600 mt-1">
-                  სიზუსტე: ±{gpsCoords.accuracy}მ
-                </p>
+                <p className="text-xs text-green-600 mt-1">სიზუსტე: ±{gpsCoords.accuracy}მ</p>
               </div>
               <button
                 type="button"
@@ -706,7 +722,7 @@ export default function InspectorCheckinPage() {
           </div>
           <textarea
             value={notes}
-            onChange={(e) => setNotes(e.target.value)}
+            onChange={e => setNotes(e.target.value)}
             placeholder="დამატებითი შენიშვნები..."
             rows={3}
             maxLength={2000}
@@ -745,7 +761,7 @@ export default function InspectorCheckinPage() {
 
           {loadingRecent ? (
             <div className="p-4 space-y-3">
-              {[1, 2, 3].map((i) => (
+              {[1, 2, 3].map(i => (
                 <div key={i} className="animate-pulse flex items-center gap-3">
                   <div className="w-8 h-8 bg-gray-100 rounded-lg" />
                   <div className="flex-1">
@@ -761,15 +777,17 @@ export default function InspectorCheckinPage() {
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {recentCheckins.map((checkin) => (
+              {recentCheckins.map(checkin => (
                 <div key={checkin.id} className="px-4 py-3 flex items-center gap-3">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    !checkin.checked_out_at
-                      ? 'bg-orange-100 text-orange-600'
-                      : checkin.location_updated
-                        ? 'bg-green-100 text-green-600'
-                        : 'bg-gray-100 text-gray-500'
-                  }`}>
+                  <div
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                      !checkin.checked_out_at
+                        ? 'bg-orange-100 text-orange-600'
+                        : checkin.location_updated
+                          ? 'bg-green-100 text-green-600'
+                          : 'bg-gray-100 text-gray-500'
+                    }`}
+                  >
                     {!checkin.checked_out_at ? (
                       <Timer className="w-4 h-4" />
                     ) : (

@@ -1,6 +1,6 @@
 /**
  * Test Utilities and Helpers
- * 
+ *
  * Common utilities for writing tests
  */
 
@@ -26,7 +26,7 @@ export const mockInspector = (overrides = {}) => ({
   email: 'inspector@test.com',
   full_name: 'Test Inspector',
   phone: '+995555123456',
-  role: 'inspector',
+  role: 'officer',
   status: 'active',
   created_at: '2025-01-01T00:00:00Z',
   updated_at: '2025-01-01T00:00:00Z',
@@ -71,10 +71,7 @@ export const mockSession = (overrides = {}) => ({
 })
 
 // Custom render function with providers
-export function renderWithProviders(
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) {
+export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
   return render(ui, {
     ...options,
   })

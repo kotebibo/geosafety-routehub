@@ -32,18 +32,24 @@ export type SaveRouteInput = z.infer<typeof saveRouteSchema>
 export type RouteStop = z.infer<typeof routeStopSchema>
 
 export const optimizeRouteSchema = z.object({
-  locations: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    lat: z.number().min(-90).max(90),
-    lng: z.number().min(-180).max(180),
-    companyId: z.string().uuid().optional(),
-  })).min(2, 'At least 2 locations required'),
-  options: z.object({
-    algorithm: z.enum(['nearest-neighbor', '2-opt', 'hybrid']).optional(),
-    useRealRoads: z.boolean().optional(),
-    maxStops: z.number().int().positive().max(100).optional(),
-  }).optional(),
+  locations: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        lat: z.number().min(-90).max(90),
+        lng: z.number().min(-180).max(180),
+        companyId: z.string().uuid().optional(),
+      })
+    )
+    .min(2, 'At least 2 locations required'),
+  options: z
+    .object({
+      algorithm: z.enum(['nearest-neighbor', '2-opt', 'hybrid']).optional(),
+      useRealRoads: z.boolean().optional(),
+      maxStops: z.number().int().positive().max(100).optional(),
+    })
+    .optional(),
 })
 
 export type OptimizeRouteInput = z.infer<typeof optimizeRouteSchema>
@@ -55,7 +61,10 @@ export const companySchema = z.object({
   address: z.string().optional(),
   lat: z.number().min(-90).max(90).optional().nullable(),
   lng: z.number().min(-180).max(180).optional().nullable(),
-  type: z.enum(['commercial', 'residential', 'industrial', 'healthcare', 'education']).optional().nullable(),
+  type: z
+    .enum(['commercial', 'residential', 'industrial', 'healthcare', 'education'])
+    .optional()
+    .nullable(),
   contact_name: z.string().max(255).optional().nullable(),
   contact_phone: z.string().max(50).optional().nullable(),
   contact_email: z.string().email().optional().nullable(),
@@ -83,7 +92,7 @@ export const inspectorSchema = z.object({
   email: z.string().email('Invalid email address'),
   full_name: z.string().min(1, 'Name is required').max(255),
   phone: z.string().max(50).optional().nullable(),
-  role: z.enum(['admin', 'dispatcher', 'inspector', 'manager']).optional().nullable(),
+  role: z.enum(['admin', 'dispatcher', 'officer', 'manager']).optional().nullable(),
   specialty: z.string().max(100).optional().nullable(),
   zone: z.string().max(100).optional().nullable(),
   status: z.enum(['active', 'inactive', 'on_leave']).optional().nullable(),
@@ -107,7 +116,7 @@ export const updateInspectorSchema = z.object({
   full_name: z.string().min(1).max(255).optional(),
   email: z.string().email().optional().nullable(),
   phone: z.string().max(50).optional().nullable(),
-  role: z.enum(['admin', 'dispatcher', 'inspector', 'manager']).optional().nullable(),
+  role: z.enum(['admin', 'dispatcher', 'officer', 'manager']).optional().nullable(),
   specialty: z.string().max(100).optional().nullable(),
   zone: z.string().max(100).optional().nullable(),
   status: z.enum(['active', 'inactive', 'on_leave']).optional().nullable(),
@@ -178,10 +187,18 @@ export type UserRoleInput = z.infer<typeof userRoleSchema>
 // ==================== CUSTOM ROLE SCHEMAS ====================
 
 export const createRoleSchema = z.object({
-  name: z.string().min(1).max(50).regex(/^[a-z0-9_]+$/, 'Name must be lowercase with underscores'),
+  name: z
+    .string()
+    .min(1)
+    .max(50)
+    .regex(/^[a-z0-9_]+$/, 'Name must be lowercase with underscores'),
   display_name: z.string().min(1).max(100),
   description: z.string().max(500).optional().nullable(),
-  color: z.string().max(7).regex(/^#[0-9A-Fa-f]{6}$/).optional(),
+  color: z
+    .string()
+    .max(7)
+    .regex(/^#[0-9A-Fa-f]{6}$/)
+    .optional(),
   permissions: z.array(z.string()).optional(),
 })
 
@@ -212,10 +229,7 @@ export type UpdateWorkspaceInput = z.infer<typeof updateWorkspaceSchema>
  * Validate request body with Zod schema
  * Returns validated data or throws structured error
  */
-export function validateBody<T extends z.ZodSchema>(
-  schema: T,
-  body: unknown
-): z.infer<T> {
+export function validateBody<T extends z.ZodSchema>(schema: T, body: unknown): z.infer<T> {
   return schema.parse(body)
 }
 

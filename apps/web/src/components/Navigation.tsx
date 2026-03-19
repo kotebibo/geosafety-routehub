@@ -31,9 +31,9 @@ export function Navigation() {
   }
 
   const navItems = [
-    { href: '/', label: 'მთავარი', icon: Home, roles: ['admin', 'dispatcher', 'inspector'] },
+    { href: '/', label: 'მთავარი', icon: Home, roles: ['admin', 'dispatcher', 'officer'] },
     { href: '/companies', label: 'კომპანიები', icon: Building2, roles: ['admin', 'dispatcher'] },
-    { href: '/inspectors', label: 'ინსპექტორები', icon: Users, roles: ['admin', 'dispatcher'] },
+    { href: '/inspectors', label: 'ოფიცრები', icon: Users, roles: ['admin', 'dispatcher'] },
     { href: '/locations', label: 'ლოკაციების რუკა', icon: MapPin, roles: ['admin', 'dispatcher'] },
     {
       href: '/admin/assignments',
@@ -48,7 +48,7 @@ export function Navigation() {
       roles: ['admin', 'dispatcher'],
     },
     { href: '/routes/manage', label: 'მარშრუტები', icon: Route, roles: ['admin', 'dispatcher'] },
-    { href: '/inspector/routes', label: 'ჩემი მარშრუტები', icon: Route, roles: ['inspector'] },
+    { href: '/inspector/routes', label: 'ჩემი მარშრუტები', icon: Route, roles: ['officer'] },
   ]
 
   // Filter nav items based on user role
@@ -100,7 +100,7 @@ export function Navigation() {
                     <div className="text-xs text-gray-500">
                       {userRole.role === 'admin' && '👑 ადმინისტრატორი'}
                       {userRole.role === 'dispatcher' && '📋 დისპეტჩერი'}
-                      {userRole.role === 'inspector' && '🔍 ინსპექტორი'}
+                      {userRole.role === 'officer' && '🔍 ოფიცერი'}
                     </div>
                   )}
                 </div>

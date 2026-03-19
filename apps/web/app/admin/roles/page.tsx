@@ -51,12 +51,12 @@ const ROLE_COLORS = [
 const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   'User Management': Users,
   'Role Management': Shield,
-  'Routes': Settings,
-  'Companies': Settings,
-  'Inspectors': Users,
-  'Inspections': Settings,
-  'Boards': Settings,
-  'Admin': Key,
+  Routes: Settings,
+  Companies: Settings,
+  Inspectors: Users,
+  Inspections: Settings,
+  Boards: Settings,
+  Admin: Key,
 }
 
 interface RoleStats {
@@ -350,7 +350,9 @@ export default function RoleManagementPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">როლების მართვა</h1>
-                <p className="text-sm text-gray-500">შექმენით და მართეთ მორგებული როლები უფლებებით</p>
+                <p className="text-sm text-gray-500">
+                  შექმენით და მართეთ მორგებული როლები უფლებებით
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -485,12 +487,8 @@ export default function RoleManagementPage() {
                           />
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-gray-900">
-                                {role.display_name}
-                              </span>
-                              {role.is_system && (
-                                <Lock className="w-3 h-3 text-gray-400" />
-                              )}
+                              <span className="font-medium text-gray-900">{role.display_name}</span>
+                              {role.is_system && <Lock className="w-3 h-3 text-gray-400" />}
                             </div>
                             <div className="flex items-center gap-2 text-xs text-gray-500">
                               <span>{role.permissions?.length || 0} უფლება</span>
@@ -550,7 +548,9 @@ export default function RoleManagementPage() {
                 <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <h2 className="font-semibold text-gray-900">
-                      {isCreating ? 'ახალი როლის შექმნა' : `რედაქტირება: ${selectedRole?.display_name}`}
+                      {isCreating
+                        ? 'ახალი როლის შექმნა'
+                        : `რედაქტირება: ${selectedRole?.display_name}`}
                     </h2>
                     {selectedRole?.is_system && (
                       <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded">
@@ -595,9 +595,7 @@ export default function RoleManagementPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        ფერი
-                      </label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">ფერი</label>
                       <div className="flex items-center gap-3">
                         <input
                           type="color"
@@ -610,7 +608,9 @@ export default function RoleManagementPage() {
                           {ROLE_COLORS.map(color => (
                             <button
                               key={color}
-                              onClick={() => !selectedRole?.is_system && setFormData({ ...formData, color })}
+                              onClick={() =>
+                                !selectedRole?.is_system && setFormData({ ...formData, color })
+                              }
                               disabled={selectedRole?.is_system}
                               className={cn(
                                 'w-6 h-6 rounded transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-50',
@@ -625,9 +625,7 @@ export default function RoleManagementPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      აღწერა
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">აღწერა</label>
                     <textarea
                       value={formData.description}
                       onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -674,10 +672,14 @@ export default function RoleManagementPage() {
                                 )}
                                 <CategoryIcon className="w-4 h-4 text-gray-500" />
                                 <span className="font-medium text-gray-700">{category}</span>
-                                <span className={cn(
-                                  'text-xs px-1.5 py-0.5 rounded',
-                                  selectedCount > 0 ? 'bg-indigo-100 text-purple-700' : 'bg-gray-100 text-gray-500'
-                                )}>
+                                <span
+                                  className={cn(
+                                    'text-xs px-1.5 py-0.5 rounded',
+                                    selectedCount > 0
+                                      ? 'bg-indigo-100 text-purple-700'
+                                      : 'bg-gray-100 text-gray-500'
+                                  )}
+                                >
                                   {selectedCount}/{perms.length}
                                 </span>
                               </div>
@@ -700,7 +702,9 @@ export default function RoleManagementPage() {
                                     key={perm.id}
                                     className={cn(
                                       'flex items-start gap-3 p-2 rounded transition-colors',
-                                      canEdit ? 'cursor-pointer hover:bg-gray-50' : 'cursor-not-allowed'
+                                      canEdit
+                                        ? 'cursor-pointer hover:bg-gray-50'
+                                        : 'cursor-not-allowed'
                                     )}
                                   >
                                     <input
@@ -756,9 +760,8 @@ export default function RoleManagementPage() {
                       <h4 className="font-medium text-amber-800">სისტემური როლები</h4>
                       <p className="text-sm text-amber-700 mt-1">
                         <strong>ადმინი</strong>, <strong>დისპეტჩერი</strong> და{' '}
-                        <strong>ინსპექტორი</strong> სისტემური როლებია და მათი რედაქტირება
-                        ან წაშლა შეუძლებელია. შექმენით მორგებული როლები დამატებითი
-                        კონფიგურაციისთვის.
+                        <strong>ოფიცერი</strong> სისტემური როლებია და მათი რედაქტირება ან წაშლა
+                        შეუძლებელია. შექმენით მორგებული როლები დამატებითი კონფიგურაციისთვის.
                       </p>
                     </div>
                   </div>
@@ -789,7 +792,8 @@ export default function RoleManagementPage() {
 
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-3">
-                დარწმუნებული ხართ, რომ გსურთ <strong>"{deleteModal.role.display_name}"</strong> როლის წაშლა?
+                დარწმუნებული ხართ, რომ გსურთ <strong>"{deleteModal.role.display_name}"</strong>{' '}
+                როლის წაშლა?
               </p>
 
               {stats?.usersByRole[deleteModal.role.name] && (
@@ -797,14 +801,16 @@ export default function RoleManagementPage() {
                   <div className="flex items-center gap-2 text-amber-800">
                     <AlertTriangle className="w-4 h-4" />
                     <span className="text-sm font-medium">
-                      {stats.usersByRole[deleteModal.role.name]} მომხმარებელს აქვს ეს როლი მინიჭებული
+                      {stats.usersByRole[deleteModal.role.name]} მომხმარებელს აქვს ეს როლი
+                      მინიჭებული
                     </span>
                   </div>
                 </div>
               )}
 
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                დასადასტურებლად ჩაწერეთ: <span className="font-semibold">{deleteModal.role.display_name}</span>
+                დასადასტურებლად ჩაწერეთ:{' '}
+                <span className="font-semibold">{deleteModal.role.display_name}</span>
               </label>
               <input
                 type="text"

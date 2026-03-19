@@ -20,7 +20,7 @@ const queryConfig: DefaultOptions = {
     },
 
     // Retry delay with exponential backoff
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
 
     // Refetch on window focus for real-time data
     refetchOnWindowFocus: true,
@@ -124,14 +124,16 @@ export const queryKeys = {
     routeStatus: () => [...queryKeys.analytics.all, 'routeStatus'] as const,
     topCompanies: (limit: number) => [...queryKeys.analytics.all, 'topCompanies', limit] as const,
     overdueInspections: () => [...queryKeys.analytics.all, 'overdueInspections'] as const,
-    weeklyDistance: (weeks: number) => [...queryKeys.analytics.all, 'weeklyDistance', weeks] as const,
+    weeklyDistance: (weeks: number) =>
+      [...queryKeys.analytics.all, 'weeklyDistance', weeks] as const,
   },
 
   // Tracking
   tracking: {
     all: ['tracking'] as const,
     activeInspectors: () => [...queryKeys.tracking.all, 'active'] as const,
-    history: (inspectorId: string, since: string) => [...queryKeys.tracking.all, 'history', inspectorId, since] as const,
+    history: (inspectorId: string, since: string) =>
+      [...queryKeys.tracking.all, 'history', inspectorId, since] as const,
   },
 } as const
 
@@ -141,19 +143,19 @@ export function getInvalidationKeys(itemType: string, itemId?: string) {
 
   switch (itemType) {
     case 'route':
-      (keys as unknown[][]).push([...queryKeys.routes.lists()])
+      ;(keys as unknown[][]).push([...queryKeys.routes.lists()])
       if (itemId) (keys as unknown[][]).push([...queryKeys.routes.detail(itemId)])
       break
     case 'company':
-      (keys as unknown[][]).push([...queryKeys.companies.lists()])
+      ;(keys as unknown[][]).push([...queryKeys.companies.lists()])
       if (itemId) (keys as unknown[][]).push([...queryKeys.companies.detail(itemId)])
       break
-    case 'inspector':
-      (keys as unknown[][]).push([...queryKeys.inspectors.lists()])
+    case 'officer':
+      ;(keys as unknown[][]).push([...queryKeys.inspectors.lists()])
       if (itemId) (keys as unknown[][]).push([...queryKeys.inspectors.detail(itemId)])
       break
     case 'inspection':
-      (keys as unknown[][]).push([...queryKeys.inspections.lists()])
+      ;(keys as unknown[][]).push([...queryKeys.inspections.lists()])
       if (itemId) (keys as unknown[][]).push([...queryKeys.inspections.detail(itemId)])
       break
   }

@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       email: validatedData.email || null,
       phone: validatedData.phone || null,
       specialty: 'general', // Default
-      role: 'inspector',
+      role: 'officer',
       status: validatedData.is_active ? 'active' : 'inactive',
       vehicle_type: validatedData.vehicle_type || null,
       license_plate: validatedData.license_plate || null,
