@@ -3,7 +3,7 @@
 export type BoardType =
   | 'routes'
   | 'companies'
-  | 'inspectors'
+  | 'officers'
   | 'inspections'
   | 'custom'
   | 'checkins'
