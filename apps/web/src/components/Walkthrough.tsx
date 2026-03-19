@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
 
 interface WalkthroughStep {
@@ -10,9 +11,10 @@ interface WalkthroughStep {
   titleKey: string
   descriptionKey: string
   position?: 'top' | 'bottom' | 'left' | 'right' | 'center'
+  roles?: string[] // Only show step for these roles. undefined = show for all.
 }
 
-const steps: WalkthroughStep[] = [
+const allSteps: WalkthroughStep[] = [
   {
     titleKey: 'walkthrough.welcome.title',
     descriptionKey: 'walkthrough.welcome.description',
@@ -29,12 +31,14 @@ const steps: WalkthroughStep[] = [
     titleKey: 'walkthrough.boards.title',
     descriptionKey: 'walkthrough.boards.description',
     position: 'right',
+    roles: ['admin', 'dispatcher'],
   },
   {
     targetSelector: '[data-walkthrough="companies"]',
     titleKey: 'walkthrough.companies.title',
     descriptionKey: 'walkthrough.companies.description',
     position: 'right',
+    roles: ['admin', 'dispatcher'],
   },
   {
     targetSelector: '[data-walkthrough="routes"]',
@@ -61,17 +65,26 @@ interface WalkthroughProps {
 
 export function Walkthrough({ onComplete }: WalkthroughProps) {
   const { t } = useLanguage()
+  const { userRole } = useAuth()
   const [currentStep, setCurrentStep] = useState(0)
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)
   const [mounted, setMounted] = useState(false)
+  const tooltipRef = useRef<HTMLDivElement>(null)
+
+  // Filter steps by user role
+  const steps = allSteps.filter(step => {
+    if (!step.roles) return true
+    if (!userRole) return false
+    return step.roles.includes(userRole.role)
+  })
 
   const step = steps[currentStep]
   const isFirstStep = currentStep === 0
   const isLastStep = currentStep === steps.length - 1
-  const isCentered = step.position === 'center'
+  const isCentered = step?.position === 'center'
 
   const updateTargetRect = useCallback(() => {
-    if (step.targetSelector) {
+    if (step?.targetSelector) {
       const el = document.querySelector(step.targetSelector)
       if (el) {
         setTargetRect(el.getBoundingClientRect())
@@ -79,7 +92,7 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
       }
     }
     setTargetRect(null)
-  }, [step.targetSelector])
+  }, [step?.targetSelector])
 
   useEffect(() => {
     setMounted(true)
@@ -88,22 +101,26 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
   useEffect(() => {
     updateTargetRect()
     window.addEventListener('resize', updateTargetRect)
-    return () => window.removeEventListener('resize', updateTargetRect)
+    window.addEventListener('scroll', updateTargetRect, true)
+    return () => {
+      window.removeEventListener('resize', updateTargetRect)
+      window.removeEventListener('scroll', updateTargetRect, true)
+    }
   }, [updateTargetRect])
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (isLastStep) {
       onComplete()
     } else {
       setCurrentStep(prev => prev + 1)
     }
-  }
+  }, [isLastStep, onComplete])
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     if (!isFirstStep) {
       setCurrentStep(prev => prev - 1)
     }
-  }
+  }, [isFirstStep])
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -111,7 +128,7 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
       if (e.key === 'ArrowRight' || e.key === 'Enter') handleNext()
       if (e.key === 'ArrowLeft') handlePrev()
     },
-    [currentStep]
+    [onComplete, handleNext, handlePrev]
   )
 
   useEffect(() => {
@@ -119,9 +136,9 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
-  if (!mounted) return null
+  if (!mounted || !step) return null
 
-  // Calculate tooltip position
+  // Calculate tooltip position, clamped to viewport
   const getTooltipStyle = (): React.CSSProperties => {
     if (isCentered || !targetRect) {
       return {
@@ -129,48 +146,58 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
         top: '50%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
+        maxWidth: 400,
       }
     }
 
     const padding = 16
     const tooltipWidth = 340
+    const tooltipHeight = 200 // approximate
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+
+    let top: number
+    let left: number
 
     switch (step.position) {
       case 'right':
-        return {
-          position: 'fixed',
-          top: Math.max(padding, targetRect.top),
-          left: targetRect.right + padding,
-          maxWidth: tooltipWidth,
+        top = targetRect.top
+        left = targetRect.right + padding
+        // If tooltip overflows right, put it on the left side
+        if (left + tooltipWidth > vw - padding) {
+          left = targetRect.left - tooltipWidth - padding
         }
+        break
       case 'left':
-        return {
-          position: 'fixed',
-          top: Math.max(padding, targetRect.top),
-          right: window.innerWidth - targetRect.left + padding,
-          maxWidth: tooltipWidth,
+        top = targetRect.top
+        left = targetRect.left - tooltipWidth - padding
+        // If tooltip overflows left, put it on the right side
+        if (left < padding) {
+          left = targetRect.right + padding
         }
+        break
       case 'bottom':
-        return {
-          position: 'fixed',
-          top: targetRect.bottom + padding,
-          left: Math.max(padding, targetRect.left),
-          maxWidth: tooltipWidth,
-        }
+        top = targetRect.bottom + padding
+        left = targetRect.left
+        break
       case 'top':
-        return {
-          position: 'fixed',
-          bottom: window.innerHeight - targetRect.top + padding,
-          left: Math.max(padding, targetRect.left),
-          maxWidth: tooltipWidth,
-        }
+        top = targetRect.top - tooltipHeight - padding
+        left = targetRect.left
+        break
       default:
-        return {
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-        }
+        top = targetRect.top
+        left = targetRect.right + padding
+    }
+
+    // Clamp to viewport bounds
+    top = Math.max(padding, Math.min(top, vh - tooltipHeight - padding))
+    left = Math.max(padding, Math.min(left, vw - tooltipWidth - padding))
+
+    return {
+      position: 'fixed',
+      top,
+      left,
+      maxWidth: tooltipWidth,
     }
   }
 
@@ -221,8 +248,9 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
 
       {/* Tooltip Card */}
       <div
+        ref={tooltipRef}
         style={getTooltipStyle()}
-        className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-in fade-in duration-200 z-[10002]"
+        className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-[10002]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
