@@ -127,6 +127,30 @@ const translations: Record<Language, Record<string, string>> = {
     'login.signupError': 'შეცდომა რეგისტრაციისას. გთხოვთ სცადოთ თავიდან.',
     'login.signinError': 'შეცდომა შესვლისას. გთხოვთ სცადოთ თავიდან.',
     'login.googleError': 'Google-ით შესვლა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.',
+
+    // Walkthrough
+    'walkthrough.welcome.title': 'მოგესალმებით RouteHub-ში!',
+    'walkthrough.welcome.description':
+      'მოდით გაგაცნოთ პლატფორმის ძირითადი ფუნქციები. ეს მხოლოდ რამდენიმე წამს წაიღებს.',
+    'walkthrough.sidebar.title': 'ნავიგაცია',
+    'walkthrough.sidebar.description':
+      'გვერდითი პანელი არის თქვენი მთავარი ნავიგაცია. აქედან შეგიძლიათ გადახვიდეთ ნებისმიერ გვერდზე.',
+    'walkthrough.boards.title': 'დაფები',
+    'walkthrough.boards.description':
+      'დაფები არის თქვენი სამუშაო სივრცე. შექმენით დაფები პროექტების, ამოცანების და მონაცემების სამართავად.',
+    'walkthrough.companies.title': 'კომპანიები',
+    'walkthrough.companies.description':
+      'აქ მართავთ კომპანიებს — დაამატეთ ახალი, შეცვალეთ ინფორმაცია და მიანიჭეთ ოფიცრები.',
+    'walkthrough.routes.title': 'მარშრუტები',
+    'walkthrough.routes.description':
+      'დაგეგმეთ და ოპტიმიზირეთ მარშრუტები. სისტემა ავტომატურად შეარჩევს ოპტიმალურ თანმიმდევრობას.',
+    'walkthrough.language.title': 'ენის შეცვლა',
+    'walkthrough.language.description':
+      'შეგიძლიათ გადართოთ ენა ქართულიდან ინგლისურზე ნებისმიერ დროს ამ ღილაკით.',
+    'walkthrough.done.title': 'მზად ხართ!',
+    'walkthrough.done.description':
+      'ეს არის ძირითადი ფუნქციები. თუ დაგჭირდებათ, ტურის ხელახლა გავლა შეგიძლიათ პარამეტრებიდან.',
+    'walkthrough.finish': 'დასრულება',
   },
   en: {
     // Navigation
@@ -240,6 +264,30 @@ const translations: Record<Language, Record<string, string>> = {
     'login.signupError': 'Registration error. Please try again.',
     'login.signinError': 'Sign in error. Please try again.',
     'login.googleError': 'Google sign in failed. Please try again.',
+
+    // Walkthrough
+    'walkthrough.welcome.title': 'Welcome to RouteHub!',
+    'walkthrough.welcome.description':
+      'Let us show you the key features of the platform. This will only take a few seconds.',
+    'walkthrough.sidebar.title': 'Navigation',
+    'walkthrough.sidebar.description':
+      'The sidebar is your main navigation. Use it to access any page in the app.',
+    'walkthrough.boards.title': 'Boards',
+    'walkthrough.boards.description':
+      'Boards are your workspace. Create boards to manage projects, tasks, and data.',
+    'walkthrough.companies.title': 'Companies',
+    'walkthrough.companies.description':
+      'Manage companies here — add new ones, edit information, and assign officers.',
+    'walkthrough.routes.title': 'Routes',
+    'walkthrough.routes.description':
+      'Plan and optimize routes. The system automatically finds the optimal order.',
+    'walkthrough.language.title': 'Change Language',
+    'walkthrough.language.description':
+      'You can switch between Georgian and English at any time using this button.',
+    'walkthrough.done.title': "You're all set!",
+    'walkthrough.done.description':
+      'Those are the key features. You can restart this tour anytime from Settings.',
+    'walkthrough.finish': 'Finish',
   },
 }
 

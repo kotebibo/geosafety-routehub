@@ -4,6 +4,7 @@ import * as React from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { LogOut, User, ChevronDown, Search } from 'lucide-react'
 import { GlobalSearchModal } from '@/features/boards/components/GlobalSearch'
 
@@ -17,6 +18,7 @@ export function Header({ className }: HeaderProps) {
   const { user, userRole, signOut } = useAuth()
   const [showUserMenu, setShowUserMenu] = React.useState(false)
   const [isSearchOpen, setIsSearchOpen] = React.useState(false)
+  const { t } = useLanguage()
 
   // Global search keyboard shortcut (Ctrl+K / Cmd+K)
   React.useEffect(() => {
@@ -43,32 +45,27 @@ export function Header({ className }: HeaderProps) {
   // Get breadcrumb from pathname
   const getBreadcrumb = () => {
     const segments = pathname.split('/').filter(Boolean)
-    if (segments.length === 0) return 'მთავარი'
+    if (segments.length === 0) return t('breadcrumb.home')
 
-    const breadcrumbMap: Record<string, string> = {
-      companies: 'კომპანიები',
-      inspectors: 'ოფიცრები',
-      locations: 'ლოკაციები',
-      routes: 'მარშრუტები',
-      builder: 'მარშრუტის შექმნა',
-      manage: 'მართვა',
-      admin: 'ადმინისტრაცია',
-      assignments: 'დანიშვნები',
-      officer: 'ოფიცერი',
-      settings: 'პარამეტრები',
-      boards: 'დაფები',
-    }
-
-    return segments.map(seg => breadcrumbMap[seg] || seg).join(' / ')
+    return segments
+      .map(seg => {
+        const key = `breadcrumb.${seg}`
+        const translated = t(key)
+        return translated !== key ? translated : seg
+      })
+      .join(' / ')
   }
 
   const getRoleBadge = () => {
     if (!userRole) return null
 
-    const roleMap: Record<string, { label: string; color: string }> = {
-      admin: { label: 'ადმინისტრატორი', color: 'bg-[var(--color-purple)] text-white' },
-      dispatcher: { label: 'დისპეტჩერი', color: 'bg-[var(--color-bright-blue)] text-white' },
-      officer: { label: 'ოფიცერი', color: 'bg-[var(--color-grass-green)] text-white' },
+    const roleMap: Record<string, { labelKey: string; color: string }> = {
+      admin: { labelKey: 'role.admin', color: 'bg-[var(--color-purple)] text-white' },
+      dispatcher: {
+        labelKey: 'role.dispatcher',
+        color: 'bg-[var(--color-bright-blue)] text-white',
+      },
+      officer: { labelKey: 'role.officer', color: 'bg-[var(--color-grass-green)] text-white' },
     }
 
     const role = roleMap[userRole.role]
@@ -76,7 +73,7 @@ export function Header({ className }: HeaderProps) {
 
     return (
       <span className={cn('text-xs px-2 py-0.5 rounded-full font-medium', role.color)}>
-        {role.label}
+        {t(role.labelKey)}
       </span>
     )
   }
@@ -171,7 +168,7 @@ export function Header({ className }: HeaderProps) {
                           className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-text-primary hover:bg-bg-hover transition-all duration-fast"
                         >
                           <User className="w-4 h-4" />
-                          <span>პროფილი</span>
+                          <span>{t('header.profile')}</span>
                         </button>
 
                         <button
@@ -179,7 +176,7 @@ export function Header({ className }: HeaderProps) {
                           className="flex items-center gap-3 w-full px-3 py-2 rounded-md text-sm text-status-stuck hover:bg-bg-hover transition-all duration-fast"
                         >
                           <LogOut className="w-4 h-4" />
-                          <span>გასვლა</span>
+                          <span>{t('header.signOut')}</span>
                         </button>
                       </div>
                     </div>

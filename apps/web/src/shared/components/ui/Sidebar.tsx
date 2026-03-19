@@ -44,9 +44,11 @@ import {
   Navigation,
   Megaphone,
   MapPinned,
+  Globe,
 } from 'lucide-react'
 import { NotificationBell } from '@/shared/components/notifications'
 import { useAnnouncements } from '@/hooks/useAnnouncements'
+import { useLanguage } from '@/contexts/LanguageContext'
 
 interface SidebarProps {
   className?: string
@@ -131,6 +133,7 @@ export function Sidebar({ className }: SidebarProps) {
   const userId = user?.id || ''
 
   const { unreadCount: unreadNews } = useAnnouncements()
+  const { language, setLanguage, t } = useLanguage()
 
   const menuRef = React.useRef<HTMLDivElement>(null)
   const renameInputRef = React.useRef<HTMLInputElement>(null)
@@ -550,8 +553,8 @@ export function Sidebar({ className }: SidebarProps) {
     },
     {
       href: '/inspectors',
-      label: 'ინსპექტორები',
-      labelEn: 'Inspectors',
+      label: 'ოფიცრები',
+      labelEn: 'Officers',
       icon: Users,
       permission: 'pages:inspectors',
     },
@@ -640,7 +643,7 @@ export function Sidebar({ className }: SidebarProps) {
           {/* Main Navigation - Top Section */}
           <div className="flex-shrink-0">
             {/* Primary Navigation */}
-            <nav className="py-4 px-2">
+            <nav className="py-4 px-2" data-walkthrough="sidebar">
               <ul className="space-y-1">
                 {navItems
                   .filter(item => hasPermission(item.permission))
@@ -661,12 +664,25 @@ export function Sidebar({ className }: SidebarProps) {
                               : 'text-text-primary hover:text-text-primary',
                             collapsed && 'justify-center'
                           )}
-                          title={collapsed ? item.label : undefined}
+                          title={
+                            collapsed ? (language === 'en' ? item.labelEn : item.label) : undefined
+                          }
+                          data-walkthrough={
+                            item.href === '/boards'
+                              ? 'boards'
+                              : item.href === '/companies'
+                                ? 'companies'
+                                : item.href === '/routes/manage'
+                                  ? 'routes'
+                                  : undefined
+                          }
                         >
                           <Icon className="shrink-0 w-5 h-5" />
                           {!collapsed && (
                             <>
-                              <span className="truncate flex-1">{item.label}</span>
+                              <span className="truncate flex-1">
+                                {language === 'en' ? item.labelEn : item.label}
+                              </span>
                               {badge > 0 && (
                                 <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-semibold text-white bg-red-500 rounded-full">
                                   {badge > 99 ? '99+' : badge}
@@ -976,8 +992,26 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
         {/* End scrollable content area */}
 
-        {/* Collapse Button */}
-        <div className="flex-shrink-0 border-t border-border-light p-2">
+        {/* Bottom Section */}
+        <div className="flex-shrink-0 border-t border-border-light p-2 space-y-1">
+          {/* Language Toggle */}
+          <button
+            onClick={() => setLanguage(language === 'ka' ? 'en' : 'ka')}
+            data-walkthrough="language-toggle"
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
+              'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
+              collapsed && 'justify-center'
+            )}
+            title={collapsed ? (language === 'ka' ? 'English' : 'ქართული') : undefined}
+          >
+            <Globe className="w-5 h-5 shrink-0" />
+            {!collapsed && (
+              <span className="truncate">{language === 'ka' ? 'English' : 'ქართული'}</span>
+            )}
+          </button>
+
+          {/* Collapse Button */}
           <button
             onClick={() => setCollapsed(!collapsed)}
             className={cn(
@@ -992,7 +1026,7 @@ export function Sidebar({ className }: SidebarProps) {
             ) : (
               <>
                 <ChevronLeft className="w-5 h-5" />
-                <span className="truncate">ჩაკეცვა</span>
+                <span className="truncate">{t('nav.collapse')}</span>
               </>
             )}
           </button>
