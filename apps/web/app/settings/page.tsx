@@ -4,17 +4,11 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { useWalkthrough } from '@/components/Walkthrough'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/shared/components/ui'
-import {
-  ArrowLeft,
-  User,
-  Bell,
-  Globe,
-  Shield,
-  Save,
-  Check,
-} from 'lucide-react'
+import { ArrowLeft, User, Bell, Globe, Shield, Save, Check, PlayCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type TabType = 'profile' | 'notifications' | 'language' | 'security'
@@ -44,6 +38,8 @@ const defaultSettings: UserSettings = {
 export default function SettingsPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
+  const { t } = useLanguage()
+  const { restartWalkthrough } = useWalkthrough()
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -74,11 +70,11 @@ export default function SettingsPage() {
       const supabase = createClient()
 
       // Fetch user profile
-      const { data: profile } = await supabase
+      const { data: profile } = (await supabase
         .from('users')
         .select('full_name, phone')
         .eq('id', user.id)
-        .single() as { data: { full_name: string | null; phone: string | null } | null }
+        .single()) as { data: { full_name: string | null; phone: string | null } | null }
 
       if (profile) {
         setFullName(profile.full_name || '')
@@ -86,17 +82,24 @@ export default function SettingsPage() {
       }
 
       // Fetch user settings
-      const { data: userSettings } = await supabase
+      const { data: userSettings } = (await supabase
         .from('user_settings')
         .select('*')
         .eq('user_id', user.id)
-        .single() as { data: { theme?: string; language?: string; notification_settings?: UserSettings['notification_settings'] } | null }
+        .single()) as {
+        data: {
+          theme?: string
+          language?: string
+          notification_settings?: UserSettings['notification_settings']
+        } | null
+      }
 
       if (userSettings) {
         setSettings({
           theme: (userSettings.theme as UserSettings['theme']) || 'light',
           language: (userSettings.language as UserSettings['language']) || 'ka',
-          notification_settings: userSettings.notification_settings || defaultSettings.notification_settings,
+          notification_settings:
+            userSettings.notification_settings || defaultSettings.notification_settings,
         })
       }
     } catch (error) {
@@ -143,15 +146,13 @@ export default function SettingsPage() {
     try {
       const supabase = createClient()
 
-      const { error } = await (supabase as any)
-        .from('user_settings')
-        .upsert({
-          user_id: user.id,
-          theme: settings.theme,
-          language: settings.language,
-          notification_settings: settings.notification_settings,
-          updated_at: new Date().toISOString(),
-        })
+      const { error } = await (supabase as any).from('user_settings').upsert({
+        user_id: user.id,
+        theme: settings.theme,
+        language: settings.language,
+        notification_settings: settings.notification_settings,
+        updated_at: new Date().toISOString(),
+      })
 
       if (error) throw error
       setSaveSuccess(true)
@@ -163,12 +164,30 @@ export default function SettingsPage() {
     }
   }
 
+  const SaveButton = ({ onClick }: { onClick: () => void }) => (
+    <div className="pt-4 border-t border-border-light">
+      <Button variant="primary" onClick={onClick} disabled={isSaving}>
+        {saveSuccess ? (
+          <>
+            <Check className="w-4 h-4 mr-2" />
+            {t('settings.saved')}
+          </>
+        ) : (
+          <>
+            <Save className="w-4 h-4 mr-2" />
+            {isSaving ? t('settings.saving') : t('common.save')}
+          </>
+        )}
+      </Button>
+    </div>
+  )
+
   if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">იტვირთება...</span>
+          <span className="text-text-secondary">{t('common.loading')}</span>
         </div>
       </div>
     )
@@ -182,7 +201,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-bg-secondary">
       {/* Header */}
       <div className="bg-bg-primary border-b border-border-light">
-        <div className="max-w-4xl mx-auto px-8 py-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-8 py-6">
           <div className="flex items-center gap-4 mb-4">
             <Link href="/">
               <Button variant="ghost" size="sm">
@@ -190,76 +209,72 @@ export default function SettingsPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-h2 font-bold text-text-primary">
-                პარამეტრები
-              </h1>
-              <p className="text-text-secondary">
-                მომხმარებლის პარამეტრები და პრეფერენციები
-              </p>
+              <h1 className="text-h2 font-bold text-text-primary">{t('settings.title')}</h1>
+              <p className="text-text-secondary">{t('settings.subtitle')}</p>
             </div>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto">
             <button
               onClick={() => setActiveTab('profile')}
               className={cn(
-                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors',
+                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
                 activeTab === 'profile'
                   ? 'bg-bg-secondary text-text-primary'
                   : 'text-text-secondary hover:text-text-primary'
               )}
             >
               <User className="w-4 h-4 inline mr-2" />
-              პროფილი
+              {t('settings.tab.profile')}
             </button>
             <button
               onClick={() => setActiveTab('notifications')}
               className={cn(
-                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors',
+                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
                 activeTab === 'notifications'
                   ? 'bg-bg-secondary text-text-primary'
                   : 'text-text-secondary hover:text-text-primary'
               )}
             >
               <Bell className="w-4 h-4 inline mr-2" />
-              შეტყობინებები
+              {t('settings.tab.notifications')}
             </button>
             <button
               onClick={() => setActiveTab('language')}
               className={cn(
-                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors',
+                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
                 activeTab === 'language'
                   ? 'bg-bg-secondary text-text-primary'
                   : 'text-text-secondary hover:text-text-primary'
               )}
             >
               <Globe className="w-4 h-4 inline mr-2" />
-              ენა
+              {t('settings.tab.language')}
             </button>
             <button
               onClick={() => setActiveTab('security')}
               className={cn(
-                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors',
+                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
                 activeTab === 'security'
                   ? 'bg-bg-secondary text-text-primary'
                   : 'text-text-secondary hover:text-text-primary'
               )}
             >
               <Shield className="w-4 h-4 inline mr-2" />
-              უსაფრთხოება
+              {t('settings.tab.security')}
             </button>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8">
         {/* Profile Tab */}
         {activeTab === 'profile' && (
           <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
             <h3 className="text-lg font-semibold text-text-primary mb-4">
-              პროფილის ინფორმაცია
+              {t('settings.profile.title')}
             </h3>
 
             {/* Avatar */}
@@ -268,7 +283,9 @@ export default function SettingsPage() {
                 {fullName?.charAt(0) || user.email?.charAt(0) || 'U'}
               </div>
               <div>
-                <p className="font-medium text-text-primary">{fullName || 'მომხმარებელი'}</p>
+                <p className="font-medium text-text-primary">
+                  {fullName || t('settings.profile.user')}
+                </p>
                 <p className="text-sm text-text-tertiary">{user.email}</p>
               </div>
             </div>
@@ -276,24 +293,24 @@ export default function SettingsPage() {
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
-                სახელი და გვარი
+                {t('settings.profile.name')}
               </label>
               <input
                 type="text"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={e => setFullName(e.target.value)}
                 className={cn(
                   'w-full max-w-md px-3 py-2 border border-border-default rounded-lg',
                   'focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary'
                 )}
-                placeholder="შეიყვანეთ სახელი და გვარი"
+                placeholder={t('settings.profile.namePlaceholder')}
               />
             </div>
 
             {/* Email (read-only) */}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
-                ელ-ფოსტა
+                {t('settings.profile.email')}
               </label>
               <input
                 type="email"
@@ -305,19 +322,19 @@ export default function SettingsPage() {
                 )}
               />
               <p className="text-sm text-text-tertiary mt-1">
-                ელ-ფოსტის შეცვლა შეუძლებელია
+                {t('settings.profile.emailReadonly')}
               </p>
             </div>
 
             {/* Phone */}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
-                ტელეფონი
+                {t('settings.profile.phone')}
               </label>
               <input
                 type="tel"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={e => setPhone(e.target.value)}
                 className={cn(
                   'w-full max-w-md px-3 py-2 border border-border-default rounded-lg',
                   'focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary'
@@ -326,26 +343,32 @@ export default function SettingsPage() {
               />
             </div>
 
-            {/* Save Button */}
-            <div className="pt-4 border-t border-border-light">
-              <Button
-                variant="primary"
-                onClick={handleSaveProfile}
-                disabled={isSaving}
-              >
-                {saveSuccess ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    შენახულია
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    {isSaving ? 'ინახება...' : 'შენახვა'}
-                  </>
-                )}
-              </Button>
+            {/* Walkthrough Restart */}
+            <div className="p-4 border border-border-default rounded-lg">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-medium text-text-primary">
+                    {t('settings.walkthrough.title')}
+                  </h4>
+                  <p className="text-sm text-text-tertiary mt-1">
+                    {t('settings.walkthrough.description')}
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    localStorage.removeItem('routehub-walkthrough-completed')
+                    restartWalkthrough()
+                    router.push('/')
+                  }}
+                >
+                  <PlayCircle className="w-4 h-4 mr-2" />
+                  {t('settings.walkthrough.restart')}
+                </Button>
+              </div>
             </div>
+
+            <SaveButton onClick={handleSaveProfile} />
           </div>
         )}
 
@@ -353,22 +376,22 @@ export default function SettingsPage() {
         {activeTab === 'notifications' && (
           <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
             <h3 className="text-lg font-semibold text-text-primary mb-4">
-              შეტყობინებების პარამეტრები
+              {t('settings.notifications.title')}
             </h3>
 
             {/* Email Notifications */}
             <div className="flex items-center justify-between max-w-md">
               <div>
                 <label className="block text-sm font-medium text-text-primary">
-                  ელ-ფოსტის შეტყობინებები
+                  {t('settings.notifications.email')}
                 </label>
                 <p className="text-sm text-text-tertiary">
-                  მიიღეთ შეტყობინებები ელ-ფოსტით
+                  {t('settings.notifications.emailDesc')}
                 </p>
               </div>
               <button
                 onClick={() =>
-                  setSettings((s) => ({
+                  setSettings(s => ({
                     ...s,
                     notification_settings: {
                       ...s.notification_settings,
@@ -376,8 +399,10 @@ export default function SettingsPage() {
                     },
                   }))
                 }
+                role="switch"
+                aria-checked={settings.notification_settings.email_notifications}
                 className={cn(
-                  'relative w-12 h-6 rounded-full transition-colors',
+                  'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
                   settings.notification_settings.email_notifications
                     ? 'bg-monday-primary'
                     : 'bg-gray-300'
@@ -386,9 +411,7 @@ export default function SettingsPage() {
                 <div
                   className={cn(
                     'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
-                    settings.notification_settings.email_notifications
-                      ? 'right-1'
-                      : 'left-1'
+                    settings.notification_settings.email_notifications ? 'right-1' : 'left-1'
                   )}
                 />
               </button>
@@ -398,15 +421,15 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between max-w-md">
               <div>
                 <label className="block text-sm font-medium text-text-primary">
-                  დავალებების შეტყობინებები
+                  {t('settings.notifications.assignments')}
                 </label>
                 <p className="text-sm text-text-tertiary">
-                  შეტყობინება ახალი დავალებების შესახებ
+                  {t('settings.notifications.assignmentsDesc')}
                 </p>
               </div>
               <button
                 onClick={() =>
-                  setSettings((s) => ({
+                  setSettings(s => ({
                     ...s,
                     notification_settings: {
                       ...s.notification_settings,
@@ -414,8 +437,10 @@ export default function SettingsPage() {
                     },
                   }))
                 }
+                role="switch"
+                aria-checked={settings.notification_settings.assignment_alerts}
                 className={cn(
-                  'relative w-12 h-6 rounded-full transition-colors',
+                  'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
                   settings.notification_settings.assignment_alerts
                     ? 'bg-monday-primary'
                     : 'bg-gray-300'
@@ -424,9 +449,7 @@ export default function SettingsPage() {
                 <div
                   className={cn(
                     'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
-                    settings.notification_settings.assignment_alerts
-                      ? 'right-1'
-                      : 'left-1'
+                    settings.notification_settings.assignment_alerts ? 'right-1' : 'left-1'
                   )}
                 />
               </button>
@@ -436,15 +459,15 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between max-w-md">
               <div>
                 <label className="block text-sm font-medium text-text-primary">
-                  მარშრუტის განახლებები
+                  {t('settings.notifications.routes')}
                 </label>
                 <p className="text-sm text-text-tertiary">
-                  შეტყობინება მარშრუტის ცვლილებების შესახებ
+                  {t('settings.notifications.routesDesc')}
                 </p>
               </div>
               <button
                 onClick={() =>
-                  setSettings((s) => ({
+                  setSettings(s => ({
                     ...s,
                     notification_settings: {
                       ...s.notification_settings,
@@ -452,44 +475,23 @@ export default function SettingsPage() {
                     },
                   }))
                 }
+                role="switch"
+                aria-checked={settings.notification_settings.route_updates}
                 className={cn(
-                  'relative w-12 h-6 rounded-full transition-colors',
-                  settings.notification_settings.route_updates
-                    ? 'bg-monday-primary'
-                    : 'bg-gray-300'
+                  'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
+                  settings.notification_settings.route_updates ? 'bg-monday-primary' : 'bg-gray-300'
                 )}
               >
                 <div
                   className={cn(
                     'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
-                    settings.notification_settings.route_updates
-                      ? 'right-1'
-                      : 'left-1'
+                    settings.notification_settings.route_updates ? 'right-1' : 'left-1'
                   )}
                 />
               </button>
             </div>
 
-            {/* Save Button */}
-            <div className="pt-4 border-t border-border-light">
-              <Button
-                variant="primary"
-                onClick={handleSaveSettings}
-                disabled={isSaving}
-              >
-                {saveSuccess ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    შენახულია
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    {isSaving ? 'ინახება...' : 'შენახვა'}
-                  </>
-                )}
-              </Button>
-            </div>
+            <SaveButton onClick={handleSaveSettings} />
           </div>
         )}
 
@@ -497,16 +499,16 @@ export default function SettingsPage() {
         {activeTab === 'language' && (
           <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
             <h3 className="text-lg font-semibold text-text-primary mb-4">
-              ენის პარამეტრები
+              {t('settings.language.title')}
             </h3>
 
             <div>
               <label className="block text-sm font-medium text-text-primary mb-4">
-                ინტერფეისის ენა
+                {t('settings.language.interface')}
               </label>
               <div className="flex gap-4">
                 <button
-                  onClick={() => setSettings((s) => ({ ...s, language: 'ka' }))}
+                  onClick={() => setSettings(s => ({ ...s, language: 'ka' }))}
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors',
                     settings.language === 'ka'
@@ -525,7 +527,7 @@ export default function SettingsPage() {
                 </button>
 
                 <button
-                  onClick={() => setSettings((s) => ({ ...s, language: 'en' }))}
+                  onClick={() => setSettings(s => ({ ...s, language: 'en' }))}
                   className={cn(
                     'flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors',
                     settings.language === 'en'
@@ -545,26 +547,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Save Button */}
-            <div className="pt-4 border-t border-border-light">
-              <Button
-                variant="primary"
-                onClick={handleSaveSettings}
-                disabled={isSaving}
-              >
-                {saveSuccess ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    შენახულია
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    {isSaving ? 'ინახება...' : 'შენახვა'}
-                  </>
-                )}
-              </Button>
-            </div>
+            <SaveButton onClick={handleSaveSettings} />
           </div>
         )}
 
@@ -572,16 +555,18 @@ export default function SettingsPage() {
         {activeTab === 'security' && (
           <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
             <h3 className="text-lg font-semibold text-text-primary mb-4">
-              უსაფრთხოება
+              {t('settings.security.title')}
             </h3>
 
             {/* Password Change */}
             <div className="p-4 border border-border-default rounded-lg">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h4 className="font-medium text-text-primary">პაროლის შეცვლა</h4>
+                  <h4 className="font-medium text-text-primary">
+                    {t('settings.security.changePassword')}
+                  </h4>
                   <p className="text-sm text-text-tertiary mt-1">
-                    პაროლის შეცვლა ხდება ელ-ფოსტით. დააჭირეთ ღილაკს და მიიღებთ ბმულს ელ-ფოსტაზე.
+                    {t('settings.security.changePasswordDesc')}
                   </p>
                 </div>
                 <Button
@@ -593,22 +578,24 @@ export default function SettingsPage() {
                       redirectTo: `${window.location.origin}/auth/reset-password`,
                     })
                     if (!error) {
-                      alert('პაროლის შეცვლის ბმული გამოგზავნილია თქვენს ელ-ფოსტაზე')
+                      alert(t('settings.security.passwordSent'))
                     }
                   }}
                 >
-                  პაროლის შეცვლა
+                  {t('settings.security.changePassword')}
                 </Button>
               </div>
             </div>
 
             {/* Active Sessions */}
             <div className="p-4 border border-border-default rounded-lg">
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h4 className="font-medium text-text-primary">აქტიური სესიები</h4>
+                  <h4 className="font-medium text-text-primary">
+                    {t('settings.security.sessions')}
+                  </h4>
                   <p className="text-sm text-text-tertiary mt-1">
-                    ყველა სესიიდან გამოსვლა სხვა მოწყობილობებზე
+                    {t('settings.security.sessionsDesc')}
                   </p>
                 </div>
                 <Button
@@ -619,7 +606,7 @@ export default function SettingsPage() {
                     router.push('/auth/login')
                   }}
                 >
-                  ყველასგან გამოსვლა
+                  {t('settings.security.signOutAll')}
                 </Button>
               </div>
             </div>

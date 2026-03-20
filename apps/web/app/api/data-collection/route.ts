@@ -1,14 +1,9 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/middleware/auth'
 import { z } from 'zod'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 const createEntrySchema = z.object({
   sk_code: z.string().min(1),
@@ -23,6 +18,7 @@ const createEntrySchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
+    const supabase = createServerClient()
     const body = await request.json()
     const validated = createEntrySchema.parse(body)
 
@@ -108,13 +104,14 @@ export async function POST(request: NextRequest) {
       )
     }
     console.error('Data collection error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
     const session = await requireAuth()
+    const supabase = createServerClient()
 
     // Get user's inspector_id
     const { data: userRole } = await supabase
@@ -153,6 +150,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     console.error('Data collection fetch error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

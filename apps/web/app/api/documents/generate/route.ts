@@ -1,17 +1,12 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/middleware/auth'
 import { z } from 'zod'
 import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
 import mammoth from 'mammoth'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 const generateSchema = z.object({
   templateId: z.string().uuid(),
@@ -47,6 +42,7 @@ function resolveComputedField(fieldName: string, itemData: Record<string, any>):
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
+    const supabase = createServerClient()
     const body = await request.json()
     const { templateId, itemId, boardId } = generateSchema.parse(body)
 
@@ -230,6 +226,6 @@ export async function POST(request: NextRequest) {
       )
     }
     console.error('Document generation error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

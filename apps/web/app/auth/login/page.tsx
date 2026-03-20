@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { LogIn, UserPlus, AlertCircle, CheckCircle, Globe } from 'lucide-react'
+import { createClient } from '@/lib/supabase'
+import { LogIn, UserPlus, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
 
 type AuthMode = 'login' | 'signup'
 
@@ -23,6 +24,30 @@ export default function LoginPage() {
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError(t('login.enterEmailFirst'))
+      return
+    }
+    setError('')
+    setResetLoading(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
+      if (error) throw error
+      setSuccess(t('login.resetEmailSent'))
+    } catch (err) {
+      setError(t('login.resetError'))
+    } finally {
+      setResetLoading(false)
+    }
+  }
 
   const resetForm = () => {
     setEmail('')
@@ -225,19 +250,40 @@ export default function LoginPage() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 {t('login.password')}
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
-                required
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                  required
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
               {mode === 'signup' && (
                 <p className="mt-1 text-xs text-gray-500">{t('login.minChars')}</p>
+              )}
+              {mode === 'login' && (
+                <div className="mt-1 text-right">
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={resetLoading}
+                    className="text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                  >
+                    {resetLoading ? t('common.loading') : t('login.forgotPassword')}
+                  </button>
+                </div>
               )}
             </div>
 
@@ -250,17 +296,30 @@ export default function LoginPage() {
                 >
                   {t('login.confirmPassword')}
                 </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
-                />
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    autoComplete="new-password"
+                    required
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>

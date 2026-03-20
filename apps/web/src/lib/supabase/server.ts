@@ -6,8 +6,13 @@
  */
 
 import { createServerClient as createSupabaseServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
+/**
+ * Session-based client — uses the user's JWT from cookies.
+ * RLS policies are enforced. Use this for all standard API operations.
+ */
 export function createServerClient() {
   const cookieStore = cookies()
 
@@ -39,4 +44,13 @@ export function createServerClient() {
       },
     }
   )
+}
+
+/**
+ * Service role client — bypasses RLS. Only use for operations that genuinely
+ * require elevated privileges (e.g., cross-user board sync, admin batch ops).
+ * NEVER use for standard CRUD where the user's own permissions should apply.
+ */
+export function createServiceClient() {
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_KEY!)
 }

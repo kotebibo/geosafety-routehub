@@ -52,6 +52,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 
 interface SidebarProps {
   className?: string
+  onMobileClose?: () => void
 }
 
 interface NavItem {
@@ -102,8 +103,13 @@ interface WorkspaceMenuState {
   position: { top: number; left: number }
 }
 
-export function Sidebar({ className }: SidebarProps) {
-  const [collapsed, setCollapsed] = React.useState(false)
+export function Sidebar({ className, onMobileClose }: SidebarProps) {
+  const [collapsed, setCollapsed] = React.useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('routehub-sidebar-collapsed') === 'true'
+    }
+    return false
+  })
   const [showArchived, setShowArchived] = React.useState(false)
   const [menuState, setMenuState] = React.useState<BoardMenuState | null>(null)
   const [showColorPicker, setShowColorPicker] = React.useState(false)
@@ -121,6 +127,11 @@ export function Sidebar({ className }: SidebarProps) {
   const [workspaceRenameMode, setWorkspaceRenameMode] = React.useState(false)
   const [workspaceRenameValue, setWorkspaceRenameValue] = React.useState('')
   const [workspaceDeleteConfirm, setWorkspaceDeleteConfirm] = React.useState(false)
+
+  // Persist collapsed state
+  React.useEffect(() => {
+    localStorage.setItem('routehub-sidebar-collapsed', String(collapsed))
+  }, [collapsed])
 
   const pathname = usePathname()
   const router = useRouter()
@@ -619,13 +630,25 @@ export function Sidebar({ className }: SidebarProps) {
         <div className="flex-shrink-0 flex items-center gap-2 h-14 px-3 border-b border-border-light">
           {!collapsed ? (
             <>
-              <Link href="/" className="flex items-center gap-2 flex-1 min-w-0">
+              <Link
+                href="/"
+                className="flex items-center gap-2 flex-1 min-w-0"
+                onClick={onMobileClose}
+              >
                 <div className="w-8 h-8 bg-monday-primary rounded-md flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                   RH
                 </div>
                 <span className="text-lg font-semibold text-text-primary truncate">RouteHub</span>
               </Link>
               <NotificationBell />
+              {onMobileClose && (
+                <button
+                  onClick={onMobileClose}
+                  className="lg:hidden p-1.5 rounded-md hover:bg-bg-hover text-text-secondary"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
             </>
           ) : (
             <div className="flex items-center justify-center w-full">
@@ -971,21 +994,67 @@ export function Sidebar({ className }: SidebarProps) {
                 )}
               </div>
             ) : (
-              /* Collapsed Boards Icon */
-              <div className="px-2 py-1">
-                <Link
-                  href="/boards"
-                  className={cn(
-                    'flex items-center justify-center p-2.5 rounded-md transition-all duration-fast',
-                    'hover:bg-bg-hover',
-                    pathname.startsWith('/boards')
-                      ? 'bg-bg-selected text-monday-primary'
-                      : 'text-text-primary'
-                  )}
-                  title="Boards"
-                >
-                  <LayoutDashboard className="w-5 h-5" />
-                </Link>
+              /* Collapsed Boards - workspace initial + board avatars */
+              <div className="px-2 py-1 space-y-1">
+                {/* Workspace initial */}
+                {selectedWorkspace && (
+                  <div
+                    className="flex items-center justify-center py-1"
+                    title={selectedWorkspace.name}
+                  >
+                    <div className="w-7 h-7 rounded bg-monday-primary flex items-center justify-center text-white text-[11px] font-bold">
+                      {selectedWorkspace.name.charAt(0).toUpperCase()}
+                    </div>
+                  </div>
+                )}
+
+                {/* Divider */}
+                <div className="border-t border-border-light mx-1" />
+
+                {/* Board avatars */}
+                {(() => {
+                  const activeBoards = selectedWorkspaceBoards.filter(
+                    (b: any) => !b.settings?.is_archived
+                  )
+                  return activeBoards.length > 0 ? (
+                    activeBoards.map((board: any) => (
+                      <Link
+                        key={board.id}
+                        href={`/boards/${board.id}`}
+                        className={cn(
+                          'flex items-center justify-center p-1.5 rounded-md transition-all duration-fast relative group',
+                          'hover:bg-bg-hover',
+                          currentBoardId === board.id &&
+                            'bg-bg-selected ring-2 ring-monday-primary/30'
+                        )}
+                        title={board.name}
+                      >
+                        <div
+                          className={cn(
+                            'w-7 h-7 rounded flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0',
+                            getBoardColor(board.color)
+                          )}
+                        >
+                          {board.name.charAt(0).toUpperCase()}
+                        </div>
+                        {board.settings?.is_favorite && (
+                          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-yellow-400 rounded-full border border-white" />
+                        )}
+                      </Link>
+                    ))
+                  ) : (
+                    <Link
+                      href="/boards"
+                      className={cn(
+                        'flex items-center justify-center p-2.5 rounded-md transition-all duration-fast',
+                        'hover:bg-bg-hover text-text-tertiary'
+                      )}
+                      title="Boards"
+                    >
+                      <LayoutDashboard className="w-5 h-5" />
+                    </Link>
+                  )
+                })()}
               </div>
             )}
           </div>

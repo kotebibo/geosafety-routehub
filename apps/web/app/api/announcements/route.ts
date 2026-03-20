@@ -1,15 +1,10 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth, requireAdmin } from '@/middleware/auth'
 import { sendEmail, generateAnnouncementEmail } from '@/lib/email'
 import { z } from 'zod'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 const createAnnouncementSchema = z.object({
   title: z.string().min(1).max(200),
@@ -21,6 +16,7 @@ const createAnnouncementSchema = z.object({
 export async function GET() {
   try {
     await requireAuth()
+    const supabase = createServerClient()
 
     const { data, error } = await supabase
       .from('announcements')
@@ -34,13 +30,14 @@ export async function GET() {
     if (error.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const { session } = await requireAdmin()
+    const supabase = createServerClient()
     const body = await request.json()
     const validated = createAnnouncementSchema.parse(body)
 
@@ -86,7 +83,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -95,6 +92,8 @@ async function sendNotificationsAndEmails(
   input: { title: string; content: string; priority: string },
   authorName: string
 ) {
+  const supabase = createServerClient()
+
   // Fetch all active users
   const { data: users, error } = await supabase
     .from('users')

@@ -15,16 +15,32 @@ interface MondayLayoutProps {
 export function MondayLayout({ children, className }: MondayLayoutProps) {
   const { user } = useAuth()
   const { showWalkthrough, completeWalkthrough } = useWalkthrough()
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
   return (
     <div className="flex h-screen overflow-hidden bg-bg-secondary">
-      {/* Sidebar - Fixed, doesn't scroll */}
-      <Sidebar />
+      {/* Sidebar - Hidden on mobile, shown on desktop */}
+      <div className="hidden lg:block">
+        <Sidebar />
+      </div>
+
+      {/* Mobile Sidebar Overlay */}
+      {mobileMenuOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div className="fixed inset-y-0 left-0 z-50 lg:hidden">
+            <Sidebar onMobileClose={() => setMobileMenuOpen(false)} />
+          </div>
+        </>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Header - Fixed, doesn't scroll */}
-        <Header />
+        <Header onMenuToggle={() => setMobileMenuOpen(!mobileMenuOpen)} />
 
         {/* Page Content - This is the only part that can scroll */}
         <main className={cn('flex-1 overflow-auto', className)}>{children}</main>

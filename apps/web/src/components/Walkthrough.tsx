@@ -31,7 +31,7 @@ const allSteps: WalkthroughStep[] = [
     titleKey: 'walkthrough.boards.title',
     descriptionKey: 'walkthrough.boards.description',
     position: 'right',
-    roles: ['admin', 'dispatcher'],
+    roles: ['admin', 'dispatcher', 'officer'],
   },
   {
     targetSelector: '[data-walkthrough="companies"]',

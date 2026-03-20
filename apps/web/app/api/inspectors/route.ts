@@ -11,19 +11,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextResponse, NextRequest } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth, requireAdmin } from '@/middleware/auth'
 import { createInspectorSchema, updateInspectorSchema } from '@/lib/validations'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 export async function GET(request: NextRequest) {
   try {
     // Require authentication for reading inspectors
     await requireAuth()
+    const supabase = createServerClient()
 
     const { searchParams } = new URL(request.url)
     const statusFilter = searchParams.get('status')
@@ -52,7 +48,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -60,6 +56,7 @@ export async function POST(request: NextRequest) {
   try {
     // Require admin for creating inspectors
     await requireAdmin()
+    const supabase = createServerClient()
 
     const body = await request.json()
 
@@ -116,7 +113,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -124,6 +121,7 @@ export async function PUT(request: NextRequest) {
   try {
     // Require admin for updating inspectors
     await requireAdmin()
+    const supabase = createServerClient()
 
     const body = await request.json()
     const { id, ...updates } = body
@@ -163,7 +161,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -171,6 +169,7 @@ export async function DELETE(request: NextRequest) {
   try {
     // Require admin for deleting inspectors
     await requireAdmin()
+    const supabase = createServerClient()
 
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
@@ -195,6 +194,6 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,17 +1,13 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/middleware/auth'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await requireAuth()
+    const supabase = createServerClient()
 
     const { error } = await supabase.from('announcement_reads').upsert(
       {
@@ -28,6 +24,6 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (error.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

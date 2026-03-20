@@ -1,18 +1,14 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth, requireAdmin } from '@/middleware/auth'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 // GET - Get a single template
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAuth()
+    const supabase = createServerClient()
 
     const { data, error } = await supabase
       .from('document_templates')
@@ -26,7 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (error.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -34,6 +30,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAdmin()
+    const supabase = createServerClient()
 
     const body = await request.json()
     const allowedFields = ['name', 'description', 'tag_mapping', 'is_active']
@@ -65,7 +62,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (error.name === 'ForbiddenError') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -73,6 +70,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireAdmin()
+    const supabase = createServerClient()
 
     // Get template to find storage path
     const { data: template, error: fetchError } = await supabase
@@ -104,6 +102,6 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     if (error.name === 'ForbiddenError') {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

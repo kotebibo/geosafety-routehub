@@ -5,20 +5,29 @@ import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { LogOut, User, ChevronDown, Search } from 'lucide-react'
+import { LogOut, User, ChevronDown, Search, Menu } from 'lucide-react'
 import { GlobalSearchModal } from '@/features/boards/components/GlobalSearch'
 
 interface HeaderProps {
   className?: string
+  onMenuToggle?: () => void
 }
 
-export function Header({ className }: HeaderProps) {
+export function Header({ className, onMenuToggle }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, userRole, signOut } = useAuth()
   const [showUserMenu, setShowUserMenu] = React.useState(false)
   const [isSearchOpen, setIsSearchOpen] = React.useState(false)
   const { t } = useLanguage()
+
+  // Detect Mac for keyboard shortcut display
+  const [isMac, setIsMac] = React.useState(false)
+  React.useEffect(() => {
+    setIsMac(
+      navigator.platform?.toUpperCase().includes('MAC') || navigator.userAgent?.includes('Mac')
+    )
+  }, [])
 
   // Global search keyboard shortcut (Ctrl+K / Cmd+K)
   React.useEffect(() => {
@@ -87,8 +96,16 @@ export function Header({ className }: HeaderProps) {
         )}
       >
         <div className="flex items-center justify-between h-full px-4 gap-4">
-          {/* Left: Breadcrumb */}
+          {/* Left: Hamburger + Breadcrumb */}
           <div className="flex items-center gap-3 flex-1 min-w-0">
+            {onMenuToggle && (
+              <button
+                onClick={onMenuToggle}
+                className="lg:hidden p-1.5 rounded-md hover:bg-bg-hover text-text-primary transition-colors"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
             <h1 className="text-lg font-semibold text-text-primary truncate">{getBreadcrumb()}</h1>
           </div>
 
@@ -101,13 +118,13 @@ export function Header({ className }: HeaderProps) {
                 'flex items-center gap-2 px-3 py-1.5 rounded-lg',
                 'border border-[#c3c6d4] bg-[#f0f1f3] hover:bg-[#e6e7ea]',
                 'text-[#555766] text-sm transition-colors',
-                'min-w-[200px] lg:min-w-[280px]'
+                'min-w-0 sm:min-w-[200px] lg:min-w-[280px]'
               )}
             >
               <Search className="w-3.5 h-3.5 flex-shrink-0" />
-              <span className="flex-1 text-left">Search</span>
+              <span className="hidden sm:block flex-1 text-left">{t('common.search')}</span>
               <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-white border border-[#c3c6d4] text-[10px] text-[#676879] font-mono">
-                Ctrl+K
+                {isMac ? '⌘K' : 'Ctrl+K'}
               </kbd>
             </button>
 

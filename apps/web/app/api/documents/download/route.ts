@@ -1,17 +1,13 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/middleware/auth'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 export async function GET(request: NextRequest) {
   try {
     await requireAuth()
+    const supabase = createServerClient()
 
     const documentId = request.nextUrl.searchParams.get('id')
     if (!documentId) {
@@ -52,6 +48,6 @@ export async function GET(request: NextRequest) {
     if (error.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

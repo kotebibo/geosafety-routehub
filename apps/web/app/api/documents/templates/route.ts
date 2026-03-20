@@ -1,15 +1,10 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth, requireAdmin } from '@/middleware/auth'
 import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 function parseTagsFromDocx(buffer: ArrayBuffer): string[] {
   const zip = new PizZip(buffer)
@@ -31,6 +26,7 @@ function parseTagsFromDocx(buffer: ArrayBuffer): string[] {
 export async function GET(request: NextRequest) {
   try {
     await requireAuth()
+    const supabase = createServerClient()
 
     const boardId = request.nextUrl.searchParams.get('boardId')
     if (!boardId) {
@@ -50,7 +46,7 @@ export async function GET(request: NextRequest) {
     if (error.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
@@ -65,6 +61,7 @@ export async function POST(request: NextRequest) {
       throw authError
     }
     const { session } = authResult
+    const supabase = createServerClient()
 
     const formData = await request.formData()
     const file = formData.get('file') as File
@@ -133,6 +130,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
     console.error('Template upload error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

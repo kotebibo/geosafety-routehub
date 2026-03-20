@@ -29,6 +29,7 @@ interface NavItem {
   labelKey: string
   icon: React.ComponentType<{ className?: string }>
   roles: string[]
+  walkthroughId?: string
 }
 
 export function Sidebar({ className }: SidebarProps) {
@@ -47,13 +48,15 @@ export function Sidebar({ className }: SidebarProps) {
       href: '/boards',
       labelKey: 'nav.boards',
       icon: LayoutDashboard,
-      roles: ['admin', 'dispatcher'],
+      roles: ['admin', 'dispatcher', 'officer'],
+      walkthroughId: 'boards',
     },
     {
       href: '/companies',
       labelKey: 'nav.companies',
       icon: Building2,
       roles: ['admin', 'dispatcher'],
+      walkthroughId: 'companies',
     },
     { href: '/inspectors', labelKey: 'nav.officers', icon: Users, roles: ['admin', 'dispatcher'] },
     { href: '/locations', labelKey: 'nav.locations', icon: MapPin, roles: ['admin', 'dispatcher'] },
@@ -62,6 +65,7 @@ export function Sidebar({ className }: SidebarProps) {
       labelKey: 'nav.routes',
       icon: Route,
       roles: ['admin', 'dispatcher', 'officer'],
+      walkthroughId: 'routes',
     },
     {
       href: '/routes/builder',
@@ -114,7 +118,7 @@ export function Sidebar({ className }: SidebarProps) {
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2">
+      <nav className="flex-1 overflow-y-auto py-4 px-2" data-walkthrough="sidebar">
         <ul className="space-y-1">
           {navItems.map(item => {
             const Icon = item.icon
@@ -124,6 +128,7 @@ export function Sidebar({ className }: SidebarProps) {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  data-walkthrough={item.walkthroughId}
                   className={cn(
                     'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast',
                     'hover:bg-bg-hover',
@@ -148,6 +153,7 @@ export function Sidebar({ className }: SidebarProps) {
         {/* Language Toggle */}
         <button
           onClick={toggleLanguage}
+          data-walkthrough="language-toggle"
           className={cn(
             'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
             'hover:bg-bg-hover text-text-secondary hover:text-text-primary',

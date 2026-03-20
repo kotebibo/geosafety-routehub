@@ -1,18 +1,14 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { UnauthorizedError, ForbiddenError } from '@/middleware/auth'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 export async function GET(request: NextRequest) {
   try {
     await requireAdminOrDispatcher()
+    const supabase = createServerClient()
 
     const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString()
     const today = new Date().toISOString().split('T')[0]

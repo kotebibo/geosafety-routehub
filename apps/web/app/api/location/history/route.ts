@@ -1,18 +1,14 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { UnauthorizedError, ForbiddenError } from '@/middleware/auth'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 export async function GET(request: NextRequest) {
   try {
     await requireAdminOrDispatcher()
+    const supabase = createServerClient()
 
     const { searchParams } = new URL(request.url)
     const inspectorId = searchParams.get('inspector_id')
@@ -39,7 +35,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     if (error instanceof ForbiddenError) {
-      return NextResponse.json({ error: error.message }, { status: 403 })
+      return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
     console.error('Location history error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

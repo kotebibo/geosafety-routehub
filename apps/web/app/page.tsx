@@ -4,7 +4,16 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { Building2, Users, MapIcon, Route, UserCog, ArrowRight, Navigation } from 'lucide-react'
+import {
+  Building2,
+  Users,
+  MapIcon,
+  Route,
+  UserCog,
+  ArrowRight,
+  Navigation,
+  LayoutDashboard,
+} from 'lucide-react'
 
 export default function HomePage() {
   const { user, userRole, loading } = useAuth()
@@ -73,6 +82,14 @@ export default function HomePage() {
       color: 'from-orange-500 to-orange-600',
       descriptionKey: 'home.allRoutes',
       show: isAdmin || isDispatcher,
+    },
+    {
+      href: '/boards',
+      labelKey: 'nav.boards',
+      icon: LayoutDashboard,
+      color: 'from-cyan-500 to-cyan-600',
+      descriptionKey: 'home.boardsDescription',
+      show: isOfficer,
     },
     {
       href: '/inspector/routes',

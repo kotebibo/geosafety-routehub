@@ -56,8 +56,9 @@ export function flattenGroupsForVirtualization({
   const itemsByGroup = new Map<string, BoardItem[]>()
 
   for (const item of items) {
-    // Get the item's group_id from either the column or the JSONB data
-    let groupId = item.group_id || (item.data as any)?.group_id
+    // Prioritize the column group_id (may be remapped by useGroupByColumn)
+    // over the JSONB data.group_id (which can be stale)
+    let groupId = item.group_id ?? (item.data as any)?.group_id
 
     // If no group_id, assign to first group (not "default" which doesn't exist)
     if (!groupId || groupId === 'default') {

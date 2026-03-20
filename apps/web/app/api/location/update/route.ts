@@ -1,15 +1,10 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/middleware/auth'
 import { UnauthorizedError, ForbiddenError } from '@/middleware/auth'
 import { z } from 'zod'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 const locationSchema = z.object({
   inspector_id: z.string().uuid(),
@@ -24,6 +19,7 @@ const locationSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
+    const supabase = createServerClient()
     const body = await request.json()
     const validated = locationSchema.parse(body)
 

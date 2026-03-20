@@ -7,18 +7,14 @@
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { requireAuth } from '@/middleware/auth'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 export async function GET(request: Request) {
   try {
     // Require authentication to view company services
     await requireAuth()
+    const supabase = createServerClient()
     const { searchParams } = new URL(request.url)
     const serviceTypeId = searchParams.get('service_type_id')
     const inspectorId = searchParams.get('inspector_id')
@@ -78,9 +74,6 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
 
-    return NextResponse.json(
-      { error: 'Failed to fetch company services', details: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

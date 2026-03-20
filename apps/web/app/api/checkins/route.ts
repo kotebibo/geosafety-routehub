@@ -1,14 +1,9 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { requireAuth, requireRole } from '@/middleware/auth'
+import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 const createCheckinSchema = z.object({
   inspector_id: z.string().uuid(),
@@ -41,12 +36,14 @@ function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number)
 }
 
 // Sync a check-in to all boards of type 'checkins'
+// Uses service client because this writes to boards the user may not own
 async function syncCheckinToBoards(
   checkin: any,
   input: { lat: number; lng: number; accuracy?: number; notes?: string },
   locationUpdated: boolean,
   distanceFromLocation: number | null
 ) {
+  const supabase = createServiceClient()
   const { data: boards } = await supabase.from('boards').select('id').eq('board_type', 'checkins')
 
   if (!boards || boards.length === 0) return
@@ -117,6 +114,7 @@ async function syncCheckoutToBoards(
   checkinId: string,
   checkoutData: { checked_out_at: string; lat: number; lng: number; duration_minutes: number }
 ) {
+  const supabase = createServiceClient()
   const { data: boards } = await supabase.from('boards').select('id').eq('board_type', 'checkins')
 
   if (!boards || boards.length === 0) return
@@ -154,6 +152,7 @@ async function syncCheckoutToBoards(
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = createServerClient()
     const session = await requireAuth()
     const body = await request.json()
     const validated = createCheckinSchema.parse(body)
@@ -258,13 +257,14 @@ export async function POST(request: NextRequest) {
       )
     }
     console.error('Check-in error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 // PATCH - Check out (close an active check-in)
 export async function PATCH(request: NextRequest) {
   try {
+    const supabase = createServerClient()
     const session = await requireAuth()
     const body = await request.json()
     const validated = checkoutSchema.parse(body)
@@ -343,12 +343,13 @@ export async function PATCH(request: NextRequest) {
       )
     }
     console.error('Check-out error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = createServerClient()
     const session = await requireAuth()
     const { searchParams } = new URL(request.url)
 
@@ -412,6 +413,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
     console.error('Checkins fetch error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

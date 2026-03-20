@@ -8,20 +8,16 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createServerClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { saveRouteSchema, type SaveRouteInput } from '@/lib/validations'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-)
 
 export async function POST(request: NextRequest) {
   try {
     // Require admin or dispatcher role to save routes
     await requireAdminOrDispatcher()
+    const supabase = createServerClient()
 
     const rawBody = await request.json()
 
@@ -59,10 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (routeError) {
       console.error('Route insert error:', routeError)
-      return NextResponse.json(
-        { error: 'Failed to create route', details: routeError.message },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
     // Insert route stops
@@ -80,10 +73,7 @@ export async function POST(request: NextRequest) {
     if (stopsError) {
       console.error('Route stops insert error:', stopsError)
       await supabase.from('routes').delete().eq('id', route.id)
-      return NextResponse.json(
-        { error: 'Failed to create route stops', details: stopsError.message },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
     }
 
     // NEW: Service-aware route saving
@@ -152,9 +142,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to save route' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

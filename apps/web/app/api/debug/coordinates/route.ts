@@ -1,24 +1,23 @@
 /**
- * Check Coordinates API
+ * Debug Coordinates API - Admin only
  * GET /api/debug/coordinates
  */
 
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { requireAdmin } from '@/middleware/auth'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function GET(request: NextRequest) {
   try {
+    await requireAdmin()
+    const supabase = createServerClient()
+
     const { data, error } = await supabase
       .from('companies')
       .select('name, address, lat, lng')
-      .limit(216) // All companies
+      .limit(216)
 
     if (error) throw error
 
@@ -54,14 +53,17 @@ export async function GET(request: NextRequest) {
       totalCompanies: data?.length || 0,
       duplicateCoordinates: duplicates.length,
       companiesWithDuplicates: duplicateCount,
-      duplicates: duplicates.slice(0, 10), // First 10
+      duplicates: duplicates.slice(0, 10),
       message: `Found ${duplicateCount} companies sharing ${duplicates.length} coordinate pairs`,
     })
   } catch (error: any) {
+    if (error?.name === 'UnauthorizedError') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    if (error?.name === 'ForbiddenError') {
+      return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+    }
     console.error('Coordinate check error:', error)
-    return NextResponse.json(
-      { error: 'Failed to check coordinates', details: error.message },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

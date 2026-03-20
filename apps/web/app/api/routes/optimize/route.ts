@@ -64,9 +64,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
     }
 
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Route optimization failed' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
