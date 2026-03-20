@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Poppins, Figtree, Noto_Sans_Georgian } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/providers'
-import { Toaster, MondayLayout } from '@/shared/components/ui'
+import { Toaster, MondayLayout, TooltipProvider } from '@/shared/components/ui'
 import { ErrorBoundary } from '@/shared/components/feedback'
 import { PWARegister } from '@/shared/components/PWARegister'
 // import { WebVitalsTracker } from '@/components/WebVitalsTracker' // Temporarily disabled
@@ -55,12 +55,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${figtree.variable} ${poppins.variable} ${georgian.variable} font-product`}>
         <ErrorBoundary>
           <Providers>
-            <MondayLayout>
-              {children}
-              <Toaster />
-              <PWARegister />
-              {/* <WebVitalsTracker /> */}
-            </MondayLayout>
+            <TooltipProvider>
+              <MondayLayout>
+                {children}
+                <Toaster />
+                <PWARegister />
+                {/* <WebVitalsTracker /> */}
+              </MondayLayout>
+            </TooltipProvider>
           </Providers>
         </ErrorBoundary>
       </body>

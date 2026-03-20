@@ -20,6 +20,7 @@ import {
   FileText,
 } from 'lucide-react'
 import type { LocationFormData } from '@/types/company'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 
 interface LocationManagerProps {
   locations: LocationFormData[]
@@ -198,31 +199,34 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                 {!disabled && (
                   <div className="flex items-center gap-1">
                     {!location.is_primary && (
+                      <Tooltip content="მთავარად დაყენება" side="top" delayDuration={200}>
+                        <button
+                          type="button"
+                          onClick={() => handleSetPrimary(index)}
+                          className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded"
+                        >
+                          <Star className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
+                    )}
+                    <Tooltip content="რედაქტირება" side="top" delayDuration={200}>
                       <button
                         type="button"
-                        onClick={() => handleSetPrimary(index)}
-                        className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded"
-                        title="მთავარად დაყენება"
+                        onClick={() => handleEditStart(index)}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
                       >
-                        <Star className="w-4 h-4" />
+                        <Edit2 className="w-4 h-4" />
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleEditStart(index)}
-                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
-                      title="რედაქტირება"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(index)}
-                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
-                      title="წაშლა"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Tooltip>
+                    <Tooltip content="წაშლა" side="top" delayDuration={200}>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(index)}
+                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </Tooltip>
                   </div>
                 )}
               </div>

@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X, User, Clock, Megaphone, AlertTriangle, AlertCircle } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { ka } from 'date-fns/locale'
 import type { Announcement } from '@/types/announcement'
 
@@ -14,12 +15,26 @@ interface AnnouncementDetailModalProps {
 }
 
 const PRIORITY = {
-  urgent: { icon: AlertCircle, bg: 'bg-red-50', label: 'სასწრაფო', badge: 'bg-red-100 text-red-700' },
-  important: { icon: AlertTriangle, bg: 'bg-amber-50', label: 'მნიშვნელოვანი', badge: 'bg-amber-100 text-amber-700' },
+  urgent: {
+    icon: AlertCircle,
+    bg: 'bg-red-50',
+    label: 'სასწრაფო',
+    badge: 'bg-red-100 text-red-700',
+  },
+  important: {
+    icon: AlertTriangle,
+    bg: 'bg-amber-50',
+    label: 'მნიშვნელოვანი',
+    badge: 'bg-amber-100 text-amber-700',
+  },
   normal: { icon: Megaphone, bg: 'bg-gray-50', label: '', badge: '' },
 } as const
 
-export function AnnouncementDetailModal({ announcement, onClose, onMarkRead }: AnnouncementDetailModalProps) {
+export function AnnouncementDetailModal({
+  announcement,
+  onClose,
+  onMarkRead,
+}: AnnouncementDetailModalProps) {
   // Mark as read on open
   useEffect(() => {
     if (!announcement.is_read) {
@@ -65,10 +80,15 @@ export function AnnouncementDetailModal({ announcement, onClose, onMarkRead }: A
                     title={format(new Date(announcement.created_at), 'PPpp', { locale: ka })}
                   >
                     <Clock className="w-3.5 h-3.5" />
-                    {formatDistanceToNow(new Date(announcement.created_at), { addSuffix: true, locale: ka })}
+                    {formatDistanceToNow(new Date(announcement.created_at), {
+                      addSuffix: true,
+                      locale: ka,
+                    })}
                   </span>
                   {announcement.priority !== 'normal' && (
-                    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${config.badge}`}>
+                    <span
+                      className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${config.badge}`}
+                    >
                       {config.label}
                     </span>
                   )}
@@ -86,7 +106,9 @@ export function AnnouncementDetailModal({ announcement, onClose, onMarkRead }: A
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{announcement.content}</p>
+          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+            {announcement.content}
+          </p>
         </div>
 
         {/* Footer */}

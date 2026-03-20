@@ -8,6 +8,7 @@ import { useNotifications } from '@/hooks/useNotifications'
 import { formatDistanceToNow } from 'date-fns'
 import { ka } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import type { Notification, NotificationType } from '@/types/notification'
 
 const TYPE_ICONS: Record<NotificationType, string> = {
@@ -70,8 +71,10 @@ export function NotificationBell({ className }: NotificationBellProps) {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node
       if (
-        dropdownRef.current && !dropdownRef.current.contains(target) &&
-        buttonRef.current && !buttonRef.current.contains(target)
+        dropdownRef.current &&
+        !dropdownRef.current.contains(target) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(target)
       ) {
         setIsOpen(false)
       }
@@ -137,125 +140,126 @@ export function NotificationBell({ className }: NotificationBellProps) {
       </button>
 
       {/* Dropdown via portal */}
-      {isOpen && createPortal(
-        <div
-          ref={dropdownRef}
-          className="fixed w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden"
-          style={{
-            top: dropdownPos.top,
-            left: dropdownPos.left,
-            maxHeight: `calc(100vh - ${dropdownPos.top + 16}px)`,
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-            <h3 className="font-semibold text-gray-900">შეტყობინებები</h3>
-            {unreadCount > 0 && (
-              <button
-                onClick={() => markAllAsRead()}
-                disabled={isMarkingAllAsRead}
-                className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
-              >
-                <CheckCheck className="w-4 h-4" />
-                ყველას წაკითხვა
-              </button>
-            )}
-          </div>
-
-          {/* Notification List */}
-          <div className="max-h-96 overflow-y-auto">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : notifications.length === 0 ? (
-              <div className="py-12 text-center text-gray-500">
-                <Bell className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-                <p>შეტყობინებები არ არის</p>
-              </div>
-            ) : (
-              notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={cn(
-                    'flex items-start gap-3 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors',
-                    !notification.is_read && 'bg-blue-50/50'
-                  )}
-                  onClick={() => handleNotificationClick(notification)}
+      {isOpen &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden"
+            style={{
+              top: dropdownPos.top,
+              left: dropdownPos.left,
+              maxHeight: `calc(100vh - ${dropdownPos.top + 16}px)`,
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
+              <h3 className="font-semibold text-gray-900">შეტყობინებები</h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={() => markAllAsRead()}
+                  disabled={isMarkingAllAsRead}
+                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
                 >
-                  {/* Icon */}
-                  <div
-                    className={cn(
-                      'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm',
-                      TYPE_COLORS[notification.type]
-                    )}
-                  >
-                    {TYPE_ICONS[notification.type]}
-                  </div>
-
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-gray-900 truncate">
-                      {notification.title}
-                    </p>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {formatDistanceToNow(new Date(notification.created_at), {
-                        addSuffix: true,
-                        locale: ka,
-                      })}
-                    </p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex-shrink-0 flex items-center gap-1">
-                    {!notification.is_read && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          markAsRead(notification.id)
-                        }}
-                        className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600"
-                        title="Mark as read"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        deleteNotification(notification.id)
-                      }}
-                      className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-600"
-                      title="Delete"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="px-4 py-2 border-t bg-gray-50 text-center">
-              <button
-                onClick={() => {
-                  router.push('/settings?tab=notifications')
-                  setIsOpen(false)
-                }}
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
-                ყველა შეტყობინების ნახვა
-              </button>
+                  <CheckCheck className="w-4 h-4" />
+                  ყველას წაკითხვა
+                </button>
+              )}
             </div>
-          )}
-        </div>,
-        document.body
-      )}
+
+            {/* Notification List */}
+            <div className="max-h-96 overflow-y-auto">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : notifications.length === 0 ? (
+                <div className="py-12 text-center text-gray-500">
+                  <Bell className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                  <p>შეტყობინებები არ არის</p>
+                </div>
+              ) : (
+                notifications.map(notification => (
+                  <div
+                    key={notification.id}
+                    className={cn(
+                      'flex items-start gap-3 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors',
+                      !notification.is_read && 'bg-blue-50/50'
+                    )}
+                    onClick={() => handleNotificationClick(notification)}
+                  >
+                    {/* Icon */}
+                    <div
+                      className={cn(
+                        'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm',
+                        TYPE_COLORS[notification.type]
+                      )}
+                    >
+                      {TYPE_ICONS[notification.type]}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-gray-900 truncate">
+                        {notification.title}
+                      </p>
+                      <p className="text-sm text-gray-600 line-clamp-2">{notification.message}</p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {formatDistanceToNow(new Date(notification.created_at), {
+                          addSuffix: true,
+                          locale: ka,
+                        })}
+                      </p>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex-shrink-0 flex items-center gap-1">
+                      {!notification.is_read && (
+                        <Tooltip content="Mark as read" side="bottom" delayDuration={200}>
+                          <button
+                            onClick={e => {
+                              e.stopPropagation()
+                              markAsRead(notification.id)
+                            }}
+                            className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                        </Tooltip>
+                      )}
+                      <Tooltip content="Delete" side="bottom" delayDuration={200}>
+                        <button
+                          onClick={e => {
+                            e.stopPropagation()
+                            deleteNotification(notification.id)
+                          }}
+                          className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Footer */}
+            {notifications.length > 0 && (
+              <div className="px-4 py-2 border-t bg-gray-50 text-center">
+                <button
+                  onClick={() => {
+                    router.push('/settings?tab=notifications')
+                    setIsOpen(false)
+                  }}
+                  className="text-sm text-blue-600 hover:text-blue-700"
+                >
+                  ყველა შეტყობინების ნახვა
+                </button>
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
     </>
   )
 }

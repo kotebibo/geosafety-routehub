@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { History, RefreshCw, Undo2, X, ArrowRight, Clock } from 'lucide-react'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 // Using native Intl.DateTimeFormat instead of date-fns to reduce bundle size
 const formatDateTime = (dateStr: string): string => {
   const date = new Date(dateStr)
@@ -189,13 +190,14 @@ export function ActivityLog({
           </span>
         </div>
         {onRefresh && (
-          <button
-            onClick={onRefresh}
-            className="p-1.5 rounded hover:bg-gray-200 transition-colors"
-            title="Refresh"
-          >
-            <RefreshCw className="w-4 h-4 text-gray-600" />
-          </button>
+          <Tooltip content="Refresh" side="top" delayDuration={200}>
+            <button
+              onClick={onRefresh}
+              className="p-1.5 rounded hover:bg-gray-200 transition-colors"
+            >
+              <RefreshCw className="w-4 h-4 text-gray-600" />
+            </button>
+          </Tooltip>
         )}
       </div>
 
@@ -247,12 +249,11 @@ export function ActivityLog({
 
                   {/* User */}
                   <td className="px-4 py-3">
-                    <span
-                      className="font-medium text-gray-700 truncate block max-w-[120px]"
-                      title={update.user_name}
-                    >
-                      {update.user_name || 'System'}
-                    </span>
+                    <Tooltip content={update.user_name} side="top" delayDuration={200}>
+                      <span className="font-medium text-gray-700 truncate block max-w-[120px]">
+                        {update.user_name || 'System'}
+                      </span>
+                    </Tooltip>
                   </td>
 
                   {/* Type */}
@@ -288,12 +289,15 @@ export function ActivityLog({
                   {/* Old Value */}
                   <td className="px-4 py-3">
                     {update.old_value ? (
-                      <span
-                        className="inline-flex items-center px-2 py-1 bg-red-50 text-red-700 rounded text-xs max-w-[150px] truncate"
-                        title={formatValue(update.old_value)}
+                      <Tooltip
+                        content={formatValue(update.old_value)}
+                        side="top"
+                        delayDuration={200}
                       >
-                        {formatValue(update.old_value)}
-                      </span>
+                        <span className="inline-flex items-center px-2 py-1 bg-red-50 text-red-700 rounded text-xs max-w-[150px] truncate">
+                          {formatValue(update.old_value)}
+                        </span>
+                      </Tooltip>
                     ) : (
                       <span className="text-gray-300">-</span>
                     )}
@@ -311,19 +315,21 @@ export function ActivityLog({
                   {/* New Value */}
                   <td className="px-4 py-3">
                     {update.new_value ? (
-                      <span
-                        className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 rounded text-xs max-w-[150px] truncate"
-                        title={formatValue(update.new_value)}
+                      <Tooltip
+                        content={formatValue(update.new_value)}
+                        side="top"
+                        delayDuration={200}
                       >
-                        {formatValue(update.new_value)}
-                      </span>
+                        <span className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 rounded text-xs max-w-[150px] truncate">
+                          {formatValue(update.new_value)}
+                        </span>
+                      </Tooltip>
                     ) : update.content ? (
-                      <span
-                        className="text-gray-600 text-xs truncate block max-w-[150px]"
-                        title={update.content}
-                      >
-                        {update.content}
-                      </span>
+                      <Tooltip content={update.content} side="top" delayDuration={200}>
+                        <span className="text-gray-600 text-xs truncate block max-w-[150px]">
+                          {update.content}
+                        </span>
+                      </Tooltip>
                     ) : (
                       <span className="text-gray-300">-</span>
                     )}
@@ -333,19 +339,20 @@ export function ActivityLog({
                   {showRollback && (
                     <td className="px-4 py-3 text-center">
                       {canRollback ? (
-                        <button
-                          onClick={() => onRollback?.(update)}
-                          className={cn(
-                            'inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all',
-                            hoveredRow === update.id
-                              ? 'bg-orange-500 text-white shadow-sm'
-                              : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
-                          )}
-                          title="Undo this change"
-                        >
-                          <Undo2 className="w-3 h-3" />
-                          Undo
-                        </button>
+                        <Tooltip content="Undo this change" side="top" delayDuration={200}>
+                          <button
+                            onClick={() => onRollback?.(update)}
+                            className={cn(
+                              'inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all',
+                              hoveredRow === update.id
+                                ? 'bg-orange-500 text-white shadow-sm'
+                                : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+                            )}
+                          >
+                            <Undo2 className="w-3 h-3" />
+                            Undo
+                          </button>
+                        </Tooltip>
                       ) : (
                         <span className="text-gray-300">-</span>
                       )}

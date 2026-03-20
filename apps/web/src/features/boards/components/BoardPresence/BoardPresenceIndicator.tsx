@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import type { BoardPresence } from '@/features/boards/types/board'
 
 interface BoardPresenceIndicatorProps {
@@ -28,7 +29,7 @@ function getUserColor(userId: string): string {
   // Simple hash from userId
   let hash = 0
   for (let i = 0; i < userId.length; i++) {
-    hash = ((hash << 5) - hash) + userId.charCodeAt(i)
+    hash = (hash << 5) - hash + userId.charCodeAt(i)
     hash = hash & hash
   }
 
@@ -54,10 +55,7 @@ export function BoardPresenceIndicator({
   if (presence.length === 0) {
     return (
       <div className="flex items-center gap-2">
-        <div className={cn(
-          'w-2 h-2 rounded-full',
-          isConnected ? 'bg-green-500' : 'bg-gray-400'
-        )} />
+        <div className={cn('w-2 h-2 rounded-full', isConnected ? 'bg-green-500' : 'bg-gray-400')} />
         <span className="text-xs text-text-tertiary">
           {isConnected ? 'Connected' : 'Connecting...'}
         </span>
@@ -75,35 +73,34 @@ export function BoardPresenceIndicator({
       onMouseLeave={() => setShowTooltip(false)}
     >
       {/* Connection indicator */}
-      <div className={cn(
-        'w-2 h-2 rounded-full mr-2',
-        isConnected ? 'bg-green-500' : 'bg-gray-400'
-      )} />
+      <div
+        className={cn('w-2 h-2 rounded-full mr-2', isConnected ? 'bg-green-500' : 'bg-gray-400')}
+      />
 
       {/* Avatar stack */}
       <div className="flex -space-x-2">
         {visibleUsers.map((user, index) => (
-          <div
-            key={user.user_id}
-            className={cn(
-              'relative w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white border-2 border-white',
-              user.is_editing && 'ring-2 ring-offset-1 ring-yellow-400'
-            )}
-            style={{
-              backgroundColor: getUserColor(user.user_id),
-              zIndex: visibleUsers.length - index,
-            }}
-            title={user.user_name}
-          >
-            {getInitials(user.user_name)}
+          <Tooltip key={user.user_id} content={user.user_name} side="bottom" delayDuration={300}>
+            <div
+              className={cn(
+                'relative w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white border-2 border-white',
+                user.is_editing && 'ring-2 ring-offset-1 ring-yellow-400'
+              )}
+              style={{
+                backgroundColor: getUserColor(user.user_id),
+                zIndex: visibleUsers.length - index,
+              }}
+            >
+              {getInitials(user.user_name)}
 
-            {/* Editing indicator */}
-            {user.is_editing && (
-              <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
-                <span className="w-1.5 h-1.5 bg-white rounded-sm" />
-              </span>
-            )}
-          </div>
+              {/* Editing indicator */}
+              {user.is_editing && (
+                <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
+                  <span className="w-1.5 h-1.5 bg-white rounded-sm" />
+                </span>
+              )}
+            </div>
+          </Tooltip>
         ))}
 
         {/* Overflow indicator */}
@@ -124,7 +121,7 @@ export function BoardPresenceIndicator({
             {presence.length} viewer{presence.length !== 1 ? 's' : ''} online
           </div>
           <div className="space-y-2">
-            {presence.map((user) => (
+            {presence.map(user => (
               <div key={user.user_id} className="flex items-center gap-2">
                 <div
                   className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-medium text-white"
@@ -133,14 +130,8 @@ export function BoardPresenceIndicator({
                   {getInitials(user.user_name)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm text-text-primary truncate">
-                    {user.user_name}
-                  </div>
-                  {user.is_editing && (
-                    <div className="text-xs text-yellow-600">
-                      Editing...
-                    </div>
-                  )}
+                  <div className="text-sm text-text-primary truncate">{user.user_name}</div>
+                  {user.is_editing && <div className="text-xs text-yellow-600">Editing...</div>}
                 </div>
               </div>
             ))}
@@ -159,10 +150,7 @@ interface CellEditingIndicatorProps {
   position?: 'top-right' | 'bottom-right'
 }
 
-export function CellEditingIndicator({
-  users,
-  position = 'top-right',
-}: CellEditingIndicatorProps) {
+export function CellEditingIndicator({ users, position = 'top-right' }: CellEditingIndicatorProps) {
   if (users.length === 0) return null
 
   const positionClasses = {
@@ -172,15 +160,20 @@ export function CellEditingIndicator({
 
   return (
     <div className={cn('absolute z-10 flex -space-x-1', positionClasses[position])}>
-      {users.slice(0, 2).map((user) => (
-        <div
+      {users.slice(0, 2).map(user => (
+        <Tooltip
           key={user.user_id}
-          className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-medium text-white border border-white animate-pulse"
-          style={{ backgroundColor: getUserColor(user.user_id) }}
-          title={`${user.user_name} is editing`}
+          content={`${user.user_name} is editing`}
+          side="bottom"
+          delayDuration={300}
         >
-          {getInitials(user.user_name)}
-        </div>
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-medium text-white border border-white animate-pulse"
+            style={{ backgroundColor: getUserColor(user.user_id) }}
+          >
+            {getInitials(user.user_name)}
+          </div>
+        </Tooltip>
       ))}
     </div>
   )

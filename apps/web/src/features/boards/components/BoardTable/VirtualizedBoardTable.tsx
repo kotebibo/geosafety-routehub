@@ -23,6 +23,7 @@ import {
 } from '../../utils/flattenGroupsForVirtualization'
 import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation'
 import { useToast } from '@/components/ui-monday/Toast'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import type {
   BoardColumn,
   BoardItem,
@@ -733,14 +734,15 @@ export function VirtualizedBoardTable({
                           onClick={e => e.stopPropagation()}
                         />
                       ) : (
-                        <span
-                          className="font-semibold text-sm cursor-pointer hover:underline"
-                          style={{ color: group.color || '#579bfc' }}
-                          onDoubleClick={e => handleGroupNameDoubleClick(e, group)}
-                          title="Double-click to rename"
-                        >
-                          {group.name}
-                        </span>
+                        <Tooltip content="Double-click to rename" side="top" delayDuration={200}>
+                          <span
+                            className="font-semibold text-sm cursor-pointer hover:underline"
+                            style={{ color: group.color || '#579bfc' }}
+                            onDoubleClick={e => handleGroupNameDoubleClick(e, group)}
+                          >
+                            {group.name}
+                          </span>
+                        </Tooltip>
                       )}
                       <span className="text-xs text-[#676879] flex-shrink-0">
                         {itemCount} {itemCount === 1 ? 'item' : 'items'}
@@ -748,16 +750,17 @@ export function VirtualizedBoardTable({
 
                       {/* Group menu */}
                       <div className="relative ml-2 flex-shrink-0">
-                        <button
-                          onClick={e => {
-                            e.stopPropagation()
-                            handleGroupMenuToggle(isMenuOpen ? null : group.id)
-                          }}
-                          className="p-1 rounded hover:bg-[#e6e9ef] transition-colors opacity-0 group-hover:opacity-100"
-                          title="Group options"
-                        >
-                          <MoreHorizontal className="w-4 h-4 text-[#676879]" />
-                        </button>
+                        <Tooltip content="Group options" side="top" delayDuration={200}>
+                          <button
+                            onClick={e => {
+                              e.stopPropagation()
+                              handleGroupMenuToggle(isMenuOpen ? null : group.id)
+                            }}
+                            className="p-1 rounded hover:bg-[#e6e9ef] transition-colors opacity-0 group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="w-4 h-4 text-[#676879]" />
+                          </button>
+                        </Tooltip>
                         {isMenuOpen && (
                           <>
                             <div
@@ -882,13 +885,14 @@ export function VirtualizedBoardTable({
                   ))}
                   <th className="bg-[#f5f6f8] border border-[#c3c6d4] w-10 px-2 py-2">
                     {onOpenAddColumnModal && (
-                      <button
-                        onClick={onOpenAddColumnModal}
-                        className="p-1 rounded hover:bg-[#c3c6d4] transition-colors"
-                        title="Add column"
-                      >
-                        <Plus className="w-4 h-4 text-[#676879]" />
-                      </button>
+                      <Tooltip content="Add column" side="top" delayDuration={200}>
+                        <button
+                          onClick={onOpenAddColumnModal}
+                          className="p-1 rounded hover:bg-[#c3c6d4] transition-colors"
+                        >
+                          <Plus className="w-4 h-4 text-[#676879]" />
+                        </button>
+                      </Tooltip>
                     )}
                   </th>
                 </tr>
@@ -1281,13 +1285,14 @@ export function VirtualizedBoardTable({
                     </SortableContext>
                     <th className="bg-[#f5f6f8] border border-[#c3c6d4] w-10 px-2 py-2">
                       {onOpenAddColumnModal && (
-                        <button
-                          onClick={onOpenAddColumnModal}
-                          className="p-1 rounded hover:bg-[#c3c6d4] transition-colors"
-                          title="Add column"
-                        >
-                          <Plus className="w-4 h-4 text-[#676879]" />
-                        </button>
+                        <Tooltip content="Add column" side="top" delayDuration={200}>
+                          <button
+                            onClick={onOpenAddColumnModal}
+                            className="p-1 rounded hover:bg-[#c3c6d4] transition-colors"
+                          >
+                            <Plus className="w-4 h-4 text-[#676879]" />
+                          </button>
+                        </Tooltip>
                       )}
                     </th>
                   </tr>

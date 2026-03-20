@@ -3,8 +3,14 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import { X, Users, Search, ChevronDown, Crown, Pencil, Eye, Trash2, UserPlus } from 'lucide-react'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { Button } from '@/components/ui-monday'
-import { useBoardMembers, useAddBoardMember, useUpdateBoardMemberRole, useRemoveBoardMember } from '../hooks'
+import {
+  useBoardMembers,
+  useAddBoardMember,
+  useUpdateBoardMemberRole,
+  useRemoveBoardMember,
+} from '../hooks'
 import { useAuth } from '@/contexts/AuthContext'
 import type { BoardMember } from '@/types/board'
 import { usersService, type User } from '@/services/users.service'
@@ -22,7 +28,10 @@ interface BoardAccessModalProps {
 
 type MemberRole = 'owner' | 'editor' | 'viewer'
 
-const ROLE_CONFIG: Record<MemberRole, { label: string; icon: React.ReactNode; description: string; color: string }> = {
+const ROLE_CONFIG: Record<
+  MemberRole,
+  { label: string; icon: React.ReactNode; description: string; color: string }
+> = {
   owner: {
     label: 'Owner',
     icon: <Crown className="w-4 h-4" />,
@@ -81,15 +90,17 @@ export function BoardAccessModal({
   const removeMember = useRemoveBoardMember(boardId)
 
   // Check if current user is owner or admin
-  const isCurrentUserOwner = user?.id === ownerId || members.some(m => m.user_id === user?.id && m.role === 'owner')
+  const isCurrentUserOwner =
+    user?.id === ownerId || members.some(m => m.user_id === user?.id && m.role === 'owner')
   const canManageAccess = isCurrentUserOwner || isAdmin
 
   // Filter users not already members
   const memberUserIds = new Set(members.map(m => m.user_id))
-  const availableUsers = allUsers.filter(u =>
-    !memberUserIds.has(u.id) &&
-    (u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-     u.email?.toLowerCase().includes(searchQuery.toLowerCase()))
+  const availableUsers = allUsers.filter(
+    u =>
+      !memberUserIds.has(u.id) &&
+      (u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchQuery.toLowerCase()))
   )
 
   const handleAddMember = async (userId: string) => {
@@ -158,10 +169,7 @@ export function BoardAccessModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={handleClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
       {/* Modal */}
       <div className="relative w-full max-w-lg bg-bg-primary rounded-lg shadow-monday-lg">
@@ -172,12 +180,8 @@ export function BoardAccessModal({
               <Users className="w-5 h-5 text-monday-primary" />
             </div>
             <div>
-              <h2 className="text-h4 font-semibold text-text-primary">
-                Board Access
-              </h2>
-              <p className="text-sm text-text-secondary truncate max-w-[280px]">
-                {boardName}
-              </p>
+              <h2 className="text-h4 font-semibold text-text-primary">Board Access</h2>
+              <p className="text-sm text-text-secondary truncate max-w-[280px]">{boardName}</p>
             </div>
           </div>
           <button
@@ -202,7 +206,7 @@ export function BoardAccessModal({
                         ref={searchInputRef}
                         type="text"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={e => setSearchQuery(e.target.value)}
                         placeholder="Search by name or email..."
                         autoFocus
                         className={cn(
@@ -217,7 +221,7 @@ export function BoardAccessModal({
                     {/* Role selector for new member */}
                     <div className="relative">
                       <button
-                        onClick={(e) => {
+                        onClick={e => {
                           e.stopPropagation()
                           setRoleDropdownOpen(roleDropdownOpen === 'new' ? null : 'new')
                         }}
@@ -236,7 +240,7 @@ export function BoardAccessModal({
                       {roleDropdownOpen === 'new' && (
                         <RoleDropdown
                           currentRole={selectedRole}
-                          onSelect={(role) => {
+                          onSelect={role => {
                             setSelectedRole(role)
                             setRoleDropdownOpen(null)
                           }}
@@ -268,7 +272,7 @@ export function BoardAccessModal({
                           No users found
                         </div>
                       ) : (
-                        availableUsers.slice(0, 5).map((u) => (
+                        availableUsers.slice(0, 5).map(u => (
                           <button
                             key={u.id}
                             onClick={() => handleAddMember(u.id)}
@@ -284,9 +288,7 @@ export function BoardAccessModal({
                               <div className="text-sm font-medium text-text-primary truncate">
                                 {u.full_name || 'Unknown'}
                               </div>
-                              <div className="text-xs text-text-secondary truncate">
-                                {u.email}
-                              </div>
+                              <div className="text-xs text-text-secondary truncate">{u.email}</div>
                             </div>
                             <UserPlus className="w-4 h-4 text-text-tertiary" />
                           </button>
@@ -319,23 +321,23 @@ export function BoardAccessModal({
                 <div className="w-6 h-6 border-2 border-monday-primary border-t-transparent rounded-full animate-spin" />
               </div>
             ) : members.length === 0 ? (
-              <div className="text-sm text-text-secondary text-center py-8">
-                No members yet
-              </div>
+              <div className="text-sm text-text-secondary text-center py-8">No members yet</div>
             ) : (
               <div className="space-y-1 max-h-[320px] overflow-y-auto">
-                {members.map((member) => (
+                {members.map(member => (
                   <MemberRow
                     key={member.user_id}
                     member={member}
                     isOwner={member.user_id === ownerId}
                     canManage={canManageAccess && member.user_id !== user?.id}
                     roleDropdownOpen={roleDropdownOpen === member.user_id}
-                    onToggleDropdown={(e) => {
+                    onToggleDropdown={e => {
                       e.stopPropagation()
-                      setRoleDropdownOpen(roleDropdownOpen === member.user_id ? null : member.user_id)
+                      setRoleDropdownOpen(
+                        roleDropdownOpen === member.user_id ? null : member.user_id
+                      )
                     }}
-                    onUpdateRole={(role) => handleUpdateRole(member.user_id, role)}
+                    onUpdateRole={role => handleUpdateRole(member.user_id, role)}
                     onRemove={() => handleRemoveMember(member.user_id)}
                     isUpdating={updateRole.isPending}
                     isRemoving={removeMember.isPending}
@@ -360,20 +362,17 @@ export function BoardAccessModal({
 // Helper Components
 
 function UserAvatar({ name, avatarUrl }: { name: string | null; avatarUrl: string | null }) {
-  const initials = name
-    ?.split(' ')
-    .map((n) => n.charAt(0))
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || '?'
+  const initials =
+    name
+      ?.split(' ')
+      .map(n => n.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || '?'
 
   if (avatarUrl) {
     return (
-      <img
-        src={avatarUrl}
-        alt={name || 'User'}
-        className="w-8 h-8 rounded-full object-cover"
-      />
+      <img src={avatarUrl} alt={name || 'User'} className="w-8 h-8 rounded-full object-cover" />
     )
   }
 
@@ -410,10 +409,12 @@ function MemberRow({
   const roleConfig = ROLE_CONFIG[member.role]
 
   return (
-    <div className={cn(
-      'flex items-center gap-3 px-3 py-2 rounded-md',
-      'hover:bg-bg-hover transition-colors'
-    )}>
+    <div
+      className={cn(
+        'flex items-center gap-3 px-3 py-2 rounded-md',
+        'hover:bg-bg-hover transition-colors'
+      )}
+    >
       <UserAvatar
         name={member.user?.full_name || null}
         avatarUrl={member.user?.avatar_url || null}
@@ -430,9 +431,7 @@ function MemberRow({
             </span>
           )}
         </div>
-        <div className="text-xs text-text-secondary truncate">
-          {member.user?.email}
-        </div>
+        <div className="text-xs text-text-secondary truncate">{member.user?.email}</div>
       </div>
 
       {/* Role badge / dropdown */}
@@ -462,10 +461,7 @@ function MemberRow({
             )}
           </>
         ) : (
-          <div className={cn(
-            'flex items-center gap-1.5 px-2 py-1 text-sm',
-            roleConfig.color
-          )}>
+          <div className={cn('flex items-center gap-1.5 px-2 py-1 text-sm', roleConfig.color)}>
             {roleConfig.icon}
             <span>{roleConfig.label}</span>
           </div>
@@ -474,18 +470,19 @@ function MemberRow({
 
       {/* Remove button */}
       {canManage && (
-        <button
-          onClick={onRemove}
-          disabled={isRemoving}
-          className={cn(
-            'p-1.5 rounded-md text-text-tertiary',
-            'hover:bg-red-50 hover:text-red-600 transition-colors',
-            isRemoving && 'opacity-50 cursor-not-allowed'
-          )}
-          title="Remove member"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <Tooltip content="Remove member" side="top" delayDuration={200}>
+          <button
+            onClick={onRemove}
+            disabled={isRemoving}
+            className={cn(
+              'p-1.5 rounded-md text-text-tertiary',
+              'hover:bg-red-50 hover:text-red-600 transition-colors',
+              isRemoving && 'opacity-50 cursor-not-allowed'
+            )}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </Tooltip>
       )}
     </div>
   )
@@ -501,19 +498,21 @@ function RoleDropdown({ currentRole, onSelect, excludeOwner }: RoleDropdownProps
   const roles: MemberRole[] = excludeOwner ? ['editor', 'viewer'] : ['owner', 'editor', 'viewer']
 
   return (
-    <div className={cn(
-      'absolute right-0 top-full mt-1 z-50',
-      'bg-white rounded-md shadow-lg border border-border-light',
-      'min-w-[180px] py-1'
-    )}>
-      {roles.map((role) => {
+    <div
+      className={cn(
+        'absolute right-0 top-full mt-1 z-50',
+        'bg-white rounded-md shadow-lg border border-border-light',
+        'min-w-[180px] py-1'
+      )}
+    >
+      {roles.map(role => {
         const config = ROLE_CONFIG[role]
         const isSelected = role === currentRole
 
         return (
           <button
             key={role}
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation()
               onSelect(role)
             }}
@@ -525,16 +524,20 @@ function RoleDropdown({ currentRole, onSelect, excludeOwner }: RoleDropdownProps
           >
             <span className={cn('mt-0.5', config.color)}>{config.icon}</span>
             <div>
-              <div className="text-sm font-medium text-text-primary">
-                {config.label}
-              </div>
-              <div className="text-xs text-text-secondary">
-                {config.description}
-              </div>
+              <div className="text-sm font-medium text-text-primary">{config.label}</div>
+              <div className="text-xs text-text-secondary">{config.description}</div>
             </div>
             {isSelected && (
-              <svg className="w-4 h-4 text-monday-primary ml-auto mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              <svg
+                className="w-4 h-4 text-monday-primary ml-auto mt-0.5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
               </svg>
             )}
           </button>

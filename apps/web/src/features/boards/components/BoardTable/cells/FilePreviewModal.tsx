@@ -4,6 +4,7 @@ import React, { useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { X, Download, ChevronLeft, ChevronRight, FileText } from 'lucide-react'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 
 interface FilePreviewModalProps {
   file: {
@@ -125,14 +126,15 @@ export function FilePreviewModal({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleDownload}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#323338] hover:bg-[#f0f1f3] rounded-md transition-colors"
-              title="Download"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Download</span>
-            </button>
+            <Tooltip content="Download" side="top" delayDuration={200}>
+              <button
+                onClick={handleDownload}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#323338] hover:bg-[#f0f1f3] rounded-md transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span className="hidden sm:inline">Download</span>
+              </button>
+            </Tooltip>
             <button
               onClick={onClose}
               className="p-1.5 hover:bg-[#f0f1f3] rounded-md transition-colors"

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { X, Plus, Check, Briefcase, Users, CheckSquare, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui-monday'
 import { useCreateBoard, useCreateBoardFromTemplate, useBoardTemplates } from '../hooks'
@@ -31,7 +32,12 @@ const COLOR_OPTIONS = [
   { name: 'Orange', value: 'orange', class: 'bg-orange-500' },
 ]
 
-export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId }: CreateBoardModalProps) {
+export function CreateBoardModal({
+  isOpen,
+  onClose,
+  onBoardCreated,
+  workspaceId,
+}: CreateBoardModalProps) {
   const { user } = useAuth()
   // Use auth user ID directly (auth.uid()) - this is the unified user ID system
   const userId = user?.id
@@ -42,7 +48,9 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
 
   // Capture the workspaceId when modal opens - this prevents the value from changing
   // if the parent component's state updates while the modal is open
-  const [capturedWorkspaceId, setCapturedWorkspaceId] = React.useState<string | null | undefined>(undefined)
+  const [capturedWorkspaceId, setCapturedWorkspaceId] = React.useState<string | null | undefined>(
+    undefined
+  )
 
   React.useEffect(() => {
     if (isOpen && capturedWorkspaceId === undefined) {
@@ -57,7 +65,6 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
   // Use captured value, falling back to prop only if not yet captured
   const effectiveWorkspaceId = capturedWorkspaceId !== undefined ? capturedWorkspaceId : workspaceId
 
-
   const { data: templates, isLoading: templatesLoading } = useBoardTemplates()
   const createBoard = useCreateBoard(userId || '')
   const createFromTemplate = useCreateBoardFromTemplate(userId || '')
@@ -67,7 +74,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
 
     try {
       const boardData = {
-        owner_id: userId,  // Use auth.uid() directly
+        owner_id: userId, // Use auth.uid() directly
         board_type: 'custom' as const,
         name: boardName,
         icon: 'board',
@@ -125,18 +132,13 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={handleClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
       {/* Modal */}
       <div className="relative w-full max-w-2xl max-h-[90vh] overflow-hidden bg-bg-primary rounded-lg shadow-monday-lg">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
-          <h2 className="text-h3 font-semibold text-text-primary">
-            Create New Board
-          </h2>
+          <h2 className="text-h3 font-semibold text-text-primary">Create New Board</h2>
           <button
             onClick={handleClose}
             className="p-2 rounded-md hover:bg-bg-hover transition-colors"
@@ -169,9 +171,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
                       <Plus className="w-6 h-6 text-monday-primary" />
                     </div>
                   </div>
-                  <h3 className="font-semibold text-text-primary mb-1">
-                    Start from Scratch
-                  </h3>
+                  <h3 className="font-semibold text-text-primary mb-1">Start from Scratch</h3>
                   <p className="text-sm text-text-tertiary">
                     Create a blank board and customize it your way
                   </p>
@@ -191,9 +191,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
                       <CheckSquare className="w-6 h-6 text-status-done" />
                     </div>
                   </div>
-                  <h3 className="font-semibold text-text-primary mb-1">
-                    Use a Template
-                  </h3>
+                  <h3 className="font-semibold text-text-primary mb-1">Use a Template</h3>
                   <p className="text-sm text-text-tertiary">
                     Choose from pre-built templates to get started faster
                   </p>
@@ -219,7 +217,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
                 <input
                   type="text"
                   value={boardName}
-                  onChange={(e) => setBoardName(e.target.value)}
+                  onChange={e => setBoardName(e.target.value)}
                   placeholder="My Board"
                   className={cn(
                     'w-full px-4 py-2 rounded-md',
@@ -243,8 +241,9 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {templates?.map((template) => {
-                    const IconComponent = ICON_MAP[template.icon as keyof typeof ICON_MAP] || TrendingUp
+                  {templates?.map(template => {
+                    const IconComponent =
+                      ICON_MAP[template.icon as keyof typeof ICON_MAP] || TrendingUp
                     const isSelected = selectedTemplate?.id === template.id
 
                     return (
@@ -266,7 +265,9 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
                               `bg-${template.color}-500/10`
                             )}
                           >
-                            <IconComponent className={cn('w-5 h-5', `text-${template.color}-500`)} />
+                            <IconComponent
+                              className={cn('w-5 h-5', `text-${template.color}-500`)}
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
@@ -312,7 +313,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
                 <input
                   type="text"
                   value={boardName}
-                  onChange={(e) => setBoardName(e.target.value)}
+                  onChange={e => setBoardName(e.target.value)}
                   placeholder="My Board"
                   autoFocus
                   className={cn(
@@ -330,7 +331,7 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
                   Choose a Color
                 </label>
                 <div className="flex items-center gap-3">
-                  {COLOR_OPTIONS.map((color) => (
+                  {COLOR_OPTIONS.map(color => (
                     <button
                       key={color.value}
                       onClick={() => setSelectedColor(color.value)}
@@ -360,7 +361,9 @@ export function CreateBoardModal({ isOpen, onClose, onBoardCreated, workspaceId 
             <Button
               variant="primary"
               onClick={handleCreateFromTemplate}
-              disabled={!boardName.trim() || !selectedTemplate || !userId || createFromTemplate.isPending}
+              disabled={
+                !boardName.trim() || !selectedTemplate || !userId || createFromTemplate.isPending
+              }
             >
               {createFromTemplate.isPending ? 'Creating...' : 'Create Board'}
             </Button>

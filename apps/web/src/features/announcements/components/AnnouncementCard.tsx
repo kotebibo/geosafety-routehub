@@ -4,6 +4,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { ka } from 'date-fns/locale'
 import { Megaphone, AlertTriangle, AlertCircle, User, Clock, Trash2 } from 'lucide-react'
 import type { Announcement } from '@/types/announcement'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 
 interface AnnouncementCardProps {
   announcement: Announcement
@@ -58,26 +59,25 @@ export function AnnouncementCard({ announcement, onClick, onDelete }: Announceme
 
       {/* Admin delete button */}
       {onDelete && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete(announcement.id)
-          }}
-          className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-          title="წაშლა"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        <Tooltip content="წაშლა" side="top" delayDuration={200}>
+          <button
+            type="button"
+            onClick={e => {
+              e.stopPropagation()
+              onDelete(announcement.id)
+            }}
+            className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </Tooltip>
       )}
 
-      <button
-        type="button"
-        onClick={onClick}
-        className="w-full text-left cursor-pointer"
-      >
+      <button type="button" onClick={onClick} className="w-full text-left cursor-pointer">
         <div className="flex items-start gap-4">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${config.iconColor}`}>
+          <div
+            className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${config.iconColor}`}
+          >
             <Icon className="w-5 h-5" />
           </div>
           <div className="flex-1 min-w-0">
@@ -86,7 +86,9 @@ export function AnnouncementCard({ announcement, onClick, onDelete }: Announceme
                 {announcement.title}
               </h3>
               {announcement.priority !== 'normal' && (
-                <span className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full flex-shrink-0 ${config.badge}`}>
+                <span
+                  className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full flex-shrink-0 ${config.badge}`}
+                >
                   {config.label}
                 </span>
               )}

@@ -22,6 +22,9 @@ export { Input } from './input'
 export * from './dropdown-menu'
 export * from './select'
 
+// Overlay
+export { Tooltip, TooltipProvider } from './tooltip'
+
 // Feedback
 export { Toaster } from './toaster'
 export { LoadingSpinner } from './LoadingSpinner'

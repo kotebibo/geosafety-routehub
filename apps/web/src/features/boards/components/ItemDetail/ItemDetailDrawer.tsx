@@ -17,6 +17,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import type { BoardItem, BoardColumn, ItemComment } from '@/types/board'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { CellRenderer } from '../BoardTable/CellRenderer'
 import { ActivityTab } from './ActivityTab'
 import {
@@ -69,7 +70,9 @@ function isImageFile(filename: string): boolean {
 }
 
 export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetailDrawerProps) {
-  const [activeTab, setActiveTab] = useState<'details' | 'activity' | 'comments' | 'files'>('details')
+  const [activeTab, setActiveTab] = useState<'details' | 'activity' | 'comments' | 'files'>(
+    'details'
+  )
   const [newComment, setNewComment] = useState('')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
   const [replyContent, setReplyContent] = useState('')
@@ -92,8 +95,9 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
 
   // Get files from item data
   const filesColumn = columns.find(col => col.column_type === 'files')
-  const files: Array<{ name: string; url: string; type: string; size?: number }> =
-    filesColumn ? (item.data?.[filesColumn.column_id] || []) : []
+  const files: Array<{ name: string; url: string; type: string; size?: number }> = filesColumn
+    ? item.data?.[filesColumn.column_id] || []
+    : []
 
   const handleCellEdit = async (columnId: string, value: any) => {
     try {
@@ -154,10 +158,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40" onClick={onClose} />
 
       {/* Drawer */}
       <div className="fixed right-0 top-0 bottom-0 w-full md:w-[650px] bg-bg-primary shadow-2xl z-50 flex flex-col">
@@ -167,7 +168,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
             <input
               type="text"
               value={item.name}
-              onChange={(e) => onUpdate(item.id, { name: e.target.value })}
+              onChange={e => onUpdate(item.id, { name: e.target.value })}
               className={cn(
                 'text-xl font-semibold text-text-primary',
                 'bg-transparent border-none focus:outline-none',
@@ -178,10 +179,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
               Created {new Date(item.created_at).toLocaleDateString()}
             </p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-md hover:bg-bg-hover transition-colors"
-          >
+          <button onClick={onClose} className="p-2 rounded-md hover:bg-bg-hover transition-colors">
             <X className="w-5 h-5 text-text-secondary" />
           </button>
         </div>
@@ -211,10 +209,12 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
             <Activity className="w-4 h-4" />
             Activity
             {updates.length > 0 && (
-              <span className={cn(
-                'text-xs px-1.5 py-0.5 rounded-full',
-                activeTab === 'activity' ? 'bg-white/20' : 'bg-bg-tertiary'
-              )}>
+              <span
+                className={cn(
+                  'text-xs px-1.5 py-0.5 rounded-full',
+                  activeTab === 'activity' ? 'bg-white/20' : 'bg-bg-tertiary'
+                )}
+              >
                 {updates.length}
               </span>
             )}
@@ -231,10 +231,12 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
             <MessageSquare className="w-4 h-4" />
             Comments
             {comments.length > 0 && (
-              <span className={cn(
-                'text-xs px-1.5 py-0.5 rounded-full',
-                activeTab === 'comments' ? 'bg-white/20' : 'bg-bg-tertiary'
-              )}>
+              <span
+                className={cn(
+                  'text-xs px-1.5 py-0.5 rounded-full',
+                  activeTab === 'comments' ? 'bg-white/20' : 'bg-bg-tertiary'
+                )}
+              >
                 {comments.length}
               </span>
             )}
@@ -251,10 +253,12 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
             >
               <Paperclip className="w-4 h-4" />
               Files
-              <span className={cn(
-                'text-xs px-1.5 py-0.5 rounded-full',
-                activeTab === 'files' ? 'bg-white/20' : 'bg-bg-tertiary'
-              )}>
+              <span
+                className={cn(
+                  'text-xs px-1.5 py-0.5 rounded-full',
+                  activeTab === 'files' ? 'bg-white/20' : 'bg-bg-tertiary'
+                )}
+              >
                 {files.length}
               </span>
             </button>
@@ -266,25 +270,28 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
           {/* Details Tab */}
           {activeTab === 'details' && (
             <div className="space-y-4">
-              {columns.filter(col => col.is_visible).map((column) => {
-                const value = column.column_id === 'name' ? item.name : item.data?.[column.column_id]
+              {columns
+                .filter(col => col.is_visible)
+                .map(column => {
+                  const value =
+                    column.column_id === 'name' ? item.name : item.data?.[column.column_id]
 
-                return (
-                  <div key={column.id} className="space-y-2">
-                    <label className="text-sm font-medium text-text-secondary">
-                      {column.column_name}
-                    </label>
-                    <div className="bg-bg-secondary rounded-md border border-border-light min-h-[40px]">
-                      <CellRenderer
-                        row={item}
-                        column={column}
-                        value={value}
-                        onEdit={(newValue) => handleCellEdit(column.column_id, newValue)}
-                      />
+                  return (
+                    <div key={column.id} className="space-y-2">
+                      <label className="text-sm font-medium text-text-secondary">
+                        {column.column_name}
+                      </label>
+                      <div className="bg-bg-secondary rounded-md border border-border-light min-h-[40px]">
+                        <CellRenderer
+                          row={item}
+                          column={column}
+                          value={value}
+                          onEdit={newValue => handleCellEdit(column.column_id, newValue)}
+                        />
+                      </div>
                     </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
             </div>
           )}
 
@@ -305,14 +312,14 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                 <textarea
                   ref={commentInputRef}
                   value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+                  onChange={e => setNewComment(e.target.value)}
                   placeholder="Write a comment..."
                   className={cn(
                     'w-full min-h-[80px] bg-transparent resize-none',
                     'text-sm text-text-primary placeholder-text-tertiary',
                     'focus:outline-none'
                   )}
-                  onKeyDown={(e) => {
+                  onKeyDown={e => {
                     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                       handleSubmitComment()
                     }
@@ -355,8 +362,11 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {comments.map((comment) => (
-                    <div key={comment.id} className="bg-bg-secondary rounded-lg border border-border-light">
+                  {comments.map(comment => (
+                    <div
+                      key={comment.id}
+                      className="bg-bg-secondary rounded-lg border border-border-light"
+                    >
                       {/* Comment Header */}
                       <div className="flex items-start gap-3 p-4">
                         <div className="w-8 h-8 rounded-full bg-monday-primary flex items-center justify-center flex-shrink-0">
@@ -378,21 +388,25 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                               )}
                             </div>
                             <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                                className="p-1 rounded hover:bg-bg-hover text-text-tertiary hover:text-text-secondary"
-                                title="Reply"
-                              >
-                                <Reply className="w-4 h-4" />
-                              </button>
-                              {comment.user_id === inspectorId && (
+                              <Tooltip content="Reply" side="top" delayDuration={200}>
                                 <button
-                                  onClick={() => handleDeleteComment(comment.id)}
-                                  className="p-1 rounded hover:bg-bg-hover text-text-tertiary hover:text-red-500"
-                                  title="Delete"
+                                  onClick={() =>
+                                    setReplyingTo(replyingTo === comment.id ? null : comment.id)
+                                  }
+                                  className="p-1 rounded hover:bg-bg-hover text-text-tertiary hover:text-text-secondary"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Reply className="w-4 h-4" />
                                 </button>
+                              </Tooltip>
+                              {comment.user_id === inspectorId && (
+                                <Tooltip content="Delete" side="top" delayDuration={200}>
+                                  <button
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                    className="p-1 rounded hover:bg-bg-hover text-text-tertiary hover:text-red-500"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </Tooltip>
                               )}
                             </div>
                           </div>
@@ -408,7 +422,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                           <div className="bg-bg-primary rounded-lg border border-border-light p-2">
                             <textarea
                               value={replyContent}
-                              onChange={(e) => setReplyContent(e.target.value)}
+                              onChange={e => setReplyContent(e.target.value)}
                               placeholder="Write a reply..."
                               className="w-full min-h-[60px] bg-transparent resize-none text-sm focus:outline-none"
                               autoFocus
@@ -443,7 +457,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                       {/* Replies */}
                       {comment.replies && comment.replies.length > 0 && (
                         <div className="border-t border-border-light bg-bg-primary/50">
-                          {comment.replies.map((reply) => (
+                          {comment.replies.map(reply => (
                             <div key={reply.id} className="flex items-start gap-3 p-4 pl-14">
                               <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
                                 <span className="text-white text-xs font-medium">
@@ -489,40 +503,44 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                     <div>
                       <h3 className="text-sm font-medium text-text-secondary mb-3">Images</h3>
                       <div className="grid grid-cols-2 gap-3">
-                        {files.filter(f => isImageFile(f.name)).map((file, index) => (
-                          <div
-                            key={index}
-                            className="relative group rounded-lg overflow-hidden border border-border-light bg-bg-secondary"
-                          >
-                            <img
-                              src={file.url}
-                              alt={file.name}
-                              className="w-full h-32 object-cover"
-                            />
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                              <a
-                                href={file.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-2 bg-white rounded-full hover:bg-gray-100"
-                                title="Open in new tab"
-                              >
-                                <ExternalLink className="w-4 h-4 text-gray-700" />
-                              </a>
-                              <a
-                                href={file.url}
-                                download={file.name}
-                                className="p-2 bg-white rounded-full hover:bg-gray-100"
-                                title="Download"
-                              >
-                                <Download className="w-4 h-4 text-gray-700" />
-                              </a>
+                        {files
+                          .filter(f => isImageFile(f.name))
+                          .map((file, index) => (
+                            <div
+                              key={index}
+                              className="relative group rounded-lg overflow-hidden border border-border-light bg-bg-secondary"
+                            >
+                              <img
+                                src={file.url}
+                                alt={file.name}
+                                className="w-full h-32 object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                <Tooltip content="Open in new tab" side="top" delayDuration={200}>
+                                  <a
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 bg-white rounded-full hover:bg-gray-100"
+                                  >
+                                    <ExternalLink className="w-4 h-4 text-gray-700" />
+                                  </a>
+                                </Tooltip>
+                                <Tooltip content="Download" side="top" delayDuration={200}>
+                                  <a
+                                    href={file.url}
+                                    download={file.name}
+                                    className="p-2 bg-white rounded-full hover:bg-gray-100"
+                                  >
+                                    <Download className="w-4 h-4 text-gray-700" />
+                                  </a>
+                                </Tooltip>
+                              </div>
+                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+                                <p className="text-xs text-white truncate">{file.name}</p>
+                              </div>
                             </div>
-                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
-                              <p className="text-xs text-white truncate">{file.name}</p>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                   )}
@@ -532,41 +550,45 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                     <div>
                       <h3 className="text-sm font-medium text-text-secondary mb-3">Documents</h3>
                       <div className="space-y-2">
-                        {files.filter(f => !isImageFile(f.name)).map((file, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-3 p-3 bg-bg-secondary rounded-lg border border-border-light hover:border-monday-primary/50 transition-colors"
-                          >
-                            {getFileIcon(file.name)}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm text-text-primary truncate">{file.name}</p>
-                              {file.size && (
-                                <p className="text-xs text-text-tertiary">
-                                  {(file.size / 1024).toFixed(1)} KB
-                                </p>
-                              )}
+                        {files
+                          .filter(f => !isImageFile(f.name))
+                          .map((file, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-3 p-3 bg-bg-secondary rounded-lg border border-border-light hover:border-monday-primary/50 transition-colors"
+                            >
+                              {getFileIcon(file.name)}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-text-primary truncate">{file.name}</p>
+                                {file.size && (
+                                  <p className="text-xs text-text-tertiary">
+                                    {(file.size / 1024).toFixed(1)} KB
+                                  </p>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Tooltip content="Open" side="top" delayDuration={200}>
+                                  <a
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1.5 rounded hover:bg-bg-hover text-text-tertiary hover:text-text-secondary"
+                                  >
+                                    <ExternalLink className="w-4 h-4" />
+                                  </a>
+                                </Tooltip>
+                                <Tooltip content="Download" side="top" delayDuration={200}>
+                                  <a
+                                    href={file.url}
+                                    download={file.name}
+                                    className="p-1.5 rounded hover:bg-bg-hover text-text-tertiary hover:text-text-secondary"
+                                  >
+                                    <Download className="w-4 h-4" />
+                                  </a>
+                                </Tooltip>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <a
-                                href={file.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="p-1.5 rounded hover:bg-bg-hover text-text-tertiary hover:text-text-secondary"
-                                title="Open"
-                              >
-                                <ExternalLink className="w-4 h-4" />
-                              </a>
-                              <a
-                                href={file.url}
-                                download={file.name}
-                                className="p-1.5 rounded hover:bg-bg-hover text-text-tertiary hover:text-text-secondary"
-                                title="Download"
-                              >
-                                <Download className="w-4 h-4" />
-                              </a>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
                       </div>
                     </div>
                   )}

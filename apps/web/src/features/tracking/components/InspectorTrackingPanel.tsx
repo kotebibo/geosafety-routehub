@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Search, Phone, MapPin, RefreshCw } from 'lucide-react'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import type { ActiveInspector } from '@/services/tracking.service'
 
 interface InspectorTrackingPanelProps {
@@ -21,9 +22,7 @@ export function InspectorTrackingPanel({
 }: InspectorTrackingPanelProps) {
   const [search, setSearch] = useState('')
 
-  const filtered = inspectors.filter(i =>
-    i.full_name.toLowerCase().includes(search.toLowerCase())
-  )
+  const filtered = inspectors.filter(i => i.full_name.toLowerCase().includes(search.toLowerCase()))
 
   const getStatusColor = (lastUpdate: string) => {
     const minutesAgo = Math.floor((Date.now() - new Date(lastUpdate).getTime()) / 60000)
@@ -48,13 +47,11 @@ export function InspectorTrackingPanel({
           <h2 className="text-sm font-semibold text-gray-800">
             Active Inspectors ({inspectors.length})
           </h2>
-          <button
-            onClick={onRefresh}
-            className="p-1 rounded hover:bg-gray-100 text-gray-500"
-            title="Refresh"
-          >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-          </button>
+          <Tooltip content="Refresh" side="top" delayDuration={200}>
+            <button onClick={onRefresh} className="p-1 rounded hover:bg-gray-100 text-gray-500">
+              <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </button>
+          </Tooltip>
         </div>
         <div className="relative">
           <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-gray-400" />
@@ -88,8 +85,12 @@ export function InspectorTrackingPanel({
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(inspector.last_location_update)}`} />
-                  <span className="text-sm font-medium text-gray-800 truncate">{inspector.full_name}</span>
+                  <span
+                    className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(inspector.last_location_update)}`}
+                  />
+                  <span className="text-sm font-medium text-gray-800 truncate">
+                    {inspector.full_name}
+                  </span>
                 </div>
 
                 <div className="ml-4 space-y-0.5">
@@ -107,12 +108,16 @@ export function InspectorTrackingPanel({
 
                   {route && (
                     <div className="mt-1.5">
-                      <div className="text-xs text-gray-600 truncate">{route.name || 'Unnamed route'}</div>
+                      <div className="text-xs text-gray-600 truncate">
+                        {route.name || 'Unnamed route'}
+                      </div>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="flex-1 bg-gray-200 rounded-full h-1.5">
                           <div
                             className="bg-green-500 h-1.5 rounded-full transition-all"
-                            style={{ width: `${route.total_stops > 0 ? (route.completed_stops / route.total_stops) * 100 : 0}%` }}
+                            style={{
+                              width: `${route.total_stops > 0 ? (route.completed_stops / route.total_stops) * 100 : 0}%`,
+                            }}
                           />
                         </div>
                         <span className="text-xs text-gray-500 flex-shrink-0">
@@ -122,9 +127,7 @@ export function InspectorTrackingPanel({
                     </div>
                   )}
 
-                  {!route && (
-                    <div className="text-xs text-gray-400 italic">No active route</div>
-                  )}
+                  {!route && <div className="text-xs text-gray-400 italic">No active route</div>}
                 </div>
               </button>
             )

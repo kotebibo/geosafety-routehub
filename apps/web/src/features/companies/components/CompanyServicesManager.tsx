@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { Plus, X, Save } from 'lucide-react'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
 import { FeatureGate } from '@/components/FeatureGate'
 
@@ -225,14 +226,15 @@ export function CompanyServicesManager({
             <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
               <div className="flex items-start justify-between mb-3">
                 <h4 className="font-medium text-gray-900">სერვისი {index + 1}</h4>
-                <button
-                  type="button"
-                  onClick={() => removeService(index)}
-                  className="text-red-600 hover:text-red-800"
-                  title="წაშლა"
-                >
-                  <X size={18} />
-                </button>
+                <Tooltip content="წაშლა" side="top" delayDuration={200}>
+                  <button
+                    type="button"
+                    onClick={() => removeService(index)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <X size={18} />
+                  </button>
+                </Tooltip>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

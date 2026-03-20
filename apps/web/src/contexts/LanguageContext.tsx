@@ -25,6 +25,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.assignments': 'დანიშვნები',
     'nav.settings': 'პარამეტრები',
     'nav.collapse': 'ჩაკეცვა',
+    'nav.expand': 'გაშლა',
 
     // Header
     'header.search': 'ძებნა...',
@@ -222,6 +223,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.assignments': 'Assignments',
     'nav.settings': 'Settings',
     'nav.collapse': 'Collapse',
+    'nav.expand': 'Expand',
 
     // Header
     'header.search': 'Search...',

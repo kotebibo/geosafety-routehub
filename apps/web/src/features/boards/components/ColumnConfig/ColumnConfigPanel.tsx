@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { X, Eye, EyeOff, GripVertical, Plus, Trash2, Settings as SettingsIcon } from 'lucide-react'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import type { BoardColumn } from '@/types/board'
 
 interface ColumnConfigPanelProps {
@@ -70,10 +71,7 @@ export function ColumnConfigPanel({
   return (
     <div className="fixed inset-0 z-50 flex">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/20 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={onClose} />
 
       {/* Panel */}
       <div className="relative ml-auto w-[400px] bg-bg-primary shadow-2xl flex flex-col">
@@ -83,10 +81,7 @@ export function ColumnConfigPanel({
             <SettingsIcon className="w-5 h-5 text-monday-primary" />
             <h2 className="text-lg font-semibold text-text-primary">Column Settings</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded hover:bg-bg-hover transition-colors"
-          >
+          <button onClick={onClose} className="p-1 rounded hover:bg-bg-hover transition-colors">
             <X className="w-5 h-5 text-text-secondary" />
           </button>
         </div>
@@ -99,7 +94,7 @@ export function ColumnConfigPanel({
                 key={column.id}
                 draggable
                 onDragStart={() => handleDragStart(index)}
-                onDragOver={(e) => handleDragOver(e, index)}
+                onDragOver={e => handleDragOver(e, index)}
                 onDragEnd={handleDragEnd}
                 className={cn(
                   'bg-bg-secondary rounded-lg border border-border-light p-3',
@@ -134,10 +129,10 @@ export function ColumnConfigPanel({
                         max="500"
                         step="10"
                         value={column.width}
-                        onChange={(e) => handleWidthChange(column, parseInt(e.target.value))}
+                        onChange={e => handleWidthChange(column, parseInt(e.target.value))}
                         className="flex-1 h-1 bg-bg-tertiary rounded-lg appearance-none cursor-pointer"
                         style={{
-                          background: `linear-gradient(to right, #0073ea 0%, #0073ea ${((column.width - 80) / (500 - 80)) * 100}%, #e6e9ef ${((column.width - 80) / (500 - 80)) * 100}%, #e6e9ef 100%)`
+                          background: `linear-gradient(to right, #0073ea 0%, #0073ea ${((column.width - 80) / (500 - 80)) * 100}%, #e6e9ef ${((column.width - 80) / (500 - 80)) * 100}%, #e6e9ef 100%)`,
                         }}
                       />
                       <span className="text-xs text-text-secondary w-10 text-right">
@@ -148,28 +143,34 @@ export function ColumnConfigPanel({
 
                   {/* Actions */}
                   <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => toggleVisibility(column)}
-                      className="p-1.5 rounded hover:bg-bg-hover transition-colors"
-                      title={column.is_visible ? 'Hide column' : 'Show column'}
+                    <Tooltip
+                      content={column.is_visible ? 'Hide column' : 'Show column'}
+                      side="top"
+                      delayDuration={200}
                     >
-                      {column.is_visible ? (
-                        <Eye className="w-4 h-4 text-monday-primary" />
-                      ) : (
-                        <EyeOff className="w-4 h-4 text-text-tertiary" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Delete column "${column.column_name}"?`)) {
-                          onDeleteColumn(column.id)
-                        }
-                      }}
-                      className="p-1.5 rounded hover:bg-red-50 transition-colors"
-                      title="Delete column"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-500" />
-                    </button>
+                      <button
+                        onClick={() => toggleVisibility(column)}
+                        className="p-1.5 rounded hover:bg-bg-hover transition-colors"
+                      >
+                        {column.is_visible ? (
+                          <Eye className="w-4 h-4 text-monday-primary" />
+                        ) : (
+                          <EyeOff className="w-4 h-4 text-text-tertiary" />
+                        )}
+                      </button>
+                    </Tooltip>
+                    <Tooltip content="Delete column" side="top" delayDuration={200}>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Delete column "${column.column_name}"?`)) {
+                            onDeleteColumn(column.id)
+                          }
+                        }}
+                        className="p-1.5 rounded hover:bg-red-50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-500" />
+                      </button>
+                    </Tooltip>
                   </div>
                 </div>
               </div>

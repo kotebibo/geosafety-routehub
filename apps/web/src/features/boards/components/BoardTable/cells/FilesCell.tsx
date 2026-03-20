@@ -4,7 +4,19 @@ import React, { useState, useRef, useEffect, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase/client'
-import { Paperclip, Upload, X, File, Image, FileText, Download, Trash2, Plus, Eye } from 'lucide-react'
+import {
+  Paperclip,
+  Upload,
+  X,
+  File,
+  Image,
+  FileText,
+  Download,
+  Trash2,
+  Plus,
+  Eye,
+} from 'lucide-react'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import { calculatePopupPosition } from './usePopupPosition'
 import { FilePreviewModal } from './FilePreviewModal'
 
@@ -28,7 +40,11 @@ interface FilesCellProps {
 
 const ACCEPTED_TYPES = {
   images: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
-  documents: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  documents: [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ],
   all: ['image/*', 'application/pdf', '.doc', '.docx'],
 }
 
@@ -59,7 +75,13 @@ function parseFilesValue(value: FileAttachment[] | string | null | undefined): F
   return []
 }
 
-export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = false, itemId, onEditStart }: FilesCellProps) {
+export const FilesCell = memo(function FilesCell({
+  value,
+  onEdit,
+  readOnly = false,
+  itemId,
+  onEditStart,
+}: FilesCellProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [files, setFiles] = useState<FileAttachment[]>(() => parseFilesValue(value))
   const [uploading, setUploading] = useState(false)
@@ -145,14 +167,14 @@ export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = fal
         // Try to upload to Supabase Storage
         // Note: The 'attachments' bucket must be created in Supabase Dashboard
         try {
-          const { data, error } = await supabase.storage
-            .from('attachments')
-            .upload(filePath, file)
+          const { data, error } = await supabase.storage.from('attachments').upload(filePath, file)
 
           if (error) {
             // Check if bucket doesn't exist
             if (error.message?.includes('Bucket not found') || error.message?.includes('bucket')) {
-              console.warn('Storage bucket "attachments" not found. Please create it in Supabase Dashboard.')
+              console.warn(
+                'Storage bucket "attachments" not found. Please create it in Supabase Dashboard.'
+              )
               // Fall back to storing file metadata without actual upload
               // In production, you'd want to create the bucket
             } else {
@@ -206,7 +228,9 @@ export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = fal
   }
 
   if (readOnly && files.length === 0) {
-    return <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+    return (
+      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+    )
   }
 
   return (
@@ -223,7 +247,9 @@ export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = fal
         <Paperclip className="w-4 h-4 text-[#676879] flex-shrink-0" />
         {files.length > 0 ? (
           <div className="flex items-center gap-1">
-            <span className="text-sm text-[#323338]">{files.length} file{files.length !== 1 ? 's' : ''}</span>
+            <span className="text-sm text-[#323338]">
+              {files.length} file{files.length !== 1 ? 's' : ''}
+            </span>
             <div className="flex -space-x-1">
               {files.slice(0, 3).map((file, i) => (
                 <div
@@ -246,53 +272,30 @@ export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = fal
       </button>
 
       {/* Dropdown Portal */}
-      {isOpen && typeof document !== 'undefined' && createPortal(
-        <div
-          ref={dropdownRef}
-          className={cn(
-            'fixed z-[9999]',
-            'bg-white rounded-lg',
-            'border border-gray-200',
-            'shadow-[0_8px_30px_rgba(0,0,0,0.12)]',
-            'p-3 min-w-[280px] max-w-[360px]'
-          )}
-          style={{
-            top: dropdownPosition.top,
-            left: dropdownPosition.left,
-          }}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-[#323338]">Attachments</span>
-            {!readOnly && (
-              <label className="flex items-center gap-1 px-2 py-1 text-xs text-[#0073ea] hover:bg-[#f0f3ff] rounded cursor-pointer transition-colors">
-                <Plus className="w-3 h-3" />
-                Add
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept={ACCEPTED_TYPES.all.join(',')}
-                  onChange={handleFileSelect}
-                  className="hidden"
-                  disabled={uploading}
-                />
-              </label>
+      {isOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className={cn(
+              'fixed z-[9999]',
+              'bg-white rounded-lg',
+              'border border-gray-200',
+              'shadow-[0_8px_30px_rgba(0,0,0,0.12)]',
+              'p-3 min-w-[280px] max-w-[360px]'
             )}
-          </div>
-
-          {/* File List */}
-          {files.length === 0 ? (
-            <div className="py-6 text-center">
-              {!readOnly ? (
-                <label className="flex flex-col items-center gap-2 cursor-pointer">
-                  <div className="w-12 h-12 rounded-full bg-[#f5f6f8] flex items-center justify-center">
-                    <Upload className="w-6 h-6 text-[#676879]" />
-                  </div>
-                  <span className="text-sm text-[#676879]">
-                    {uploading ? 'Uploading...' : 'Click to upload files'}
-                  </span>
-                  <span className="text-xs text-[#9699a6]">Max 10MB per file</span>
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-[#323338]">Attachments</span>
+              {!readOnly && (
+                <label className="flex items-center gap-1 px-2 py-1 text-xs text-[#0073ea] hover:bg-[#f0f3ff] rounded cursor-pointer transition-colors">
+                  <Plus className="w-3 h-3" />
+                  Add
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -303,91 +306,132 @@ export const FilesCell = memo(function FilesCell({ value, onEdit, readOnly = fal
                     disabled={uploading}
                   />
                 </label>
-              ) : (
-                <span className="text-sm text-[#9699a6]">No attachments</span>
               )}
             </div>
-          ) : (
-            <div className="space-y-2 max-h-[240px] overflow-y-auto">
-              {files.map((file, index) => (
-                <div
-                  key={file.id}
-                  className="flex items-center gap-2 p-2 rounded hover:bg-[#f5f6f8] group"
-                >
-                  {/* Thumbnail or Icon — click to preview */}
-                  <button
-                    onClick={() => { setPreviewIndex(index); setIsOpen(false) }}
-                    className="flex-shrink-0 cursor-pointer"
-                    title="Preview"
-                  >
-                    {file.type.startsWith('image/') ? (
-                      <div className="w-10 h-10 rounded overflow-hidden bg-[#f5f6f8]">
-                        <img
-                          src={file.url}
-                          alt={file.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 rounded bg-[#f5f6f8] flex items-center justify-center">
-                        {getFileIcon(file.type)}
-                      </div>
-                    )}
-                  </button>
 
-                  {/* File Info — click to preview */}
-                  <button
-                    onClick={() => { setPreviewIndex(index); setIsOpen(false) }}
-                    className="flex-1 min-w-0 text-left cursor-pointer"
-                    title="Preview"
-                  >
-                    <div className="text-sm text-[#323338] truncate hover:text-[#0073ea] transition-colors">{file.name}</div>
-                    <div className="text-xs text-[#9699a6]">{formatFileSize(file.size)}</div>
-                  </button>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => { setPreviewIndex(index); setIsOpen(false) }}
-                      className="p-1 rounded hover:bg-[#e6e9ef]"
-                      title="Preview"
-                    >
-                      <Eye className="w-4 h-4 text-[#676879]" />
-                    </button>
-                    <button
-                      onClick={() => handleDownload(file)}
-                      className="p-1 rounded hover:bg-[#e6e9ef]"
-                      title="Download"
-                    >
-                      <Download className="w-4 h-4 text-[#676879]" />
-                    </button>
-                    {!readOnly && (
-                      <button
-                        onClick={() => handleRemoveFile(file.id)}
-                        className="p-1 rounded hover:bg-[#ffebeb]"
-                        title="Remove"
-                      >
-                        <Trash2 className="w-4 h-4 text-[#e2445c]" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Upload indicator */}
-          {uploading && (
-            <div className="mt-2 pt-2 border-t border-gray-100">
-              <div className="flex items-center gap-2 text-sm text-[#676879]">
-                <div className="w-4 h-4 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
-                Uploading...
+            {/* File List */}
+            {files.length === 0 ? (
+              <div className="py-6 text-center">
+                {!readOnly ? (
+                  <label className="flex flex-col items-center gap-2 cursor-pointer">
+                    <div className="w-12 h-12 rounded-full bg-[#f5f6f8] flex items-center justify-center">
+                      <Upload className="w-6 h-6 text-[#676879]" />
+                    </div>
+                    <span className="text-sm text-[#676879]">
+                      {uploading ? 'Uploading...' : 'Click to upload files'}
+                    </span>
+                    <span className="text-xs text-[#9699a6]">Max 10MB per file</span>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept={ACCEPTED_TYPES.all.join(',')}
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                  </label>
+                ) : (
+                  <span className="text-sm text-[#9699a6]">No attachments</span>
+                )}
               </div>
-            </div>
-          )}
-        </div>,
-        document.body
-      )}
+            ) : (
+              <div className="space-y-2 max-h-[240px] overflow-y-auto">
+                {files.map((file, index) => (
+                  <div
+                    key={file.id}
+                    className="flex items-center gap-2 p-2 rounded hover:bg-[#f5f6f8] group"
+                  >
+                    {/* Thumbnail or Icon — click to preview */}
+                    <Tooltip content="Preview" side="top" delayDuration={200}>
+                      <button
+                        onClick={() => {
+                          setPreviewIndex(index)
+                          setIsOpen(false)
+                        }}
+                        className="flex-shrink-0 cursor-pointer"
+                      >
+                        {file.type.startsWith('image/') ? (
+                          <div className="w-10 h-10 rounded overflow-hidden bg-[#f5f6f8]">
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded bg-[#f5f6f8] flex items-center justify-center">
+                            {getFileIcon(file.type)}
+                          </div>
+                        )}
+                      </button>
+                    </Tooltip>
+
+                    {/* File Info — click to preview */}
+                    <Tooltip content="Preview" side="top" delayDuration={200}>
+                      <button
+                        onClick={() => {
+                          setPreviewIndex(index)
+                          setIsOpen(false)
+                        }}
+                        className="flex-1 min-w-0 text-left cursor-pointer"
+                      >
+                        <div className="text-sm text-[#323338] truncate hover:text-[#0073ea] transition-colors">
+                          {file.name}
+                        </div>
+                        <div className="text-xs text-[#9699a6]">{formatFileSize(file.size)}</div>
+                      </button>
+                    </Tooltip>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Tooltip content="Preview" side="top" delayDuration={200}>
+                        <button
+                          onClick={() => {
+                            setPreviewIndex(index)
+                            setIsOpen(false)
+                          }}
+                          className="p-1 rounded hover:bg-[#e6e9ef]"
+                        >
+                          <Eye className="w-4 h-4 text-[#676879]" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip content="Download" side="top" delayDuration={200}>
+                        <button
+                          onClick={() => handleDownload(file)}
+                          className="p-1 rounded hover:bg-[#e6e9ef]"
+                        >
+                          <Download className="w-4 h-4 text-[#676879]" />
+                        </button>
+                      </Tooltip>
+                      {!readOnly && (
+                        <Tooltip content="Remove" side="top" delayDuration={200}>
+                          <button
+                            onClick={() => handleRemoveFile(file.id)}
+                            className="p-1 rounded hover:bg-[#ffebeb]"
+                          >
+                            <Trash2 className="w-4 h-4 text-[#e2445c]" />
+                          </button>
+                        </Tooltip>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload indicator */}
+            {uploading && (
+              <div className="mt-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-2 text-sm text-[#676879]">
+                  <div className="w-4 h-4 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
+                  Uploading...
+                </div>
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
 
       {/* File Preview Modal */}
       {previewIndex !== null && files[previewIndex] && (

@@ -49,6 +49,7 @@ import {
 import { NotificationBell } from '@/shared/components/notifications'
 import { useAnnouncements } from '@/hooks/useAnnouncements'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 
 interface SidebarProps {
   className?: string
@@ -675,48 +676,55 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                     const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                     const badge = item.href === '/news' && unreadNews > 0 ? unreadNews : 0
 
+                    const label = language === 'en' ? item.labelEn : item.label
+
+                    const link = (
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast',
+                          'hover:bg-bg-hover',
+                          isActive
+                            ? 'bg-bg-selected text-monday-primary'
+                            : 'text-text-primary hover:text-text-primary',
+                          collapsed && 'justify-center'
+                        )}
+                        data-walkthrough={
+                          item.href === '/boards'
+                            ? 'boards'
+                            : item.href === '/companies'
+                              ? 'companies'
+                              : item.href === '/routes/manage'
+                                ? 'routes'
+                                : undefined
+                        }
+                      >
+                        <Icon className="shrink-0 w-5 h-5" />
+                        {!collapsed && (
+                          <>
+                            <span className="truncate flex-1">{label}</span>
+                            {badge > 0 && (
+                              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-semibold text-white bg-red-500 rounded-full">
+                                {badge > 99 ? '99+' : badge}
+                              </span>
+                            )}
+                          </>
+                        )}
+                        {collapsed && badge > 0 && (
+                          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                        )}
+                      </Link>
+                    )
+
                     return (
                       <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          className={cn(
-                            'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast',
-                            'hover:bg-bg-hover',
-                            isActive
-                              ? 'bg-bg-selected text-monday-primary'
-                              : 'text-text-primary hover:text-text-primary',
-                            collapsed && 'justify-center'
-                          )}
-                          title={
-                            collapsed ? (language === 'en' ? item.labelEn : item.label) : undefined
-                          }
-                          data-walkthrough={
-                            item.href === '/boards'
-                              ? 'boards'
-                              : item.href === '/companies'
-                                ? 'companies'
-                                : item.href === '/routes/manage'
-                                  ? 'routes'
-                                  : undefined
-                          }
-                        >
-                          <Icon className="shrink-0 w-5 h-5" />
-                          {!collapsed && (
-                            <>
-                              <span className="truncate flex-1">
-                                {language === 'en' ? item.labelEn : item.label}
-                              </span>
-                              {badge > 0 && (
-                                <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[11px] font-semibold text-white bg-red-500 rounded-full">
-                                  {badge > 99 ? '99+' : badge}
-                                </span>
-                              )}
-                            </>
-                          )}
-                          {collapsed && badge > 0 && (
-                            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-                          )}
-                        </Link>
+                        {collapsed ? (
+                          <Tooltip content={label} side="right">
+                            {link}
+                          </Tooltip>
+                        ) : (
+                          link
+                        )}
                       </li>
                     )
                   })}
@@ -998,14 +1006,13 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
               <div className="px-2 py-1 space-y-1">
                 {/* Workspace initial */}
                 {selectedWorkspace && (
-                  <div
-                    className="flex items-center justify-center py-1"
-                    title={selectedWorkspace.name}
-                  >
-                    <div className="w-7 h-7 rounded bg-monday-primary flex items-center justify-center text-white text-[11px] font-bold">
-                      {selectedWorkspace.name.charAt(0).toUpperCase()}
+                  <Tooltip content={selectedWorkspace.name} side="right">
+                    <div className="flex items-center justify-center py-1">
+                      <div className="w-7 h-7 rounded bg-monday-primary flex items-center justify-center text-white text-[11px] font-bold">
+                        {selectedWorkspace.name.charAt(0).toUpperCase()}
+                      </div>
                     </div>
-                  </div>
+                  </Tooltip>
                 )}
 
                 {/* Divider */}
@@ -1018,41 +1025,42 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                   )
                   return activeBoards.length > 0 ? (
                     activeBoards.map((board: any) => (
-                      <Link
-                        key={board.id}
-                        href={`/boards/${board.id}`}
-                        className={cn(
-                          'flex items-center justify-center p-1.5 rounded-md transition-all duration-fast relative group',
-                          'hover:bg-bg-hover',
-                          currentBoardId === board.id &&
-                            'bg-bg-selected ring-2 ring-monday-primary/30'
-                        )}
-                        title={board.name}
-                      >
-                        <div
+                      <Tooltip key={board.id} content={board.name} side="right">
+                        <Link
+                          href={`/boards/${board.id}`}
                           className={cn(
-                            'w-7 h-7 rounded flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0',
-                            getBoardColor(board.color)
+                            'flex items-center justify-center p-1.5 rounded-md transition-all duration-fast relative group',
+                            'hover:bg-bg-hover',
+                            currentBoardId === board.id &&
+                              'bg-bg-selected ring-2 ring-monday-primary/30'
                           )}
                         >
-                          {board.name.charAt(0).toUpperCase()}
-                        </div>
-                        {board.settings?.is_favorite && (
-                          <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-yellow-400 rounded-full border border-white" />
-                        )}
-                      </Link>
+                          <div
+                            className={cn(
+                              'w-7 h-7 rounded flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0',
+                              getBoardColor(board.color)
+                            )}
+                          >
+                            {board.name.charAt(0).toUpperCase()}
+                          </div>
+                          {board.settings?.is_favorite && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-yellow-400 rounded-full border border-white" />
+                          )}
+                        </Link>
+                      </Tooltip>
                     ))
                   ) : (
-                    <Link
-                      href="/boards"
-                      className={cn(
-                        'flex items-center justify-center p-2.5 rounded-md transition-all duration-fast',
-                        'hover:bg-bg-hover text-text-tertiary'
-                      )}
-                      title="Boards"
-                    >
-                      <LayoutDashboard className="w-5 h-5" />
-                    </Link>
+                    <Tooltip content="Boards" side="right">
+                      <Link
+                        href="/boards"
+                        className={cn(
+                          'flex items-center justify-center p-2.5 rounded-md transition-all duration-fast',
+                          'hover:bg-bg-hover text-text-tertiary'
+                        )}
+                      >
+                        <LayoutDashboard className="w-5 h-5" />
+                      </Link>
+                    </Tooltip>
                   )
                 })()}
               </div>
@@ -1064,41 +1072,61 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
         {/* Bottom Section */}
         <div className="flex-shrink-0 border-t border-border-light p-2 space-y-1">
           {/* Language Toggle */}
-          <button
-            onClick={() => setLanguage(language === 'ka' ? 'en' : 'ka')}
-            data-walkthrough="language-toggle"
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
-              'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
-              collapsed && 'justify-center'
-            )}
-            title={collapsed ? (language === 'ka' ? 'English' : 'ქართული') : undefined}
-          >
-            <Globe className="w-5 h-5 shrink-0" />
-            {!collapsed && (
-              <span className="truncate">{language === 'ka' ? 'English' : 'ქართული'}</span>
-            )}
-          </button>
+          {(() => {
+            const langLabel = language === 'ka' ? 'English' : 'ქართული'
+            const langBtn = (
+              <button
+                onClick={() => setLanguage(language === 'ka' ? 'en' : 'ka')}
+                data-walkthrough="language-toggle"
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
+                  'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
+                  collapsed && 'justify-center'
+                )}
+              >
+                <Globe className="w-5 h-5 shrink-0" />
+                {!collapsed && <span className="truncate">{langLabel}</span>}
+              </button>
+            )
+            return collapsed ? (
+              <Tooltip content={langLabel} side="right">
+                {langBtn}
+              </Tooltip>
+            ) : (
+              langBtn
+            )
+          })()}
 
           {/* Collapse Button */}
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className={cn(
-              'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
-              'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
-              collapsed && 'justify-center'
-            )}
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          >
-            {collapsed ? (
-              <ChevronRight className="w-5 h-5" />
+          {(() => {
+            const collapseLabel = collapsed ? t('nav.expand') : t('nav.collapse')
+            const collapseBtn = (
+              <button
+                onClick={() => setCollapsed(!collapsed)}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
+                  'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
+                  collapsed && 'justify-center'
+                )}
+              >
+                {collapsed ? (
+                  <ChevronRight className="w-5 h-5" />
+                ) : (
+                  <>
+                    <ChevronLeft className="w-5 h-5" />
+                    <span className="truncate">{collapseLabel}</span>
+                  </>
+                )}
+              </button>
+            )
+            return collapsed ? (
+              <Tooltip content={collapseLabel} side="right">
+                {collapseBtn}
+              </Tooltip>
             ) : (
-              <>
-                <ChevronLeft className="w-5 h-5" />
-                <span className="truncate">{t('nav.collapse')}</span>
-              </>
-            )}
-          </button>
+              collapseBtn
+            )
+          })()}
         </div>
       </aside>
 
@@ -1159,18 +1187,23 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   {COLOR_OPTIONS.map(color => (
-                    <button
+                    <Tooltip
                       key={color.value}
-                      onClick={() => handleChangeColor(color.value)}
-                      disabled={actionLoading}
-                      className={cn(
-                        'w-7 h-7 rounded-full transition-transform hover:scale-110',
-                        color.class,
-                        menuState.boardColor === color.value &&
-                          'ring-2 ring-offset-2 ring-monday-primary'
-                      )}
-                      title={color.label}
-                    />
+                      content={color.label}
+                      side="bottom"
+                      delayDuration={200}
+                    >
+                      <button
+                        onClick={() => handleChangeColor(color.value)}
+                        disabled={actionLoading}
+                        className={cn(
+                          'w-7 h-7 rounded-full transition-transform hover:scale-110',
+                          color.class,
+                          menuState.boardColor === color.value &&
+                            'ring-2 ring-offset-2 ring-monday-primary'
+                        )}
+                      />
+                    </Tooltip>
                   ))}
                 </div>
               </div>

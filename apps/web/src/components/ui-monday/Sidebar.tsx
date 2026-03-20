@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { Tooltip } from '@/shared/components/ui/tooltip'
 import {
   Home,
   Building2,
@@ -124,24 +125,34 @@ export function Sidebar({ className }: SidebarProps) {
             const Icon = item.icon
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
 
+            const label = t(item.labelKey)
+            const link = (
+              <Link
+                href={item.href}
+                data-walkthrough={item.walkthroughId}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast',
+                  'hover:bg-bg-hover',
+                  isActive
+                    ? 'bg-bg-selected text-monday-primary'
+                    : 'text-text-primary hover:text-text-primary',
+                  collapsed && 'justify-center'
+                )}
+              >
+                <Icon className="shrink-0 w-5 h-5" />
+                {!collapsed && <span className="truncate">{label}</span>}
+              </Link>
+            )
+
             return (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  data-walkthrough={item.walkthroughId}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast',
-                    'hover:bg-bg-hover',
-                    isActive
-                      ? 'bg-bg-selected text-monday-primary'
-                      : 'text-text-primary hover:text-text-primary',
-                    collapsed && 'justify-center'
-                  )}
-                  title={collapsed ? t(item.labelKey) : undefined}
-                >
-                  <Icon className="shrink-0 w-5 h-5" />
-                  {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
-                </Link>
+                {collapsed ? (
+                  <Tooltip content={label} side="right">
+                    {link}
+                  </Tooltip>
+                ) : (
+                  link
+                )}
               </li>
             )
           })}
@@ -151,41 +162,61 @@ export function Sidebar({ className }: SidebarProps) {
       {/* Bottom Section */}
       <div className="border-t border-border-light p-2 space-y-1">
         {/* Language Toggle */}
-        <button
-          onClick={toggleLanguage}
-          data-walkthrough="language-toggle"
-          className={cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
-            'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
-            collapsed && 'justify-center'
-          )}
-          title={collapsed ? (language === 'ka' ? 'English' : 'ქართული') : undefined}
-        >
-          <Globe className="w-5 h-5 shrink-0" />
-          {!collapsed && (
-            <span className="truncate">{language === 'ka' ? 'English' : 'ქართული'}</span>
-          )}
-        </button>
+        {(() => {
+          const langLabel = language === 'ka' ? 'English' : 'ქართული'
+          const langBtn = (
+            <button
+              onClick={toggleLanguage}
+              data-walkthrough="language-toggle"
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
+                'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
+                collapsed && 'justify-center'
+              )}
+            >
+              <Globe className="w-5 h-5 shrink-0" />
+              {!collapsed && <span className="truncate">{langLabel}</span>}
+            </button>
+          )
+          return collapsed ? (
+            <Tooltip content={langLabel} side="right">
+              {langBtn}
+            </Tooltip>
+          ) : (
+            langBtn
+          )
+        })()}
 
         {/* Collapse Button */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
-            'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
-            collapsed && 'justify-center'
-          )}
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? (
-            <ChevronRight className="w-5 h-5" />
+        {(() => {
+          const collapseLabel = collapsed ? t('nav.expand') : t('nav.collapse')
+          const collapseBtn = (
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-all duration-fast w-full',
+                'hover:bg-bg-hover text-text-secondary hover:text-text-primary',
+                collapsed && 'justify-center'
+              )}
+            >
+              {collapsed ? (
+                <ChevronRight className="w-5 h-5" />
+              ) : (
+                <>
+                  <ChevronLeft className="w-5 h-5" />
+                  <span className="truncate">{collapseLabel}</span>
+                </>
+              )}
+            </button>
+          )
+          return collapsed ? (
+            <Tooltip content={collapseLabel} side="right">
+              {collapseBtn}
+            </Tooltip>
           ) : (
-            <>
-              <ChevronLeft className="w-5 h-5" />
-              <span className="truncate">{t('nav.collapse')}</span>
-            </>
-          )}
-        </button>
+            collapseBtn
+          )
+        })()}
       </div>
     </aside>
   )
