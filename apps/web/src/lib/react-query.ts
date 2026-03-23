@@ -88,7 +88,14 @@ export const queryKeys = {
     byType: (boardType: string) => [...queryKeys.boardColumns.all, boardType] as const,
   },
 
-  // Board views
+  // Board view tabs (per-board)
+  boardViewTabs: {
+    all: ['board-view-tabs'] as const,
+    byBoard: (boardId: string) => ['board-view-tabs', boardId] as const,
+    detail: (tabId: string) => ['board-view-tabs', 'detail', tabId] as const,
+  },
+
+  // Board views (legacy per-user)
   boardViews: {
     all: ['board-views'] as const,
     byType: (boardType: string) => [...queryKeys.boardViews.all, boardType] as const,

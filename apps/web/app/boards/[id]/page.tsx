@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/react-query'
 import { useRealtimeBoard } from '@/features/boards/hooks'
@@ -21,6 +21,15 @@ import {
 } from '@/features/boards/components'
 import { BoardPageSkeleton } from '@/features/boards/components/BoardPageSkeleton'
 import { BoardPageHeader } from '@/features/boards/components/BoardPageHeader'
+import { ViewTabBar } from '@/features/boards/components/ViewTabBar'
+import {
+  useBoardViewTabs,
+  useCreateViewTab,
+  useUpdateViewTab,
+  useDeleteViewTab,
+  useDuplicateViewTab,
+} from '@/features/boards/hooks/useBoardViewTabs'
+import type { ViewType, BoardViewTab } from '@/features/boards/types/board'
 import { Button } from '@/shared/components/ui'
 import { useToast } from '@/components/ui-monday/Toast'
 import {
@@ -105,8 +114,22 @@ const TemplateManagementModal = dynamic(
 
 export default function BoardDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const { showToast } = useToast()
+
+  // View tabs
+  const { data: viewTabs } = useBoardViewTabs(params.id)
+  const createViewTab = useCreateViewTab(params.id)
+  const updateViewTab = useUpdateViewTab(params.id)
+  const deleteViewTab = useDeleteViewTab(params.id)
+  const duplicateViewTab = useDuplicateViewTab(params.id)
+
+  // Determine active tab from URL or default
+  const viewParam = searchParams.get('view')
+  const activeTab =
+    viewTabs?.find(t => t.id === viewParam) ?? viewTabs?.find(t => t.is_default) ?? viewTabs?.[0]
+  const activeTabId = activeTab?.id ?? null
 
   // UI state
   const [selection, setSelection] = useState<Set<string>>(new Set())
@@ -124,6 +147,118 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const [showMoveModal, setShowMoveModal] = useState(false)
   const [showGenerateDoc, setShowGenerateDoc] = useState(false)
   const [showDocTemplates, setShowDocTemplates] = useState(false)
+
+  // Sync local toolbar state from active tab
+  const prevTabIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (activeTab && activeTab.id !== prevTabIdRef.current) {
+      setSortConfig(activeTab.sort_config ?? null)
+      setFilters(activeTab.filters ?? [])
+      setGroupByColumn(activeTab.group_by_column ?? null)
+      prevTabIdRef.current = activeTab.id
+    }
+  }, [activeTab])
+
+  // Debounced save-back: persist toolbar state changes to active tab
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const saveTabState = useCallback(
+    (updates: Partial<Pick<BoardViewTab, 'sort_config' | 'filters' | 'group_by_column'>>) => {
+      if (!activeTabId) return
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+      saveTimeoutRef.current = setTimeout(() => {
+        updateViewTab.mutate({ tabId: activeTabId, updates })
+      }, 1000)
+    },
+    [activeTabId, updateViewTab]
+  )
+
+  // Wrap toolbar setters to also persist
+  const handleSortChange = useCallback(
+    (config: SortConfig | null) => {
+      setSortConfig(config)
+      saveTabState({ sort_config: config })
+    },
+    [saveTabState]
+  )
+
+  const handleFiltersChange = useCallback(
+    (newFilters: FilterConfig[]) => {
+      setFilters(newFilters)
+      saveTabState({ filters: newFilters })
+    },
+    [saveTabState]
+  )
+
+  const handleGroupByChange = useCallback(
+    (columnId: string | null) => {
+      setGroupByColumn(columnId)
+      saveTabState({ group_by_column: columnId })
+    },
+    [saveTabState]
+  )
+
+  // Tab actions
+  const handleTabChange = useCallback(
+    (tabId: string) => {
+      router.replace(`/boards/${params.id}?view=${tabId}`, { scroll: false })
+    },
+    [router, params.id]
+  )
+
+  const handleCreateTab = useCallback(
+    (viewType: ViewType, name: string) => {
+      const nextPosition = viewTabs?.length ?? 0
+      createViewTab.mutate(
+        { view_name: name, view_type: viewType, position: nextPosition },
+        {
+          onSuccess: newTab => {
+            router.replace(`/boards/${params.id}?view=${newTab.id}`, { scroll: false })
+          },
+        }
+      )
+    },
+    [viewTabs, createViewTab, router, params.id]
+  )
+
+  const handleDeleteTab = useCallback(
+    (tabId: string) => {
+      const tab = viewTabs?.find(t => t.id === tabId)
+      if (tab?.is_default) return
+      deleteViewTab.mutate(tabId, {
+        onSuccess: () => {
+          // Switch to default tab after deletion
+          const defaultTab = viewTabs?.find(t => t.is_default)
+          if (defaultTab && tabId === activeTabId) {
+            router.replace(`/boards/${params.id}?view=${defaultTab.id}`, { scroll: false })
+          }
+        },
+      })
+    },
+    [viewTabs, deleteViewTab, activeTabId, router, params.id]
+  )
+
+  const handleRenameTab = useCallback(
+    (tabId: string, name: string) => {
+      updateViewTab.mutate({ tabId, updates: { view_name: name } })
+    },
+    [updateViewTab]
+  )
+
+  const handleDuplicateTab = useCallback(
+    (tabId: string) => {
+      const tab = viewTabs?.find(t => t.id === tabId)
+      if (!tab) return
+      duplicateViewTab.mutate(
+        { tabId, newName: `${tab.view_name} (copy)` },
+        {
+          onSuccess: newTab => {
+            router.replace(`/boards/${params.id}?view=${newTab.id}`, { scroll: false })
+          },
+        }
+      )
+    },
+    [viewTabs, duplicateViewTab, router, params.id]
+  )
 
   // Data
   const data = useBoardPageData(params.id)
@@ -254,6 +389,19 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         onShowDocTemplates={() => setShowDocTemplates(true)}
       />
 
+      {/* View Tabs */}
+      {viewTabs && viewTabs.length > 0 && (
+        <ViewTabBar
+          tabs={viewTabs}
+          activeTabId={activeTabId}
+          onTabChange={handleTabChange}
+          onCreateTab={handleCreateTab}
+          onDeleteTab={handleDeleteTab}
+          onRenameTab={handleRenameTab}
+          onDuplicateTab={handleDuplicateTab}
+        />
+      )}
+
       {/* Fixed Toolbar */}
       <div className="flex-shrink-0 bg-bg-primary border-b border-border-light px-4 md:px-6 py-3">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -303,11 +451,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 <BoardToolbar
                   columns={columns}
                   sortConfig={sortConfig}
-                  onSortChange={setSortConfig}
+                  onSortChange={handleSortChange}
                   groupByColumn={groupByColumn}
-                  onGroupByChange={setGroupByColumn}
+                  onGroupByChange={handleGroupByChange}
                   filters={filters}
-                  onFiltersChange={setFilters}
+                  onFiltersChange={handleFiltersChange}
                 />
               )
             )}
@@ -426,7 +574,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               onCellEditStart={(itemId, columnId) => setEditing(itemId, columnId)}
               onCellEditEnd={() => setEditing(null)}
               sortConfig={sortConfig}
-              onSortChange={setSortConfig}
+              onSortChange={handleSortChange}
             />
           </ErrorBoundary>
         ) : (

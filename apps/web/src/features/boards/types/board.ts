@@ -147,7 +147,28 @@ export interface BoardColumn {
   updated_at?: string
 }
 
-// Board View (Saved filters/sorts)
+// View Tab Types
+export type ViewType = 'table' | 'kanban' | 'calendar' | 'chart' | 'timeline'
+
+// Board View Tab (per-board view with independent state)
+export interface BoardViewTab {
+  id: string
+  board_id: string
+  view_name: string
+  view_name_ka?: string
+  view_type: ViewType
+  icon?: string
+  position: number
+  is_default: boolean
+  filters: any[] // FilterConfig[] from BoardToolbar
+  sort_config: any | null // SortConfig from BoardToolbar
+  group_by_column: string | null
+  created_by?: string
+  created_at?: string
+  updated_at?: string
+}
+
+// Board View (Saved filters/sorts) - legacy per-user views
 export interface BoardView {
   id: string
   user_id: string
