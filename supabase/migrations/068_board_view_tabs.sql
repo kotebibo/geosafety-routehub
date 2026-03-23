@@ -30,7 +30,7 @@ CREATE UNIQUE INDEX idx_board_view_tabs_default
 CREATE TRIGGER set_board_view_tabs_updated_at
     BEFORE UPDATE ON public.board_view_tabs
     FOR EACH ROW
-    EXECUTE FUNCTION public.set_updated_at();
+    EXECUTE FUNCTION public.update_updated_at_column();
 
 -- RLS
 ALTER TABLE public.board_view_tabs ENABLE ROW LEVEL SECURITY;

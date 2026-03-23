@@ -24,12 +24,15 @@ import {
 import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation'
 import { useToast } from '@/components/ui-monday/Toast'
 import { Tooltip } from '@/shared/components/ui/tooltip'
+import { SubitemRow } from './SubitemRow'
 import type {
   BoardColumn,
   BoardItem,
   BoardGroup,
   BoardType,
   BoardPresence,
+  BoardSubitem,
+  BoardSubitemColumn,
   ColumnType,
 } from '../../types/board'
 
@@ -87,6 +90,23 @@ interface VirtualizedBoardTableProps {
   scrollContainerClassName?: string
   /** Search query for match highlighting in global search results */
   highlightQuery?: string
+  // ─── Subitem props ───
+  /** Set of item IDs whose subitems are expanded */
+  expandedItems?: Set<string>
+  /** Subitem counts per parent item (for badge display) */
+  subitemCounts?: Record<string, number>
+  /** Map of parent item ID -> loaded subitems */
+  subitemsByParent?: Map<string, BoardSubitem[]>
+  /** Subitem column definitions */
+  subitemColumns?: BoardSubitemColumn[]
+  /** Toggle expand/collapse for an item's subitems */
+  onToggleExpandItem?: (itemId: string) => void
+  /** Edit a subitem cell */
+  onSubitemCellEdit?: (subitemId: string, field: string, value: any) => void
+  /** Add a new subitem under a parent */
+  onAddSubitem?: (parentItemId: string) => void
+  /** Delete a subitem */
+  onDeleteSubitem?: (subitemId: string, parentItemId: string) => void
 }
 
 export function VirtualizedBoardTable({
@@ -122,6 +142,14 @@ export function VirtualizedBoardTable({
   onSortChange,
   scrollContainerClassName,
   highlightQuery,
+  expandedItems,
+  subitemCounts,
+  subitemsByParent,
+  subitemColumns,
+  onToggleExpandItem,
+  onSubitemCellEdit,
+  onAddSubitem,
+  onDeleteSubitem,
 }: VirtualizedBoardTableProps) {
   // Scroll container ref - THIS is the key difference from the non-virtualized version
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -198,8 +226,10 @@ export function VirtualizedBoardTable({
       summaryHeight: SUMMARY_HEIGHT,
       preserveItemOrder: !!sortConfig,
       skipColumnHeaders: true,
+      expandedItems,
+      subitemsByParent,
     })
-  }, [effectiveGroups, data, collapsedGroups, sortConfig])
+  }, [effectiveGroups, data, collapsedGroups, sortConfig, expandedItems, subitemsByParent])
 
   // Pre-compute items by group for summary rows
   const itemsByGroup = useMemo(() => {
@@ -1022,6 +1052,105 @@ export function VirtualizedBoardTable({
         return <div key={virtualRow.id} style={style} />
       }
 
+      // Subitem header row (add subitem button)
+      if (virtualRow.type === 'subitem-header') {
+        const parentItem = virtualRow.data as BoardItem
+        const parentGroup = effectiveGroups.find(g => g.id === virtualRow.groupId)
+
+        return (
+          <div key={virtualRow.id} style={style}>
+            <table
+              className="w-full border-collapse"
+              style={{ tableLayout: 'fixed', width: totalTableWidth }}
+            >
+              <tbody>
+                <tr className="h-8">
+                  {onSelectionChange && (
+                    <td
+                      className="bg-bg-secondary/50 border border-border-medium w-10 h-8"
+                      style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                    />
+                  )}
+                  <td
+                    className="border border-border-medium p-0 h-8"
+                    style={{
+                      width: 6,
+                      backgroundColor: parentGroup?.color || '#579bfc',
+                      opacity: 0.2,
+                      position: 'sticky',
+                      left: stickyOffsets.colorBar,
+                      zIndex: 2,
+                    }}
+                  />
+                  <td
+                    className="bg-bg-secondary/50 border border-border-medium px-0 py-0 h-8"
+                    style={{
+                      width: getColumnWidth(visibleColumns[0]),
+                      position: 'sticky',
+                      left: stickyOffsets.firstCol,
+                      zIndex: 2,
+                    }}
+                  >
+                    {onAddSubitem && (
+                      <button
+                        onClick={() => onAddSubitem(parentItem.id)}
+                        className="flex items-center gap-1.5 h-full pl-8 text-xs text-text-tertiary hover:text-text-secondary transition-colors"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Add Subitem</span>
+                      </button>
+                    )}
+                  </td>
+                  {visibleColumns.slice(1).map(col => (
+                    <td
+                      key={`subhdr-${col.id}`}
+                      className="bg-bg-secondary/50 border border-border-medium h-8"
+                      style={{ width: getColumnWidth(col) }}
+                    />
+                  ))}
+                  <td className="bg-bg-secondary/50 border border-border-medium w-10 h-8" />
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+
+      // Subitem data row
+      if (virtualRow.type === 'subitem') {
+        const subitem = virtualRow.data as any as BoardSubitem
+        const parentGroup = effectiveGroups.find(g => g.id === virtualRow.groupId)
+
+        return (
+          <div key={virtualRow.id} style={style}>
+            <table
+              className="w-full border-collapse"
+              style={{ tableLayout: 'fixed', width: totalTableWidth }}
+            >
+              <tbody>
+                <SubitemRow
+                  subitem={subitem}
+                  subitemColumns={subitemColumns || []}
+                  parentColumns={visibleColumns}
+                  groupColor={parentGroup?.color || '#579bfc'}
+                  hasCheckbox={!!onSelectionChange}
+                  checkboxWidth={40}
+                  colorBarWidth={6}
+                  firstColumnWidth={getColumnWidth(visibleColumns[0])}
+                  getColumnWidth={getColumnWidth}
+                  onCellEdit={onSubitemCellEdit}
+                  onDelete={
+                    onDeleteSubitem && virtualRow.parentItemId
+                      ? (subitemId: string) => onDeleteSubitem(subitemId, virtualRow.parentItemId!)
+                      : undefined
+                  }
+                />
+              </tbody>
+            </table>
+          </div>
+        )
+      }
+
       // Item row
       const item = virtualRow.data as BoardItem
       const group = effectiveGroups.find(g => g.id === virtualRow.groupId)
@@ -1044,7 +1173,7 @@ export function VirtualizedBoardTable({
                 onDragLeave={handleRowDragLeave}
                 onDrop={e => handleRowDrop(e, item.id, itemGroupId)}
                 className={cn(
-                  'h-9 hover:bg-bg-hover cursor-pointer relative',
+                  'h-9 hover:bg-bg-hover cursor-pointer relative group/row',
                   selection.has(item.id) && 'bg-bg-selected',
                   isDragging && 'opacity-50',
                   isDragOver &&
@@ -1101,6 +1230,12 @@ export function VirtualizedBoardTable({
                   const value =
                     col.column_id === 'name' ? item.name : (item.data?.[col.column_id] ?? '')
 
+                  // Show expand toggle on the first column (name cell)
+                  const isFirstCol = colIndex === 0
+                  const itemSubitemCount = isFirstCol ? subitemCounts?.[item.id] || 0 : 0
+                  const isExpanded = isFirstCol && expandedItems?.has(item.id)
+                  const showExpandToggle = isFirstCol && onToggleExpandItem && itemSubitemCount > 0
+
                   return (
                     <td
                       key={col.id}
@@ -1119,15 +1254,53 @@ export function VirtualizedBoardTable({
                         setFocusedCell({ rowIndex, columnIndex: colIndex })
                       }}
                     >
-                      <CellRenderer
-                        row={item}
-                        column={col}
-                        value={value}
-                        isEditing={isEditing}
-                        onEdit={newValue => handleCellEdit(item.id, col.column_id, newValue)}
-                        onEditStart={() => handleCellEditStart(item.id, col.column_id)}
-                        highlightQuery={highlightQuery}
-                      />
+                      <div className="flex items-center h-full">
+                        {/* Expand toggle for subitems */}
+                        {isFirstCol && onToggleExpandItem && (
+                          <button
+                            onClick={e => {
+                              e.stopPropagation()
+                              onToggleExpandItem(item.id)
+                            }}
+                            className={cn(
+                              'flex-shrink-0 p-0.5 ml-0.5 rounded transition-colors',
+                              'hover:bg-bg-hover hover:text-text-secondary',
+                              isExpanded || showExpandToggle
+                                ? 'text-text-tertiary'
+                                : 'text-transparent group-hover/row:text-text-tertiary/50'
+                            )}
+                          >
+                            {isExpanded ? (
+                              <ChevronDown className="w-3.5 h-3.5" />
+                            ) : (
+                              <ChevronRight className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <CellRenderer
+                            row={item}
+                            column={col}
+                            value={value}
+                            isEditing={isEditing}
+                            onEdit={newValue => handleCellEdit(item.id, col.column_id, newValue)}
+                            onEditStart={() => handleCellEditStart(item.id, col.column_id)}
+                            highlightQuery={highlightQuery}
+                          />
+                        </div>
+                        {/* Subitem count badge */}
+                        {isFirstCol && itemSubitemCount > 0 && !isExpanded && (
+                          <span
+                            className="flex-shrink-0 mr-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-bg-tertiary text-text-tertiary cursor-pointer hover:bg-bg-hover"
+                            onClick={e => {
+                              e.stopPropagation()
+                              onToggleExpandItem?.(item.id)
+                            }}
+                          >
+                            {itemSubitemCount}
+                          </span>
+                        )}
+                      </div>
                     </td>
                   )
                 })}
@@ -1192,6 +1365,14 @@ export function VirtualizedBoardTable({
       handleGroupDrop,
       itemsByGroup,
       highlightQuery,
+      // Subitems
+      expandedItems,
+      subitemCounts,
+      subitemColumns,
+      onToggleExpandItem,
+      onSubitemCellEdit,
+      onAddSubitem,
+      onDeleteSubitem,
     ]
   )
 

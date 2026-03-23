@@ -3,13 +3,23 @@
  * Each row has a type (group-header, item, group-footer) for rendering
  */
 
-import type { BoardItem, BoardGroup } from '../types/board'
+import type { BoardItem, BoardGroup, BoardSubitem } from '../types/board'
 
 export interface VirtualRow {
   id: string
-  type: 'group-header' | 'column-header' | 'item' | 'group-summary' | 'group-footer' | 'group-gap'
-  data: BoardGroup | BoardItem
+  type:
+    | 'group-header'
+    | 'column-header'
+    | 'item'
+    | 'group-summary'
+    | 'group-footer'
+    | 'group-gap'
+    | 'subitem-header'
+    | 'subitem'
+  data: BoardGroup | BoardItem | BoardSubitem
   groupId: string
+  /** For subitem/subitem-header rows, the parent item ID */
+  parentItemId?: string
   height: number
 }
 
@@ -26,6 +36,10 @@ interface FlattenOptions {
   preserveItemOrder?: boolean
   /** When true, don't emit column-header rows (use with sticky header) */
   skipColumnHeaders?: boolean
+  /** Set of expanded item IDs that show their subitems */
+  expandedItems?: Set<string>
+  /** Map of parent item ID -> subitems */
+  subitemsByParent?: Map<string, BoardSubitem[]>
 }
 
 /**
@@ -43,6 +57,8 @@ export function flattenGroupsForVirtualization({
   summaryHeight = 28,
   preserveItemOrder = false,
   skipColumnHeaders = false,
+  expandedItems,
+  subitemsByParent,
 }: FlattenOptions): VirtualRow[] {
   const rows: VirtualRow[] = []
 
@@ -108,6 +124,33 @@ export function flattenGroupsForVirtualization({
           groupId: group.id,
           height: rowHeight,
         })
+
+        // If this item is expanded, inject subitem header + subitem rows
+        if (expandedItems?.has(item.id)) {
+          const subitems = subitemsByParent?.get(item.id) || []
+
+          // Subitem header (add subitem button row)
+          rows.push({
+            id: `subitem-header-${item.id}`,
+            type: 'subitem-header',
+            data: item,
+            groupId: group.id,
+            parentItemId: item.id,
+            height: 32,
+          })
+
+          // Individual subitem rows
+          for (const subitem of subitems) {
+            rows.push({
+              id: `subitem-${subitem.id}`,
+              type: 'subitem',
+              data: subitem,
+              groupId: group.id,
+              parentItemId: item.id,
+              height: 32,
+            })
+          }
+        }
       }
 
       // Group summary row (aggregates) - only if group has items

@@ -168,6 +168,38 @@ export interface BoardViewTab {
   updated_at?: string
 }
 
+// Board Subitem (child row under a parent item)
+export interface BoardSubitem {
+  id: string
+  parent_item_id: string
+  board_id: string
+  position: number
+  name: string
+  data: Record<string, any>
+  status: StatusType
+  assigned_to?: string
+  due_date?: string
+  created_by?: string
+  created_at?: string
+  updated_at?: string
+}
+
+// Board Subitem Column (column schema for subitems, shared per board)
+export interface BoardSubitemColumn {
+  id: string
+  board_id: string
+  column_id: string
+  column_name: string
+  column_name_ka?: string
+  column_type: ColumnType
+  is_visible: boolean
+  position: number
+  width: number
+  config: Record<string, any>
+  created_at?: string
+  updated_at?: string
+}
+
 // Board View (Saved filters/sorts) - legacy per-user views
 export interface BoardView {
   id: string

@@ -95,6 +95,19 @@ export const queryKeys = {
     detail: (tabId: string) => ['board-view-tabs', 'detail', tabId] as const,
   },
 
+  // Board subitems
+  boardSubitems: {
+    all: ['board-subitems'] as const,
+    byParent: (parentItemId: string) => ['board-subitems', 'parent', parentItemId] as const,
+    counts: (parentItemIds: string[]) => ['board-subitems', 'counts', ...parentItemIds] as const,
+  },
+
+  // Board subitem columns
+  boardSubitemColumns: {
+    all: ['board-subitem-columns'] as const,
+    byBoard: (boardId: string) => ['board-subitem-columns', boardId] as const,
+  },
+
   // Board views (legacy per-user)
   boardViews: {
     all: ['board-views'] as const,

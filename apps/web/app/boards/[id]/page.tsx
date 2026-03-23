@@ -29,7 +29,16 @@ import {
   useDeleteViewTab,
   useDuplicateViewTab,
 } from '@/features/boards/hooks/useBoardViewTabs'
-import type { ViewType, BoardViewTab } from '@/features/boards/types/board'
+import {
+  useBoardSubitems,
+  useBoardSubitemCounts,
+  useBoardSubitemColumns,
+  useCreateSubitem,
+  useUpdateSubitem,
+  useDeleteSubitem,
+  useEnsureSubitemColumns,
+} from '@/features/boards/hooks/useBoardSubitems'
+import type { ViewType, BoardViewTab, BoardSubitem } from '@/features/boards/types/board'
 import { Button } from '@/shared/components/ui'
 import { useToast } from '@/components/ui-monday/Toast'
 import {
@@ -119,7 +128,8 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const { showToast } = useToast()
 
   // View tabs
-  const { data: viewTabs } = useBoardViewTabs(params.id)
+  const { data: viewTabs, error: viewTabsError } = useBoardViewTabs(params.id)
+  if (viewTabsError) console.error('View tabs fetch error:', viewTabsError)
   const createViewTab = useCreateViewTab(params.id)
   const updateViewTab = useUpdateViewTab(params.id)
   const deleteViewTab = useDeleteViewTab(params.id)
@@ -328,6 +338,149 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     columns
   )
 
+  // ─── Subitems state ───
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+
+  // Subitem columns for this board
+  const { data: subitemColumns } = useBoardSubitemColumns(params.id)
+  const ensureSubitemColumns = useEnsureSubitemColumns(params.id)
+
+  // Get all item IDs for batch subitem count fetch
+  const allItemIds = (items || []).map(i => i.id)
+  const { data: subitemCounts } = useBoardSubitemCounts(allItemIds, allItemIds.length > 0)
+
+  // Track loaded subitems per expanded parent
+  const [subitemsByParent, setSubitemsByParent] = useState<Map<string, BoardSubitem[]>>(new Map())
+
+  // Subitem mutations (we create per-parent hooks on demand)
+  const createSubitem = useCreateSubitem(params.id)
+
+  const handleToggleExpandItem = useCallback(
+    (itemId: string) => {
+      setExpandedItems(prev => {
+        const next = new Set(prev)
+        if (next.has(itemId)) {
+          next.delete(itemId)
+        } else {
+          next.add(itemId)
+          // Ensure subitem columns exist when first expanding
+          if (!subitemColumns || subitemColumns.length === 0) {
+            ensureSubitemColumns.mutate()
+          }
+        }
+        return next
+      })
+    },
+    [subitemColumns, ensureSubitemColumns]
+  )
+
+  // Lazy-load subitems for expanded items
+  useEffect(() => {
+    if (expandedItems.size === 0) return
+
+    const loadSubitems = async () => {
+      const { boardSubitemsService } =
+        await import('@/features/boards/services/board-subitems.service')
+      const newMap = new Map(subitemsByParent)
+
+      for (const itemId of expandedItems) {
+        if (!newMap.has(itemId)) {
+          try {
+            const subs = await boardSubitemsService.getSubitems(itemId)
+            newMap.set(itemId, subs)
+          } catch {
+            newMap.set(itemId, [])
+          }
+        }
+      }
+
+      // Remove collapsed items from map
+      for (const key of newMap.keys()) {
+        if (!expandedItems.has(key)) {
+          newMap.delete(key)
+        }
+      }
+
+      setSubitemsByParent(newMap)
+    }
+
+    loadSubitems()
+  }, [expandedItems]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleAddSubitem = useCallback(
+    (parentItemId: string) => {
+      const currentSubs = subitemsByParent.get(parentItemId) || []
+      const nextPosition = currentSubs.length
+
+      createSubitem.mutate(
+        {
+          parent_item_id: parentItemId,
+          name: '',
+          position: nextPosition,
+          created_by: inspectorId || undefined,
+        },
+        {
+          onSuccess: newSubitem => {
+            setSubitemsByParent(prev => {
+              const next = new Map(prev)
+              const existing = next.get(parentItemId) || []
+              next.set(parentItemId, [...existing, newSubitem])
+              return next
+            })
+          },
+        }
+      )
+    },
+    [subitemsByParent, createSubitem, inspectorId]
+  )
+
+  const handleSubitemCellEdit = useCallback(
+    async (subitemId: string, field: string, value: any) => {
+      const { boardSubitemsService } =
+        await import('@/features/boards/services/board-subitems.service')
+      const updates = field === 'data' ? { data: value } : { [field]: value }
+      try {
+        const updated = await boardSubitemsService.updateSubitem(subitemId, updates as any)
+        // Update local state
+        setSubitemsByParent(prev => {
+          const next = new Map(prev)
+          for (const [parentId, subs] of next) {
+            const idx = subs.findIndex(s => s.id === subitemId)
+            if (idx >= 0) {
+              const newSubs = [...subs]
+              newSubs[idx] = updated
+              next.set(parentId, newSubs)
+              break
+            }
+          }
+          return next
+        })
+      } catch (err) {
+        console.error('Failed to update subitem:', err)
+      }
+    },
+    []
+  )
+
+  const handleDeleteSubitem = useCallback(async (subitemId: string, parentItemId: string) => {
+    const { boardSubitemsService } =
+      await import('@/features/boards/services/board-subitems.service')
+    try {
+      await boardSubitemsService.deleteSubitem(subitemId)
+      setSubitemsByParent(prev => {
+        const next = new Map(prev)
+        const subs = next.get(parentItemId) || []
+        next.set(
+          parentItemId,
+          subs.filter(s => s.id !== subitemId)
+        )
+        return next
+      })
+    } catch (err) {
+      console.error('Failed to delete subitem:', err)
+    }
+  }, [])
+
   // All event handlers
   const handlers = useBoardHandlers({
     boardId: params.id,
@@ -390,7 +543,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       />
 
       {/* View Tabs */}
-      {viewTabs && viewTabs.length > 0 && (
+      {viewTabs && (
         <ViewTabBar
           tabs={viewTabs}
           activeTabId={activeTabId}
@@ -575,6 +728,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               onCellEditEnd={() => setEditing(null)}
               sortConfig={sortConfig}
               onSortChange={handleSortChange}
+              expandedItems={expandedItems}
+              subitemCounts={subitemCounts}
+              subitemsByParent={subitemsByParent}
+              subitemColumns={subitemColumns}
+              onToggleExpandItem={handleToggleExpandItem}
+              onSubitemCellEdit={handleSubitemCellEdit}
+              onAddSubitem={handleAddSubitem}
+              onDeleteSubitem={handleDeleteSubitem}
             />
           </ErrorBoundary>
         ) : (
