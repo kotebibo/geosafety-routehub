@@ -222,6 +222,12 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.theme.darkDesc': 'მუქი ფერები, იცავს თვალებს',
     'settings.theme.night': 'ღამის',
     'settings.theme.nightDesc': 'ღრმა ლურჯი, კონცენტრაციისთვის',
+    'settings.theme.arctic': 'არქტიკული',
+    'settings.theme.arcticDesc': 'ცივი ლურჯი, სუფთა და მსუბუქი',
+    'settings.theme.sunset': 'მზის ჩასვლა',
+    'settings.theme.sunsetDesc': 'თბილი ნარინჯისფერი მუქ ფონზე',
+    'settings.theme.coffee': 'ყავა',
+    'settings.theme.coffeeDesc': 'თბილი ყავისფერი, მყუდრო მუქი რეჟიმი',
   },
   en: {
     // Navigation
@@ -430,6 +436,12 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.theme.darkDesc': 'Dark colors, easy on the eyes',
     'settings.theme.night': 'Night',
     'settings.theme.nightDesc': 'Deep blue, for focused work',
+    'settings.theme.arctic': 'Arctic',
+    'settings.theme.arcticDesc': 'Cool icy blues, crisp and clean',
+    'settings.theme.sunset': 'Sunset',
+    'settings.theme.sunsetDesc': 'Warm amber on dark background',
+    'settings.theme.coffee': 'Coffee',
+    'settings.theme.coffeeDesc': 'Warm brown, cozy dark mode',
   },
 }
 

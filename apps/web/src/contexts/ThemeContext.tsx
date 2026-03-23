@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 
-export type Theme = 'light' | 'dark' | 'night'
+export type Theme = 'light' | 'dark' | 'night' | 'arctic' | 'sunset' | 'coffee'
 
 interface ThemeContextType {
   theme: Theme
@@ -19,7 +19,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // Load theme from localStorage on mount
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as Theme | null
-    if (stored && ['light', 'dark', 'night'].includes(stored)) {
+    if (stored && ['light', 'dark', 'night', 'arctic', 'sunset', 'coffee'].includes(stored)) {
       setThemeState(stored)
       applyTheme(stored)
     }
@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const applyTheme = (t: Theme) => {
     const root = document.documentElement
     // Remove all theme classes
-    root.classList.remove('light', 'dark', 'night')
+    root.classList.remove('light', 'dark', 'night', 'arctic', 'sunset', 'coffee')
     // Add the active theme class (light has no class needed, but we add it for consistency)
     if (t !== 'light') {
       root.classList.add(t)

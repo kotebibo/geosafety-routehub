@@ -21,6 +21,9 @@ import {
   Sun,
   Moon,
   Star,
+  Snowflake,
+  Sunset,
+  Coffee,
 } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import type { Theme } from '@/contexts/ThemeContext'
@@ -119,7 +122,7 @@ export default function SettingsPage() {
             userSettings.notification_settings || defaultSettings.notification_settings,
         })
         // Sync theme context with saved preference
-        if (['light', 'dark', 'night'].includes(savedTheme)) {
+        if (['light', 'dark', 'night', 'arctic', 'sunset', 'coffee'].includes(savedTheme)) {
           setTheme(savedTheme)
         }
       }
@@ -601,7 +604,7 @@ export default function SettingsPage() {
                 {t('settings.appearance.themeDesc')}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-3xl">
                 {/* Light Theme */}
                 <button
                   onClick={() => {
@@ -763,6 +766,168 @@ export default function SettingsPage() {
                     </div>
                     {currentTheme === 'night' && (
                       <Check className="w-4 h-4 text-monday-primary ml-auto shrink-0" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Arctic Theme */}
+                <button
+                  onClick={() => {
+                    setTheme('arctic')
+                    setSettings(s => ({ ...s, theme: 'arctic' }))
+                  }}
+                  className={cn(
+                    'group relative rounded-lg border-2 p-1 transition-all',
+                    currentTheme === 'arctic'
+                      ? 'border-[#0ea5e9] ring-2 ring-[#0ea5e9]/20'
+                      : 'border-border-light hover:border-[#0ea5e9]/40'
+                  )}
+                >
+                  <div className="rounded-md overflow-hidden bg-[#f0f9ff]">
+                    <div className="flex h-[100px]">
+                      <div className="w-10 bg-[#e0f2fe] border-r border-[#bae6fd] flex flex-col items-center pt-2 gap-1.5">
+                        <div className="w-5 h-5 rounded bg-[#0ea5e9]" />
+                        <div className="w-5 h-1.5 rounded bg-[#bae6fd]" />
+                        <div className="w-5 h-1.5 rounded bg-[#bae6fd]" />
+                        <div className="w-5 h-1.5 rounded bg-[#bae6fd]" />
+                      </div>
+                      <div className="flex-1 p-2">
+                        <div className="h-3 w-16 rounded bg-[#0c4a6e] mb-2" />
+                        <div className="space-y-1.5">
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#e0f2fe]" />
+                            <div className="h-2 w-8 rounded bg-[#00c875]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#e0f2fe]" />
+                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#e0f2fe]" />
+                            <div className="h-2 w-8 rounded bg-[#0ea5e9]" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-2">
+                    <Snowflake className="w-4 h-4 text-text-secondary" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-text-primary">
+                        {t('settings.theme.arctic')}
+                      </p>
+                      <p className="text-xs text-text-tertiary">{t('settings.theme.arcticDesc')}</p>
+                    </div>
+                    {currentTheme === 'arctic' && (
+                      <Check className="w-4 h-4 text-[#0ea5e9] ml-auto shrink-0" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Sunset Theme */}
+                <button
+                  onClick={() => {
+                    setTheme('sunset')
+                    setSettings(s => ({ ...s, theme: 'sunset' }))
+                  }}
+                  className={cn(
+                    'group relative rounded-lg border-2 p-1 transition-all',
+                    currentTheme === 'sunset'
+                      ? 'border-[#f59e0b] ring-2 ring-[#f59e0b]/20'
+                      : 'border-border-light hover:border-[#f59e0b]/40'
+                  )}
+                >
+                  <div className="rounded-md overflow-hidden bg-[#1c1210]">
+                    <div className="flex h-[100px]">
+                      <div className="w-10 bg-[#271a15] border-r border-[#3d2b20] flex flex-col items-center pt-2 gap-1.5">
+                        <div className="w-5 h-5 rounded bg-[#f59e0b]" />
+                        <div className="w-5 h-1.5 rounded bg-[#3d2b20]" />
+                        <div className="w-5 h-1.5 rounded bg-[#3d2b20]" />
+                        <div className="w-5 h-1.5 rounded bg-[#3d2b20]" />
+                      </div>
+                      <div className="flex-1 p-2">
+                        <div className="h-3 w-16 rounded bg-[#fef3c7] mb-2" />
+                        <div className="space-y-1.5">
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#271a15]" />
+                            <div className="h-2 w-8 rounded bg-[#00c875]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#271a15]" />
+                            <div className="h-2 w-8 rounded bg-[#fbbf24]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#271a15]" />
+                            <div className="h-2 w-8 rounded bg-[#f59e0b]" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-2">
+                    <Sunset className="w-4 h-4 text-text-secondary" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-text-primary">
+                        {t('settings.theme.sunset')}
+                      </p>
+                      <p className="text-xs text-text-tertiary">{t('settings.theme.sunsetDesc')}</p>
+                    </div>
+                    {currentTheme === 'sunset' && (
+                      <Check className="w-4 h-4 text-[#f59e0b] ml-auto shrink-0" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Coffee Theme */}
+                <button
+                  onClick={() => {
+                    setTheme('coffee')
+                    setSettings(s => ({ ...s, theme: 'coffee' }))
+                  }}
+                  className={cn(
+                    'group relative rounded-lg border-2 p-1 transition-all',
+                    currentTheme === 'coffee'
+                      ? 'border-[#a78bfa] ring-2 ring-[#a78bfa]/20'
+                      : 'border-border-light hover:border-[#a78bfa]/40'
+                  )}
+                >
+                  <div className="rounded-md overflow-hidden bg-[#1a1614]">
+                    <div className="flex h-[100px]">
+                      <div className="w-10 bg-[#231e1b] border-r border-[#382f2a] flex flex-col items-center pt-2 gap-1.5">
+                        <div className="w-5 h-5 rounded bg-[#a78bfa]" />
+                        <div className="w-5 h-1.5 rounded bg-[#382f2a]" />
+                        <div className="w-5 h-1.5 rounded bg-[#382f2a]" />
+                        <div className="w-5 h-1.5 rounded bg-[#382f2a]" />
+                      </div>
+                      <div className="flex-1 p-2">
+                        <div className="h-3 w-16 rounded bg-[#ede9e3] mb-2" />
+                        <div className="space-y-1.5">
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#231e1b]" />
+                            <div className="h-2 w-8 rounded bg-[#00c875]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#231e1b]" />
+                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#231e1b]" />
+                            <div className="h-2 w-8 rounded bg-[#a78bfa]" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-2">
+                    <Coffee className="w-4 h-4 text-text-secondary" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-text-primary">
+                        {t('settings.theme.coffee')}
+                      </p>
+                      <p className="text-xs text-text-tertiary">{t('settings.theme.coffeeDesc')}</p>
+                    </div>
+                    {currentTheme === 'coffee' && (
+                      <Check className="w-4 h-4 text-[#a78bfa] ml-auto shrink-0" />
                     )}
                   </div>
                 </button>

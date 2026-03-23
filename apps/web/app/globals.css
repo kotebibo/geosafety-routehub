@@ -282,6 +282,180 @@
     --input: 212 35% 18%;
     --ring: 207 90% 68%;
   }
+
+  /* ========== ARCTIC THEME ========== */
+  /* Cool icy blues — crisp and clean light theme */
+  .arctic {
+    --monday-primary: #0ea5e9;
+    --monday-primary-hover: #0284c7;
+    --monday-primary-active: #0369a1;
+    --monday-primary-disabled: #7dd3fc;
+    --monday-dark: #0c4a6e;
+    --monday-white: #f0f9ff;
+
+    --bg-primary: #f0f9ff;
+    --bg-secondary: #e0f2fe;
+    --bg-tertiary: #bae6fd;
+    --bg-hover: #e0eeff;
+    --bg-selected: #bfdbfe;
+    --bg-overlay: rgba(12, 74, 110, 0.6);
+
+    --border-light: #bae6fd;
+    --border-medium: #7dd3fc;
+    --border-strong: #38bdf8;
+    --border-focus: #0ea5e9;
+
+    --text-primary: #0c4a6e;
+    --text-secondary: #0369a1;
+    --text-tertiary: #0284c7;
+    --text-disabled: #7dd3fc;
+    --text-inverse: #f0f9ff;
+    --text-link: #0369a1;
+
+    --shadow-xs: 0 1px 2px rgba(12, 74, 110, 0.06);
+    --shadow-sm: 0 1px 3px rgba(12, 74, 110, 0.08);
+    --shadow-md: 0 4px 6px rgba(12, 74, 110, 0.1);
+    --shadow-lg: 0 8px 16px rgba(12, 74, 110, 0.12);
+    --shadow-xl: 0 16px 32px rgba(12, 74, 110, 0.15);
+    --shadow-primary: 0 4px 16px rgba(14, 165, 233, 0.3);
+
+    /* Legacy Radix UI compatibility */
+    --background: 204 100% 97%;
+    --foreground: 204 80% 16%;
+    --card: 204 100% 97%;
+    --card-foreground: 204 80% 16%;
+    --popover: 204 100% 97%;
+    --popover-foreground: 204 80% 16%;
+    --primary: 199 89% 48%;
+    --primary-foreground: 204 100% 97%;
+    --secondary: 204 94% 94%;
+    --secondary-foreground: 204 80% 16%;
+    --muted: 204 94% 94%;
+    --muted-foreground: 201 90% 27%;
+    --accent: 204 94% 94%;
+    --accent-foreground: 204 80% 16%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 204 94% 86%;
+    --input: 204 94% 86%;
+    --ring: 199 89% 48%;
+  }
+
+  /* ========== SUNSET THEME ========== */
+  /* Warm amber/orange on dark — evening vibes */
+  .sunset {
+    --monday-primary: #f59e0b;
+    --monday-primary-hover: #d97706;
+    --monday-primary-active: #b45309;
+    --monday-primary-disabled: #6b4c1e;
+    --monday-dark: #fef3c7;
+    --monday-white: #1c1210;
+
+    --bg-primary: #1c1210;
+    --bg-secondary: #271a15;
+    --bg-tertiary: #33221b;
+    --bg-hover: #3d2b20;
+    --bg-selected: #4a3328;
+    --bg-overlay: rgba(0, 0, 0, 0.65);
+
+    --border-light: #3d2b20;
+    --border-medium: #5c4033;
+    --border-strong: #7a5544;
+    --border-focus: #f59e0b;
+
+    --text-primary: #fef3c7;
+    --text-secondary: #c8a87a;
+    --text-tertiary: #8a6e4a;
+    --text-disabled: #5c4033;
+    --text-inverse: #1c1210;
+    --text-link: #fbbf24;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.45);
+    --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.5);
+    --shadow-primary: 0 4px 16px rgba(245, 158, 11, 0.25);
+
+    /* Legacy Radix UI compatibility */
+    --background: 15 30% 9%;
+    --foreground: 44 92% 95%;
+    --card: 15 30% 9%;
+    --card-foreground: 44 92% 95%;
+    --popover: 15 30% 9%;
+    --popover-foreground: 44 92% 95%;
+    --primary: 43 96% 56%;
+    --primary-foreground: 15 30% 9%;
+    --secondary: 15 30% 12%;
+    --secondary-foreground: 44 92% 95%;
+    --muted: 15 30% 12%;
+    --muted-foreground: 30 30% 50%;
+    --accent: 15 30% 12%;
+    --accent-foreground: 44 92% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 15 30% 18%;
+    --input: 15 30% 18%;
+    --ring: 43 96% 56%;
+  }
+
+  /* ========== COFFEE THEME ========== */
+  /* Warm brown/sepia — cozy dark mode */
+  .coffee {
+    --monday-primary: #a78bfa;
+    --monday-primary-hover: #8b5cf6;
+    --monday-primary-active: #7c3aed;
+    --monday-primary-disabled: #4c3a6e;
+    --monday-dark: #ede9e3;
+    --monday-white: #1a1614;
+
+    --bg-primary: #1a1614;
+    --bg-secondary: #231e1b;
+    --bg-tertiary: #2e2723;
+    --bg-hover: #382f2a;
+    --bg-selected: #3d3230;
+    --bg-overlay: rgba(0, 0, 0, 0.6);
+
+    --border-light: #382f2a;
+    --border-medium: #504540;
+    --border-strong: #6a5d55;
+    --border-focus: #a78bfa;
+
+    --text-primary: #ede9e3;
+    --text-secondary: #b5a99a;
+    --text-tertiary: #7d7068;
+    --text-disabled: #504540;
+    --text-inverse: #1a1614;
+    --text-link: #c4b5fd;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
+    --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.45);
+    --shadow-primary: 0 4px 16px rgba(167, 139, 250, 0.2);
+
+    /* Legacy Radix UI compatibility */
+    --background: 20 18% 9%;
+    --foreground: 30 20% 92%;
+    --card: 20 18% 9%;
+    --card-foreground: 30 20% 92%;
+    --popover: 20 18% 9%;
+    --popover-foreground: 30 20% 92%;
+    --primary: 263 70% 76%;
+    --primary-foreground: 20 18% 9%;
+    --secondary: 20 18% 12%;
+    --secondary-foreground: 30 20% 92%;
+    --muted: 20 18% 12%;
+    --muted-foreground: 20 12% 50%;
+    --accent: 20 18% 12%;
+    --accent-foreground: 30 20% 92%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 20 18% 18%;
+    --input: 20 18% 18%;
+    --ring: 263 70% 76%;
+  }
 }
 
 @layer base {
