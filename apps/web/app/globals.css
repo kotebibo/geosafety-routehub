@@ -402,10 +402,10 @@
   /* ========== COFFEE THEME ========== */
   /* Warm brown/sepia — cozy dark mode */
   .coffee {
-    --monday-primary: #a78bfa;
-    --monday-primary-hover: #8b5cf6;
-    --monday-primary-active: #7c3aed;
-    --monday-primary-disabled: #4c3a6e;
+    --monday-primary: #d4a574;
+    --monday-primary-hover: #c4915e;
+    --monday-primary-active: #b07d4a;
+    --monday-primary-disabled: #5c4a38;
     --monday-dark: #ede9e3;
     --monday-white: #1a1614;
 
@@ -419,21 +419,21 @@
     --border-light: #382f2a;
     --border-medium: #504540;
     --border-strong: #6a5d55;
-    --border-focus: #a78bfa;
+    --border-focus: #d4a574;
 
     --text-primary: #ede9e3;
     --text-secondary: #b5a99a;
     --text-tertiary: #7d7068;
     --text-disabled: #504540;
     --text-inverse: #1a1614;
-    --text-link: #c4b5fd;
+    --text-link: #e0b88a;
 
     --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.35);
     --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.4);
     --shadow-xl: 0 16px 32px rgba(0, 0, 0, 0.45);
-    --shadow-primary: 0 4px 16px rgba(167, 139, 250, 0.2);
+    --shadow-primary: 0 4px 16px rgba(212, 165, 116, 0.2);
 
     /* Legacy Radix UI compatibility */
     --background: 20 18% 9%;
@@ -442,7 +442,7 @@
     --card-foreground: 30 20% 92%;
     --popover: 20 18% 9%;
     --popover-foreground: 30 20% 92%;
-    --primary: 263 70% 76%;
+    --primary: 30 50% 65%;
     --primary-foreground: 20 18% 9%;
     --secondary: 20 18% 12%;
     --secondary-foreground: 30 20% 92%;
@@ -454,7 +454,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 20 18% 18%;
     --input: 20 18% 18%;
-    --ring: 263 70% 76%;
+    --ring: 30 50% 65%;
   }
 }
 

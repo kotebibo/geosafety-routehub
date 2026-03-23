@@ -887,14 +887,14 @@ export default function SettingsPage() {
                   className={cn(
                     'group relative rounded-lg border-2 p-1 transition-all',
                     currentTheme === 'coffee'
-                      ? 'border-[#a78bfa] ring-2 ring-[#a78bfa]/20'
-                      : 'border-border-light hover:border-[#a78bfa]/40'
+                      ? 'border-[#d4a574] ring-2 ring-[#d4a574]/20'
+                      : 'border-border-light hover:border-[#d4a574]/40'
                   )}
                 >
                   <div className="rounded-md overflow-hidden bg-[#1a1614]">
                     <div className="flex h-[100px]">
                       <div className="w-10 bg-[#231e1b] border-r border-[#382f2a] flex flex-col items-center pt-2 gap-1.5">
-                        <div className="w-5 h-5 rounded bg-[#a78bfa]" />
+                        <div className="w-5 h-5 rounded bg-[#d4a574]" />
                         <div className="w-5 h-1.5 rounded bg-[#382f2a]" />
                         <div className="w-5 h-1.5 rounded bg-[#382f2a]" />
                         <div className="w-5 h-1.5 rounded bg-[#382f2a]" />
@@ -912,7 +912,7 @@ export default function SettingsPage() {
                           </div>
                           <div className="flex gap-1.5">
                             <div className="h-2 flex-1 rounded bg-[#231e1b]" />
-                            <div className="h-2 w-8 rounded bg-[#a78bfa]" />
+                            <div className="h-2 w-8 rounded bg-[#d4a574]" />
                           </div>
                         </div>
                       </div>
@@ -927,7 +927,7 @@ export default function SettingsPage() {
                       <p className="text-xs text-text-tertiary">{t('settings.theme.coffeeDesc')}</p>
                     </div>
                     {currentTheme === 'coffee' && (
-                      <Check className="w-4 h-4 text-[#a78bfa] ml-auto shrink-0" />
+                      <Check className="w-4 h-4 text-[#d4a574] ml-auto shrink-0" />
                     )}
                   </div>
                 </button>
