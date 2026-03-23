@@ -12,8 +12,13 @@ import {
   ArrowUp,
   ArrowDown,
   Plus,
+  Check,
+  Calendar,
+  Hash,
 } from 'lucide-react'
 import type { BoardColumn, ColumnType } from '../types/board'
+import { MONDAY_COLORS, DEFAULT_STATUS_OPTIONS } from './BoardTable/cells/StatusCell'
+import type { StatusOption } from './BoardTable/cells/StatusCell'
 
 // Filter condition types based on column type
 const CONDITIONS_BY_TYPE: Record<ColumnType, { value: string; label: string }[]> = {
@@ -147,7 +152,9 @@ export const BoardToolbar = memo(function BoardToolbar({
 
   // Temporary state for sort dropdown
   const [tempSortColumn, setTempSortColumn] = useState<string>(sortConfig?.column || '')
-  const [tempSortDirection, setTempSortDirection] = useState<'asc' | 'desc'>(sortConfig?.direction || 'asc')
+  const [tempSortDirection, setTempSortDirection] = useState<'asc' | 'desc'>(
+    sortConfig?.direction || 'asc'
+  )
 
   // Temporary state for new filter
   const [newFilterColumn, setNewFilterColumn] = useState<string>('')
@@ -160,19 +167,19 @@ export const BoardToolbar = memo(function BoardToolbar({
     setTempSortDirection(sortConfig?.direction || 'asc')
   }, [sortConfig])
 
-  const openDropdown = useCallback((
-    ref: React.RefObject<HTMLButtonElement>,
-    setter: (val: boolean) => void
-  ) => {
-    if (ref.current) {
-      const rect = ref.current.getBoundingClientRect()
-      setDropdownPosition({
-        top: rect.bottom + 4,
-        left: rect.left,
-      })
-    }
-    setter(true)
-  }, [])
+  const openDropdown = useCallback(
+    (ref: React.RefObject<HTMLButtonElement>, setter: (val: boolean) => void) => {
+      if (ref.current) {
+        const rect = ref.current.getBoundingClientRect()
+        setDropdownPosition({
+          top: rect.bottom + 4,
+          left: rect.left,
+        })
+      }
+      setter(true)
+    },
+    []
+  )
 
   const closeAllDropdowns = useCallback(() => {
     setShowSortDropdown(false)
@@ -196,16 +203,21 @@ export const BoardToolbar = memo(function BoardToolbar({
   }, [onSortChange])
 
   // Handle group by
-  const handleGroupBySelect = useCallback((columnId: string | null) => {
-    onGroupByChange(columnId)
-    setShowGroupDropdown(false)
-  }, [onGroupByChange])
+  const handleGroupBySelect = useCallback(
+    (columnId: string | null) => {
+      onGroupByChange(columnId)
+      setShowGroupDropdown(false)
+    },
+    [onGroupByChange]
+  )
 
   // Handle add filter
   const handleAddFilter = useCallback(() => {
     if (!newFilterColumn || !newFilterCondition) return
 
-    const needsValue = !['is_empty', 'is_not_empty', 'is_checked', 'is_not_checked'].includes(newFilterCondition)
+    const needsValue = !['is_empty', 'is_not_empty', 'is_checked', 'is_not_checked'].includes(
+      newFilterCondition
+    )
 
     if (needsValue && !newFilterValue) return
 
@@ -222,9 +234,12 @@ export const BoardToolbar = memo(function BoardToolbar({
     setNewFilterValue('')
   }, [newFilterColumn, newFilterCondition, newFilterValue, filters, onFiltersChange])
 
-  const handleRemoveFilter = useCallback((filterId: string) => {
-    onFiltersChange(filters.filter(f => f.id !== filterId))
-  }, [filters, onFiltersChange])
+  const handleRemoveFilter = useCallback(
+    (filterId: string) => {
+      onFiltersChange(filters.filter(f => f.id !== filterId))
+    },
+    [filters, onFiltersChange]
+  )
 
   const handleClearAllFilters = useCallback(() => {
     onFiltersChange([])
@@ -232,15 +247,18 @@ export const BoardToolbar = memo(function BoardToolbar({
   }, [onFiltersChange])
 
   // Get conditions for selected column type
-  const getConditionsForColumn = useCallback((columnId: string) => {
-    const column = columns.find(c => c.column_id === columnId)
-    if (!column) return []
-    return CONDITIONS_BY_TYPE[column.column_type] || CONDITIONS_BY_TYPE.text
-  }, [columns])
+  const getConditionsForColumn = useCallback(
+    (columnId: string) => {
+      const column = columns.find(c => c.column_id === columnId)
+      if (!column) return []
+      return CONDITIONS_BY_TYPE[column.column_type] || CONDITIONS_BY_TYPE.text
+    },
+    [columns]
+  )
 
   // Groupable columns - memoized
-  const groupableColumns = React.useMemo(() =>
-    columns.filter(col => !NON_GROUPABLE_TYPES.includes(col.column_type)),
+  const groupableColumns = React.useMemo(
+    () => columns.filter(col => !NON_GROUPABLE_TYPES.includes(col.column_type)),
     [columns]
   )
 
@@ -248,6 +266,26 @@ export const BoardToolbar = memo(function BoardToolbar({
   const conditionNeedsValue = useCallback((condition: string) => {
     return !['is_empty', 'is_not_empty', 'is_checked', 'is_not_checked'].includes(condition)
   }, [])
+
+  // Get status options for a column (from config or defaults)
+  const getStatusOptions = useCallback(
+    (columnId: string): StatusOption[] => {
+      const column = columns.find(c => c.column_id === columnId)
+      if (!column) return DEFAULT_STATUS_OPTIONS
+      const configOptions = column.config?.options as StatusOption[] | undefined
+      return configOptions && configOptions.length > 0 ? configOptions : DEFAULT_STATUS_OPTIONS
+    },
+    [columns]
+  )
+
+  // Get column type for a column id
+  const getColumnType = useCallback(
+    (columnId: string): ColumnType => {
+      const column = columns.find(c => c.column_id === columnId)
+      return column?.column_type || 'text'
+    },
+    [columns]
+  )
 
   return (
     <div className="flex items-center gap-2">
@@ -336,6 +374,16 @@ export const BoardToolbar = memo(function BoardToolbar({
         <div className="flex items-center gap-1.5 ml-2 pl-2 border-l border-border-light">
           {filters.map(filter => {
             const column = columns.find(c => c.column_id === filter.column)
+            const filterDisplayValue = (() => {
+              if (!filter.value) return null
+              if (column?.column_type === 'status') {
+                const opts = column.config?.options as StatusOption[] | undefined
+                const allOpts = opts && opts.length > 0 ? opts : DEFAULT_STATUS_OPTIONS
+                const match = allOpts.find(o => o.key === filter.value)
+                return match?.label || filter.value
+              }
+              return filter.value
+            })()
             return (
               <div
                 key={filter.id}
@@ -343,7 +391,7 @@ export const BoardToolbar = memo(function BoardToolbar({
               >
                 <span className="font-medium">{column?.column_name || filter.column}:</span>
                 <span>{filter.condition.replace(/_/g, ' ')}</span>
-                {filter.value && <span>"{filter.value}"</span>}
+                {filterDisplayValue && <span>"{filterDisplayValue}"</span>}
                 <button
                   onClick={() => handleRemoveFilter(filter.id)}
                   className="ml-1 hover:bg-monday-primary/20 rounded p-0.5"
@@ -357,239 +405,338 @@ export const BoardToolbar = memo(function BoardToolbar({
       )}
 
       {/* Sort Dropdown */}
-      {showSortDropdown && typeof document !== 'undefined' && createPortal(
-        <>
-          <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
-          <div
-            className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light p-4 min-w-[280px]"
-            style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
-          >
-            <div className="text-sm font-semibold text-text-primary mb-3">Sort by</div>
+      {showSortDropdown &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
+            <div
+              className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light p-4 min-w-[280px]"
+              style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
+            >
+              <div className="text-sm font-semibold text-text-primary mb-3">Sort by</div>
 
-            {/* Column Select */}
-            <div className="mb-3">
-              <label className="block text-xs text-text-secondary mb-1">Column</label>
-              <select
-                value={tempSortColumn}
-                onChange={(e) => setTempSortColumn(e.target.value)}
-                className="w-full px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
-              >
-                <option value="">Select column...</option>
-                {columns.map(col => (
-                  <option key={col.id} value={col.column_id}>
-                    {col.column_name}
-                  </option>
-                ))}
-              </select>
-            </div>
+              {/* Column Select */}
+              <div className="mb-3">
+                <label className="block text-xs text-text-secondary mb-1">Column</label>
+                <select
+                  value={tempSortColumn}
+                  onChange={e => setTempSortColumn(e.target.value)}
+                  className="w-full px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                >
+                  <option value="">Select column...</option>
+                  {columns.map(col => (
+                    <option key={col.id} value={col.column_id}>
+                      {col.column_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            {/* Direction Select */}
-            <div className="mb-4">
-              <label className="block text-xs text-text-secondary mb-1">Direction</label>
+              {/* Direction Select */}
+              <div className="mb-4">
+                <label className="block text-xs text-text-secondary mb-1">Direction</label>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setTempSortDirection('asc')}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors',
+                      tempSortDirection === 'asc'
+                        ? 'border-monday-primary bg-monday-primary/10 text-monday-primary'
+                        : 'border-border-light hover:bg-bg-hover'
+                    )}
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                    Ascending
+                  </button>
+                  <button
+                    onClick={() => setTempSortDirection('desc')}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors',
+                      tempSortDirection === 'desc'
+                        ? 'border-monday-primary bg-monday-primary/10 text-monday-primary'
+                        : 'border-border-light hover:bg-bg-hover'
+                    )}
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                    Descending
+                  </button>
+                </div>
+              </div>
+
+              {/* Actions */}
               <div className="flex gap-2">
                 <button
-                  onClick={() => setTempSortDirection('asc')}
-                  className={cn(
-                    'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors',
-                    tempSortDirection === 'asc'
-                      ? 'border-monday-primary bg-monday-primary/10 text-monday-primary'
-                      : 'border-border-light hover:bg-bg-hover'
-                  )}
+                  onClick={handleClearSort}
+                  className="flex-1 px-3 py-2 text-sm text-text-secondary hover:bg-bg-hover rounded-md transition-colors"
                 >
-                  <ArrowUp className="w-4 h-4" />
-                  Ascending
+                  Clear
                 </button>
                 <button
-                  onClick={() => setTempSortDirection('desc')}
-                  className={cn(
-                    'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors',
-                    tempSortDirection === 'desc'
-                      ? 'border-monday-primary bg-monday-primary/10 text-monday-primary'
-                      : 'border-border-light hover:bg-bg-hover'
-                  )}
+                  onClick={handleApplySort}
+                  disabled={!tempSortColumn}
+                  className="flex-1 px-3 py-2 text-sm bg-monday-primary text-white rounded-md hover:bg-monday-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  <ArrowDown className="w-4 h-4" />
-                  Descending
+                  Apply
                 </button>
               </div>
             </div>
-
-            {/* Actions */}
-            <div className="flex gap-2">
-              <button
-                onClick={handleClearSort}
-                className="flex-1 px-3 py-2 text-sm text-text-secondary hover:bg-bg-hover rounded-md transition-colors"
-              >
-                Clear
-              </button>
-              <button
-                onClick={handleApplySort}
-                disabled={!tempSortColumn}
-                className="flex-1 px-3 py-2 text-sm bg-monday-primary text-white rounded-md hover:bg-monday-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </>,
-        document.body
-      )}
+          </>,
+          document.body
+        )}
 
       {/* Group By Dropdown */}
-      {showGroupDropdown && typeof document !== 'undefined' && createPortal(
-        <>
-          <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
-          <div
-            className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light py-2 min-w-[200px]"
-            style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
-          >
-            <div className="px-3 py-2 text-xs font-semibold text-text-tertiary uppercase">
-              Group by column
-            </div>
-            <button
-              onClick={() => handleGroupBySelect(null)}
-              className={cn(
-                'w-full px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
-                !groupByColumn && 'bg-bg-selected text-monday-primary'
-              )}
+      {showGroupDropdown &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
+            <div
+              className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light py-2 min-w-[200px] max-h-[320px] flex flex-col"
+              style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
             >
-              None (use default groups)
-            </button>
-            <div className="my-1 border-t border-border-light" />
-            {groupableColumns.map(col => (
-              <button
-                key={col.id}
-                onClick={() => handleGroupBySelect(col.column_id)}
-                className={cn(
-                  'w-full px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
-                  groupByColumn === col.column_id && 'bg-bg-selected text-monday-primary'
-                )}
-              >
-                {col.column_name}
-              </button>
-            ))}
-          </div>
-        </>,
-        document.body
-      )}
+              <div className="px-3 py-2 text-xs font-semibold text-text-tertiary uppercase shrink-0">
+                Group by column
+              </div>
+              <div className="overflow-y-auto">
+                <button
+                  onClick={() => handleGroupBySelect(null)}
+                  className={cn(
+                    'w-full px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
+                    !groupByColumn && 'bg-bg-selected text-monday-primary'
+                  )}
+                >
+                  None (use default groups)
+                </button>
+                <div className="my-1 border-t border-border-light" />
+                {groupableColumns.map(col => (
+                  <button
+                    key={col.id}
+                    onClick={() => handleGroupBySelect(col.column_id)}
+                    className={cn(
+                      'w-full px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
+                      groupByColumn === col.column_id && 'bg-bg-selected text-monday-primary'
+                    )}
+                  >
+                    {col.column_name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>,
+          document.body
+        )}
 
       {/* Filter Dropdown */}
-      {showFilterDropdown && typeof document !== 'undefined' && createPortal(
-        <>
-          <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
-          <div
-            className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light p-4 min-w-[340px]"
-            style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
-          >
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-sm font-semibold text-text-primary">Filters</div>
-              {filters.length > 0 && (
-                <button
-                  onClick={handleClearAllFilters}
-                  className="text-xs text-text-tertiary hover:text-text-secondary"
-                >
-                  Clear all
-                </button>
-              )}
-            </div>
-
-            {/* Existing Filters */}
-            {filters.length > 0 && (
-              <div className="mb-3 space-y-2">
-                {filters.map(filter => {
-                  const column = columns.find(c => c.column_id === filter.column)
-                  return (
-                    <div
-                      key={filter.id}
-                      className="flex items-center justify-between p-2 bg-bg-secondary rounded-md"
-                    >
-                      <div className="text-sm">
-                        <span className="font-medium">{column?.column_name}</span>
-                        <span className="text-text-secondary mx-1">
-                          {filter.condition.replace(/_/g, ' ')}
-                        </span>
-                        {filter.value && (
-                          <span className="text-monday-primary">"{filter.value}"</span>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleRemoveFilter(filter.id)}
-                        className="p-1 hover:bg-bg-hover rounded"
-                      >
-                        <X className="w-4 h-4 text-text-tertiary" />
-                      </button>
-                    </div>
-                  )
-                })}
+      {showFilterDropdown &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
+            <div
+              className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light p-4 min-w-[340px]"
+              style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-sm font-semibold text-text-primary">Filters</div>
+                {filters.length > 0 && (
+                  <button
+                    onClick={handleClearAllFilters}
+                    className="text-xs text-text-tertiary hover:text-text-secondary"
+                  >
+                    Clear all
+                  </button>
+                )}
               </div>
-            )}
 
-            {/* Add New Filter */}
-            <div className="space-y-3">
-              <div className="text-xs font-medium text-text-secondary">Add filter</div>
+              {/* Existing Filters */}
+              {filters.length > 0 && (
+                <div className="mb-3 space-y-2">
+                  {filters.map(filter => {
+                    const column = columns.find(c => c.column_id === filter.column)
+                    const displayVal = (() => {
+                      if (!filter.value) return null
+                      if (column?.column_type === 'status') {
+                        const opts = column.config?.options as StatusOption[] | undefined
+                        const allOpts = opts && opts.length > 0 ? opts : DEFAULT_STATUS_OPTIONS
+                        const match = allOpts.find(o => o.key === filter.value)
+                        return match?.label || filter.value
+                      }
+                      return filter.value
+                    })()
+                    return (
+                      <div
+                        key={filter.id}
+                        className="flex items-center justify-between p-2 bg-bg-secondary rounded-md"
+                      >
+                        <div className="text-sm">
+                          <span className="font-medium">{column?.column_name}</span>
+                          <span className="text-text-secondary mx-1">
+                            {filter.condition.replace(/_/g, ' ')}
+                          </span>
+                          {displayVal && (
+                            <span className="text-monday-primary">"{displayVal}"</span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFilter(filter.id)}
+                          className="p-1 hover:bg-bg-hover rounded"
+                        >
+                          <X className="w-4 h-4 text-text-tertiary" />
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
 
-              {/* Column */}
-              <select
-                value={newFilterColumn}
-                onChange={(e) => {
-                  setNewFilterColumn(e.target.value)
-                  setNewFilterCondition('')
-                  setNewFilterValue('')
-                }}
-                className="w-full px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
-              >
-                <option value="">Select column...</option>
-                {columns.filter(c => c.column_type !== 'actions').map(col => (
-                  <option key={col.id} value={col.column_id}>
-                    {col.column_name}
-                  </option>
-                ))}
-              </select>
+              {/* Add New Filter */}
+              <div className="space-y-3">
+                <div className="text-xs font-medium text-text-secondary">Add filter</div>
 
-              {/* Condition */}
-              {newFilterColumn && (
+                {/* Column */}
                 <select
-                  value={newFilterCondition}
-                  onChange={(e) => {
-                    setNewFilterCondition(e.target.value)
+                  value={newFilterColumn}
+                  onChange={e => {
+                    setNewFilterColumn(e.target.value)
+                    setNewFilterCondition('')
                     setNewFilterValue('')
                   }}
                   className="w-full px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
                 >
-                  <option value="">Select condition...</option>
-                  {getConditionsForColumn(newFilterColumn).map(cond => (
-                    <option key={cond.value} value={cond.value}>
-                      {cond.label}
-                    </option>
-                  ))}
+                  <option value="">Select column...</option>
+                  {columns
+                    .filter(c => c.column_type !== 'actions')
+                    .map(col => (
+                      <option key={col.id} value={col.column_id}>
+                        {col.column_name}
+                      </option>
+                    ))}
                 </select>
-              )}
 
-              {/* Value */}
-              {newFilterColumn && newFilterCondition && conditionNeedsValue(newFilterCondition) && (
-                <input
-                  type="text"
-                  value={newFilterValue}
-                  onChange={(e) => setNewFilterValue(e.target.value)}
-                  placeholder="Enter value..."
-                  className="w-full px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
-                />
-              )}
+                {/* Condition */}
+                {newFilterColumn && (
+                  <select
+                    value={newFilterCondition}
+                    onChange={e => {
+                      setNewFilterCondition(e.target.value)
+                      setNewFilterValue('')
+                    }}
+                    className="w-full px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                  >
+                    <option value="">Select condition...</option>
+                    {getConditionsForColumn(newFilterColumn).map(cond => (
+                      <option key={cond.value} value={cond.value}>
+                        {cond.label}
+                      </option>
+                    ))}
+                  </select>
+                )}
 
-              {/* Add Button */}
-              <button
-                onClick={handleAddFilter}
-                disabled={!newFilterColumn || !newFilterCondition || (conditionNeedsValue(newFilterCondition) && !newFilterValue)}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-monday-primary text-white rounded-md hover:bg-monday-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Add Filter
-              </button>
+                {/* Value - type-specific input */}
+                {newFilterColumn &&
+                  newFilterCondition &&
+                  conditionNeedsValue(newFilterCondition) &&
+                  (() => {
+                    const colType = getColumnType(newFilterColumn)
+
+                    // Status → colored option picker
+                    if (colType === 'status') {
+                      const statusOptions = getStatusOptions(newFilterColumn)
+                      return (
+                        <div className="max-h-[180px] overflow-y-auto border border-border-light rounded-md">
+                          {statusOptions.map(opt => {
+                            const colorInfo = MONDAY_COLORS[opt.color] || {
+                              hex: '#C4C4C4',
+                              text: '#FFFFFF',
+                            }
+                            const isSelected = newFilterValue === opt.key
+                            return (
+                              <button
+                                key={opt.key}
+                                type="button"
+                                onClick={() => setNewFilterValue(opt.key)}
+                                className={cn(
+                                  'w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
+                                  isSelected && 'bg-monday-primary/5'
+                                )}
+                              >
+                                <span
+                                  className="w-4 h-4 rounded-sm shrink-0"
+                                  style={{ backgroundColor: colorInfo.hex }}
+                                />
+                                <span className="flex-1">{opt.label}</span>
+                                {isSelected && (
+                                  <Check className="w-4 h-4 text-monday-primary shrink-0" />
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )
+                    }
+
+                    // Number → number input
+                    if (colType === 'number') {
+                      return (
+                        <div className="relative">
+                          <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+                          <input
+                            type="number"
+                            value={newFilterValue}
+                            onChange={e => setNewFilterValue(e.target.value)}
+                            placeholder="Enter number..."
+                            className="w-full pl-9 pr-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                          />
+                        </div>
+                      )
+                    }
+
+                    // Date / Date Range → date input
+                    if (colType === 'date' || colType === 'date_range') {
+                      return (
+                        <div className="relative">
+                          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+                          <input
+                            type="date"
+                            value={newFilterValue}
+                            onChange={e => setNewFilterValue(e.target.value)}
+                            className="w-full pl-9 pr-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                          />
+                        </div>
+                      )
+                    }
+
+                    // Default → text input (for text, person, location, phone, company, etc.)
+                    return (
+                      <input
+                        type="text"
+                        value={newFilterValue}
+                        onChange={e => setNewFilterValue(e.target.value)}
+                        placeholder="Enter value..."
+                        className="w-full px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                      />
+                    )
+                  })()}
+
+                {/* Add Button */}
+                <button
+                  onClick={handleAddFilter}
+                  disabled={
+                    !newFilterColumn ||
+                    !newFilterCondition ||
+                    (conditionNeedsValue(newFilterCondition) && !newFilterValue)
+                  }
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm bg-monday-primary text-white rounded-md hover:bg-monday-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Filter
+                </button>
+              </div>
             </div>
-          </div>
-        </>,
-        document.body
-      )}
+          </>,
+          document.body
+        )}
     </div>
   )
 })
