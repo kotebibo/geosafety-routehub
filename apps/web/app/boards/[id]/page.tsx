@@ -224,10 +224,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           onSuccess: newTab => {
             router.replace(`/boards/${params.id}?view=${newTab.id}`, { scroll: false })
           },
+          onError: err => {
+            console.error('Failed to create view tab:', err)
+            showToast('Failed to create view tab', 'error')
+          },
         }
       )
     },
-    [viewTabs, createViewTab, router, params.id]
+    [viewTabs, createViewTab, router, params.id, showToast]
   )
 
   const handleDeleteTab = useCallback(

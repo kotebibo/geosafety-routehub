@@ -2,13 +2,12 @@
 
 import React, { memo, useState, useCallback } from 'react'
 import { cn } from '@/lib/utils'
-import { Trash2, GripVertical } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { CellRenderer } from './CellRenderer'
-import type { BoardSubitem, BoardSubitemColumn, BoardColumn } from '../../types/board'
+import type { BoardSubitem, BoardColumn } from '../../types/board'
 
 interface SubitemRowProps {
   subitem: BoardSubitem
-  subitemColumns: BoardSubitemColumn[]
   parentColumns: BoardColumn[]
   groupColor: string
   hasCheckbox: boolean
@@ -22,7 +21,6 @@ interface SubitemRowProps {
 
 export const SubitemRow = memo(function SubitemRow({
   subitem,
-  subitemColumns,
   parentColumns,
   groupColor,
   hasCheckbox,
@@ -117,19 +115,18 @@ export const SubitemRow = memo(function SubitemRow({
         </div>
       </td>
 
-      {/* Remaining columns - map subitem data to parent column positions */}
+      {/* Remaining columns - render all parent columns with proper type renderers */}
       {parentColumns.slice(1).map(col => {
-        // Find matching subitem column
-        const subCol = subitemColumns.find(sc => sc.column_id === col.column_id)
-        const value = subCol
-          ? col.column_id === 'status'
+        // Map known top-level fields; everything else comes from data JSONB
+        const colId = col.column_id
+        const value =
+          colId === 'status'
             ? subitem.status
-            : col.column_id === 'assigned_to' || col.column_id === 'person'
+            : colId === 'assigned_to' || colId === 'person'
               ? subitem.assigned_to
-              : col.column_id === 'due_date' || col.column_id === 'date'
+              : colId === 'due_date' || colId === 'date'
                 ? subitem.due_date
-                : (subitem.data?.[col.column_id] ?? '')
-          : ''
+                : (subitem.data?.[colId] ?? '')
 
         return (
           <td
@@ -137,25 +134,23 @@ export const SubitemRow = memo(function SubitemRow({
             className="bg-bg-secondary/50 border border-border-medium p-0 h-8 text-sm"
             style={{ width: getColumnWidth(col) }}
           >
-            {subCol ? (
-              <CellRenderer
-                row={subitem as any}
-                column={col}
-                value={value}
-                isEditing={false}
-                onEdit={newValue => {
-                  if (col.column_id === 'status') {
-                    handleEdit('status', newValue)
-                  } else if (col.column_id === 'assigned_to' || col.column_id === 'person') {
-                    handleEdit('assigned_to', newValue)
-                  } else if (col.column_id === 'due_date' || col.column_id === 'date') {
-                    handleEdit('due_date', newValue)
-                  } else {
-                    handleEdit('data', { ...subitem.data, [col.column_id]: newValue })
-                  }
-                }}
-              />
-            ) : null}
+            <CellRenderer
+              row={subitem as any}
+              column={col}
+              value={value}
+              isEditing={false}
+              onEdit={newValue => {
+                if (colId === 'status') {
+                  handleEdit('status', newValue)
+                } else if (colId === 'assigned_to' || colId === 'person') {
+                  handleEdit('assigned_to', newValue)
+                } else if (colId === 'due_date' || colId === 'date') {
+                  handleEdit('due_date', newValue)
+                } else {
+                  handleEdit('data', { ...subitem.data, [colId]: newValue })
+                }
+              }}
+            />
           </td>
         )
       })}

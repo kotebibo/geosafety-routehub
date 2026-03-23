@@ -1,37 +1,16 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
-import {
-  Table,
-  LayoutGrid,
-  Calendar,
-  BarChart3,
-  GanttChart,
-  Plus,
-  MoreHorizontal,
-  Pencil,
-  Copy,
-  Trash2,
-  X,
-  Check,
-} from 'lucide-react'
+import { Table, Plus, MoreHorizontal, Pencil, Copy, Trash2, X, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { BoardViewTab, ViewType } from '../types/board'
 
 const VIEW_TYPE_ICONS: Record<ViewType, typeof Table> = {
   table: Table,
-  kanban: LayoutGrid,
-  calendar: Calendar,
-  chart: BarChart3,
-  timeline: GanttChart,
-}
-
-const VIEW_TYPE_LABELS: Record<ViewType, string> = {
-  table: 'Table',
-  kanban: 'Kanban',
-  calendar: 'Calendar',
-  chart: 'Chart',
-  timeline: 'Timeline',
+  kanban: Table,
+  calendar: Table,
+  chart: Table,
+  timeline: Table,
 }
 
 interface ViewTabBarProps {
@@ -53,22 +32,17 @@ export function ViewTabBar({
   onRenameTab,
   onDuplicateTab,
 }: ViewTabBarProps) {
-  const [showAddMenu, setShowAddMenu] = useState(false)
   const [contextMenu, setContextMenu] = useState<{ tabId: string; x: number; y: number } | null>(
     null
   )
   const [editingTabId, setEditingTabId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const editInputRef = useRef<HTMLInputElement>(null)
-  const addMenuRef = useRef<HTMLDivElement>(null)
   const contextMenuRef = useRef<HTMLDivElement>(null)
 
-  // Close menus on outside click
+  // Close context menu on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (addMenuRef.current && !addMenuRef.current.contains(e.target as Node)) {
-        setShowAddMenu(false)
-      }
       if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
         setContextMenu(null)
       }
@@ -182,39 +156,13 @@ export function ViewTabBar({
         )
       })}
 
-      {/* Add View Tab */}
-      <div className="relative" ref={addMenuRef}>
-        <button
-          onClick={() => setShowAddMenu(!showAddMenu)}
-          className="flex items-center gap-1 px-2 py-1.5 text-xs text-text-tertiary hover:text-text-secondary hover:bg-bg-hover rounded-md transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" />
-        </button>
-
-        {showAddMenu && (
-          <div className="absolute left-0 top-full mt-1 w-48 bg-bg-primary rounded-lg shadow-lg border border-border-light z-50 py-1">
-            <div className="px-3 py-1.5 text-[10px] font-semibold uppercase text-text-tertiary tracking-wide">
-              Add View
-            </div>
-            {(Object.keys(VIEW_TYPE_LABELS) as ViewType[]).map(viewType => {
-              const Icon = VIEW_TYPE_ICONS[viewType]
-              return (
-                <button
-                  key={viewType}
-                  onClick={() => {
-                    onCreateTab(viewType, VIEW_TYPE_LABELS[viewType])
-                    setShowAddMenu(false)
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
-                >
-                  <Icon className="w-4 h-4 text-text-tertiary" />
-                  {VIEW_TYPE_LABELS[viewType]}
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </div>
+      {/* Add Table View */}
+      <button
+        onClick={() => onCreateTab('table', 'Table')}
+        className="flex items-center gap-1 px-2 py-1.5 text-xs text-text-tertiary hover:text-text-secondary hover:bg-bg-hover rounded-md transition-colors"
+      >
+        <Plus className="w-3.5 h-3.5" />
+      </button>
 
       {/* Context Menu */}
       {contextMenu && (

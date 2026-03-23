@@ -1130,7 +1130,6 @@ export function VirtualizedBoardTable({
               <tbody>
                 <SubitemRow
                   subitem={subitem}
-                  subitemColumns={subitemColumns || []}
                   parentColumns={visibleColumns}
                   groupColor={parentGroup?.color || '#579bfc'}
                   hasCheckbox={!!onSelectionChange}
