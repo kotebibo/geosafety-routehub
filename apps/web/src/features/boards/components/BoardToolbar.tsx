@@ -53,6 +53,7 @@ export const BoardToolbar = memo(function BoardToolbar({
 
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
   const [filterPosition, setFilterPosition] = useState({ top: 0, left: 0 })
+  const [editFilterId, setEditFilterId] = useState<string | null>(null)
 
   // Temporary state for sort dropdown
   const [tempSortColumn, setTempSortColumn] = useState<string>(sortConfig?.column || '')
@@ -245,6 +246,7 @@ export const BoardToolbar = memo(function BoardToolbar({
           } else {
             setShowSortDropdown(false)
             setShowGroupDropdown(false)
+            setEditFilterId(null)
             if (filterButtonRef.current) {
               const rect = filterButtonRef.current.getBoundingClientRect()
               setFilterPosition({ top: rect.bottom + 4, left: rect.left })
@@ -277,7 +279,19 @@ export const BoardToolbar = memo(function BoardToolbar({
             return (
               <React.Fragment key={filter.id}>
                 {index > 0 && <span className="text-xs text-text-tertiary">and</span>}
-                <div className="flex items-center gap-1 px-2 py-1 bg-bg-secondary border border-border-light rounded-md text-xs group hover:border-monday-primary/30 transition-colors">
+                <div
+                  onClick={() => {
+                    setEditFilterId(filter.id)
+                    if (filterButtonRef.current) {
+                      const rect = filterButtonRef.current.getBoundingClientRect()
+                      setFilterPosition({ top: rect.bottom + 4, left: rect.left })
+                    }
+                    setShowSortDropdown(false)
+                    setShowGroupDropdown(false)
+                    setShowFilterPopover(true)
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 bg-bg-secondary border border-border-light rounded-md text-xs group hover:border-monday-primary/30 transition-colors cursor-pointer"
+                >
                   {statusColor && (
                     <span
                       className="w-2.5 h-2.5 rounded-sm shrink-0"
@@ -288,7 +302,10 @@ export const BoardToolbar = memo(function BoardToolbar({
                   <span className="text-text-tertiary">{condition}</span>
                   {value && <span className="text-text-primary">{value}</span>}
                   <button
-                    onClick={() => handleRemoveFilter(filter.id)}
+                    onClick={e => {
+                      e.stopPropagation()
+                      handleRemoveFilter(filter.id)
+                    }}
                     className="ml-0.5 p-0.5 rounded opacity-60 hover:opacity-100 hover:bg-red-100 transition-all"
                   >
                     <X className="w-3 h-3 text-text-tertiary hover:text-red-500" />
@@ -434,11 +451,15 @@ export const BoardToolbar = memo(function BoardToolbar({
       {/* Filter Popover */}
       <FilterPopover
         isOpen={showFilterPopover}
-        onClose={() => setShowFilterPopover(false)}
+        onClose={() => {
+          setShowFilterPopover(false)
+          setEditFilterId(null)
+        }}
         anchorPosition={filterPosition}
         columns={columns}
         filters={filters}
         onFiltersChange={onFiltersChange}
+        initialEditFilterId={editFilterId}
       />
     </div>
   )

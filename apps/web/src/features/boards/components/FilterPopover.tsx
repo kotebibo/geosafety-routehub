@@ -23,6 +23,7 @@ import {
   Clock,
   CircleDot,
   Plus,
+  Pencil,
 } from 'lucide-react'
 import type { BoardColumn, ColumnType } from '../types/board'
 import { MONDAY_COLORS, DEFAULT_STATUS_OPTIONS } from './BoardTable/cells/StatusCell'
@@ -211,6 +212,7 @@ interface FilterPopoverProps {
   columns: BoardColumn[]
   filters: FilterConfig[]
   onFiltersChange: (filters: FilterConfig[]) => void
+  initialEditFilterId?: string | null
 }
 
 export function FilterPopover({
@@ -220,26 +222,46 @@ export function FilterPopover({
   columns,
   filters,
   onFiltersChange,
+  initialEditFilterId,
 }: FilterPopoverProps) {
   const [step, setStep] = useState<PopoverStep>('columns')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedColumn, setSelectedColumn] = useState<BoardColumn | null>(null)
   const [selectedOperator, setSelectedOperator] = useState('')
   const [selectedValue, setSelectedValue] = useState('')
+  const [editingFilterId, setEditingFilterId] = useState<string | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
   // Reset state when popover opens
   useEffect(() => {
     if (isOpen) {
+      // If opening with a specific filter to edit, go straight to edit mode
+      if (initialEditFilterId) {
+        const filter = filters.find(f => f.id === initialEditFilterId)
+        if (filter) {
+          const col = columns.find(c => c.column_id === filter.column)
+          if (col) {
+            setEditingFilterId(filter.id)
+            setSelectedColumn(col)
+            setSelectedOperator(filter.condition)
+            setSelectedValue(filter.value || '')
+            setSearchQuery('')
+            setStep('value')
+            return
+          }
+        }
+      }
+
       setStep('columns')
       setSearchQuery('')
       setSelectedColumn(null)
       setSelectedOperator('')
       setSelectedValue('')
+      setEditingFilterId(null)
       // Focus search on next tick
       setTimeout(() => searchInputRef.current?.focus(), 50)
     }
-  }, [isOpen])
+  }, [isOpen, initialEditFilterId, filters, columns])
 
   // Filterable columns (exclude actions)
   const filterableColumns = useMemo(
@@ -304,23 +326,51 @@ export function FilterPopover({
       const needsValue = !NO_VALUE_CONDITIONS.includes(selectedOperator)
       if (needsValue && !filterValue) return
 
-      const newFilter: FilterConfig = {
-        id: `filter-${Date.now()}`,
-        column: selectedColumn.column_id,
-        condition: selectedOperator,
-        value: needsValue ? filterValue : null,
+      if (editingFilterId) {
+        // Update existing filter
+        onFiltersChange(
+          filters.map(f =>
+            f.id === editingFilterId
+              ? { ...f, condition: selectedOperator, value: needsValue ? filterValue : null }
+              : f
+          )
+        )
+      } else {
+        // Add new filter
+        const newFilter: FilterConfig = {
+          id: `filter-${Date.now()}`,
+          column: selectedColumn.column_id,
+          condition: selectedOperator,
+          value: needsValue ? filterValue : null,
+        }
+        onFiltersChange([...filters, newFilter])
       }
-
-      onFiltersChange([...filters, newFilter])
 
       // Reset to columns for adding another filter (popover stays open)
       setStep('columns')
       setSelectedColumn(null)
       setSelectedOperator('')
       setSelectedValue('')
+      setEditingFilterId(null)
       setSearchQuery('')
     },
-    [selectedColumn, selectedOperator, selectedValue, filters, onFiltersChange]
+    [selectedColumn, selectedOperator, selectedValue, filters, onFiltersChange, editingFilterId]
+  )
+
+  // Edit an existing filter
+  const handleEditFilter = useCallback(
+    (filter: FilterConfig) => {
+      const col = columns.find(c => c.column_id === filter.column)
+      if (!col) return
+
+      setEditingFilterId(filter.id)
+      setSelectedColumn(col)
+      setSelectedOperator(filter.condition)
+      setSelectedValue(filter.value || '')
+      setSearchQuery('')
+      setStep('value')
+    },
+    [columns]
   )
 
   const handleRemoveFilter = useCallback(
@@ -339,6 +389,7 @@ export function FilterPopover({
     setSelectedColumn(null)
     setSelectedOperator('')
     setSelectedValue('')
+    setEditingFilterId(null)
     setSearchQuery('')
     setTimeout(() => searchInputRef.current?.focus(), 50)
   }, [])
@@ -416,7 +467,8 @@ export function FilterPopover({
                 return (
                   <div
                     key={filter.id}
-                    className="flex items-center gap-2 group rounded-md px-2 py-1.5 bg-bg-secondary hover:bg-bg-hover transition-colors"
+                    className="flex items-center gap-2 group rounded-md px-2 py-1.5 bg-bg-secondary hover:bg-bg-hover transition-colors cursor-pointer"
+                    onClick={() => handleEditFilter(filter)}
                   >
                     <div className="flex-1 text-xs min-w-0">
                       <span className="font-medium text-text-primary">{name}</span>
@@ -433,9 +485,13 @@ export function FilterPopover({
                         </span>
                       )}
                     </div>
+                    <Pencil className="w-3 h-3 text-text-tertiary opacity-0 group-hover:opacity-100 transition-all shrink-0" />
                     <button
-                      onClick={() => handleRemoveFilter(filter.id)}
-                      className="p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-all"
+                      onClick={e => {
+                        e.stopPropagation()
+                        handleRemoveFilter(filter.id)
+                      }}
+                      className="p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-red-100 transition-all shrink-0"
                     >
                       <X className="w-3.5 h-3.5 text-text-tertiary hover:text-red-500" />
                     </button>
@@ -511,7 +567,7 @@ export function FilterPopover({
               >
                 <ChevronLeft className="w-4 h-4 text-text-secondary" />
               </button>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-1">
                 {(() => {
                   const Icon = COLUMN_TYPE_ICONS[selectedColumn.column_type] || Type
                   return <Icon className="w-4 h-4 text-text-tertiary" />
@@ -520,6 +576,9 @@ export function FilterPopover({
                   {selectedColumn.column_name}
                 </span>
               </div>
+              {editingFilterId && (
+                <span className="text-xs text-monday-primary font-medium">Editing</span>
+              )}
             </div>
 
             <div className="p-3 space-y-3">
@@ -535,16 +594,27 @@ export function FilterPopover({
                         setSelectedValue('')
                         // If no value needed, apply immediately
                         if (NO_VALUE_CONDITIONS.includes(cond.value)) {
-                          const newFilter: FilterConfig = {
-                            id: `filter-${Date.now()}`,
-                            column: selectedColumn.column_id,
-                            condition: cond.value,
-                            value: null,
+                          if (editingFilterId) {
+                            onFiltersChange(
+                              filters.map(f =>
+                                f.id === editingFilterId
+                                  ? { ...f, condition: cond.value, value: null }
+                                  : f
+                              )
+                            )
+                          } else {
+                            const newFilter: FilterConfig = {
+                              id: `filter-${Date.now()}`,
+                              column: selectedColumn.column_id,
+                              condition: cond.value,
+                              value: null,
+                            }
+                            onFiltersChange([...filters, newFilter])
                           }
-                          onFiltersChange([...filters, newFilter])
                           setStep('columns')
                           setSelectedColumn(null)
                           setSelectedOperator('')
+                          setEditingFilterId(null)
                         }
                       }}
                       className={cn(
@@ -585,8 +655,17 @@ export function FilterPopover({
                     disabled={!selectedValue}
                     className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm bg-monday-primary text-white rounded-md hover:bg-monday-primary-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                   >
-                    <Plus className="w-3.5 h-3.5" />
-                    Add filter
+                    {editingFilterId ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        Update filter
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3.5 h-3.5" />
+                        Add filter
+                      </>
+                    )}
                   </button>
                 )}
             </div>
