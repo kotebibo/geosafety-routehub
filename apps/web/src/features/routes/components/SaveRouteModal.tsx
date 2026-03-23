@@ -69,15 +69,15 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
       {/* Modal */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div
-          className="bg-white rounded-lg shadow-2xl p-6 w-full max-w-md pointer-events-auto"
+          className="bg-bg-primary rounded-lg shadow-2xl p-6 w-full max-w-md pointer-events-auto"
           style={{ position: 'relative', zIndex: 10000 }}
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-4">მარშრუტის შენახვა</h2>
+          <h2 className="text-xl font-bold text-text-primary mb-4">მარშრუტის შენახვა</h2>
 
           <div className="space-y-4">
             {/* Route Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 მარშრუტის სახელი *
               </label>
               <input
@@ -92,7 +92,7 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
 
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">თარიღი *</label>
+              <label className="block text-sm font-medium text-text-primary mb-1">თარიღი *</label>
               <input
                 type="date"
                 value={date}
@@ -103,7 +103,9 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
 
             {/* Start Time */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">დაწყების დრო</label>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                დაწყების დრო
+              </label>
               <input
                 type="time"
                 value={startTime}
@@ -117,7 +119,7 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
             <button
               onClick={onClose}
               disabled={saving}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 disabled:opacity-50 transition-colors"
+              className="flex-1 px-4 py-2 border border-border-medium text-text-primary rounded-lg font-semibold hover:bg-bg-hover disabled:opacity-50 transition-colors"
             >
               გაუქმება
             </button>

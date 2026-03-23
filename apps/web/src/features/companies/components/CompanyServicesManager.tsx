@@ -194,7 +194,7 @@ export function CompanyServicesManager({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
+        <h3 className="text-lg font-semibold text-text-primary">
           {DEPLOYMENT_CONFIG.isSingleServiceMode
             ? `${DEPLOYMENT_CONFIG.primaryServiceName} - სერვისები`
             : 'სერვისები'}
@@ -212,7 +212,7 @@ export function CompanyServicesManager({
       </div>
 
       {services.length === 0 && (
-        <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+        <div className="text-center py-8 text-text-secondary border-2 border-dashed border-border-medium rounded-lg">
           სერვისები არ არის დამატებული. დააჭირეთ "სერვისის დამატება" ღილაკს.
         </div>
       )}
@@ -223,9 +223,9 @@ export function CompanyServicesManager({
           const filteredInspectors = getFilteredInspectors(service.service_type_id)
 
           return (
-            <div key={index} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div key={index} className="border border-border-light rounded-lg p-4 bg-bg-secondary">
               <div className="flex items-start justify-between mb-3">
-                <h4 className="font-medium text-gray-900">სერვისი {index + 1}</h4>
+                <h4 className="font-medium text-text-primary">სერვისი {index + 1}</h4>
                 <Tooltip content="წაშლა" side="top" delayDuration={200}>
                   <button
                     type="button"
@@ -241,13 +241,13 @@ export function CompanyServicesManager({
                 {/* Service Type */}
                 <FeatureGate feature="ENABLE_SERVICE_SELECTOR">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-text-primary mb-1">
                       სერვისის ტიპი *
                     </label>
                     <select
                       value={service.service_type_id}
                       onChange={e => updateService(index, { service_type_id: e.target.value })}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                       required
                     >
                       <option value="">აირჩიეთ სერვისი</option>
@@ -271,7 +271,9 @@ export function CompanyServicesManager({
 
                 {/* Inspector */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">ინსპექტორი</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    ინსპექტორი
+                  </label>
                   <select
                     value={service.assigned_inspector_id || ''}
                     onChange={e =>
@@ -279,7 +281,7 @@ export function CompanyServicesManager({
                         assigned_inspector_id: e.target.value || null,
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">აირჩიეთ ინსპექტორი</option>
                     {filteredInspectors.map(inspector => (
@@ -298,7 +300,7 @@ export function CompanyServicesManager({
 
                 {/* Frequency */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-text-primary mb-1">
                     სიხშირე (დღეები) *
                   </label>
                   <input
@@ -309,7 +311,7 @@ export function CompanyServicesManager({
                         inspection_frequency_days: parseInt(e.target.value),
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                     min="1"
                     required
                   />
@@ -317,7 +319,9 @@ export function CompanyServicesManager({
 
                 {/* Priority */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">პრიორიტეტი</label>
+                  <label className="block text-sm font-medium text-text-primary mb-1">
+                    პრიორიტეტი
+                  </label>
                   <select
                     value={service.priority}
                     onChange={e =>
@@ -325,7 +329,7 @@ export function CompanyServicesManager({
                         priority: e.target.value as 'low' | 'medium' | 'high',
                       })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="low">დაბალი</option>
                     <option value="medium">საშუალო</option>
@@ -335,14 +339,14 @@ export function CompanyServicesManager({
 
                 {/* Next Inspection Date */}
                 <div className="col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-text-primary mb-1">
                     შემდეგი ინსპექტირების თარიღი
                   </label>
                   <input
                     type="date"
                     value={service.next_inspection_date}
                     onChange={e => updateService(index, { next_inspection_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>

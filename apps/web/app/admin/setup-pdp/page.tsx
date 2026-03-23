@@ -1,16 +1,16 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase/client';
+import { useState } from 'react'
+import { supabase } from '@/lib/supabase/client'
 
 // Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
-const db = supabase as any;
-import { Shield } from 'lucide-react';
+const db = supabase as any
+import { Shield } from 'lucide-react'
 
 export default function SetupPDPServicesPage() {
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
+  const [results, setResults] = useState<any[]>([])
 
   // The 5 PDP service types/phases
   const pdpServiceTypes = [
@@ -23,19 +23,20 @@ export default function SetupPDPServicesPage() {
       default_frequency_days: 30,
       regulatory_requirement: true,
       is_active: true,
-      sort_order: 1
+      sort_order: 1,
     },
     {
       name: 'Personal Data Documentation',
-      name_ka: 'პერსონალური მონაცემები - დოკუმენტაცია', 
+      name_ka: 'პერსონალური მონაცემები - დოკუმენტაცია',
       description: 'Review and prepare documentation',
       description_ka: 'დოკუმენტაციის განხილვა და მომზადება',
       required_inspector_type: 'personal_data',
       default_frequency_days: 45,
       regulatory_requirement: true,
       is_active: true,
-      sort_order: 2
-    },    {
+      sort_order: 2,
+    },
+    {
       name: 'Data Protection Implementation',
       name_ka: 'მონაცემთა დაცვა - დანერგვა',
       description: 'Implementation of data protection measures',
@@ -44,7 +45,7 @@ export default function SetupPDPServicesPage() {
       default_frequency_days: 60,
       regulatory_requirement: true,
       is_active: true,
-      sort_order: 3
+      sort_order: 3,
     },
     {
       name: 'Personal Data Training',
@@ -55,7 +56,7 @@ export default function SetupPDPServicesPage() {
       default_frequency_days: 90,
       regulatory_requirement: true,
       is_active: true,
-      sort_order: 4
+      sort_order: 4,
     },
     {
       name: 'Personal Data Certification',
@@ -66,59 +67,55 @@ export default function SetupPDPServicesPage() {
       default_frequency_days: 365,
       regulatory_requirement: true,
       is_active: true,
-      sort_order: 5
-    }
-  ];
+      sort_order: 5,
+    },
+  ]
   async function addServiceTypes() {
-    setLoading(true);
-    setMessage('');
-    setResults([]);
-    
+    setLoading(true)
+    setMessage('')
+    setResults([])
+
     try {
       // First check existing service types
       const { data: existing } = await db
         .from('service_types')
         .select('*')
         .ilike('name', '%personal%data%')
-        .order('sort_order');
-      
+        .order('sort_order')
+
       if (existing && existing.length > 0) {
-        setMessage(`Found ${existing.length} existing PDP service types`);
-        setResults(existing);
-        setLoading(false);
-        return;
+        setMessage(`Found ${existing.length} existing PDP service types`)
+        setResults(existing)
+        setLoading(false)
+        return
       }
-      
+
       // Insert all service types
-      const { data, error } = await db
-        .from('service_types')
-        .insert(pdpServiceTypes)
-        .select();
-      
+      const { data, error } = await db.from('service_types').insert(pdpServiceTypes).select()
+
       if (error) {
-        setMessage(`Error: ${error.message}`);
-        console.error('Error inserting service types:', error);
-        return;
+        setMessage(`Error: ${error.message}`)
+        console.error('Error inserting service types:', error)
+        return
       }
-      
-      setMessage(`✅ Successfully added ${data?.length || 0} PDP service types!`);
-      setResults(data || []);
-      
+
+      setMessage(`✅ Successfully added ${data?.length || 0} PDP service types!`)
+      setResults(data || [])
     } catch (error) {
-      setMessage(`Failed: ${error}`);
-      console.error('Failed to add service types:', error);
+      setMessage(`Failed: ${error}`)
+      console.error('Failed to add service types:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-bg-primary rounded-lg shadow p-6">
         <div className="flex items-center gap-3 mb-4">
           <Shield className="w-8 h-8 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold">Setup PDP Service Types</h1>
-            <p className="text-gray-600">Add the 5 Personal Data Protection service phases</p>
+            <p className="text-text-secondary">Add the 5 Personal Data Protection service phases</p>
           </div>
         </div>
 
@@ -142,11 +139,13 @@ export default function SetupPDPServicesPage() {
         </button>
 
         {message && (
-          <div className={`mt-4 p-4 rounded-lg ${
-            message.includes('Error') || message.includes('Failed') 
-              ? 'bg-red-50 text-red-700' 
-              : 'bg-green-50 text-green-700'
-          }`}>
+          <div
+            className={`mt-4 p-4 rounded-lg ${
+              message.includes('Error') || message.includes('Failed')
+                ? 'bg-red-50 text-red-700'
+                : 'bg-green-50 text-green-700'
+            }`}
+          >
             {message}
           </div>
         )}
@@ -156,10 +155,10 @@ export default function SetupPDPServicesPage() {
             <h3 className="font-semibold mb-2">Service Types:</h3>
             <div className="space-y-2">
               {results.map((st: any) => (
-                <div key={st.id} className="p-3 bg-gray-50 rounded">
+                <div key={st.id} className="p-3 bg-bg-secondary rounded">
                   <div className="font-medium">{st.name_ka}</div>
-                  <div className="text-sm text-gray-600">{st.name}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-sm text-text-secondary">{st.name}</div>
+                  <div className="text-xs text-text-secondary">
                     Frequency: {st.default_frequency_days} days | Order: {st.sort_order}
                   </div>
                 </div>
@@ -169,5 +168,5 @@ export default function SetupPDPServicesPage() {
         )}
       </div>
     </div>
-  );
+  )
 }

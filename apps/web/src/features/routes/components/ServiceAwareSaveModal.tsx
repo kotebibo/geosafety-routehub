@@ -113,17 +113,17 @@ export function ServiceAwareSaveModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-bg-primary rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <Save className="w-5 h-5 text-green-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900">მარშრუტის შენახვა</h2>
+            <h2 className="text-xl font-bold text-text-primary">მარშრუტის შენახვა</h2>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={onClose} className="p-2 hover:bg-bg-hover rounded-lg transition-colors">
+            <X className="w-5 h-5 text-text-secondary" />
           </button>
         </div>
 
@@ -131,7 +131,7 @@ export function ServiceAwareSaveModal({
         <div className="p-6 space-y-4">
           {/* Route Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-text-primary mb-2">
               მარშრუტის სახელი *
             </label>
             <input
@@ -139,13 +139,13 @@ export function ServiceAwareSaveModal({
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="მაგ: თბილისი - სახანძრო ინსპექცია"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
 
           {/* Date */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-text-primary mb-2">
               <Calendar className="w-4 h-4 inline mr-1" />
               თარიღი *
             </label>
@@ -153,13 +153,13 @@ export function ServiceAwareSaveModal({
               type="date"
               value={date}
               onChange={e => setDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
 
           {/* Start Time */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-text-primary mb-2">
               <Clock className="w-4 h-4 inline mr-1" />
               დაწყების დრო
             </label>
@@ -167,24 +167,24 @@ export function ServiceAwareSaveModal({
               type="time"
               value={startTime}
               onChange={e => setStartTime(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
 
           {/* Route Stats */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-            <h3 className="font-medium text-gray-900 mb-2">მარშრუტის დეტალები</h3>
+          <div className="bg-bg-secondary rounded-lg p-4 space-y-2">
+            <h3 className="font-medium text-text-primary mb-2">მარშრუტის დეტალები</h3>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">გაჩერებები:</span>
-              <span className="font-semibold text-gray-900">{route.length}</span>
+              <span className="text-text-secondary">გაჩერებები:</span>
+              <span className="font-semibold text-text-primary">{route.length}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">სრული მანძილი:</span>
-              <span className="font-semibold text-gray-900">{totalDistance.toFixed(1)} კმ</span>
+              <span className="text-text-secondary">სრული მანძილი:</span>
+              <span className="font-semibold text-text-primary">{totalDistance.toFixed(1)} კმ</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600">ინსპექტორი:</span>
-              <span className="font-semibold text-gray-900">
+              <span className="text-text-secondary">ინსპექტორი:</span>
+              <span className="font-semibold text-text-primary">
                 <User className="w-3 h-3 inline mr-1" />
                 არჩეული
               </span>
@@ -209,7 +209,7 @@ export function ServiceAwareSaveModal({
           <button
             onClick={onClose}
             disabled={saving}
-            className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-2 text-text-primary bg-bg-tertiary rounded-lg hover:bg-bg-hover transition-colors disabled:opacity-50"
           >
             გაუქმება
           </button>

@@ -80,21 +80,25 @@ export function CompanyAssignmentTable({
         header: 'კომპანია',
         accessorFn: row => row.company?.name,
         sortable: true,
-        cell: ({ value }) => <span className="font-medium text-gray-900">{value as string}</span>,
+        cell: ({ value }) => (
+          <span className="font-medium text-text-primary">{value as string}</span>
+        ),
       },
       {
         id: 'address',
         header: 'მისამართი',
         accessorFn: row => row.company?.address,
         sortable: true,
-        cell: ({ value }) => <span className="text-gray-600">{value as string}</span>,
+        cell: ({ value }) => <span className="text-text-secondary">{value as string}</span>,
       },
       {
         id: 'service',
         header: 'სერვისი',
         accessorFn: row => row.service_type?.name_ka,
         sortable: true,
-        cell: ({ value }) => <span className="text-gray-600">{(value as string) || 'N/A'}</span>,
+        cell: ({ value }) => (
+          <span className="text-text-secondary">{(value as string) || 'N/A'}</span>
+        ),
       },
       {
         id: 'inspector',
@@ -107,7 +111,7 @@ export function CompanyAssignmentTable({
               {row.assigned_inspector.full_name}
             </span>
           ) : (
-            <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+            <span className="px-2 py-1 bg-bg-tertiary text-text-secondary rounded-full text-xs">
               არადანიშნული
             </span>
           ),
@@ -117,13 +121,13 @@ export function CompanyAssignmentTable({
   )
 
   return (
-    <div className="bg-white rounded-lg border">
+    <div className="bg-bg-primary rounded-lg border">
       {/* Header with filters and actions */}
       <div className="p-4 border-b space-y-4">
         <div className="flex items-center justify-between">
           <FeatureGate feature="ENABLE_SERVICE_FILTERING">
             <div className="flex items-center gap-2">
-              <Filter className="w-5 h-5 text-gray-400" />
+              <Filter className="w-5 h-5 text-text-tertiary" />
               <span className="font-medium">ფილტრი:</span>
               <select
                 value={filter}
@@ -140,7 +144,7 @@ export function CompanyAssignmentTable({
             </div>
           </FeatureGate>
 
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-text-secondary">
             {selected.size > 0 && (
               <span className="font-medium text-blue-600">{selected.size} არჩეული</span>
             )}
@@ -167,7 +171,7 @@ export function CompanyAssignmentTable({
             <button
               onClick={handleBulkAssign}
               disabled={isAssigning || !assigningTo}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-bg-tertiary disabled:cursor-not-allowed transition-colors"
             >
               {isAssigning ? 'ინიშნება...' : 'დანიშვნა'}
             </button>
@@ -183,7 +187,7 @@ export function CompanyAssignmentTable({
         selectedRows={selected}
         onSelectionChange={setSelected}
         getRowId={row => row.id}
-        emptyState={<div className="text-center text-gray-500">კომპანიები არ მოიძებნა</div>}
+        emptyState={<div className="text-center text-text-secondary">კომპანიები არ მოიძებნა</div>}
         caption="კომპანიების დანიშვნების სია"
         className="rounded-t-none border-t-0"
       />

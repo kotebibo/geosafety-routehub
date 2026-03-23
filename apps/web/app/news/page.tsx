@@ -47,27 +47,30 @@ export default function NewsPage() {
   // Loading skeleton
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b">
+      <div className="min-h-screen bg-bg-secondary">
+        <div className="bg-bg-primary border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div className="animate-pulse">
-              <div className="h-7 w-64 bg-gray-200 rounded mb-2" />
-              <div className="h-4 w-96 bg-gray-200 rounded" />
+              <div className="h-7 w-64 bg-bg-tertiary rounded mb-2" />
+              <div className="h-4 w-96 bg-bg-tertiary rounded" />
             </div>
           </div>
         </div>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse bg-white rounded-xl border border-gray-200 p-5">
+          {[1, 2, 3].map(i => (
+            <div
+              key={i}
+              className="animate-pulse bg-bg-primary rounded-xl border border-border-light p-5"
+            >
               <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+                <div className="w-10 h-10 bg-bg-tertiary rounded-lg" />
                 <div className="flex-1">
-                  <div className="h-5 w-48 bg-gray-200 rounded mb-2" />
-                  <div className="h-4 w-full bg-gray-200 rounded mb-1" />
-                  <div className="h-4 w-2/3 bg-gray-200 rounded" />
+                  <div className="h-5 w-48 bg-bg-tertiary rounded mb-2" />
+                  <div className="h-4 w-full bg-bg-tertiary rounded mb-1" />
+                  <div className="h-4 w-2/3 bg-bg-tertiary rounded" />
                   <div className="flex gap-4 mt-3">
-                    <div className="h-3 w-24 bg-gray-200 rounded" />
-                    <div className="h-3 w-20 bg-gray-200 rounded" />
+                    <div className="h-3 w-24 bg-bg-tertiary rounded" />
+                    <div className="h-3 w-20 bg-bg-tertiary rounded" />
                   </div>
                 </div>
               </div>
@@ -79,7 +82,7 @@ export default function NewsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       <PageHeader
         title="სიახლეები და განცხადებები"
         description="კომპანიის მნიშვნელოვანი სიახლეები და შეტყობინებები"
@@ -97,13 +100,11 @@ export default function NewsPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {announcements.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-16 h-16 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <Megaphone className="w-8 h-8 text-gray-400" />
+            <div className="w-16 h-16 rounded-2xl bg-bg-tertiary flex items-center justify-center mx-auto mb-4">
+              <Megaphone className="w-8 h-8 text-text-tertiary" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              განცხადებები არ არის
-            </h3>
-            <p className="text-sm text-gray-500 max-w-sm mx-auto">
+            <h3 className="text-lg font-semibold text-text-primary mb-1">განცხადებები არ არის</h3>
+            <p className="text-sm text-text-secondary max-w-sm mx-auto">
               {isAdmin
                 ? 'შექმენით პირველი განცხადება ზემოთ "ახალი განცხადება" ღილაკით'
                 : 'ახალი განცხადებები და სიახლეები გამოჩნდება აქ'}
@@ -111,12 +112,12 @@ export default function NewsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {announcements.map((announcement) => (
+            {announcements.map(announcement => (
               <AnnouncementCard
                 key={announcement.id}
                 announcement={announcement}
                 onClick={() => setSelectedAnnouncement(announcement)}
-                onDelete={isAdmin ? (id) => setDeleteTarget(id) : undefined}
+                onDelete={isAdmin ? id => setDeleteTarget(id) : undefined}
               />
             ))}
           </div>
@@ -141,39 +142,43 @@ export default function NewsPage() {
       )}
 
       {/* Delete confirmation modal */}
-      {deleteTarget && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => !deleting && setDeleteTarget(null)} />
-          <div className="relative bg-white rounded-xl shadow-2xl max-w-sm w-full mx-4 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
+      {deleteTarget &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+            <div
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => !deleting && setDeleteTarget(null)}
+            />
+            <div className="relative bg-bg-primary rounded-xl shadow-2xl max-w-sm w-full mx-4 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-text-primary">განცხადების წაშლა</h3>
+                  <p className="text-sm text-text-secondary">ეს მოქმედება შეუქცევადია</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-semibold text-gray-900">განცხადების წაშლა</h3>
-                <p className="text-sm text-gray-500">ეს მოქმედება შეუქცევადია</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={deleting}
+                  className="px-4 py-2 text-sm text-text-secondary hover:bg-bg-tertiary rounded-lg transition-colors"
+                >
+                  გაუქმება
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {deleting ? 'იშლება...' : 'წაშლა'}
+                </button>
               </div>
             </div>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                disabled={deleting}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                გაუქმება
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
-              >
-                {deleting ? 'იშლება...' : 'წაშლა'}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 }

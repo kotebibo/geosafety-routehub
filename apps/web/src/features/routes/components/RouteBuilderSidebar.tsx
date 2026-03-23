@@ -38,19 +38,19 @@ export function RouteBuilderSidebar({
   loading,
 }: RouteBuilderSidebarProps) {
   return (
-    <div className="w-80 bg-white border-r h-screen overflow-y-auto">
+    <div className="w-80 bg-bg-primary border-r h-screen overflow-y-auto">
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold mb-4">მარშრუტის შექმნა</h2>
-        
+
         {/* Inspector Selection */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium text-text-primary">
             <User className="w-4 h-4 inline mr-1" />
             ინსპექტორი
           </label>
           <select
             value={selectedInspector}
-            onChange={(e) => onInspectorChange(e.target.value)}
+            onChange={e => onInspectorChange(e.target.value)}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">აირჩიეთ ინსპექტორი...</option>
@@ -67,19 +67,14 @@ export function RouteBuilderSidebar({
       {selectedInspector && (
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium">
-              კომპანიები ({companies.length})
-            </h3>
+            <h3 className="font-medium">კომპანიები ({companies.length})</h3>
             <div className="flex gap-2">
-              <button
-                onClick={onSelectAll}
-                className="text-xs text-blue-600 hover:text-blue-700"
-              >
+              <button onClick={onSelectAll} className="text-xs text-blue-600 hover:text-blue-700">
                 ყველა
               </button>
               <button
                 onClick={onClearSelection}
-                className="text-xs text-gray-600 hover:text-gray-700"
+                className="text-xs text-text-secondary hover:text-text-primary"
               >
                 გასუფთავება
               </button>
@@ -88,10 +83,10 @@ export function RouteBuilderSidebar({
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <Loader2 className="w-6 h-6 animate-spin text-text-tertiary" />
             </div>
           ) : companies.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-8">
+            <p className="text-sm text-text-secondary text-center py-8">
               ამ ინსპექტორს არ აქვს დანიშნული კომპანიები
             </p>
           ) : (
@@ -105,22 +100,20 @@ export function RouteBuilderSidebar({
                     className={`w-full text-left p-3 rounded-lg border transition-colors ${
                       isSelected
                         ? 'bg-blue-50 border-blue-200'
-                        : 'hover:bg-gray-50 border-gray-200'
+                        : 'hover:bg-bg-hover border-border-light'
                     }`}
                   >
                     <div className="flex items-start gap-2">
                       {isSelected ? (
                         <CheckSquare className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                       ) : (
-                        <Square className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                        <Square className="w-5 h-5 text-text-tertiary flex-shrink-0 mt-0.5" />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-gray-900 truncate">
+                        <p className="font-medium text-sm text-text-primary truncate">
                           {company.name}
                         </p>
-                        <p className="text-xs text-gray-600 truncate">
-                          {company.address}
-                        </p>
+                        <p className="text-xs text-text-secondary truncate">{company.address}</p>
                       </div>
                     </div>
                   </button>
@@ -131,9 +124,7 @@ export function RouteBuilderSidebar({
 
           {selectedCompanies.size > 0 && (
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm font-medium text-blue-900">
-                არჩეული: {selectedCompanies.size}
-              </p>
+              <p className="text-sm font-medium text-blue-900">არჩეული: {selectedCompanies.size}</p>
             </div>
           )}
         </div>

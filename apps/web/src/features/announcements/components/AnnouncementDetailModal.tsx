@@ -27,7 +27,7 @@ const PRIORITY = {
     label: 'მნიშვნელოვანი',
     badge: 'bg-amber-100 text-amber-700',
   },
-  normal: { icon: Megaphone, bg: 'bg-gray-50', label: '', badge: '' },
+  normal: { icon: Megaphone, bg: 'bg-bg-secondary', label: '', badge: '' },
 } as const
 
 export function AnnouncementDetailModal({
@@ -60,17 +60,17 @@ export function AnnouncementDetailModal({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[85vh] flex flex-col overflow-hidden">
+      <div className="relative bg-bg-primary rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[85vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className={`px-6 py-5 border-b ${config.bg}`}>
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-start gap-4 flex-1 min-w-0">
-              <div className="w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center flex-shrink-0">
-                <Icon className="w-6 h-6 text-gray-700" />
+              <div className="w-11 h-11 rounded-xl bg-bg-primary shadow-sm flex items-center justify-center flex-shrink-0">
+                <Icon className="w-6 h-6 text-text-primary" />
               </div>
               <div className="min-w-0">
-                <h2 className="text-xl font-bold text-gray-900 mb-1.5">{announcement.title}</h2>
-                <div className="flex items-center gap-3 text-sm text-gray-500 flex-wrap">
+                <h2 className="text-xl font-bold text-text-primary mb-1.5">{announcement.title}</h2>
+                <div className="flex items-center gap-3 text-sm text-text-secondary flex-wrap">
                   <span className="flex items-center gap-1">
                     <User className="w-3.5 h-3.5" />
                     {announcement.author_name}
@@ -99,23 +99,23 @@ export function AnnouncementDetailModal({
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-black/5 transition-colors flex-shrink-0"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-text-secondary" />
             </button>
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+          <p className="text-text-primary leading-relaxed whitespace-pre-wrap">
             {announcement.content}
           </p>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t bg-gray-50 flex justify-end">
+        <div className="px-6 py-4 border-t bg-bg-secondary flex justify-end">
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-[#6161FF] text-white text-sm font-medium rounded-lg hover:bg-[#4f4fd9] transition-colors"
+            className="px-5 py-2 bg-monday-primary text-white text-sm font-medium rounded-lg hover:bg-monday-primary-hover transition-colors"
           >
             დახურვა
           </button>

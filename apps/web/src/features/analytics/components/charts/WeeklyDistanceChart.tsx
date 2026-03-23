@@ -1,6 +1,14 @@
 'use client'
 
-import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts'
 import type { WeeklyDistance } from '@/services/analytics.service'
 
 interface WeeklyDistanceChartProps {
@@ -14,10 +22,12 @@ export function WeeklyDistanceChart({ data }: WeeklyDistanceChartProps) {
   }))
 
   return (
-    <div className="bg-white rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">Weekly Distance Covered (km)</h3>
+    <div className="bg-bg-primary rounded-lg border p-6">
+      <h3 className="text-sm font-semibold text-text-primary mb-4">Weekly Distance Covered (km)</h3>
       {data.length === 0 ? (
-        <div className="h-[300px] flex items-center justify-center text-sm text-gray-400">No distance data available</div>
+        <div className="h-[300px] flex items-center justify-center text-sm text-text-tertiary">
+          No distance data available
+        </div>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={formatted}>

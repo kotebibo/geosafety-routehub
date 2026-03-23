@@ -163,8 +163,8 @@ export default function ServiceTypesPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">სერვისის ტიპები</h1>
-          <p className="text-gray-600 mt-1">მართეთ სერვისების ტიპები</p>
+          <h1 className="text-3xl font-bold text-text-primary">სერვისის ტიპები</h1>
+          <p className="text-text-secondary mt-1">მართეთ სერვისების ტიპები</p>
         </div>
         <button
           onClick={startAdd}
@@ -176,44 +176,44 @@ export default function ServiceTypesPage() {
       </div>
 
       {(isAddingNew || editingId) && (
-        <div className="bg-white border-2 border-blue-500 rounded-lg p-6 mb-6 shadow-lg">
+        <div className="bg-bg-primary border-2 border-blue-500 rounded-lg p-6 mb-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4">
             {editingId ? 'რედაქტირება' : 'ახალი სერვისის დამატება'}
           </h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 დასახელება (English)
               </label>
               <input
                 type="text"
                 value={formData.name || ''}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 დასახელება (ქართული)
               </label>
               <input
                 type="text"
                 value={formData.name_ka || ''}
                 onChange={e => setFormData({ ...formData, name_ka: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">აღწერა</label>
+              <label className="block text-sm font-medium text-text-primary mb-1">აღწერა</label>
               <textarea
                 value={formData.description || ''}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-border-medium rounded-lg"
                 rows={3}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 საჭირო ოფიცრის ტიპი
               </label>
               <select
@@ -221,7 +221,7 @@ export default function ServiceTypesPage() {
                 onChange={e =>
                   setFormData({ ...formData, required_inspector_type: e.target.value })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-border-medium rounded-lg"
               >
                 {INSPECTOR_TYPES.map(type => (
                   <option key={type.value} value={type.value}>
@@ -231,7 +231,7 @@ export default function ServiceTypesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 სიხშირე (დღეები)
               </label>
               <input
@@ -240,7 +240,7 @@ export default function ServiceTypesPage() {
                 onChange={e =>
                   setFormData({ ...formData, default_frequency_days: parseInt(e.target.value) })
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2 border border-border-medium rounded-lg"
                 min="1"
               />
             </div>
@@ -252,7 +252,7 @@ export default function ServiceTypesPage() {
                 onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
                 className="w-4 h-4 text-blue-600"
               />
-              <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">
+              <label htmlFor="is_active" className="ml-2 text-sm text-text-primary">
                 აქტიური
               </label>
             </div>
@@ -276,38 +276,38 @@ export default function ServiceTypesPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+      <div className="bg-bg-primary rounded-lg shadow overflow-hidden">
+        <table className="min-w-full divide-y divide-border-light">
+          <thead className="bg-bg-secondary">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
                 სერვისი
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
                 აღწერა
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
                 ოფიცრის ტიპი
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
                 სიხშირე
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
                 სტატუსი
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+              <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase">
                 მოქმედებები
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-bg-primary divide-y divide-border-light">
             {serviceTypes.map(st => (
-              <tr key={st.id} className="hover:bg-gray-50">
+              <tr key={st.id} className="hover:bg-bg-secondary">
                 <td className="px-6 py-4">
-                  <div className="font-medium text-gray-900">{st.name_ka}</div>
-                  <div className="text-sm text-gray-500">{st.name}</div>
+                  <div className="font-medium text-text-primary">{st.name_ka}</div>
+                  <div className="text-sm text-text-secondary">{st.name}</div>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">{st.description}</td>
+                <td className="px-6 py-4 text-sm text-text-secondary">{st.description}</td>
                 <td className="px-6 py-4">
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                     {INSPECTOR_TYPES.find(t => t.value === st.required_inspector_type)?.label_ka}
@@ -346,7 +346,7 @@ export default function ServiceTypesPage() {
           </tbody>
         </table>
         {serviceTypes.length === 0 && (
-          <div className="text-center py-12 text-gray-500">სერვისები არ მოიძებნა</div>
+          <div className="text-center py-12 text-text-secondary">სერვისები არ მოიძებნა</div>
         )}
       </div>
     </div>

@@ -3,12 +3,12 @@
  * Admin page to manage users and their roles
  */
 
-'use client';
+'use client'
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { usersService, User, CustomRole } from '@/services/users.service';
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+import { usersService, User, CustomRole } from '@/services/users.service'
 import {
   Users,
   Shield,
@@ -26,30 +26,30 @@ import {
   Phone,
   Calendar,
   RefreshCw,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 export default function UserManagementPage() {
-  const router = useRouter();
-  const { user: currentUser, isAdmin, loading: authLoading } = useAuth();
+  const router = useRouter()
+  const { user: currentUser, isAdmin, loading: authLoading } = useAuth()
 
-  const [users, setUsers] = useState<User[]>([]);
-  const [roles, setRoles] = useState<CustomRole[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterRole, setFilterRole] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [users, setUsers] = useState<User[]>([])
+  const [roles, setRoles] = useState<CustomRole[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filterRole, setFilterRole] = useState<string>('all')
+  const [filterStatus, setFilterStatus] = useState<string>('all')
 
   // Edit mode state
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState<{
-    full_name: string;
-    phone: string;
-    role: string;
-  }>({ full_name: '', phone: '', role: '' });
+    full_name: string
+    phone: string
+    role: string
+  }>({ full_name: '', phone: '', role: '' })
 
   // Action menu state
-  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
+  const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
 
   // Stats
   const [stats, setStats] = useState({
@@ -57,36 +57,36 @@ export default function UserManagementPage() {
     active: 0,
     inactive: 0,
     byRole: {} as Record<string, number>,
-  });
+  })
 
   // Redirect non-admins
   useEffect(() => {
     if (!authLoading && !isAdmin) {
-      router.push('/');
+      router.push('/')
     }
-  }, [authLoading, isAdmin, router]);
+  }, [authLoading, isAdmin, router])
 
   useEffect(() => {
     if (isAdmin) {
-      fetchData();
+      fetchData()
     }
-  }, [isAdmin]);
+  }, [isAdmin])
 
   async function fetchData() {
     try {
-      setLoading(true);
+      setLoading(true)
       const [usersData, rolesData, statsData] = await Promise.all([
         usersService.getUsers(),
         usersService.getRoles(),
         usersService.getUserStats(),
-      ]);
-      setUsers(usersData);
-      setRoles(rolesData);
-      setStats(statsData);
+      ])
+      setUsers(usersData)
+      setRoles(rolesData)
+      setStats(statsData)
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error('Error fetching data:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
@@ -95,79 +95,79 @@ export default function UserManagementPage() {
     const matchesSearch =
       !searchQuery ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (user.full_name || '').toLowerCase().includes(searchQuery.toLowerCase());
+      (user.full_name || '').toLowerCase().includes(searchQuery.toLowerCase())
 
     const matchesRole =
       filterRole === 'all' ||
       user.role?.role === filterRole ||
-      (!user.role && filterRole === 'none');
+      (!user.role && filterRole === 'none')
 
     const matchesStatus =
       filterStatus === 'all' ||
       (filterStatus === 'active' && user.is_active) ||
-      (filterStatus === 'inactive' && !user.is_active);
+      (filterStatus === 'inactive' && !user.is_active)
 
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+    return matchesSearch && matchesRole && matchesStatus
+  })
 
   async function handleEditUser(user: User) {
-    setEditingUserId(user.id);
+    setEditingUserId(user.id)
     setEditForm({
       full_name: user.full_name || '',
       phone: user.phone || '',
       role: user.role?.role || '',
-    });
+    })
   }
 
   async function handleSaveUser() {
-    if (!editingUserId) return;
+    if (!editingUserId) return
 
     try {
       // Update user profile
       await usersService.updateUser(editingUserId, {
         full_name: editForm.full_name,
         phone: editForm.phone,
-      });
+      })
 
       // Update role if changed
-      const user = users.find(u => u.id === editingUserId);
+      const user = users.find(u => u.id === editingUserId)
       if (editForm.role && editForm.role !== user?.role?.role) {
-        await usersService.assignRole(editingUserId, editForm.role);
+        await usersService.assignRole(editingUserId, editForm.role)
       } else if (!editForm.role && user?.role) {
-        await usersService.removeRole(editingUserId);
+        await usersService.removeRole(editingUserId)
       }
 
-      await fetchData();
-      setEditingUserId(null);
+      await fetchData()
+      setEditingUserId(null)
     } catch (error) {
-      console.error('Error saving user:', error);
-      alert('Failed to save user');
+      console.error('Error saving user:', error)
+      alert('Failed to save user')
     }
   }
 
   async function handleToggleUserStatus(user: User) {
     try {
       if (user.is_active) {
-        await usersService.deactivateUser(user.id);
+        await usersService.deactivateUser(user.id)
       } else {
-        await usersService.activateUser(user.id);
+        await usersService.activateUser(user.id)
       }
-      await fetchData();
+      await fetchData()
     } catch (error) {
-      console.error('Error toggling user status:', error);
-      alert('Failed to update user status');
+      console.error('Error toggling user status:', error)
+      alert('Failed to update user status')
     }
   }
 
   function getRoleColor(roleName?: string): string {
-    const role = roles.find(r => r.name === roleName);
-    return role?.color || '#6b7280';
+    const role = roles.find(r => r.name === roleName)
+    return role?.color || '#6b7280'
   }
 
   function getRoleDisplayName(roleName?: string): string {
-    if (!roleName) return 'No Role';
-    const role = roles.find(r => r.name === roleName);
-    return role?.display_name || roleName;
+    if (!roleName) return 'No Role'
+    const role = roles.find(r => r.name === roleName)
+    return role?.display_name || roleName
   }
 
   if (authLoading || !isAdmin) {
@@ -175,13 +175,13 @@ export default function UserManagementPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
       </div>
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-bg-primary border-b border-border-light">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -189,14 +189,14 @@ export default function UserManagementPage() {
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
-                <p className="text-sm text-gray-500">Manage users, roles, and permissions</p>
+                <h1 className="text-2xl font-bold text-text-primary">User Management</h1>
+                <p className="text-sm text-text-secondary">Manage users, roles, and permissions</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => router.push('/admin/roles')}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-primary bg-bg-primary border border-border-medium rounded-lg hover:bg-bg-secondary"
               >
                 <Shield className="w-4 h-4" />
                 Manage Roles
@@ -216,64 +216,64 @@ export default function UserManagementPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-bg-primary rounded-lg border border-border-light p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Users className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                <p className="text-sm text-text-secondary">Total Users</p>
+                <p className="text-2xl font-bold text-text-primary">{stats.total}</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-bg-primary rounded-lg border border-border-light p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <UserCheck className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Active</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.active}</p>
+                <p className="text-sm text-text-secondary">Active</p>
+                <p className="text-2xl font-bold text-text-primary">{stats.active}</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-bg-primary rounded-lg border border-border-light p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-red-100 rounded-lg">
                 <UserX className="w-5 h-5 text-red-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Inactive</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.inactive}</p>
+                <p className="text-sm text-text-secondary">Inactive</p>
+                <p className="text-2xl font-bold text-text-primary">{stats.inactive}</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="bg-bg-primary rounded-lg border border-border-light p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <Shield className="w-5 h-5 text-purple-600" />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Roles</p>
-                <p className="text-2xl font-bold text-gray-900">{roles.length}</p>
+                <p className="text-sm text-text-secondary">Roles</p>
+                <p className="text-2xl font-bold text-text-primary">{roles.length}</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+        <div className="bg-bg-primary rounded-lg border border-border-light p-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
             {/* Search */}
             <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
               <input
                 type="text"
                 placeholder="Search by name or email..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -281,7 +281,7 @@ export default function UserManagementPage() {
             <select
               value={filterRole}
               onChange={e => setFilterRole(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Roles</option>
               <option value="none">No Role</option>
@@ -296,7 +296,7 @@ export default function UserManagementPage() {
             <select
               value={filterStatus}
               onChange={e => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -306,44 +306,44 @@ export default function UserManagementPage() {
         </div>
 
         {/* Users Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="bg-bg-primary rounded-lg border border-border-light overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12">
-              <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500">No users found</p>
+              <Users className="w-12 h-12 text-text-disabled mx-auto mb-4" />
+              <p className="text-text-secondary">No users found</p>
             </div>
           ) : (
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-bg-secondary border-b border-border-light">
                 <tr>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                     User
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="text-left px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                     Joined
                   </th>
-                  <th className="text-right px-6 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  <th className="text-right px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-border-light">
                 {filteredUsers.map(user => (
                   <tr
                     key={user.id}
                     className={cn(
-                      'hover:bg-gray-50',
-                      !user.is_active && 'bg-gray-50 opacity-60'
+                      'hover:bg-bg-secondary',
+                      !user.is_active && 'bg-bg-secondary opacity-60'
                     )}
                   >
                     <td className="px-6 py-4">
@@ -352,37 +352,33 @@ export default function UserManagementPage() {
                           <input
                             type="text"
                             value={editForm.full_name}
-                            onChange={e =>
-                              setEditForm({ ...editForm, full_name: e.target.value })
-                            }
+                            onChange={e => setEditForm({ ...editForm, full_name: e.target.value })}
                             placeholder="Full name"
-                            className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm"
+                            className="w-full px-3 py-1.5 border border-border-medium rounded text-sm"
                           />
                           <input
                             type="text"
                             value={editForm.phone}
-                            onChange={e =>
-                              setEditForm({ ...editForm, phone: e.target.value })
-                            }
+                            onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
                             placeholder="Phone"
-                            className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm"
+                            className="w-full px-3 py-1.5 border border-border-medium rounded text-sm"
                           />
                         </div>
                       ) : (
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
+                          <div className="w-10 h-10 rounded-full bg-bg-tertiary flex items-center justify-center text-text-secondary font-medium">
                             {(user.full_name || user.email)?.[0]?.toUpperCase() || '?'}
                           </div>
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-text-primary">
                               {user.full_name || 'No name'}
                             </p>
-                            <p className="text-sm text-gray-500 flex items-center gap-1">
+                            <p className="text-sm text-text-secondary flex items-center gap-1">
                               <Mail className="w-3 h-3" />
                               {user.email}
                             </p>
                             {user.phone && (
-                              <p className="text-sm text-gray-500 flex items-center gap-1">
+                              <p className="text-sm text-text-secondary flex items-center gap-1">
                                 <Phone className="w-3 h-3" />
                                 {user.phone}
                               </p>
@@ -395,10 +391,8 @@ export default function UserManagementPage() {
                       {editingUserId === user.id ? (
                         <select
                           value={editForm.role}
-                          onChange={e =>
-                            setEditForm({ ...editForm, role: e.target.value })
-                          }
-                          className="px-3 py-1.5 border border-gray-300 rounded text-sm"
+                          onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                          className="px-3 py-1.5 border border-border-medium rounded text-sm"
                         >
                           <option value="">No Role</option>
                           {roles.map(role => (
@@ -423,15 +417,13 @@ export default function UserManagementPage() {
                       <span
                         className={cn(
                           'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                          user.is_active
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
+                          user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                         )}
                       >
                         {user.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm text-text-secondary">
                       <div className="flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {new Date(user.created_at).toLocaleDateString()}
@@ -449,7 +441,7 @@ export default function UserManagementPage() {
                             </button>
                             <button
                               onClick={() => setEditingUserId(null)}
-                              className="p-1.5 text-gray-400 hover:bg-gray-100 rounded"
+                              className="p-1.5 text-text-tertiary hover:bg-bg-hover rounded"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -458,7 +450,7 @@ export default function UserManagementPage() {
                           <>
                             <button
                               onClick={() => handleEditUser(user)}
-                              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                              className="p-1.5 text-text-tertiary hover:text-blue-600 hover:bg-blue-50 rounded"
                               title="Edit user"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -468,8 +460,8 @@ export default function UserManagementPage() {
                               className={cn(
                                 'p-1.5 rounded',
                                 user.is_active
-                                  ? 'text-gray-400 hover:text-red-600 hover:bg-red-50'
-                                  : 'text-gray-400 hover:text-green-600 hover:bg-green-50'
+                                  ? 'text-text-tertiary hover:text-red-600 hover:bg-red-50'
+                                  : 'text-text-tertiary hover:text-green-600 hover:bg-green-50'
                               )}
                               title={user.is_active ? 'Deactivate user' : 'Activate user'}
                             >
@@ -491,10 +483,10 @@ export default function UserManagementPage() {
         </div>
 
         {/* Footer info */}
-        <div className="mt-4 text-sm text-gray-500">
+        <div className="mt-4 text-sm text-text-secondary">
           Showing {filteredUsers.length} of {users.length} users
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -121,17 +121,17 @@ export function ServiceBasedCompanySelector({
   }
 
   const getUrgencyColor = (days: number | null) => {
-    if (days === null) return 'text-gray-500'
+    if (days === null) return 'text-text-secondary'
     if (days < 0) return 'text-red-600' // Overdue
     if (days <= 7) return 'text-yellow-600' // Due soon
     return 'text-green-600' // Future
   }
 
   const getUrgencyBg = (days: number | null) => {
-    if (days === null) return 'bg-gray-50'
+    if (days === null) return 'bg-bg-secondary'
     if (days < 0) return 'bg-red-50 border-red-200' // Overdue
     if (days <= 7) return 'bg-yellow-50 border-yellow-200' // Due soon
-    return 'bg-white' // Future
+    return 'bg-bg-primary' // Future
   }
 
   // Filter company services
@@ -174,8 +174,8 @@ export function ServiceBasedCompanySelector({
     <div className="h-full flex flex-col">
       {/* Service Type Selector */}
       <FeatureGate feature="ENABLE_SERVICE_SELECTOR">
-        <div className="p-4 border-b bg-gray-50">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="p-4 border-b bg-bg-secondary">
+          <label className="block text-sm font-medium text-text-primary mb-2">
             აირჩიეთ სერვისის ტიპი
           </label>
           <select
@@ -184,7 +184,7 @@ export function ServiceBasedCompanySelector({
               const value = e.target.value || null
               onServiceTypeChange(value)
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
             <option value="">აირჩიეთ სერვისი...</option>
             {serviceTypes.map(type => (
@@ -208,8 +208,8 @@ export function ServiceBasedCompanySelector({
       {/* Show message if no service type selected */}
       {!selectedServiceType && (
         <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center text-gray-500">
-            <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <div className="text-center text-text-secondary">
+            <AlertCircle className="w-16 h-16 mx-auto mb-4 text-text-tertiary" />
             <p>აირჩიეთ სერვისის ტიპი დასაწყებად</p>
           </div>
         </div>
@@ -219,16 +219,16 @@ export function ServiceBasedCompanySelector({
       {selectedServiceType && (
         <>
           {/* Filters */}
-          <div className="p-4 space-y-3 border-b bg-white">
+          <div className="p-4 space-y-3 border-b bg-bg-primary">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-tertiary w-5 h-5" />
               <input
                 type="text"
                 placeholder="ძებნა..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -237,7 +237,7 @@ export function ServiceBasedCompanySelector({
               <select
                 value={priorityFilter}
                 onChange={e => setPriorityFilter(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 text-sm border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="all">ყველა პრიორიტეტი</option>
                 <option value="high">მაღალი</option>
@@ -250,7 +250,7 @@ export function ServiceBasedCompanySelector({
                 className={`px-3 py-2 text-sm rounded-lg transition-colors ${
                   overdueOnly
                     ? 'bg-red-100 text-red-700 border border-red-300'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300'
+                    : 'bg-bg-tertiary text-text-primary border border-border-medium'
                 }`}
               >
                 🔴 გადაცილებული
@@ -258,7 +258,7 @@ export function ServiceBasedCompanySelector({
             </div>
 
             {/* Stats */}
-            <div className="flex gap-4 text-xs text-gray-600">
+            <div className="flex gap-4 text-xs text-text-secondary">
               <span>სულ: {sortedServices.length}</span>
               <span>არჩეული: {selectedServices.length}</span>
               <span className="text-red-600">
@@ -276,12 +276,12 @@ export function ServiceBasedCompanySelector({
           {/* Company Services List */}
           <div className="flex-1 overflow-y-auto">
             {loading ? (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-text-secondary">
                 <div className="animate-spin text-3xl mb-2">⏳</div>
                 <p>ჩატვირთვა...</p>
               </div>
             ) : sortedServices.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-text-secondary">
                 <p>კომპანიები არ მოიძებნა</p>
               </div>
             ) : (
@@ -296,19 +296,19 @@ export function ServiceBasedCompanySelector({
                     <div
                       key={service.id}
                       onClick={() => onServiceToggle(service)}
-                      className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors border-l-4 ${
+                      className={`p-4 cursor-pointer hover:bg-bg-secondary transition-colors border-l-4 ${
                         selected ? 'border-l-blue-500 bg-blue-50' : 'border-l-transparent'
                       } ${urgencyBg}`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           {/* Company Name */}
-                          <h4 className="font-semibold text-gray-900 truncate">
+                          <h4 className="font-semibold text-text-primary truncate">
                             {service.company.name}
                           </h4>
 
                           {/* Address */}
-                          <p className="text-sm text-gray-600 truncate">
+                          <p className="text-sm text-text-secondary truncate">
                             {service.company.address}
                           </p>
 
@@ -360,7 +360,7 @@ export function ServiceBasedCompanySelector({
                         <div className="flex-shrink-0">
                           <div
                             className={`w-6 h-6 rounded border-2 flex items-center justify-center ${
-                              selected ? 'bg-blue-500 border-blue-500' : 'border-gray-300'
+                              selected ? 'bg-blue-500 border-blue-500' : 'border-border-medium'
                             }`}
                           >
                             {selected && (

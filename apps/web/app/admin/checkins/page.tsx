@@ -82,7 +82,7 @@ export default function AdminCheckinsPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-full min-h-screen">
-        <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
       </div>
     )
   }
@@ -106,55 +106,55 @@ export default function AdminCheckinsPage() {
       : null
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       <PageHeader title="ჩეკ-ინების ისტორია" description="ოფიცრების ლოკაციის ჩეკ-ინები" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-bg-primary rounded-xl border border-border-light p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-[#6161FF]/10 flex items-center justify-center">
-                <MapPinned className="w-5 h-5 text-[#6161FF]" />
+              <div className="w-10 h-10 rounded-lg bg-monday-primary/10 flex items-center justify-center">
+                <MapPinned className="w-5 h-5 text-monday-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{checkins.length}</p>
-                <p className="text-xs text-gray-500">სულ ჩეკ-ინი</p>
+                <p className="text-2xl font-bold text-text-primary">{checkins.length}</p>
+                <p className="text-xs text-text-secondary">სულ ჩეკ-ინი</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-bg-primary rounded-xl border border-border-light p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{todayCount}</p>
-                <p className="text-xs text-gray-500">დღეს</p>
+                <p className="text-2xl font-bold text-text-primary">{todayCount}</p>
+                <p className="text-xs text-text-secondary">დღეს</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-bg-primary rounded-xl border border-border-light p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
                 <Timer className="w-5 h-5 text-orange-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{activeCount}</p>
-                <p className="text-xs text-gray-500">აქტიური</p>
+                <p className="text-2xl font-bold text-text-primary">{activeCount}</p>
+                <p className="text-xs text-text-secondary">აქტიური</p>
               </div>
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-bg-primary rounded-xl border border-border-light p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
                 <Clock className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-2xl font-bold text-text-primary">
                   {avgDuration != null ? formatDuration(avgDuration) : '—'}
                 </p>
-                <p className="text-xs text-gray-500">საშ. ხანგრძლივობა</p>
+                <p className="text-xs text-text-secondary">საშ. ხანგრძლივობა</p>
               </div>
             </div>
           </div>
@@ -165,7 +165,7 @@ export default function AdminCheckinsPage() {
           <button
             type="button"
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary bg-bg-primary border border-border-light rounded-lg hover:bg-bg-secondary transition-colors"
           >
             <Filter className="w-4 h-4" />
             <span>ფილტრები</span>
@@ -174,7 +174,7 @@ export default function AdminCheckinsPage() {
             type="button"
             onClick={loadCheckins}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary bg-bg-primary border border-border-light rounded-lg hover:bg-bg-secondary transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             <span>განახლება</span>
@@ -183,24 +183,28 @@ export default function AdminCheckinsPage() {
 
         {/* Filters panel */}
         {showFilters && (
-          <div className="bg-white rounded-xl border border-gray-200 p-4 mb-4">
+          <div className="bg-bg-primary rounded-xl border border-border-light p-4 mb-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">თარიღიდან</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  თარიღიდან
+                </label>
                 <input
                   type="date"
                   value={filters.fromDate}
                   onChange={e => setFilters(f => ({ ...f, fromDate: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30"
+                  className="w-full px-3 py-2 text-sm border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary/30"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1">თარიღამდე</label>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  თარიღამდე
+                </label>
                 <input
                   type="date"
                   value={filters.toDate}
                   onChange={e => setFilters(f => ({ ...f, toDate: e.target.value }))}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30"
+                  className="w-full px-3 py-2 text-sm border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary/30"
                 />
               </div>
             </div>
@@ -210,14 +214,14 @@ export default function AdminCheckinsPage() {
                 onClick={() =>
                   setFilters({ fromDate: '', toDate: '', companyId: '', inspectorId: '' })
                 }
-                className="text-sm text-gray-500 hover:text-gray-700 mr-3"
+                className="text-sm text-text-secondary hover:text-text-primary mr-3"
               >
                 გასუფთავება
               </button>
               <button
                 type="button"
                 onClick={loadCheckins}
-                className="px-4 py-1.5 text-sm bg-[#6161FF] text-white rounded-lg hover:bg-[#5050DD] transition-colors"
+                className="px-4 py-1.5 text-sm bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
               >
                 ძებნა
               </button>
@@ -226,69 +230,71 @@ export default function AdminCheckinsPage() {
         )}
 
         {/* Table */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden">
           {loading ? (
             <div className="p-6">
               <div className="space-y-3">
                 {[1, 2, 3, 4, 5].map(i => (
                   <div key={i} className="animate-pulse flex items-center gap-4">
-                    <div className="w-8 h-8 bg-gray-100 rounded-lg" />
+                    <div className="w-8 h-8 bg-bg-tertiary rounded-lg" />
                     <div className="flex-1 space-y-1.5">
-                      <div className="h-3.5 w-40 bg-gray-100 rounded" />
-                      <div className="h-3 w-28 bg-gray-100 rounded" />
+                      <div className="h-3.5 w-40 bg-bg-tertiary rounded" />
+                      <div className="h-3 w-28 bg-bg-tertiary rounded" />
                     </div>
-                    <div className="h-3 w-20 bg-gray-100 rounded" />
+                    <div className="h-3 w-20 bg-bg-tertiary rounded" />
                   </div>
                 ))}
               </div>
             </div>
           ) : checkins.length === 0 ? (
             <div className="py-16 text-center">
-              <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
-                <MapPinned className="w-7 h-7 text-gray-400" />
+              <div className="w-14 h-14 rounded-2xl bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
+                <MapPinned className="w-7 h-7 text-text-tertiary" />
               </div>
-              <h3 className="text-base font-semibold text-gray-900 mb-1">ჩეკ-ინები არ მოიძებნა</h3>
-              <p className="text-sm text-gray-500">ოფიცრების ჩეკ-ინები გამოჩნდება აქ</p>
+              <h3 className="text-base font-semibold text-text-primary mb-1">
+                ჩეკ-ინები არ მოიძებნა
+              </h3>
+              <p className="text-sm text-text-secondary">ოფიცრების ჩეკ-ინები გამოჩნდება აქ</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50/50">
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                  <tr className="border-b border-border-light bg-bg-secondary/50">
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       ჩეკ-ინი
                     </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       ჩეკ-აუთი
                     </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       ხანგრძლივობა
                     </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       ოფიცერი
                     </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       კომპანია
                     </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       ლოკაცია
                     </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       მანძილი
                     </th>
-                    <th className="text-left text-xs font-medium text-gray-500 px-4 py-3">
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       სტატუსი
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-border-light">
                   {checkins.map(checkin => (
-                    <tr key={checkin.id} className="hover:bg-gray-50/50 transition-colors">
+                    <tr key={checkin.id} className="hover:bg-bg-secondary/50 transition-colors">
                       <td className="px-4 py-3">
-                        <div className="text-sm text-gray-900">
+                        <div className="text-sm text-text-primary">
                           {new Date(checkin.created_at).toLocaleDateString('ka-GE')}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-text-tertiary">
                           {new Date(checkin.created_at).toLocaleTimeString('ka-GE', {
                             hour: '2-digit',
                             minute: '2-digit',
@@ -298,10 +304,10 @@ export default function AdminCheckinsPage() {
                       <td className="px-4 py-3">
                         {checkin.checked_out_at ? (
                           <div>
-                            <div className="text-sm text-gray-900">
+                            <div className="text-sm text-text-primary">
                               {new Date(checkin.checked_out_at).toLocaleDateString('ka-GE')}
                             </div>
-                            <div className="text-xs text-gray-400">
+                            <div className="text-xs text-text-tertiary">
                               {new Date(checkin.checked_out_at).toLocaleTimeString('ka-GE', {
                                 hour: '2-digit',
                                 minute: '2-digit',
@@ -329,22 +335,24 @@ export default function AdminCheckinsPage() {
                             {formatDuration(checkin.duration_minutes)}
                           </span>
                         ) : (
-                          <span className="text-sm text-gray-400">—</span>
+                          <span className="text-sm text-text-tertiary">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-[#6161FF]/10 flex items-center justify-center">
-                            <User className="w-3.5 h-3.5 text-[#6161FF]" />
+                          <div className="w-7 h-7 rounded-full bg-monday-primary/10 flex items-center justify-center">
+                            <User className="w-3.5 h-3.5 text-monday-primary" />
                           </div>
-                          <span className="text-sm text-gray-900">{checkin.inspector_name}</span>
+                          <span className="text-sm text-text-primary">
+                            {checkin.inspector_name}
+                          </span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-900">{checkin.company_name}</span>
+                        <span className="text-sm text-text-primary">{checkin.company_name}</span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-text-secondary">
                           {checkin.location_name || '—'}
                         </span>
                       </td>
@@ -362,7 +370,7 @@ export default function AdminCheckinsPage() {
                             {checkin.distance_from_location}მ
                           </span>
                         ) : (
-                          <span className="text-sm text-gray-400">—</span>
+                          <span className="text-sm text-text-tertiary">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
@@ -373,13 +381,13 @@ export default function AdminCheckinsPage() {
                           </span>
                         ) : checkin.notes ? (
                           <span
-                            className="text-xs text-gray-500 max-w-[120px] truncate block"
+                            className="text-xs text-text-secondary max-w-[120px] truncate block"
                             title={checkin.notes}
                           >
                             {checkin.notes}
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-bg-tertiary text-text-secondary rounded-full">
                             <Check className="w-3 h-3" />
                             ჩეკ-ინი
                           </span>

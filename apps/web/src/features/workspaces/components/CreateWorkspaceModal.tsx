@@ -93,21 +93,16 @@ export function CreateWorkspaceModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={handleClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
+      <div className="relative bg-bg-primary rounded-xl shadow-xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-text-primary">
-            Create Workspace
-          </h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
+          <h2 className="text-lg font-semibold text-text-primary">Create Workspace</h2>
           <button
             onClick={handleClose}
-            className="p-1 rounded-md hover:bg-gray-100 transition-colors"
+            className="p-1 rounded-md hover:bg-bg-hover transition-colors"
           >
             <X className="w-5 h-5 text-text-tertiary" />
           </button>
@@ -124,20 +119,23 @@ export function CreateWorkspaceModal({
 
           {/* Name Input */}
           <div>
-            <label htmlFor="workspace-name" className="block text-sm font-medium text-text-primary mb-1.5">
+            <label
+              htmlFor="workspace-name"
+              className="block text-sm font-medium text-text-primary mb-1.5"
+            >
               Workspace Name *
             </label>
             <input
               id="workspace-name"
               type="text"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={e => setName(e.target.value)}
               placeholder="e.g., Marketing, Engineering, HR"
               className={cn(
                 'w-full px-3 py-2 border rounded-lg text-sm transition-colors',
                 'focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary',
                 'placeholder:text-text-tertiary',
-                error && !name.trim() ? 'border-red-300' : 'border-gray-200'
+                error && !name.trim() ? 'border-red-300' : 'border-border-light'
               )}
               autoFocus
             />
@@ -145,17 +143,20 @@ export function CreateWorkspaceModal({
 
           {/* Description Input */}
           <div>
-            <label htmlFor="workspace-description" className="block text-sm font-medium text-text-primary mb-1.5">
+            <label
+              htmlFor="workspace-description"
+              className="block text-sm font-medium text-text-primary mb-1.5"
+            >
               Description
             </label>
             <textarea
               id="workspace-description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={e => setDescription(e.target.value)}
               placeholder="What is this workspace for?"
               rows={3}
               className={cn(
-                'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm transition-colors resize-none',
+                'w-full px-3 py-2 border border-border-light rounded-lg text-sm transition-colors resize-none',
                 'focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary',
                 'placeholder:text-text-tertiary'
               )}
@@ -164,11 +165,9 @@ export function CreateWorkspaceModal({
 
           {/* Icon Selection */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">
-              Icon
-            </label>
+            <label className="block text-sm font-medium text-text-primary mb-2">Icon</label>
             <div className="flex gap-2 flex-wrap">
-              {ICON_OPTIONS.map((option) => {
+              {ICON_OPTIONS.map(option => {
                 const IconComponent = option.Icon
                 return (
                   <button
@@ -179,7 +178,7 @@ export function CreateWorkspaceModal({
                       'w-10 h-10 rounded-lg flex items-center justify-center transition-all',
                       icon === option.value
                         ? 'bg-monday-primary text-white ring-2 ring-offset-2 ring-monday-primary'
-                        : 'bg-gray-100 text-text-secondary hover:bg-gray-200'
+                        : 'bg-bg-tertiary text-text-secondary hover:bg-bg-hover'
                     )}
                     title={option.label}
                   >
@@ -192,11 +191,9 @@ export function CreateWorkspaceModal({
 
           {/* Color Selection */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">
-              Color
-            </label>
+            <label className="block text-sm font-medium text-text-primary mb-2">Color</label>
             <div className="flex gap-2 flex-wrap">
-              {COLOR_OPTIONS.map((option) => (
+              {COLOR_OPTIONS.map(option => (
                 <button
                   key={option.value}
                   type="button"
@@ -214,14 +211,12 @@ export function CreateWorkspaceModal({
 
           {/* Preview */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-2">
-              Preview
-            </label>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <label className="block text-sm font-medium text-text-primary mb-2">Preview</label>
+            <div className="flex items-center gap-3 p-3 bg-bg-secondary rounded-lg">
               <div
                 className={cn(
                   'w-10 h-10 rounded-lg flex items-center justify-center text-white text-lg font-semibold',
-                  COLOR_OPTIONS.find((c) => c.value === color)?.class || 'bg-monday-primary'
+                  COLOR_OPTIONS.find(c => c.value === color)?.class || 'bg-monday-primary'
                 )}
               >
                 {name.trim() ? name.trim().charAt(0).toUpperCase() : 'W'}
@@ -242,7 +237,7 @@ export function CreateWorkspaceModal({
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-text-primary hover:bg-gray-50 transition-colors"
+              className="flex-1 px-4 py-2.5 border border-border-light rounded-lg text-sm font-medium text-text-primary hover:bg-bg-secondary transition-colors"
             >
               Cancel
             </button>

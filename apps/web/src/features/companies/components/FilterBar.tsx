@@ -13,7 +13,7 @@ import {
 
 export function FilterBar() {
   return (
-    <div className="bg-white border-b px-4 py-3">
+    <div className="bg-bg-primary border-b px-4 py-3">
       <div className="flex items-center gap-4 flex-wrap">
         {/* Filter Button */}
         <Button variant="outline" size="sm">
@@ -75,7 +75,7 @@ export function FilterBar() {
 
         {/* Active Filters Display */}
         <div className="flex items-center gap-2 ml-auto">
-          <span className="text-sm text-gray-600">Active:</span>
+          <span className="text-sm text-text-secondary">Active:</span>
           <Badge variant="secondary">Commercial</Badge>
           <Badge variant="secondary">Pending</Badge>
           <Button variant="ghost" size="sm" className="text-xs">

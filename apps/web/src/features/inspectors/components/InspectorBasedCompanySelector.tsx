@@ -106,17 +106,17 @@ export function InspectorBasedCompanySelector({
   }
 
   const getUrgencyColor = (days: number | null) => {
-    if (days === null) return 'text-gray-500'
+    if (days === null) return 'text-text-secondary'
     if (days < 0) return 'text-red-600'
     if (days <= 7) return 'text-yellow-600'
     return 'text-green-600'
   }
 
   const getUrgencyBg = (days: number | null) => {
-    if (days === null) return 'bg-gray-50'
+    if (days === null) return 'bg-bg-secondary'
     if (days < 0) return 'bg-red-50 border-red-200'
     if (days <= 7) return 'bg-yellow-50 border-yellow-200'
-    return 'bg-white'
+    return 'bg-bg-primary'
   }
 
   // Get unique service types from companies
@@ -159,8 +159,8 @@ export function InspectorBasedCompanySelector({
   return (
     <div className="h-full flex flex-col">
       {/* Inspector Selector */}
-      <div className="p-4 border-b bg-gray-50">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="p-4 border-b bg-bg-secondary">
+        <label className="block text-sm font-medium text-text-primary mb-2">
           <User className="w-4 h-4 inline mr-1" />
           აირჩიეთ ინსპექტორი
         </label>
@@ -170,7 +170,7 @@ export function InspectorBasedCompanySelector({
             const value = e.target.value || null
             onInspectorChange(value)
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="">აირჩიეთ ინსპექტორი...</option>
           {inspectors.map(inspector => (
@@ -181,7 +181,7 @@ export function InspectorBasedCompanySelector({
         </select>
 
         {selectedInspectorData && (
-          <div className="mt-2 text-sm text-gray-600">
+          <div className="mt-2 text-sm text-text-secondary">
             <span className="font-medium">{selectedInspectorData.specialty}</span>
             {' • '}
             <span>{selectedInspectorData.email}</span>
@@ -192,8 +192,8 @@ export function InspectorBasedCompanySelector({
       {/* Show message if no inspector selected */}
       {!selectedInspector && (
         <div className="flex-1 flex items-center justify-center p-8">
-          <div className="text-center text-gray-500">
-            <User className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+          <div className="text-center text-text-secondary">
+            <User className="w-16 h-16 mx-auto mb-4 text-text-tertiary" />
             <p className="font-medium">აირჩიეთ ინსპექტორი</p>
             <p className="text-sm mt-2">გამოჩნდება მათზე დანიშნული კომპანიები</p>
           </div>
@@ -204,16 +204,16 @@ export function InspectorBasedCompanySelector({
       {selectedInspector && (
         <>
           {/* Filters */}
-          <div className="p-4 space-y-3 border-b bg-white">
+          <div className="p-4 space-y-3 border-b bg-bg-primary">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-tertiary w-5 h-5" />
               <input
                 type="text"
                 placeholder="ძებნა..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
@@ -222,7 +222,7 @@ export function InspectorBasedCompanySelector({
               <select
                 value={serviceTypeFilter}
                 onChange={e => setServiceTypeFilter(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg"
+                className="flex-1 px-3 py-2 text-sm border border-border-medium rounded-lg"
               >
                 <option value="all">ყველა სერვისი</option>
                 {serviceTypes.map(type => (
@@ -237,7 +237,7 @@ export function InspectorBasedCompanySelector({
                 className={`px-3 py-2 text-sm rounded-lg transition-colors ${
                   overdueOnly
                     ? 'bg-red-100 text-red-700 border border-red-300'
-                    : 'bg-gray-100 text-gray-700 border border-gray-300'
+                    : 'bg-bg-tertiary text-text-primary border border-border-medium'
                 }`}
               >
                 🔴 გადაცილებული
@@ -245,7 +245,7 @@ export function InspectorBasedCompanySelector({
             </div>
 
             {/* Stats */}
-            <div className="flex gap-4 text-xs text-gray-600">
+            <div className="flex gap-4 text-xs text-text-secondary">
               <span>სულ: {sortedServices.length}</span>
               <span>არჩეული: {selectedServices.length}</span>
               <span className="text-red-600">
@@ -263,13 +263,13 @@ export function InspectorBasedCompanySelector({
           {/* Company Services List */}
           <div className="flex-1 overflow-y-auto">
             {loading ? (
-              <div className="p-8 text-center text-gray-500">
+              <div className="p-8 text-center text-text-secondary">
                 <div className="animate-spin text-3xl mb-2">⏳</div>
                 <p>ჩატვირთვა...</p>
               </div>
             ) : sortedServices.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <AlertCircle className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+              <div className="p-8 text-center text-text-secondary">
+                <AlertCircle className="w-12 h-12 mx-auto mb-2 text-text-tertiary" />
                 <p>კომპანიები არ მოიძებნა</p>
                 <p className="text-sm mt-1">ამ ინსპექტორზე არ არის დანიშნული კომპანიები</p>
               </div>
@@ -285,19 +285,19 @@ export function InspectorBasedCompanySelector({
                     <div
                       key={service.id}
                       onClick={() => onServiceToggle(service)}
-                      className={`p-4 cursor-pointer hover:bg-gray-50 transition-colors border-l-4 ${
+                      className={`p-4 cursor-pointer hover:bg-bg-secondary transition-colors border-l-4 ${
                         selected ? 'border-l-blue-500 bg-blue-50' : 'border-l-transparent'
                       } ${urgencyBg}`}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           {/* Company Name */}
-                          <h4 className="font-semibold text-gray-900 truncate">
+                          <h4 className="font-semibold text-text-primary truncate">
                             {service.company.name}
                           </h4>
 
                           {/* Address */}
-                          <p className="text-sm text-gray-600 truncate">
+                          <p className="text-sm text-text-secondary truncate">
                             {service.company.address}
                           </p>
 

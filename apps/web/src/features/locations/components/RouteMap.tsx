@@ -125,8 +125,8 @@ export function RouteMap({
 
         const marker = L.marker([company.lat, company.lng], { icon }).addTo(map).bindPopup(`
             <div class="p-2">
-              <div class="font-semibold text-gray-900">${company.name}</div>
-              <div class="text-sm text-gray-600">${company.address}</div>
+              <div class="font-semibold text-text-primary">${company.name}</div>
+              <div class="text-sm text-text-secondary">${company.address}</div>
               <div class="text-xs text-green-600 mt-2 flex items-center gap-1">
                 <span>✓</span>
                 <span>Selected - Click "Optimize" to plan route</span>
@@ -175,9 +175,9 @@ export function RouteMap({
                 <div class="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
                   ${position}
                 </div>
-                <div class="font-semibold text-gray-900">${company.name}</div>
+                <div class="font-semibold text-text-primary">${company.name}</div>
               </div>
-              <div class="text-sm text-gray-600">${company.address}</div>
+              <div class="text-sm text-text-secondary">${company.address}</div>
               <div class="text-xs text-blue-600 mt-2">
                 Stop #${position} in optimized route
               </div>

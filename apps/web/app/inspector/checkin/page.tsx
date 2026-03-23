@@ -177,23 +177,23 @@ export default function DataCollectionPage() {
   if (authLoading || inspectorLoading) {
     return (
       <div className="flex items-center justify-center h-full min-h-screen">
-        <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
+      <div className="bg-bg-primary border-b sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#6161FF]/10 flex items-center justify-center">
-              <ClipboardList className="w-5 h-5 text-[#6161FF]" />
+            <div className="w-10 h-10 rounded-xl bg-monday-primary/10 flex items-center justify-center">
+              <ClipboardList className="w-5 h-5 text-monday-primary" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">კომპანიის მონაცემები</h1>
-              <p className="text-xs text-gray-500">ინფორმაციის შეგროვება</p>
+              <h1 className="text-lg font-bold text-text-primary">კომპანიის მონაცემები</h1>
+              <p className="text-xs text-text-secondary">ინფორმაციის შეგროვება</p>
             </div>
           </div>
         </div>
@@ -201,10 +201,10 @@ export default function DataCollectionPage() {
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
         {/* სკ (SK Code) */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Hash className="w-4 h-4 text-[#6161FF]" />
-            <span className="text-sm font-semibold text-gray-700">სკ</span>
+            <Hash className="w-4 h-4 text-monday-primary" />
+            <span className="text-sm font-semibold text-text-primary">სკ</span>
             <span className="text-xs text-red-400">*</span>
           </div>
           <input
@@ -212,15 +212,15 @@ export default function DataCollectionPage() {
             value={skCode}
             onChange={e => setSkCode(e.target.value)}
             placeholder="საიდენტიფიკაციო კოდი..."
-            className="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
+            className="w-full px-3 py-3 text-sm border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary/30 focus:border-monday-primary"
           />
         </div>
 
         {/* Company Name */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Building2 className="w-4 h-4 text-[#6161FF]" />
-            <span className="text-sm font-semibold text-gray-700">კომპანიის სახელი</span>
+            <Building2 className="w-4 h-4 text-monday-primary" />
+            <span className="text-sm font-semibold text-text-primary">კომპანიის სახელი</span>
             <span className="text-xs text-red-400">*</span>
           </div>
           <input
@@ -228,15 +228,15 @@ export default function DataCollectionPage() {
             value={companyName}
             onChange={e => setCompanyName(e.target.value)}
             placeholder="კომპანიის სახელი..."
-            className="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
+            className="w-full px-3 py-3 text-sm border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary/30 focus:border-monday-primary"
           />
         </div>
 
         {/* Services */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Briefcase className="w-4 h-4 text-[#6161FF]" />
-            <span className="text-sm font-semibold text-gray-700">მომსახურებები</span>
+            <Briefcase className="w-4 h-4 text-monday-primary" />
+            <span className="text-sm font-semibold text-text-primary">მომსახურებები</span>
             <span className="text-xs text-red-400">*</span>
           </div>
           <textarea
@@ -244,15 +244,15 @@ export default function DataCollectionPage() {
             onChange={e => setServices(e.target.value)}
             placeholder="რა მომსახურებას ვუწევთ..."
             rows={3}
-            className="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
+            className="w-full px-3 py-3 text-sm border border-border-light rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-monday-primary/30 focus:border-monday-primary"
           />
         </div>
 
         {/* GPS Capture */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Crosshair className="w-4 h-4 text-[#6161FF]" />
-            <span className="text-sm font-semibold text-gray-700">GPS ლოკაცია</span>
+            <Crosshair className="w-4 h-4 text-monday-primary" />
+            <span className="text-sm font-semibold text-text-primary">GPS ლოკაცია</span>
             <span className="text-xs text-red-400">*</span>
           </div>
 
@@ -273,7 +273,7 @@ export default function DataCollectionPage() {
                 type="button"
                 onClick={captureGps}
                 disabled={gpsLoading}
-                className="text-sm text-[#6161FF] hover:underline"
+                className="text-sm text-monday-primary hover:underline"
               >
                 თავიდან დაფიქსირება
               </button>
@@ -284,7 +284,7 @@ export default function DataCollectionPage() {
                 type="button"
                 onClick={captureGps}
                 disabled={gpsLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#6161FF] text-white rounded-lg hover:bg-[#5050DD] transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors disabled:opacity-50"
               >
                 {gpsLoading ? (
                   <>
@@ -309,11 +309,11 @@ export default function DataCollectionPage() {
         </div>
 
         {/* Notes */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <div className="flex items-center gap-2 mb-3">
-            <StickyNote className="w-4 h-4 text-[#6161FF]" />
-            <span className="text-sm font-semibold text-gray-700">შენიშვნები</span>
-            <span className="text-xs text-gray-400">(არასავალდებულო)</span>
+            <StickyNote className="w-4 h-4 text-monday-primary" />
+            <span className="text-sm font-semibold text-text-primary">შენიშვნები</span>
+            <span className="text-xs text-text-tertiary">(არასავალდებულო)</span>
           </div>
           <textarea
             value={notes}
@@ -321,7 +321,7 @@ export default function DataCollectionPage() {
             placeholder="დამატებითი შენიშვნები..."
             rows={3}
             maxLength={2000}
-            className="w-full px-3 py-3 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
+            className="w-full px-3 py-3 text-sm border border-border-light rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-monday-primary/30 focus:border-monday-primary"
           />
         </div>
 
@@ -330,7 +330,7 @@ export default function DataCollectionPage() {
           type="button"
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-[#6161FF] text-white rounded-xl font-medium hover:bg-[#5050DD] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-monday-primary text-white rounded-xl font-medium hover:bg-monday-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
         >
           {submitting ? (
             <>
@@ -346,10 +346,10 @@ export default function DataCollectionPage() {
         </button>
 
         {/* Recent Entries */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-400" />
+        <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden">
+          <div className="px-4 py-3 border-b border-border-light">
+            <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+              <Clock className="w-4 h-4 text-text-tertiary" />
               ბოლო ჩანაწერები
             </h3>
           </div>
@@ -358,28 +358,28 @@ export default function DataCollectionPage() {
             <div className="p-4 space-y-3">
               {[1, 2, 3].map(i => (
                 <div key={i} className="animate-pulse flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-lg" />
+                  <div className="w-8 h-8 bg-bg-tertiary rounded-lg" />
                   <div className="flex-1">
-                    <div className="h-3.5 w-32 bg-gray-100 rounded mb-1.5" />
-                    <div className="h-3 w-24 bg-gray-100 rounded" />
+                    <div className="h-3.5 w-32 bg-bg-tertiary rounded mb-1.5" />
+                    <div className="h-3 w-24 bg-bg-tertiary rounded" />
                   </div>
                 </div>
               ))}
             </div>
           ) : recentEntries.length === 0 ? (
             <div className="p-6 text-center">
-              <p className="text-sm text-gray-400">ჩანაწერები არ მოიძებნა</p>
+              <p className="text-sm text-text-tertiary">ჩანაწერები არ მოიძებნა</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-border-light">
               {recentEntries.map(entry => (
                 <div key={entry.id} className="px-4 py-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#6161FF]/10 flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-4 h-4 text-[#6161FF]" />
+                  <div className="w-8 h-8 rounded-lg bg-monday-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-4 h-4 text-monday-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{entry.name}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                    <p className="text-sm font-medium text-text-primary truncate">{entry.name}</p>
+                    <div className="flex items-center gap-2 text-xs text-text-tertiary">
                       {entry.data?.sk_code && (
                         <span className="font-mono">{entry.data.sk_code}</span>
                       )}

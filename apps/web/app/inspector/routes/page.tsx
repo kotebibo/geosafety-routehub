@@ -14,7 +14,7 @@ interface Route {
   start_time: string
   status: string
   stops: any[]
-  total_distance_km: number  // Changed from total_distance
+  total_distance_km: number // Changed from total_distance
 }
 
 export default function InspectorRoutesPage() {
@@ -57,33 +57,15 @@ export default function InspectorRoutesPage() {
   const completedRoutes = routes.filter(r => r.status === 'completed')
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <PageHeader 
-        title="ჩემი მარშრუტები"
-        description="თქვენზე დანიშნული მარშრუტები"
-      />
+    <div className="min-h-screen bg-bg-secondary">
+      <PageHeader title="ჩემი მარშრუტები" description="თქვენზე დანიშნული მარშრუტები" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <StatCard
-            label="სულ მარშრუტები"
-            value={routes.length}
-            icon={RouteIcon}
-            color="blue"
-          />
-          <StatCard
-            label="დაგეგმილი"
-            value={plannedRoutes.length}
-            icon={Calendar}
-            color="purple"
-          />
-          <StatCard
-            label="მიმდინარე"
-            value={inProgressRoutes.length}
-            icon={Clock}
-            color="amber"
-          />
+          <StatCard label="სულ მარშრუტები" value={routes.length} icon={RouteIcon} color="blue" />
+          <StatCard label="დაგეგმილი" value={plannedRoutes.length} icon={Calendar} color="purple" />
+          <StatCard label="მიმდინარე" value={inProgressRoutes.length} icon={Clock} color="amber" />
           <StatCard
             label="დასრულებული"
             value={completedRoutes.length}
@@ -101,7 +83,7 @@ export default function InspectorRoutesPage() {
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {routes.map((route) => (
+            {routes.map(route => (
               <RouteCard key={route.id} route={route} />
             ))}
           </div>
@@ -127,39 +109,39 @@ function RouteCard({ route }: { route: Route }) {
   }
 
   return (
-    <div className="bg-white rounded-lg border hover:shadow-lg transition-shadow p-6">
+    <div className="bg-bg-primary rounded-lg border hover:shadow-lg transition-shadow p-6">
       <div className="flex items-start justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">{route.name}</h3>
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[route.status as keyof typeof statusColors]}`}>
+        <h3 className="text-lg font-semibold text-text-primary">{route.name}</h3>
+        <span
+          className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[route.status as keyof typeof statusColors]}`}
+        >
           {statusLabels[route.status as keyof typeof statusLabels]}
         </span>
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-text-secondary">
           <Calendar className="w-4 h-4" />
           <span>{new Date(route.date).toLocaleDateString('ka-GE')}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-text-secondary">
           <Clock className="w-4 h-4" />
           <span>{route.start_time}</span>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-text-secondary">
           <MapPin className="w-4 h-4" />
           <span>{route.stops?.length || 0} გაჩერება</span>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-text-secondary">
           <RouteIcon className="w-4 h-4" />
           <span>{route.total_distance_km?.toFixed(1) || '0.0'} კმ</span>
         </div>
       </div>
 
-      <button
-        className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-      >
+      <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
         ნახვა
       </button>
     </div>

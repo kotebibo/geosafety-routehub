@@ -125,13 +125,13 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
     <div className="space-y-4">
       {/* Current Phase Selector */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-text-primary mb-2">
           მიმდინარე ფაზა (Current Onboarding Phase)
         </label>
         <select
           value={currentPhase}
           onChange={e => setCurrentPhase(Number(e.target.value))}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
         >
           <option value={0}>არ დაწყებულა (Not Started)</option>
           {PHASE_DEFINITIONS.map(def => (
@@ -141,14 +141,14 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
           ))}
           <option value={6}>დასრულებული (Completed)</option>
         </select>
-        <p className="text-xs text-gray-600 mt-2">
+        <p className="text-xs text-text-secondary mt-2">
           * აირჩიეთ ფაზა, რომელზეც ამჟამად მუშაობთ ამ კომპანიასთან
         </p>
       </div>
 
       {/* Phase Schedule Grid */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
-        <h3 className="font-semibold text-gray-900 mb-4">ფაზების განრიგი (Phase Schedule)</h3>
+      <div className="bg-bg-primary border border-border-light rounded-lg p-4">
+        <h3 className="font-semibold text-text-primary mb-4">ფაზების განრიგი (Phase Schedule)</h3>
 
         <div className="space-y-3">
           {phases.map(phase => {
@@ -164,8 +164,8 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
                     : status === 'current'
                       ? 'bg-blue-50 border-blue-300'
                       : status === 'skipped'
-                        ? 'bg-gray-50 border-gray-200'
-                        : 'bg-white border-gray-200'
+                        ? 'bg-bg-secondary border-border-light'
+                        : 'bg-bg-primary border-border-light'
                 }`}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -176,14 +176,14 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
                           ? 'bg-green-600 text-white'
                           : status === 'current'
                             ? 'bg-blue-600 text-white'
-                            : 'bg-gray-300 text-gray-600'
+                            : 'bg-bg-tertiary text-text-secondary'
                       }`}
                     >
                       {phase.phase}
                     </div>
                     <div>
-                      <div className="font-medium text-gray-900">{phase.name_ka}</div>
-                      <div className="text-sm text-gray-600">{phase.name}</div>
+                      <div className="font-medium text-text-primary">{phase.name_ka}</div>
+                      <div className="text-sm text-text-secondary">{phase.name}</div>
                     </div>
                   </div>
 
@@ -198,27 +198,27 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {/* Scheduled Date */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-text-secondary mb-1">
                       დაგეგმილი თარიღი
                     </label>
                     <input
                       type="date"
                       value={phase.scheduled_date || ''}
                       onChange={e => updatePhase(phase.phase, { scheduled_date: e.target.value })}
-                      className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-1.5 text-sm border border-border-medium rounded focus:ring-1 focus:ring-blue-500"
                       placeholder={getDefaultDate(phase.phase)}
                     />
                   </div>
 
                   {/* Inspector */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-text-secondary mb-1">
                       ინსპექტორი
                     </label>
                     <select
                       value={phase.inspector_id || ''}
                       onChange={e => updatePhase(phase.phase, { inspector_id: e.target.value })}
-                      className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-1.5 text-sm border border-border-medium rounded focus:ring-1 focus:ring-blue-500"
                     >
                       <option value="">აირჩიეთ</option>
                       {inspectors.map(inspector => (
@@ -231,14 +231,14 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
 
                   {/* Completion Date */}
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                    <label className="block text-xs font-medium text-text-secondary mb-1">
                       დასრულების თარიღი
                     </label>
                     <input
                       type="date"
                       value={phase.completed_date || ''}
                       onChange={e => updatePhase(phase.phase, { completed_date: e.target.value })}
-                      className="w-full px-3 py-1.5 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500"
+                      className="w-full px-3 py-1.5 text-sm border border-border-medium rounded focus:ring-1 focus:ring-blue-500"
                       disabled={phase.phase > currentPhase}
                     />
                   </div>
@@ -251,7 +251,7 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
                     placeholder="შენიშვნები..."
                     value={phase.notes || ''}
                     onChange={e => updatePhase(phase.phase, { notes: e.target.value })}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded focus:ring-1 focus:ring-blue-500"
+                    className="w-full px-3 py-1.5 text-sm border border-border-light rounded focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -261,25 +261,25 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
       </div>
 
       {/* Quick Stats */}
-      <div className="bg-gray-50 rounded-lg p-4">
+      <div className="bg-bg-secondary rounded-lg p-4">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
             <div className="text-2xl font-bold text-green-600">
               {phases.filter(p => p.completed_date).length}
             </div>
-            <div className="text-xs text-gray-600">დასრულებული</div>
+            <div className="text-xs text-text-secondary">დასრულებული</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-blue-600">
               {currentPhase > 0 && currentPhase <= 5 ? 1 : 0}
             </div>
-            <div className="text-xs text-gray-600">მიმდინარე</div>
+            <div className="text-xs text-text-secondary">მიმდინარე</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-gray-400">
+            <div className="text-2xl font-bold text-text-tertiary">
               {5 - phases.filter(p => p.completed_date).length}
             </div>
-            <div className="text-xs text-gray-600">დარჩენილი</div>
+            <div className="text-xs text-text-secondary">დარჩენილი</div>
           </div>
         </div>
       </div>

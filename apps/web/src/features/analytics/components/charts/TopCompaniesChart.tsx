@@ -14,10 +14,12 @@ export function TopCompaniesChart({ data }: TopCompaniesChartProps) {
   }))
 
   return (
-    <div className="bg-white rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-gray-700 mb-4">Top Companies by Inspections</h3>
+    <div className="bg-bg-primary rounded-lg border p-6">
+      <h3 className="text-sm font-semibold text-text-primary mb-4">Top Companies by Inspections</h3>
       {data.length === 0 ? (
-        <div className="h-[300px] flex items-center justify-center text-sm text-gray-400">No inspection data available</div>
+        <div className="h-[300px] flex items-center justify-center text-sm text-text-tertiary">
+          No inspection data available
+        </div>
       ) : (
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={formatted} layout="vertical" margin={{ left: 20 }}>
@@ -26,9 +28,14 @@ export function TopCompaniesChart({ data }: TopCompaniesChartProps) {
             <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={120} />
             <Tooltip
               formatter={(value: any) => [value, 'Inspections']}
-              labelFormatter={(label) => `Company: ${label}`}
+              labelFormatter={label => `Company: ${label}`}
             />
-            <Bar dataKey="inspection_count" fill="#579BFC" name="Inspections" radius={[0, 4, 4, 0]} />
+            <Bar
+              dataKey="inspection_count"
+              fill="#579BFC"
+              name="Inspections"
+              radius={[0, 4, 4, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
       )}

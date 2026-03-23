@@ -15,10 +15,10 @@ const LocationsMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+      <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
         <div className="text-center">
           <div className="animate-spin text-4xl mb-2">🗺️</div>
-          <p className="text-gray-600">რუკის ჩატვირთვა...</p>
+          <p className="text-text-secondary">რუკის ჩატვირთვა...</p>
         </div>
       </div>
     ),
@@ -548,22 +548,22 @@ export default function LocationsMapPage() {
       <div className="h-[calc(100vh-64px)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin text-6xl mb-4">⏳</div>
-          <p className="text-xl text-gray-600">მონაცემების ჩატვირთვა...</p>
+          <p className="text-xl text-text-secondary">მონაცემების ჩატვირთვა...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-50">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-bg-secondary">
       {/* Top Bar with Filters */}
-      <div className="bg-white border-b px-6 py-4 flex-shrink-0">
+      <div className="bg-bg-primary border-b px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">ყველა ლოკაცია</h1>
-            <p className="text-sm text-gray-600">ობიექტების რუკა ფილტრებით</p>
+            <h1 className="text-2xl font-bold text-text-primary">ყველა ლოკაცია</h1>
+            <p className="text-sm text-text-secondary">ობიექტების რუკა ფილტრებით</p>
           </div>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-text-secondary">
             ნაჩვენები: <span className="font-bold text-blue-600">{filteredCompanies.length}</span> /{' '}
             {mappableCompanies.length}
           </div>
@@ -573,7 +573,7 @@ export default function LocationsMapPage() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">ძიება</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">ძიება</label>
             <input
               type="text"
               value={searchQuery}
@@ -585,7 +585,7 @@ export default function LocationsMapPage() {
 
           {/* Region Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">რეგიონი</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">რეგიონი</label>
             <select
               value={selectedRegion}
               onChange={e => {
@@ -613,7 +613,9 @@ export default function LocationsMapPage() {
 
           {/* District Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">რაიონი / ქალაქი</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              რაიონი / ქალაქი
+            </label>
             <select
               value={selectedDistrict}
               onChange={e => setSelectedDistrict(e.target.value)}
@@ -633,7 +635,9 @@ export default function LocationsMapPage() {
 
           {/* Company Type Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">ობიექტის ტიპი</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              ობიექტის ტიპი
+            </label>
             <select
               value={selectedCompanyType}
               onChange={e => setSelectedCompanyType(e.target.value)}
@@ -653,7 +657,7 @@ export default function LocationsMapPage() {
 
           {/* Inspector Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">ოფიცერი</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">ოფიცერი</label>
             <select
               value={selectedInspector}
               onChange={e => setSelectedInspector(e.target.value)}
@@ -680,7 +684,7 @@ export default function LocationsMapPage() {
           selectedCompanyType !== 'all' ||
           searchQuery) && (
           <div className="mt-4 flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-gray-600">აქტიური ფილტრები:</span>
+            <span className="text-sm text-text-secondary">აქტიური ფილტრები:</span>
 
             {searchQuery && (
               <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-2">
@@ -767,7 +771,7 @@ export default function LocationsMapPage() {
                 setSelectedInspector('all')
                 setSelectedServiceType('all')
               }}
-              className="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm hover:bg-gray-300"
+              className="px-3 py-1 bg-bg-tertiary text-text-primary rounded-full text-sm hover:bg-border-medium"
             >
               გასუფთავება
             </button>

@@ -41,7 +41,7 @@ export default function TrackingPage() {
   if (authLoading || !isAllowed) {
     return (
       <div className="flex items-center justify-center h-full">
-        <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
       </div>
     )
   }
@@ -64,9 +64,11 @@ export default function TrackingPage() {
         />
         {inspectors.length === 0 && !isLoading && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="bg-white/90 rounded-lg px-6 py-4 text-center shadow-sm">
-              <p className="text-gray-600 text-sm">No active officers in the last 30 minutes</p>
-              <p className="text-gray-400 text-xs mt-1">
+            <div className="bg-bg-primary/90 rounded-lg px-6 py-4 text-center shadow-sm">
+              <p className="text-text-secondary text-sm">
+                No active officers in the last 30 minutes
+              </p>
+              <p className="text-text-tertiary text-xs mt-1">
                 Officers will appear here when they start tracking
               </p>
             </div>

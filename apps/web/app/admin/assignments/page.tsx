@@ -39,7 +39,7 @@ export default function AssignmentsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       <PageHeader title="კომპანიების დანიშვნა" description="მიანიჭეთ კომპანიები ოფიცრებს" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

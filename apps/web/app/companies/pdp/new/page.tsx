@@ -76,13 +76,13 @@ export default function NewPDPCompanyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       {/* Navigation */}
-      <div className="bg-white border-b">
+      <div className="bg-bg-primary border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <button
             onClick={handleCancel}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>უკან დაბრუნება</span>

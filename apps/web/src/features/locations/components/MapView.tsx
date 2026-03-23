@@ -17,7 +17,7 @@ export function MapView({ selectedRoute, onMarkerClick }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const [lng] = useState(44.783333) // Tbilisi longitude
-  const [lat] = useState(41.716667) // Tbilisi latitude  
+  const [lat] = useState(41.716667) // Tbilisi latitude
   const [zoom] = useState(12)
 
   const { locations, filters } = useMapStore()
@@ -29,20 +29,20 @@ export function MapView({ selectedRoute, onMarkerClick }: MapViewProps) {
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
       center: [lng, lat],
-      zoom: zoom
+      zoom: zoom,
     })
 
     // Add navigation controls
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right')
-    
+
     // Add geolocate control
     map.current.addControl(
       new mapboxgl.GeolocateControl({
         positionOptions: {
-          enableHighAccuracy: true
+          enableHighAccuracy: true,
         },
         trackUserLocation: true,
-        showUserHeading: true
+        showUserHeading: true,
       }),
       'top-right'
     )
@@ -61,7 +61,7 @@ export function MapView({ selectedRoute, onMarkerClick }: MapViewProps) {
 
     // Clear existing markers
     const markers = document.getElementsByClassName('mapboxgl-marker')
-    while(markers[0]) {
+    while (markers[0]) {
       markers[0].remove()
     }
 
@@ -87,11 +87,10 @@ export function MapView({ selectedRoute, onMarkerClick }: MapViewProps) {
         const marker = new mapboxgl.Marker(el)
           .setLngLat([location.lng, location.lat])
           .setPopup(
-            new mapboxgl.Popup({ offset: 25 })
-              .setHTML(`
+            new mapboxgl.Popup({ offset: 25 }).setHTML(`
                 <div class="p-3">
                   <h3 class="font-bold">${location.name}</h3>
-                  <p class="text-sm text-gray-600">${location.address}</p>
+                  <p class="text-sm text-text-secondary">${location.address}</p>
                   <p class="text-sm">Type: ${location.type}</p>
                 </div>
               `)
@@ -110,7 +109,7 @@ export function MapView({ selectedRoute, onMarkerClick }: MapViewProps) {
       residential: '#10B981',
       industrial: '#F59E0B',
       healthcare: '#EF4444',
-      education: '#8B5CF6'
+      education: '#8B5CF6',
     }
     return colors[type] || '#6B7280'
   }

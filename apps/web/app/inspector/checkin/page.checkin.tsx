@@ -399,7 +399,7 @@ export default function InspectorCheckinPage() {
   if (authLoading || inspectorLoading) {
     return (
       <div className="flex items-center justify-center h-full min-h-screen">
-        <RefreshCw className="w-6 h-6 animate-spin text-gray-400" />
+        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
       </div>
     )
   }
@@ -408,9 +408,9 @@ export default function InspectorCheckinPage() {
   if (!inspectorId) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-screen p-4">
-        <MapPinned className="w-12 h-12 text-gray-300 mb-4" />
-        <h2 className="text-lg font-semibold text-gray-700">ინსპექტორის პროფილი არ მოიძებნა</h2>
-        <p className="text-sm text-gray-500 mt-1 text-center">
+        <MapPinned className="w-12 h-12 text-text-disabled mb-4" />
+        <h2 className="text-lg font-semibold text-text-primary">ინსპექტორის პროფილი არ მოიძებნა</h2>
+        <p className="text-sm text-text-secondary mt-1 text-center">
           თქვენი ანგარიში არ არის მიბმული ინსპექტორის პროფილთან. დაუკავშირდით ადმინისტრატორს.
         </p>
       </div>
@@ -418,17 +418,17 @@ export default function InspectorCheckinPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       {/* Header */}
-      <div className="bg-white border-b sticky top-0 z-10">
+      <div className="bg-bg-primary border-b sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#6161FF]/10 flex items-center justify-center">
-              <MapPinned className="w-5 h-5 text-[#6161FF]" />
+            <div className="w-10 h-10 rounded-xl bg-monday-primary/10 flex items-center justify-center">
+              <MapPinned className="w-5 h-5 text-monday-primary" />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">ჩეკ-ინი</h1>
-              <p className="text-xs text-gray-500">კომპანიის ლოკაციის დაფიქსირება</p>
+              <h1 className="text-lg font-bold text-text-primary">ჩეკ-ინი</h1>
+              <p className="text-xs text-text-secondary">კომპანიის ლოკაციის დაფიქსირება</p>
             </div>
           </div>
         </div>
@@ -468,7 +468,7 @@ export default function InspectorCheckinPage() {
 
             {/* Checkout GPS capture */}
             {checkoutGps ? (
-              <div className="bg-white/60 rounded-lg px-3 py-2 text-xs text-green-700 flex items-center gap-2">
+              <div className="bg-bg-primary/60 rounded-lg px-3 py-2 text-xs text-green-700 flex items-center gap-2">
                 <Check className="w-3.5 h-3.5 text-green-600" />
                 GPS: {checkoutGps.lat.toFixed(6)}, {checkoutGps.lng.toFixed(6)} (±
                 {checkoutGps.accuracy}მ)
@@ -478,7 +478,7 @@ export default function InspectorCheckinPage() {
                 type="button"
                 onClick={captureCheckoutGps}
                 disabled={checkoutGpsLoading}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-white/70 border border-orange-200 rounded-lg text-sm text-orange-800 hover:bg-white transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-bg-primary/70 border border-orange-200 rounded-lg text-sm text-orange-800 hover:bg-bg-primary transition-colors disabled:opacity-50"
               >
                 {checkoutGpsLoading ? (
                   <>
@@ -524,24 +524,24 @@ export default function InspectorCheckinPage() {
         )}
 
         {/* Step 1: Company Search */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Building2 className="w-4 h-4 text-[#6161FF]" />
-            <span className="text-sm font-semibold text-gray-700">1. აირჩიეთ კომპანია</span>
+            <Building2 className="w-4 h-4 text-monday-primary" />
+            <span className="text-sm font-semibold text-text-primary">1. აირჩიეთ კომპანია</span>
           </div>
 
           {selectedCompany ? (
-            <div className="flex items-center justify-between bg-[#6161FF]/5 border border-[#6161FF]/20 rounded-lg px-3 py-2.5">
+            <div className="flex items-center justify-between bg-monday-primary/5 border border-monday-primary/20 rounded-lg px-3 py-2.5">
               <div className="flex items-center gap-2 min-w-0">
-                <Building2 className="w-4 h-4 text-[#6161FF] flex-shrink-0" />
-                <span className="text-sm font-medium text-gray-900 truncate">
+                <Building2 className="w-4 h-4 text-monday-primary flex-shrink-0" />
+                <span className="text-sm font-medium text-text-primary truncate">
                   {selectedCompany.name}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={handleClearCompany}
-                className="p-1 text-gray-400 hover:text-gray-600 flex-shrink-0"
+                className="p-1 text-text-tertiary hover:text-text-secondary flex-shrink-0"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -549,29 +549,29 @@ export default function InspectorCheckinPage() {
           ) : (
             <div ref={searchRef} className="relative">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={e => handleSearchChange(e.target.value)}
                   placeholder="კომპანიის სახელი..."
-                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary/30 focus:border-monday-primary"
                 />
                 {searching && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 animate-spin" />
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary animate-spin" />
                 )}
               </div>
 
               {showDropdown && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-20">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-48 overflow-y-auto z-20">
                   {searchResults.map(company => (
                     <button
                       key={company.id}
                       type="button"
                       onClick={() => handleSelectCompany(company)}
-                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-gray-50 flex items-center gap-2 border-b border-gray-100 last:border-0"
+                      className="w-full text-left px-3 py-2.5 text-sm hover:bg-bg-secondary flex items-center gap-2 border-b border-border-light last:border-0"
                     >
-                      <Building2 className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                      <Building2 className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />
                       <span className="truncate">{company.name}</span>
                     </button>
                   ))}
@@ -582,8 +582,8 @@ export default function InspectorCheckinPage() {
                 searchQuery.length >= 2 &&
                 searchResults.length === 0 &&
                 !searching && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20">
-                    <p className="text-sm text-gray-500 text-center">კომპანია ვერ მოიძებნა</p>
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg p-3 z-20">
+                    <p className="text-sm text-text-secondary text-center">კომპანია ვერ მოიძებნა</p>
                   </div>
                 )}
             </div>
@@ -592,19 +592,19 @@ export default function InspectorCheckinPage() {
 
         {/* Step 2: Location Selector (if company has multiple locations) */}
         {selectedCompany && (
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-bg-primary rounded-xl border border-border-light p-4">
             <div className="flex items-center gap-2 mb-3">
-              <MapPin className="w-4 h-4 text-[#6161FF]" />
-              <span className="text-sm font-semibold text-gray-700">2. ლოკაცია</span>
+              <MapPin className="w-4 h-4 text-monday-primary" />
+              <span className="text-sm font-semibold text-text-primary">2. ლოკაცია</span>
             </div>
 
             {loadingLocations ? (
-              <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
+              <div className="flex items-center gap-2 text-sm text-text-tertiary py-2">
                 <Loader2 className="w-4 h-4 animate-spin" />
                 <span>იტვირთება...</span>
               </div>
             ) : locations.length === 0 ? (
-              <p className="text-sm text-gray-500 py-1">
+              <p className="text-sm text-text-secondary py-1">
                 ლოკაციები არ მოიძებნა (GPS ჩეკ-ინი კომპანიაზე)
               </p>
             ) : (
@@ -616,14 +616,14 @@ export default function InspectorCheckinPage() {
                     onClick={() => setSelectedLocationId(loc.id)}
                     className={`w-full text-left px-3 py-2.5 rounded-lg border text-sm transition-colors ${
                       selectedLocationId === loc.id
-                        ? 'border-[#6161FF] bg-[#6161FF]/5 ring-1 ring-[#6161FF]/30'
-                        : 'border-gray-200 hover:bg-gray-50'
+                        ? 'border-monday-primary bg-monday-primary/5 ring-1 ring-monday-primary/30'
+                        : 'border-border-light hover:bg-bg-secondary'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-medium text-gray-900 truncate">{loc.name}</span>
+                          <span className="font-medium text-text-primary truncate">{loc.name}</span>
                           {loc.is_primary && (
                             <span className="px-1.5 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded">
                               მთავარი
@@ -636,11 +636,13 @@ export default function InspectorCheckinPage() {
                           )}
                         </div>
                         {loc.address && (
-                          <p className="text-xs text-gray-500 mt-0.5 truncate">{loc.address}</p>
+                          <p className="text-xs text-text-secondary mt-0.5 truncate">
+                            {loc.address}
+                          </p>
                         )}
                       </div>
                       {selectedLocationId === loc.id && (
-                        <Check className="w-4 h-4 text-[#6161FF] flex-shrink-0" />
+                        <Check className="w-4 h-4 text-monday-primary flex-shrink-0" />
                       )}
                     </div>
                   </button>
@@ -651,10 +653,10 @@ export default function InspectorCheckinPage() {
         )}
 
         {/* Step 3: GPS Capture */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Crosshair className="w-4 h-4 text-[#6161FF]" />
-            <span className="text-sm font-semibold text-gray-700">
+            <Crosshair className="w-4 h-4 text-monday-primary" />
+            <span className="text-sm font-semibold text-text-primary">
               {selectedCompany ? '3' : '2'}. GPS კოორდინატები
             </span>
           </div>
@@ -676,7 +678,7 @@ export default function InspectorCheckinPage() {
                 type="button"
                 onClick={captureGps}
                 disabled={gpsLoading}
-                className="text-sm text-[#6161FF] hover:underline"
+                className="text-sm text-monday-primary hover:underline"
               >
                 თავიდან დაფიქსირება
               </button>
@@ -687,7 +689,7 @@ export default function InspectorCheckinPage() {
                 type="button"
                 onClick={captureGps}
                 disabled={gpsLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#6161FF] text-white rounded-lg hover:bg-[#5050DD] transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors disabled:opacity-50"
               >
                 {gpsLoading ? (
                   <>
@@ -712,13 +714,13 @@ export default function InspectorCheckinPage() {
         </div>
 
         {/* Step 4: Notes */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <div className="flex items-center gap-2 mb-3">
-            <StickyNote className="w-4 h-4 text-[#6161FF]" />
-            <span className="text-sm font-semibold text-gray-700">
+            <StickyNote className="w-4 h-4 text-monday-primary" />
+            <span className="text-sm font-semibold text-text-primary">
               {selectedCompany ? '4' : '3'}. შენიშვნები
             </span>
-            <span className="text-xs text-gray-400">(არასავალდებულო)</span>
+            <span className="text-xs text-text-tertiary">(არასავალდებულო)</span>
           </div>
           <textarea
             value={notes}
@@ -726,7 +728,7 @@ export default function InspectorCheckinPage() {
             placeholder="დამატებითი შენიშვნები..."
             rows={3}
             maxLength={2000}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#6161FF]/30 focus:border-[#6161FF]"
+            className="w-full px-3 py-2 text-sm border border-border-light rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-monday-primary/30 focus:border-monday-primary"
           />
         </div>
 
@@ -735,7 +737,7 @@ export default function InspectorCheckinPage() {
           type="button"
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-[#6161FF] text-white rounded-xl font-medium hover:bg-[#5050DD] transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-monday-primary text-white rounded-xl font-medium hover:bg-monday-primary-hover transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
         >
           {submitting ? (
             <>
@@ -751,10 +753,10 @@ export default function InspectorCheckinPage() {
         </button>
 
         {/* Recent Check-ins */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-gray-400" />
+        <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden">
+          <div className="px-4 py-3 border-b border-border-light">
+            <h3 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+              <Clock className="w-4 h-4 text-text-tertiary" />
               ბოლო ჩეკ-ინები
             </h3>
           </div>
@@ -763,20 +765,20 @@ export default function InspectorCheckinPage() {
             <div className="p-4 space-y-3">
               {[1, 2, 3].map(i => (
                 <div key={i} className="animate-pulse flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gray-100 rounded-lg" />
+                  <div className="w-8 h-8 bg-bg-tertiary rounded-lg" />
                   <div className="flex-1">
-                    <div className="h-3.5 w-32 bg-gray-100 rounded mb-1.5" />
-                    <div className="h-3 w-24 bg-gray-100 rounded" />
+                    <div className="h-3.5 w-32 bg-bg-tertiary rounded mb-1.5" />
+                    <div className="h-3 w-24 bg-bg-tertiary rounded" />
                   </div>
                 </div>
               ))}
             </div>
           ) : recentCheckins.length === 0 ? (
             <div className="p-6 text-center">
-              <p className="text-sm text-gray-400">ჩეკ-ინები არ მოიძებნა</p>
+              <p className="text-sm text-text-tertiary">ჩეკ-ინები არ მოიძებნა</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-border-light">
               {recentCheckins.map(checkin => (
                 <div key={checkin.id} className="px-4 py-3 flex items-center gap-3">
                   <div
@@ -785,7 +787,7 @@ export default function InspectorCheckinPage() {
                         ? 'bg-orange-100 text-orange-600'
                         : checkin.location_updated
                           ? 'bg-green-100 text-green-600'
-                          : 'bg-gray-100 text-gray-500'
+                          : 'bg-bg-tertiary text-text-secondary'
                     }`}
                   >
                     {!checkin.checked_out_at ? (
@@ -795,10 +797,10 @@ export default function InspectorCheckinPage() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
+                    <p className="text-sm font-medium text-text-primary truncate">
                       {checkin.company_name}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+                    <div className="flex items-center gap-2 text-xs text-text-tertiary flex-wrap">
                       {checkin.location_name && (
                         <span className="truncate">{checkin.location_name}</span>
                       )}

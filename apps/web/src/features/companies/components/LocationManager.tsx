@@ -135,9 +135,9 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Building2 className="w-5 h-5 text-gray-500" />
-          <h3 className="text-lg font-medium text-gray-900">ლოკაციები / ფილიალები</h3>
-          <span className="text-sm text-gray-500">({locations.length})</span>
+          <Building2 className="w-5 h-5 text-text-secondary" />
+          <h3 className="text-lg font-medium text-text-primary">ლოკაციები / ფილიალები</h3>
+          <span className="text-sm text-text-secondary">({locations.length})</span>
         </div>
         {!disabled && !isAdding && (
           <button
@@ -157,7 +157,9 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
           <div
             key={location.id || index}
             className={`border rounded-lg p-4 ${
-              location.is_primary ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white'
+              location.is_primary
+                ? 'border-yellow-400 bg-yellow-50'
+                : 'border-border-light bg-bg-primary'
             }`}
           >
             {editingIndex === index && editingData ? (
@@ -177,19 +179,19 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                     {location.is_primary && (
                       <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                     )}
-                    <span className="font-medium text-gray-900">{location.name}</span>
+                    <span className="font-medium text-text-primary">{location.name}</span>
                     {location.is_primary && (
                       <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded">
                         მთავარი
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-1 text-sm text-gray-600">
+                  <div className="flex items-center gap-1 text-sm text-text-secondary">
                     <MapPin className="w-3.5 h-3.5" />
                     {location.address}
                   </div>
                   {location.contact_phone && (
-                    <div className="flex items-center gap-1 text-sm text-gray-500 mt-1">
+                    <div className="flex items-center gap-1 text-sm text-text-secondary mt-1">
                       <Phone className="w-3.5 h-3.5" />
                       {location.contact_phone}
                     </div>
@@ -203,7 +205,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                         <button
                           type="button"
                           onClick={() => handleSetPrimary(index)}
-                          className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded"
+                          className="p-1.5 text-text-tertiary hover:text-yellow-600 hover:bg-yellow-50 rounded"
                         >
                           <Star className="w-4 h-4" />
                         </button>
@@ -213,7 +215,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                       <button
                         type="button"
                         onClick={() => handleEditStart(index)}
-                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                        className="p-1.5 text-text-tertiary hover:text-blue-600 hover:bg-blue-50 rounded"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
@@ -222,7 +224,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                       <button
                         type="button"
                         onClick={() => handleDelete(index)}
-                        className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                        className="p-1.5 text-text-tertiary hover:text-red-600 hover:bg-red-50 rounded"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -236,10 +238,10 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
 
         {/* Empty State */}
         {locations.length === 0 && !isAdding && (
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600 mb-2">ლოკაციები არ არის დამატებული</p>
-            <p className="text-sm text-gray-500 mb-4">
+          <div className="border-2 border-dashed border-border-medium rounded-lg p-8 text-center">
+            <MapPin className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
+            <p className="text-text-secondary mb-2">ლოკაციები არ არის დამატებული</p>
+            <p className="text-sm text-text-secondary mb-4">
               დაამატეთ მინიმუმ ერთი ლოკაცია კომპანიისთვის
             </p>
             {!disabled && (
@@ -258,7 +260,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
         {/* Add New Location Form */}
         {isAdding && (
           <div className="border-2 border-blue-300 border-dashed rounded-lg p-4 bg-blue-50">
-            <h4 className="font-medium text-gray-900 mb-3">ახალი ლოკაცია</h4>
+            <h4 className="font-medium text-text-primary mb-3">ახალი ლოკაცია</h4>
             <LocationForm
               data={newLocation}
               onChange={setNewLocation}
@@ -274,7 +276,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
       </div>
 
       {/* Help Text */}
-      <p className="text-xs text-gray-500">
+      <p className="text-xs text-text-secondary">
         <Star className="w-3 h-3 inline text-yellow-500 fill-yellow-500" /> მთავარი ლოკაცია
         გამოჩნდება როგორც ნაგულისხმევი მისამართი. თუ კომპანიას აქვს მხოლოდ ერთი ლოკაცია, ის
         ავტომატურად იქნება მთავარი.
@@ -304,74 +306,76 @@ function LocationForm({
       <div className="grid grid-cols-2 gap-3">
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">სახელი *</label>
+          <label className="block text-sm font-medium text-text-primary mb-1">სახელი *</label>
           <input
             type="text"
             value={data.name}
             onChange={e => onChange({ ...data, name: e.target.value })}
             placeholder="მაგ: მთავარი ოფისი, ფილიალი #1"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
         {/* Address */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">მისამართი *</label>
+          <label className="block text-sm font-medium text-text-primary mb-1">მისამართი *</label>
           <input
             type="text"
             value={data.address}
             onChange={e => onChange({ ...data, address: e.target.value })}
             placeholder="მაგ: რუსთაველის გამზ. 12"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
         {/* Contact Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">საკონტაქტო პირი</label>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            საკონტაქტო პირი
+          </label>
           <input
             type="text"
             value={data.contact_name || ''}
             onChange={e => onChange({ ...data, contact_name: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
         {/* Contact Phone */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">ტელეფონი</label>
+          <label className="block text-sm font-medium text-text-primary mb-1">ტელეფონი</label>
           <input
             type="tel"
             value={data.contact_phone || ''}
             onChange={e => onChange({ ...data, contact_phone: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+            className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
       </div>
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">შენიშვნა</label>
+        <label className="block text-sm font-medium text-text-primary mb-1">შენიშვნა</label>
         <input
           type="text"
           value={data.notes || ''}
           onChange={e => onChange({ ...data, notes: e.target.value })}
           placeholder="დამატებითი ინფორმაცია"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+          className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
         />
       </div>
 
       {/* Primary Toggle & Actions */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+      <div className="flex items-center justify-between pt-2 border-t border-border-light">
         {showPrimaryToggle ? (
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
               checked={data.is_primary}
               onChange={e => onChange({ ...data, is_primary: e.target.checked })}
-              className="w-4 h-4 rounded border-gray-300 text-yellow-600 focus:ring-yellow-500"
+              className="w-4 h-4 rounded border-border-medium text-yellow-600 focus:ring-yellow-500"
             />
-            <span className="text-sm text-gray-700">მთავარი ლოკაცია</span>
+            <span className="text-sm text-text-primary">მთავარი ლოკაცია</span>
           </label>
         ) : (
           <div />
@@ -381,7 +385,7 @@ function LocationForm({
           <button
             type="button"
             onClick={onCancel}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
+            className="flex items-center gap-1 px-3 py-1.5 text-sm text-text-secondary hover:bg-bg-hover rounded-lg"
           >
             <X className="w-4 h-4" />
             გაუქმება

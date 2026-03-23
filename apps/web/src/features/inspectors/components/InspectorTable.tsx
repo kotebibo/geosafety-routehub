@@ -39,59 +39,54 @@ export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Inspect
   }
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
+    <div className="bg-bg-primary rounded-lg border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-bg-secondary border-b">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                 ინსპექტორი
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                 კონტაქტი
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                 სპეციალობა
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                 სტატუსი
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
                 მოქმედებები
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {inspectors.map((inspector) => (
-              <tr 
-                key={inspector.id} 
-                className="hover:bg-gray-50 transition-colors"
-              >
+          <tbody className="divide-y divide-border-light">
+            {inspectors.map(inspector => (
+              <tr key={inspector.id} className="hover:bg-bg-secondary transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
                       <User className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {inspector.full_name}
-                      </p>
+                      <p className="text-sm font-medium text-text-primary">{inspector.full_name}</p>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <Mail className="w-4 h-4" />
                       {inspector.email}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <Phone className="w-4 h-4" />
                       {inspector.phone}
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-600">
+                <td className="px-6 py-4 text-sm text-text-secondary">
                   <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                     {inspector.specialty}
                   </span>
@@ -104,16 +99,12 @@ export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Inspect
                     {inspector.status === 'active' ? (
                       <>
                         <ToggleRight className="w-6 h-6 text-green-600" />
-                        <span className="text-sm font-medium text-green-600">
-                          აქტიური
-                        </span>
+                        <span className="text-sm font-medium text-green-600">აქტიური</span>
                       </>
                     ) : (
                       <>
-                        <ToggleLeft className="w-6 h-6 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-600">
-                          არააქტიური
-                        </span>
+                        <ToggleLeft className="w-6 h-6 text-text-tertiary" />
+                        <span className="text-sm font-medium text-text-secondary">არააქტიური</span>
                       </>
                     )}
                   </button>
@@ -134,9 +125,7 @@ export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Inspect
       </div>
 
       {inspectors.length === 0 && (
-        <div className="p-12 text-center text-gray-500">
-          ინსპექტორები არ არის
-        </div>
+        <div className="p-12 text-center text-text-secondary">ინსპექტორები არ არის</div>
       )}
     </div>
   )

@@ -87,33 +87,35 @@ export default function NewCompanyPage() {
     <div className="h-full overflow-y-auto">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">ახალი კომპანიის დამატება</h1>
-          <p className="text-gray-600 mt-1">შეავსეთ ყველა საჭირო ველი</p>
+          <h1 className="text-3xl font-bold text-text-primary">ახალი კომპანიის დამატება</h1>
+          <p className="text-text-secondary mt-1">შეავსეთ ყველა საჭირო ველი</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
           {/* Basic Information */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">ძირითადი ინფორმაცია</h2>
+          <div className="bg-bg-primary rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-text-primary mb-4">ძირითადი ინფორმაცია</h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">დასახელება *</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  დასახელება *
+                </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ტიპი</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">ტიპი</label>
                 <select
                   value={formData.type}
                   onChange={e => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="commercial">კომერციული</option>
                   <option value="residential">საცხოვრებელი</option>
@@ -124,11 +126,13 @@ export default function NewCompanyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">პრიორიტეტი</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  პრიორიტეტი
+                </label>
                 <select
                   value={formData.priority}
                   onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="low">დაბალი</option>
                   <option value="medium">საშუალო</option>
@@ -139,56 +143,60 @@ export default function NewCompanyPage() {
           </div>
 
           {/* Locations Section */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-bg-primary rounded-lg shadow p-6">
             <LocationManager locations={locations} onChange={setLocations} />
           </div>
 
           {/* Contact Information (Company-level, optional) */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+          <div className="bg-bg-primary rounded-lg shadow p-6">
+            <h2 className="text-xl font-semibold text-text-primary mb-4">
               საკონტაქტო ინფორმაცია
-              <span className="text-sm font-normal text-gray-500 ml-2">(არასავალდებულო)</span>
+              <span className="text-sm font-normal text-text-secondary ml-2">(არასავალდებულო)</span>
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-text-primary mb-1">
                   საკონტაქტო პირი
                 </label>
                 <input
                   type="text"
                   value={formData.contact_name}
                   onChange={e => setFormData({ ...formData, contact_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ტელეფონი</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">ტელეფონი</label>
                 <input
                   type="tel"
                   value={formData.contact_phone}
                   onChange={e => setFormData({ ...formData, contact_phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">ელ. ფოსტა</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  ელ. ფოსტა
+                </label>
                 <input
                   type="email"
                   value={formData.contact_email}
                   onChange={e => setFormData({ ...formData, contact_email: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">შენიშვნები</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  შენიშვნები
+                </label>
                 <textarea
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                   rows={3}
                 />
               </div>

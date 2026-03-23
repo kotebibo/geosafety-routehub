@@ -1,20 +1,20 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Database, CheckCircle } from 'lucide-react';
+import { useState } from 'react'
+import { Database, CheckCircle } from 'lucide-react'
 
 export default function SetupPDPDatabasePage() {
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-bg-primary rounded-lg shadow p-6">
         <div className="flex items-center gap-3 mb-4">
           <Database className="w-8 h-8 text-blue-600" />
           <div>
             <h1 className="text-2xl font-bold">PDP Database Setup</h1>
-            <p className="text-gray-600">Database tables for PDP onboarding</p>
+            <p className="text-text-secondary">Database tables for PDP onboarding</p>
           </div>
         </div>
 
@@ -23,7 +23,7 @@ export default function SetupPDPDatabasePage() {
           <p className="text-sm text-green-700">
             Run this SQL migration in your Supabase dashboard:
           </p>
-          <code className="block mt-2 p-2 bg-white rounded text-xs">
+          <code className="block mt-2 p-2 bg-bg-primary rounded text-xs">
             supabase/migrations/20250115_add_pdp_phases_table.sql
           </code>
         </div>
@@ -39,5 +39,5 @@ export default function SetupPDPDatabasePage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

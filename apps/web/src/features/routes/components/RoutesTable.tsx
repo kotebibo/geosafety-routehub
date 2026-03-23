@@ -10,7 +10,7 @@ interface Route {
   start_time: string
   status: string
   stops: any[]
-  total_distance_km: number  // Changed from total_distance
+  total_distance_km: number // Changed from total_distance
 }
 
 interface Inspector {
@@ -52,11 +52,8 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
   }
 
   const handleReassign = async (routeId: string, currentInspectorId: string) => {
-    const newInspectorId = prompt(
-      'ახალი ინსპექტორის ID:',
-      currentInspectorId
-    )
-    
+    const newInspectorId = prompt('ახალი ინსპექტორის ID:', currentInspectorId)
+
     if (newInspectorId && newInspectorId !== currentInspectorId) {
       try {
         await onReassign?.(routeId, newInspectorId)
@@ -73,62 +70,57 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
   }
 
   return (
-    <div className="bg-white rounded-lg border overflow-hidden">
+    <div className="bg-bg-primary rounded-lg border overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-bg-secondary border-b">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                 მარშრუტი
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                 ინსპექტორი
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                 თარიღი & დრო
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                 დეტალები
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
                 სტატუსი
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
                 მოქმედებები
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {routes.map((route) => (
-              <tr 
-                key={route.id} 
-                className="hover:bg-gray-50 transition-colors"
-              >
+          <tbody className="divide-y divide-border-light">
+            {routes.map(route => (
+              <tr key={route.id} className="hover:bg-bg-secondary transition-colors">
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                       <RouteIcon className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        {route.name}
-                      </p>
+                      <p className="text-sm font-medium text-text-primary">{route.name}</p>
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-900">
+                  <div className="flex items-center gap-2 text-sm text-text-primary">
                     <UserCheck className="w-4 h-4 text-purple-600" />
                     {getInspectorName(route.inspector_id)}
                   </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <Calendar className="w-4 h-4" />
                       {new Date(route.date).toLocaleDateString('ka-GE')}
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <Clock className="w-4 h-4" />
                       {route.start_time}
                     </div>
@@ -136,18 +128,20 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
                 </td>
                 <td className="px-6 py-4">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <MapPin className="w-4 h-4" />
                       {route.stops?.length || 0} გაჩერება
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <RouteIcon className="w-4 h-4" />
                       {route.total_distance_km?.toFixed(1) || '0.0'} კმ
                     </div>
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[route.status as keyof typeof statusColors]}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[route.status as keyof typeof statusColors]}`}
+                  >
                     {statusLabels[route.status as keyof typeof statusLabels]}
                   </span>
                 </td>
@@ -176,9 +170,7 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
       </div>
 
       {routes.length === 0 && (
-        <div className="p-12 text-center text-gray-500">
-          მარშრუტები არ არის
-        </div>
+        <div className="p-12 text-center text-text-secondary">მარშრუტები არ არის</div>
       )}
     </div>
   )

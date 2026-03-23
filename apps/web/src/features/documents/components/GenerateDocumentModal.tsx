@@ -225,7 +225,7 @@ export function GenerateDocumentModal({
               </div>
               {/* Inline mammoth preview */}
               <div
-                className="overflow-auto border border-border-light rounded-lg bg-white p-6"
+                className="overflow-auto border border-border-light rounded-lg bg-bg-primary p-6"
                 style={{ maxHeight: '400px' }}
               >
                 <div

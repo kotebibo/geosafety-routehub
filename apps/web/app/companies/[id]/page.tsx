@@ -252,21 +252,21 @@ export default function CompanyDetailsPage() {
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-6 py-8 animate-pulse">
-        <div className="h-5 w-20 bg-gray-200 rounded mb-6" />
+        <div className="h-5 w-20 bg-bg-tertiary rounded mb-6" />
         <div className="flex items-start gap-6 mb-8">
-          <div className="w-14 h-14 bg-gray-200 rounded-xl" />
+          <div className="w-14 h-14 bg-bg-tertiary rounded-xl" />
           <div className="flex-1">
-            <div className="h-7 w-64 bg-gray-200 rounded mb-2" />
-            <div className="h-4 w-40 bg-gray-200 rounded" />
+            <div className="h-7 w-64 bg-bg-tertiary rounded mb-2" />
+            <div className="h-4 w-40 bg-bg-tertiary rounded" />
           </div>
         </div>
         <div className="grid grid-cols-3 gap-4 mb-8">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-gray-200 rounded-xl" />
+            <div key={i} className="h-24 bg-bg-tertiary rounded-xl" />
           ))}
         </div>
-        <div className="h-64 bg-gray-200 rounded-xl mb-6" />
-        <div className="h-48 bg-gray-200 rounded-xl" />
+        <div className="h-64 bg-bg-tertiary rounded-xl mb-6" />
+        <div className="h-48 bg-bg-tertiary rounded-xl" />
       </div>
     )
   }
@@ -279,7 +279,7 @@ export default function CompanyDetailsPage() {
         <p className="text-text-tertiary mb-6">მოთხოვნილი კომპანია არ არსებობს ან წაშლილია</p>
         <button
           onClick={() => router.push('/companies')}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-[#6161FF] text-white rounded-lg hover:bg-[#4f4fd9] transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           კომპანიებზე დაბრუნება
@@ -309,7 +309,7 @@ export default function CompanyDetailsPage() {
 
       {/* Header */}
       <div className="flex items-start gap-4 mb-8">
-        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#6161FF] to-[#4747cc] flex items-center justify-center flex-shrink-0">
+        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-monday-primary to-monday-primary-hover flex items-center justify-center flex-shrink-0">
           <Building2 className="w-7 h-7 text-white" />
         </div>
         <div className="flex-1 min-w-0">
@@ -486,7 +486,7 @@ export default function CompanyDetailsPage() {
                 <button
                   onClick={handleSaveLocations}
                   disabled={saving}
-                  className="flex items-center gap-2 px-5 py-2 bg-[#6161FF] text-white text-sm font-medium rounded-lg hover:bg-[#4f4fd9] disabled:opacity-50 transition-colors"
+                  className="flex items-center gap-2 px-5 py-2 bg-monday-primary text-white text-sm font-medium rounded-lg hover:bg-monday-primary-hover disabled:opacity-50 transition-colors"
                 >
                   <Save className="w-4 h-4" />
                   {saving ? 'ინახება...' : 'შენახვა'}
@@ -509,7 +509,7 @@ export default function CompanyDetailsPage() {
                   <p className="text-sm text-text-tertiary mb-4">ლოკაციები არ არის დამატებული</p>
                   <button
                     onClick={handleStartEditLocations}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-[#6161FF] text-white rounded-lg hover:bg-[#4f4fd9] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
                   >
                     <MapPin className="w-4 h-4" />
                     ლოკაციის დამატება
@@ -624,7 +624,7 @@ export default function CompanyDetailsPage() {
                     fetchCompanyData()
                     showToast('სერვისები განახლდა', 'success')
                   }}
-                  className="flex items-center gap-2 px-5 py-2 bg-[#6161FF] text-white text-sm font-medium rounded-lg hover:bg-[#4f4fd9] transition-colors"
+                  className="flex items-center gap-2 px-5 py-2 bg-monday-primary text-white text-sm font-medium rounded-lg hover:bg-monday-primary-hover transition-colors"
                 >
                   <Save className="w-4 h-4" />
                   დასრულება
@@ -649,7 +649,7 @@ export default function CompanyDetailsPage() {
                   <p className="text-sm text-text-tertiary mb-4">სერვისები არ არის დამატებული</p>
                   <button
                     onClick={() => setEditingServices(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-[#6161FF] text-white rounded-lg hover:bg-[#4f4fd9] transition-colors"
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
                   >
                     <Shield className="w-4 h-4" />
                     სერვისის დამატება
@@ -825,7 +825,7 @@ function InfoField({ icon, label, value, badge, href }: InfoFieldProps) {
       </p>
       {badge ||
         (href ? (
-          <a href={href} className="text-sm font-medium text-[#6161FF] hover:underline">
+          <a href={href} className="text-sm font-medium text-monday-primary hover:underline">
             {value}
           </a>
         ) : (

@@ -32,69 +32,73 @@ export default function CompaniesPage() {
     setPageSize,
   } = useCompanies(50)
 
-  const handleDelete = useCallback(async (id: string, name: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (confirm(`დარწმუნებული ხართ, რომ გსურთ ${name}-ის წაშლა?`)) {
-      try {
-        await deleteCompany(id)
-        alert('კომპანია წაიშალა')
-      } catch {
-        alert('წაშლისას დაფიქსირდა შეცდომა')
+  const handleDelete = useCallback(
+    async (id: string, name: string, e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (confirm(`დარწმუნებული ხართ, რომ გსურთ ${name}-ის წაშლა?`)) {
+        try {
+          await deleteCompany(id)
+          alert('კომპანია წაიშალა')
+        } catch {
+          alert('წაშლისას დაფიქსირდა შეცდომა')
+        }
       }
-    }
-  }, [deleteCompany])
+    },
+    [deleteCompany]
+  )
 
-  const columns = useMemo<Column<Company>[]>(() => [
-    {
-      id: 'name',
-      header: 'კომპანია',
-      accessorKey: 'name',
-      sortable: true,
-      cell: ({ value }) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-            <Building2 className="w-5 h-5 text-blue-600" />
+  const columns = useMemo<Column<Company>[]>(
+    () => [
+      {
+        id: 'name',
+        header: 'კომპანია',
+        accessorKey: 'name',
+        sortable: true,
+        cell: ({ value }) => (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-5 h-5 text-blue-600" />
+            </div>
+            <span className="font-medium text-text-primary">{value as string}</span>
           </div>
-          <span className="font-medium text-gray-900">{value as string}</span>
-        </div>
-      ),
-    },
-    {
-      id: 'address',
-      header: 'მისამართი',
-      accessorKey: 'address',
-      sortable: true,
-      cell: ({ value }) => (
-        <div className="flex items-center gap-2 text-gray-600">
-          <MapPin className="w-4 h-4 flex-shrink-0" />
-          <span>{value as string}</span>
-        </div>
-      ),
-    },
-    {
-      id: 'coordinates',
-      header: 'კოორდინატები',
-      accessorFn: (row) =>
-        row.lat && row.lng
-          ? `${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}`
-          : null,
-    },
-    {
-      id: 'actions',
-      header: '',
-      align: 'right',
-      width: 100,
-      cell: ({ row }) => (
-        <button
-          onClick={(e) => handleDelete(row.id, row.name, e)}
-          className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-          წაშლა
-        </button>
-      ),
-    },
-  ], [handleDelete])
+        ),
+      },
+      {
+        id: 'address',
+        header: 'მისამართი',
+        accessorKey: 'address',
+        sortable: true,
+        cell: ({ value }) => (
+          <div className="flex items-center gap-2 text-text-secondary">
+            <MapPin className="w-4 h-4 flex-shrink-0" />
+            <span>{value as string}</span>
+          </div>
+        ),
+      },
+      {
+        id: 'coordinates',
+        header: 'კოორდინატები',
+        accessorFn: row =>
+          row.lat && row.lng ? `${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}` : null,
+      },
+      {
+        id: 'actions',
+        header: '',
+        align: 'right',
+        width: 100,
+        cell: ({ row }) => (
+          <button
+            onClick={e => handleDelete(row.id, row.name, e)}
+            className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            წაშლა
+          </button>
+        ),
+      },
+    ],
+    [handleDelete]
+  )
 
   // Calculate display range
   const startItem = (pagination.page - 1) * pagination.pageSize + 1
@@ -117,7 +121,7 @@ export default function CompaniesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       <PageHeader
         title="კომპანიები"
         description="ყველა რეგისტრირებული კომპანია"
@@ -131,18 +135,8 @@ export default function CompaniesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <StatCard
-            label="სულ კომპანიები"
-            value={pagination.total}
-            icon={Building2}
-            color="blue"
-          />
-          <StatCard
-            label="ნაჩვენები"
-            value={companies.length}
-            icon={Search}
-            color="green"
-          />
+          <StatCard label="სულ კომპანიები" value={pagination.total} icon={Building2} color="blue" />
+          <StatCard label="ნაჩვენები" value={companies.length} icon={Search} color="green" />
           <StatCard
             label="გვერდი"
             value={`${pagination.page} / ${pagination.totalPages || 1}`}
@@ -154,11 +148,11 @@ export default function CompaniesPage() {
         {/* Search Bar */}
         <div className="mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-tertiary" />
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               placeholder="ძებნა სახელით ან მისამართით..."
               className="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -193,7 +187,7 @@ export default function CompaniesPage() {
                 data={companies}
                 columns={columns}
                 loading={loading}
-                onRowClick={(row) => router.push(`/companies/${row.id}`)}
+                onRowClick={row => router.push(`/companies/${row.id}`)}
                 caption="კომპანიების სია"
               />
             </ComponentErrorBoundary>
@@ -203,10 +197,10 @@ export default function CompaniesPage() {
               <div className="mt-6 flex items-center justify-between">
                 {/* Page size selector */}
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">გვერდზე:</span>
+                  <span className="text-sm text-text-secondary">გვერდზე:</span>
                   <select
                     value={pagination.pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    onChange={e => setPageSize(Number(e.target.value))}
                     className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value={25}>25</option>
@@ -216,7 +210,7 @@ export default function CompaniesPage() {
                 </div>
 
                 {/* Page info */}
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-text-secondary">
                   {startItem}-{endItem} სულ {pagination.total}-დან
                 </div>
 
@@ -225,36 +219,39 @@ export default function CompaniesPage() {
                   <button
                     onClick={prevPage}
                     disabled={pagination.page === 1}
-                    className="p-2 rounded-lg border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 rounded-lg border hover:bg-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
 
                   {/* Page numbers */}
                   <div className="flex items-center gap-1">
-                    {generatePageNumbers(pagination.page, pagination.totalPages).map((pageNum, idx) => (
-                      pageNum === '...' ? (
-                        <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">...</span>
-                      ) : (
-                        <button
-                          key={pageNum}
-                          onClick={() => goToPage(pageNum as number)}
-                          className={`px-3 py-1 rounded-lg text-sm ${
-                            pagination.page === pageNum
-                              ? 'bg-blue-600 text-white'
-                              : 'hover:bg-gray-100'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      )
-                    ))}
+                    {generatePageNumbers(pagination.page, pagination.totalPages).map(
+                      (pageNum, idx) =>
+                        pageNum === '...' ? (
+                          <span key={`ellipsis-${idx}`} className="px-2 text-text-tertiary">
+                            ...
+                          </span>
+                        ) : (
+                          <button
+                            key={pageNum}
+                            onClick={() => goToPage(pageNum as number)}
+                            className={`px-3 py-1 rounded-lg text-sm ${
+                              pagination.page === pageNum
+                                ? 'bg-blue-600 text-white'
+                                : 'hover:bg-bg-hover'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        )
+                    )}
                   </div>
 
                   <button
                     onClick={nextPage}
                     disabled={pagination.page === pagination.totalPages}
-                    className="p-2 rounded-lg border hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-2 rounded-lg border hover:bg-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
@@ -292,7 +289,11 @@ function generatePageNumbers(currentPage: number, totalPages: number): (number |
     }
 
     // Pages around current
-    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
       pages.push(i)
     }
 

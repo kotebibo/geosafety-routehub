@@ -9,14 +9,7 @@ import { Route as RouteIcon, Calendar, CheckCircle, Plus } from 'lucide-react'
 
 export default function RoutesManagePage() {
   const router = useRouter()
-  const {
-    routes,
-    inspectors,
-    loading,
-    error,
-    deleteRoute,
-    reassignRoute,
-  } = useRoutes()
+  const { routes, inspectors, loading, error, deleteRoute, reassignRoute } = useRoutes()
 
   if (loading) {
     return <LoadingSpinner message="მარშრუტების ჩატვირთვა..." />
@@ -43,7 +36,7 @@ export default function RoutesManagePage() {
   const completedRoutes = routes.filter(r => r.status === 'completed')
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       <PageHeader
         title="მარშრუტების მართვა"
         description="ყველა შექმნილი მარშრუტი"
@@ -57,18 +50,8 @@ export default function RoutesManagePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <StatCard
-            label="სულ მარშრუტები"
-            value={routes.length}
-            icon={RouteIcon}
-            color="blue"
-          />
-          <StatCard
-            label="დაგეგმილი"
-            value={plannedRoutes.length}
-            icon={Calendar}
-            color="purple"
-          />
+          <StatCard label="სულ მარშრუტები" value={routes.length} icon={RouteIcon} color="blue" />
+          <StatCard label="დაგეგმილი" value={plannedRoutes.length} icon={Calendar} color="purple" />
           <StatCard
             label="მიმდინარე"
             value={inProgressRoutes.length}

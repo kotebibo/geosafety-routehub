@@ -21,7 +21,7 @@ interface RouteOptimizationPanelProps {
   onOptimize: () => void
   onSave: (data: {
     name: string
-    date: string  // Changed from scheduled_date
+    date: string // Changed from scheduled_date
     start_time: string
     notes?: string
   }) => Promise<void>
@@ -51,7 +51,7 @@ export function RouteOptimizationPanel({
 
     await onSave({
       name: routeName,
-      date: scheduledDate,  // Changed from scheduled_date
+      date: scheduledDate, // Changed from scheduled_date
       start_time: startTime,
       notes: notes || undefined,
     })
@@ -64,7 +64,7 @@ export function RouteOptimizationPanel({
   }
 
   return (
-    <div className="w-96 bg-white border-l h-screen overflow-y-auto">
+    <div className="w-96 bg-bg-primary border-l h-screen overflow-y-auto">
       <div className="p-4 border-b">
         <h2 className="text-lg font-semibold">მარშრუტის დეტალები</h2>
       </div>
@@ -75,7 +75,7 @@ export function RouteOptimizationPanel({
           <button
             onClick={onOptimize}
             disabled={!hasSelection || optimizing}
-            className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-bg-tertiary disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             {optimizing ? (
               <>
@@ -97,17 +97,13 @@ export function RouteOptimizationPanel({
             <div className="space-y-4">
               <div className="p-4 bg-green-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-green-900">
-                    სულ გაჩერება
-                  </span>
+                  <span className="text-sm font-medium text-green-900">სულ გაჩერება</span>
                   <span className="text-lg font-bold text-green-900">
                     {optimizedRoute.stops.length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-green-900">
-                    სულ მანძილი
-                  </span>
+                  <span className="text-sm font-medium text-green-900">სულ მანძილი</span>
                   <span className="text-lg font-bold text-green-900">
                     {optimizedRoute.totalDistance.toFixed(1)} კმ
                   </span>
@@ -116,7 +112,7 @@ export function RouteOptimizationPanel({
 
               {/* Stop List */}
               <div className="space-y-2">
-                <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-text-primary flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
                   მარშრუტის თანმიმდევრობა
                 </h3>
@@ -124,20 +120,20 @@ export function RouteOptimizationPanel({
                   {optimizedRoute.stops.map((stop, index) => (
                     <div
                       key={index}
-                      className="flex items-start gap-2 p-2 bg-gray-50 rounded text-sm"
+                      className="flex items-start gap-2 p-2 bg-bg-secondary rounded text-sm"
                     >
                       <div className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0 text-xs font-bold">
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
+                        <p className="font-medium text-text-primary truncate">
                           {stop.company.name}
                         </p>
-                        <p className="text-xs text-gray-600 truncate">
+                        <p className="text-xs text-text-secondary truncate">
                           {stop.company.address}
                         </p>
                         {stop.distance > 0 && (
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-text-secondary mt-1">
                             +{stop.distance.toFixed(1)} კმ
                           </p>
                         )}
@@ -150,54 +146,44 @@ export function RouteOptimizationPanel({
 
             {/* Save Form */}
             <div className="space-y-4 pt-4 border-t">
-              <h3 className="text-sm font-medium text-gray-700">
-                მარშრუტის შენახვა
-              </h3>
+              <h3 className="text-sm font-medium text-text-primary">მარშრუტის შენახვა</h3>
 
               <div>
-                <label className="text-xs text-gray-600 mb-1 block">
-                  მარშრუტის სახელი *
-                </label>
+                <label className="text-xs text-text-secondary mb-1 block">მარშრუტის სახელი *</label>
                 <input
                   type="text"
                   value={routeName}
-                  onChange={(e) => setRouteName(e.target.value)}
+                  onChange={e => setRouteName(e.target.value)}
                   placeholder="მაგ: დილის მარშრუტი"
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-gray-600 mb-1 block">
-                  თარიღი *
-                </label>
+                <label className="text-xs text-text-secondary mb-1 block">თარიღი *</label>
                 <input
                   type="date"
                   value={scheduledDate}
-                  onChange={(e) => setScheduledDate(e.target.value)}
+                  onChange={e => setScheduledDate(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-gray-600 mb-1 block">
-                  დაწყების დრო
-                </label>
+                <label className="text-xs text-text-secondary mb-1 block">დაწყების დრო</label>
                 <input
                   type="time"
                   value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
+                  onChange={e => setStartTime(e.target.value)}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-gray-600 mb-1 block">
-                  შენიშვნა
-                </label>
+                <label className="text-xs text-text-secondary mb-1 block">შენიშვნა</label>
                 <textarea
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={e => setNotes(e.target.value)}
                   placeholder="დამატებითი ინფორმაცია..."
                   rows={3}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
@@ -207,7 +193,7 @@ export function RouteOptimizationPanel({
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-bg-tertiary disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <>

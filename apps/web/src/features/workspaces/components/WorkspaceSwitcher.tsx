@@ -113,7 +113,7 @@ export function WorkspaceSwitcher({
           </>
         ) : isLoading ? (
           <>
-            <div className="w-5 h-5 rounded bg-gray-200 animate-pulse flex-shrink-0" />
+            <div className="w-5 h-5 rounded bg-bg-tertiary animate-pulse flex-shrink-0" />
             <span className="flex-1 text-left text-text-tertiary">Loading...</span>
           </>
         ) : (
@@ -129,7 +129,7 @@ export function WorkspaceSwitcher({
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-white rounded-lg border border-gray-200 shadow-lg py-1 max-h-[300px] overflow-y-auto">
+        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-bg-primary rounded-lg border border-border-light shadow-lg py-1 max-h-[300px] overflow-y-auto">
           {/* Workspace List */}
           {workspaces && workspaces.length > 0 ? (
             <>
@@ -148,7 +148,7 @@ export function WorkspaceSwitcher({
                       'w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors',
                       isSelected
                         ? 'bg-bg-selected text-monday-primary'
-                        : 'text-text-primary hover:bg-gray-50'
+                        : 'text-text-primary hover:bg-bg-hover'
                     )}
                   >
                     <div
@@ -171,7 +171,7 @@ export function WorkspaceSwitcher({
             </div>
           )}
 
-          <div className="my-1 border-t border-gray-100" />
+          <div className="my-1 border-t border-border-light" />
 
           {/* Create Workspace */}
           <button
@@ -179,7 +179,7 @@ export function WorkspaceSwitcher({
               setIsOpen(false)
               onCreateClick()
             }}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
           >
             <Plus className="w-4 h-4 text-text-tertiary flex-shrink-0" />
             <span>Create Workspace</span>
@@ -190,7 +190,7 @@ export function WorkspaceSwitcher({
             <Link
               href={`/workspaces/${currentWorkspace.id}/settings`}
               onClick={() => setIsOpen(false)}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
             >
               <Settings className="w-4 h-4 text-text-tertiary flex-shrink-0" />
               <span>Workspace Settings</span>

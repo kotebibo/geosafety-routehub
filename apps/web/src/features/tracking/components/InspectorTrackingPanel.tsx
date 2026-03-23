@@ -28,7 +28,7 @@ export function InspectorTrackingPanel({
     const minutesAgo = Math.floor((Date.now() - new Date(lastUpdate).getTime()) / 60000)
     if (minutesAgo <= 2) return 'bg-green-500'
     if (minutesAgo <= 10) return 'bg-yellow-500'
-    return 'bg-gray-400'
+    return 'bg-text-tertiary'
   }
 
   const getTimeAgo = (lastUpdate: string) => {
@@ -40,21 +40,24 @@ export function InspectorTrackingPanel({
   }
 
   return (
-    <div className="w-72 bg-white border-r flex flex-col h-full">
+    <div className="w-72 bg-bg-primary border-r flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold text-gray-800">
+          <h2 className="text-sm font-semibold text-text-primary">
             Active Inspectors ({inspectors.length})
           </h2>
           <Tooltip content="Refresh" side="top" delayDuration={200}>
-            <button onClick={onRefresh} className="p-1 rounded hover:bg-gray-100 text-gray-500">
+            <button
+              onClick={onRefresh}
+              className="p-1 rounded hover:bg-bg-hover text-text-secondary"
+            >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
           </Tooltip>
         </div>
         <div className="relative">
-          <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-gray-400" />
+          <Search className="w-4 h-4 absolute left-2.5 top-2.5 text-text-tertiary" />
           <input
             type="text"
             value={search}
@@ -68,7 +71,7 @@ export function InspectorTrackingPanel({
       {/* Inspector List */}
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="p-4 text-center text-sm text-gray-400">
+          <div className="p-4 text-center text-sm text-text-tertiary">
             {isLoading ? 'Loading...' : 'No active inspectors'}
           </div>
         ) : (
@@ -80,7 +83,7 @@ export function InspectorTrackingPanel({
               <button
                 key={inspector.id}
                 onClick={() => onSelectInspector(isSelected ? null : inspector.id)}
-                className={`w-full text-left p-3 border-b hover:bg-gray-50 transition-colors ${
+                className={`w-full text-left p-3 border-b hover:bg-bg-hover transition-colors ${
                   isSelected ? 'bg-blue-50 border-l-2 border-l-blue-500' : ''
                 }`}
               >
@@ -88,19 +91,19 @@ export function InspectorTrackingPanel({
                   <span
                     className={`w-2 h-2 rounded-full flex-shrink-0 ${getStatusColor(inspector.last_location_update)}`}
                   />
-                  <span className="text-sm font-medium text-gray-800 truncate">
+                  <span className="text-sm font-medium text-text-primary truncate">
                     {inspector.full_name}
                   </span>
                 </div>
 
                 <div className="ml-4 space-y-0.5">
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-1 text-xs text-text-secondary">
                     <MapPin className="w-3 h-3" />
                     <span>{getTimeAgo(inspector.last_location_update)}</span>
                   </div>
 
                   {inspector.phone && (
-                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                    <div className="flex items-center gap-1 text-xs text-text-secondary">
                       <Phone className="w-3 h-3" />
                       <span>{inspector.phone}</span>
                     </div>
@@ -108,11 +111,11 @@ export function InspectorTrackingPanel({
 
                   {route && (
                     <div className="mt-1.5">
-                      <div className="text-xs text-gray-600 truncate">
+                      <div className="text-xs text-text-secondary truncate">
                         {route.name || 'Unnamed route'}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 bg-gray-200 rounded-full h-1.5">
+                        <div className="flex-1 bg-bg-tertiary rounded-full h-1.5">
                           <div
                             className="bg-green-500 h-1.5 rounded-full transition-all"
                             style={{
@@ -120,14 +123,16 @@ export function InspectorTrackingPanel({
                             }}
                           />
                         </div>
-                        <span className="text-xs text-gray-500 flex-shrink-0">
+                        <span className="text-xs text-text-secondary flex-shrink-0">
                           {route.completed_stops}/{route.total_stops}
                         </span>
                       </div>
                     </div>
                   )}
 
-                  {!route && <div className="text-xs text-gray-400 italic">No active route</div>}
+                  {!route && (
+                    <div className="text-xs text-text-tertiary italic">No active route</div>
+                  )}
                 </div>
               </button>
             )

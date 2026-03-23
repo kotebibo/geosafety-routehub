@@ -31,10 +31,10 @@ const PRIORITY = {
   },
   normal: {
     icon: Megaphone,
-    border: 'border-gray-200',
-    bg: 'bg-white',
+    border: 'border-border-light',
+    bg: 'bg-bg-primary',
     badge: '',
-    iconColor: 'text-[#6161FF] bg-[#6161FF]/10',
+    iconColor: 'text-monday-primary bg-monday-primary/10',
     label: '',
   },
 } as const
@@ -46,14 +46,14 @@ export function AnnouncementCard({ announcement, onClick, onDelete }: Announceme
   return (
     <div
       className={`relative rounded-xl border p-5 transition-all hover:shadow-md ${config.border} ${config.bg} ${
-        !announcement.is_read ? 'ring-2 ring-[#6161FF]/40' : ''
+        !announcement.is_read ? 'ring-2 ring-monday-primary/40' : ''
       }`}
     >
       {/* Unread dot */}
       {!announcement.is_read && !onDelete && (
         <span className="absolute top-4 right-4 flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#6161FF] opacity-75" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#6161FF]" />
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-monday-primary opacity-75" />
+          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-monday-primary" />
         </span>
       )}
 
@@ -66,7 +66,7 @@ export function AnnouncementCard({ announcement, onClick, onDelete }: Announceme
               e.stopPropagation()
               onDelete(announcement.id)
             }}
-            className="absolute top-4 right-4 p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+            className="absolute top-4 right-4 p-1.5 rounded-lg text-text-tertiary hover:text-red-600 hover:bg-red-50 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -82,7 +82,7 @@ export function AnnouncementCard({ announcement, onClick, onDelete }: Announceme
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-base font-semibold text-gray-900 line-clamp-1">
+              <h3 className="text-base font-semibold text-text-primary line-clamp-1">
                 {announcement.title}
               </h3>
               {announcement.priority !== 'normal' && (
@@ -93,10 +93,10 @@ export function AnnouncementCard({ announcement, onClick, onDelete }: Announceme
                 </span>
               )}
             </div>
-            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+            <p className="text-sm text-text-secondary line-clamp-2 leading-relaxed">
               {announcement.content}
             </p>
-            <div className="flex items-center gap-4 mt-3 text-xs text-gray-400">
+            <div className="flex items-center gap-4 mt-3 text-xs text-text-tertiary">
               <span className="flex items-center gap-1">
                 <User className="w-3 h-3" />
                 {announcement.author_name || 'Unknown'}

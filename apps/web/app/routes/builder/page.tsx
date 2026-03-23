@@ -16,10 +16,10 @@ const RouteMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-gray-100">
+      <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
         <div className="text-center">
           <div className="animate-spin text-4xl mb-2">🗺️</div>
-          <p className="text-gray-600">რუკის ჩატვირთვა...</p>
+          <p className="text-text-secondary">რუკის ჩატვირთვა...</p>
         </div>
       </div>
     ),
@@ -232,15 +232,15 @@ export default function RouteBuilderPage() {
         }))
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col bg-gray-50">
+    <div className="h-[calc(100vh-64px)] flex flex-col bg-bg-secondary">
       {/* Top Bar */}
-      <div className="bg-white border-b px-6 py-4 flex items-center justify-between flex-shrink-0">
+      <div className="bg-bg-primary border-b px-6 py-4 flex items-center justify-between flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">მარშრუტის შექმნა</h1>
-          <p className="text-sm text-gray-600">აირჩიეთ ობიექტები რუკაზე</p>
+          <h1 className="text-2xl font-bold text-text-primary">მარშრუტის შექმნა</h1>
+          <p className="text-sm text-text-secondary">აირჩიეთ ობიექტები რუკაზე</p>
         </div>
         <div className="flex items-center space-x-4">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-text-secondary">
             არჩეული: <span className="font-bold text-blue-600">{selectedCompanies.length}</span>
           </div>
           {selectedCompanies.length >= 2 && (
@@ -257,7 +257,7 @@ export default function RouteBuilderPage() {
 
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Company List */}
-        <div className="w-80 bg-white border-r flex flex-col h-full">
+        <div className="w-80 bg-bg-primary border-r flex flex-col h-full">
           <div className="p-4 border-b">
             <input
               type="text"
@@ -278,13 +278,13 @@ export default function RouteBuilderPage() {
                   onMouseEnter={() => setHoveredStop(company.id)}
                   onMouseLeave={() => setHoveredStop(null)}
                   className={`p-4 border-b cursor-pointer transition ${
-                    isSelected ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'hover:bg-gray-50'
-                  } ${hoveredStop === company.id ? 'bg-gray-100' : ''}`}
+                    isSelected ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'hover:bg-bg-secondary'
+                  } ${hoveredStop === company.id ? 'bg-bg-tertiary' : ''}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="font-semibold text-sm text-gray-900">{company.name}</div>
-                      <div className="text-xs text-gray-600 mt-1">{company.address}</div>
+                      <div className="font-semibold text-sm text-text-primary">{company.name}</div>
+                      <div className="text-xs text-text-secondary mt-1">{company.address}</div>
                     </div>
                     {isSelected && (
                       <div className="ml-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
@@ -311,9 +311,9 @@ export default function RouteBuilderPage() {
         </div>
 
         {/* Right Sidebar - Route Details */}
-        <div className="w-96 bg-white border-l flex flex-col h-full">
+        <div className="w-96 bg-bg-primary border-l flex flex-col h-full">
           <div className="p-4 border-b">
-            <h2 className="text-lg font-bold text-gray-900">მარშრუტი</h2>
+            <h2 className="text-lg font-bold text-text-primary">მარშრუტი</h2>
             {optimizedRoute.length > 0 && (
               <div className="mt-2 text-sm text-green-600 font-medium">✅ ოპტიმიზირებული</div>
             )}
@@ -321,7 +321,7 @@ export default function RouteBuilderPage() {
 
           <div className="flex-1 overflow-y-auto">
             {displayedRoute.length === 0 ? (
-              <div className="p-8 text-center text-gray-400">
+              <div className="p-8 text-center text-text-tertiary">
                 <div className="text-4xl mb-3">📍</div>
                 <p>აირჩიეთ ობიექტები</p>
                 <p className="text-sm mt-1">მარცხნივ სიიდან ან რუკაზე</p>
@@ -336,7 +336,7 @@ export default function RouteBuilderPage() {
                     className={`p-4 rounded-lg border-2 transition ${
                       hoveredStop === stop.company.id
                         ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 bg-white'
+                        : 'border-border-light bg-bg-primary'
                     }`}
                   >
                     <div className="flex items-start">
@@ -344,10 +344,12 @@ export default function RouteBuilderPage() {
                         {stop.position}
                       </div>
                       <div className="ml-3 flex-1">
-                        <div className="font-semibold text-sm text-gray-900">
+                        <div className="font-semibold text-sm text-text-primary">
                           {stop.company.name}
                         </div>
-                        <div className="text-xs text-gray-600 mt-1">📍 {stop.company.address}</div>
+                        <div className="text-xs text-text-secondary mt-1">
+                          📍 {stop.company.address}
+                        </div>
                         {stop.distance && index > 0 && (
                           <div className="text-xs text-blue-600 mt-2">
                             🚗 ~{stop.distance.toFixed(1)} კმ წინა პუნქტიდან
@@ -391,7 +393,7 @@ export default function RouteBuilderPage() {
                   setOptimizedRoute([])
                   setRouteGeometry(null)
                 }}
-                className="w-full py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300"
+                className="w-full py-2 bg-bg-tertiary text-text-primary rounded-lg font-semibold hover:bg-border-medium"
               >
                 🗑️ გასუფთავება
               </button>
