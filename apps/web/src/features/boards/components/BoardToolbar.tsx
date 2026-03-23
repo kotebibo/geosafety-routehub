@@ -3,11 +3,21 @@
 import React, { useState, useRef, useEffect, useCallback, memo } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
-import { ArrowUpDown, Layers, Filter, ChevronDown, X, ArrowUp, ArrowDown } from 'lucide-react'
+import {
+  ArrowUpDown,
+  Layers,
+  Filter,
+  ChevronDown,
+  X,
+  ArrowUp,
+  ArrowDown,
+  Search,
+  Check,
+} from 'lucide-react'
 import type { BoardColumn, ColumnType } from '../types/board'
 import { MONDAY_COLORS, DEFAULT_STATUS_OPTIONS } from './BoardTable/cells/StatusCell'
 import type { StatusOption } from './BoardTable/cells/StatusCell'
-import { FilterPopover } from './FilterPopover'
+import { FilterPopover, COLUMN_TYPE_ICONS } from './FilterPopover'
 
 // Columns that don't make sense for grouping
 const NON_GROUPABLE_TYPES: ColumnType[] = ['files', 'updates', 'actions', 'location', 'phone']
@@ -54,6 +64,10 @@ export const BoardToolbar = memo(function BoardToolbar({
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
   const [filterPosition, setFilterPosition] = useState({ top: 0, left: 0 })
   const [editFilterId, setEditFilterId] = useState<string | null>(null)
+  const [groupSearchQuery, setGroupSearchQuery] = useState('')
+  const [sortSearchQuery, setSortSearchQuery] = useState('')
+  const groupSearchRef = useRef<HTMLInputElement>(null)
+  const sortSearchRef = useRef<HTMLInputElement>(null)
 
   // Temporary state for sort dropdown
   const [tempSortColumn, setTempSortColumn] = useState<string>(sortConfig?.column || '')
@@ -66,6 +80,15 @@ export const BoardToolbar = memo(function BoardToolbar({
     setTempSortColumn(sortConfig?.column || '')
     setTempSortDirection(sortConfig?.direction || 'asc')
   }, [sortConfig])
+
+  // Focus search when dropdowns open
+  useEffect(() => {
+    if (showGroupDropdown) setTimeout(() => groupSearchRef.current?.focus(), 50)
+  }, [showGroupDropdown])
+
+  useEffect(() => {
+    if (showSortDropdown) setTimeout(() => sortSearchRef.current?.focus(), 50)
+  }, [showSortDropdown])
 
   // Keyboard shortcut: F to open filters
   useEffect(() => {
@@ -113,15 +136,9 @@ export const BoardToolbar = memo(function BoardToolbar({
     setShowSortDropdown(false)
     setShowGroupDropdown(false)
     setShowFilterPopover(false)
+    setGroupSearchQuery('')
+    setSortSearchQuery('')
   }, [])
-
-  // Handle sort apply
-  const handleApplySort = useCallback(() => {
-    if (tempSortColumn) {
-      onSortChange({ column: tempSortColumn, direction: tempSortDirection })
-    }
-    setShowSortDropdown(false)
-  }, [tempSortColumn, tempSortDirection, onSortChange])
 
   const handleClearSort = useCallback(() => {
     onSortChange(null)
@@ -151,6 +168,20 @@ export const BoardToolbar = memo(function BoardToolbar({
     () => columns.filter(col => !NON_GROUPABLE_TYPES.includes(col.column_type)),
     [columns]
   )
+
+  // Filtered groupable columns based on search
+  const filteredGroupableColumns = React.useMemo(() => {
+    if (!groupSearchQuery.trim()) return groupableColumns
+    const q = groupSearchQuery.toLowerCase()
+    return groupableColumns.filter(col => col.column_name.toLowerCase().includes(q))
+  }, [groupableColumns, groupSearchQuery])
+
+  // Filtered sort columns based on search
+  const filteredSortColumns = React.useMemo(() => {
+    if (!sortSearchQuery.trim()) return columns
+    const q = sortSearchQuery.toLowerCase()
+    return columns.filter(col => col.column_name.toLowerCase().includes(q))
+  }, [columns, sortSearchQuery])
 
   // Get display info for filter chips
   const getChipDisplay = useCallback(
@@ -332,74 +363,124 @@ export const BoardToolbar = memo(function BoardToolbar({
           <>
             <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
             <div
-              className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light p-4 min-w-[280px]"
+              className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light w-[300px] overflow-hidden"
               style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
             >
-              <div className="text-sm font-semibold text-text-primary mb-3">Sort by</div>
+              {/* Current sort indicator */}
+              {sortConfig && (
+                <div className="border-b border-border-light px-3 pt-3 pb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-text-tertiary uppercase tracking-wide">
+                      Current sort
+                    </span>
+                    <button
+                      onClick={handleClearSort}
+                      className="text-xs text-text-tertiary hover:text-red-500 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-1.5 bg-bg-secondary rounded-md text-xs">
+                    <span className="font-medium text-text-primary">
+                      {columns.find(c => c.column_id === sortConfig.column)?.column_name ||
+                        sortConfig.column}
+                    </span>
+                    <span className="text-text-tertiary">
+                      {sortConfig.direction === 'asc' ? 'ascending' : 'descending'}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-              {/* Column Select */}
-              <div className="mb-3">
-                <label className="block text-xs text-text-secondary mb-1">Column</label>
-                <select
-                  value={tempSortColumn}
-                  onChange={e => setTempSortColumn(e.target.value)}
-                  className="w-full px-3 py-2 border border-border-light rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
-                >
-                  <option value="">Select column...</option>
-                  {columns.map(col => (
-                    <option key={col.id} value={col.column_id}>
-                      {col.column_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Direction Select */}
-              <div className="mb-4">
-                <label className="block text-xs text-text-secondary mb-1">Direction</label>
-                <div className="flex gap-2">
+              {/* Direction toggle */}
+              <div className="px-3 pt-3 pb-2">
+                <label className="block text-xs text-text-tertiary mb-1.5">Direction</label>
+                <div className="flex gap-1.5">
                   <button
                     onClick={() => setTempSortDirection('asc')}
                     className={cn(
-                      'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors',
+                      'flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs transition-colors',
                       tempSortDirection === 'asc'
-                        ? 'border-monday-primary bg-monday-primary/10 text-monday-primary'
-                        : 'border-border-light hover:bg-bg-hover'
+                        ? 'border-monday-primary bg-monday-primary/10 text-monday-primary font-medium'
+                        : 'border-border-light text-text-secondary hover:border-monday-primary/40'
                     )}
                   >
-                    <ArrowUp className="w-4 h-4" />
+                    <ArrowUp className="w-3.5 h-3.5" />
                     Ascending
                   </button>
                   <button
                     onClick={() => setTempSortDirection('desc')}
                     className={cn(
-                      'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors',
+                      'flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-full border text-xs transition-colors',
                       tempSortDirection === 'desc'
-                        ? 'border-monday-primary bg-monday-primary/10 text-monday-primary'
-                        : 'border-border-light hover:bg-bg-hover'
+                        ? 'border-monday-primary bg-monday-primary/10 text-monday-primary font-medium'
+                        : 'border-border-light text-text-secondary hover:border-monday-primary/40'
                     )}
                   >
-                    <ArrowDown className="w-4 h-4" />
+                    <ArrowDown className="w-3.5 h-3.5" />
                     Descending
                   </button>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={handleClearSort}
-                  className="flex-1 px-3 py-2 text-sm text-text-secondary hover:bg-bg-hover rounded-md transition-colors"
-                >
-                  Clear
-                </button>
-                <button
-                  onClick={handleApplySort}
-                  disabled={!tempSortColumn}
-                  className="flex-1 px-3 py-2 text-sm bg-monday-primary text-white rounded-md hover:bg-monday-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  Apply
-                </button>
+              {/* Search */}
+              <div className="px-3 pb-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+                  <input
+                    ref={sortSearchRef}
+                    type="text"
+                    value={sortSearchQuery}
+                    onChange={e => setSortSearchQuery(e.target.value)}
+                    placeholder="Sort by column..."
+                    className="w-full pl-8 pr-3 py-2 text-sm bg-bg-secondary rounded-md border-0 focus:outline-none focus:ring-2 focus:ring-monday-primary/30 placeholder:text-text-tertiary"
+                  />
+                  {sortSearchQuery && (
+                    <button
+                      onClick={() => setSortSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2"
+                    >
+                      <X className="w-3.5 h-3.5 text-text-tertiary hover:text-text-secondary" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Column list */}
+              <div className="max-h-[280px] overflow-y-auto py-1 border-t border-border-light">
+                {filteredSortColumns.length === 0 ? (
+                  <div className="px-3 py-6 text-center text-sm text-text-tertiary">
+                    No matching columns
+                  </div>
+                ) : (
+                  filteredSortColumns.map(col => {
+                    const Icon = COLUMN_TYPE_ICONS[col.column_type]
+                    const isSelected = tempSortColumn === col.column_id
+                    return (
+                      <button
+                        key={col.id}
+                        onClick={() => {
+                          setTempSortColumn(col.column_id)
+                          onSortChange({ column: col.column_id, direction: tempSortDirection })
+                          setSortSearchQuery('')
+                          setShowSortDropdown(false)
+                        }}
+                        className={cn(
+                          'w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
+                          isSelected && 'bg-bg-selected'
+                        )}
+                      >
+                        {Icon && <Icon className="w-4 h-4 text-text-tertiary shrink-0" />}
+                        <span
+                          className={cn('flex-1', isSelected && 'text-monday-primary font-medium')}
+                        >
+                          {col.column_name}
+                        </span>
+                        {isSelected && <Check className="w-4 h-4 text-monday-primary shrink-0" />}
+                      </button>
+                    )
+                  })
+                )}
               </div>
             </div>
           </>,
@@ -413,35 +494,119 @@ export const BoardToolbar = memo(function BoardToolbar({
           <>
             <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
             <div
-              className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light py-2 min-w-[200px] max-h-[320px] flex flex-col"
+              className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light w-[300px] overflow-hidden"
               style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
             >
-              <div className="px-3 py-2 text-xs font-semibold text-text-tertiary uppercase shrink-0">
-                Group by column
-              </div>
-              <div className="overflow-y-auto">
-                <button
-                  onClick={() => handleGroupBySelect(null)}
-                  className={cn(
-                    'w-full px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
-                    !groupByColumn && 'bg-bg-selected text-monday-primary'
+              {/* Current group indicator */}
+              {groupByColumn && (
+                <div className="border-b border-border-light px-3 pt-3 pb-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-medium text-text-tertiary uppercase tracking-wide">
+                      Grouped by
+                    </span>
+                    <button
+                      onClick={() => handleGroupBySelect(null)}
+                      className="text-xs text-text-tertiary hover:text-red-500 transition-colors"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-1.5 bg-bg-secondary rounded-md text-xs">
+                    {(() => {
+                      const col = columns.find(c => c.column_id === groupByColumn)
+                      const Icon = col ? COLUMN_TYPE_ICONS[col.column_type] : Layers
+                      return (
+                        <>
+                          {Icon && <Icon className="w-3.5 h-3.5 text-text-tertiary" />}
+                          <span className="font-medium text-text-primary">
+                            {col?.column_name || groupByColumn}
+                          </span>
+                        </>
+                      )
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Search */}
+              <div className="p-3 border-b border-border-light">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+                  <input
+                    ref={groupSearchRef}
+                    type="text"
+                    value={groupSearchQuery}
+                    onChange={e => setGroupSearchQuery(e.target.value)}
+                    placeholder="Group by column..."
+                    className="w-full pl-8 pr-3 py-2 text-sm bg-bg-secondary rounded-md border-0 focus:outline-none focus:ring-2 focus:ring-monday-primary/30 placeholder:text-text-tertiary"
+                  />
+                  {groupSearchQuery && (
+                    <button
+                      onClick={() => setGroupSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2"
+                    >
+                      <X className="w-3.5 h-3.5 text-text-tertiary hover:text-text-secondary" />
+                    </button>
                   )}
-                >
-                  None (use default groups)
-                </button>
-                <div className="my-1 border-t border-border-light" />
-                {groupableColumns.map(col => (
+                </div>
+              </div>
+
+              {/* Column list */}
+              <div className="max-h-[280px] overflow-y-auto py-1">
+                {!groupSearchQuery && (
                   <button
-                    key={col.id}
-                    onClick={() => handleGroupBySelect(col.column_id)}
+                    onClick={() => handleGroupBySelect(null)}
                     className={cn(
-                      'w-full px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
-                      groupByColumn === col.column_id && 'bg-bg-selected text-monday-primary'
+                      'w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
+                      !groupByColumn && 'bg-bg-selected'
                     )}
                   >
-                    {col.column_name}
+                    <Layers className="w-4 h-4 text-text-tertiary shrink-0" />
+                    <span
+                      className={cn('flex-1', !groupByColumn && 'text-monday-primary font-medium')}
+                    >
+                      None (default groups)
+                    </span>
+                    {!groupByColumn && <Check className="w-4 h-4 text-monday-primary shrink-0" />}
                   </button>
-                ))}
+                )}
+                {!groupSearchQuery && <div className="my-1 border-t border-border-light" />}
+                {filteredGroupableColumns.length === 0 ? (
+                  <div className="px-3 py-6 text-center text-sm text-text-tertiary">
+                    No matching columns
+                  </div>
+                ) : (
+                  filteredGroupableColumns.map(col => {
+                    const Icon = COLUMN_TYPE_ICONS[col.column_type]
+                    const isSelected = groupByColumn === col.column_id
+                    return (
+                      <button
+                        key={col.id}
+                        onClick={() => {
+                          handleGroupBySelect(col.column_id)
+                          setGroupSearchQuery('')
+                        }}
+                        className={cn(
+                          'w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
+                          isSelected && 'bg-bg-selected'
+                        )}
+                      >
+                        {Icon && <Icon className="w-4 h-4 text-text-tertiary shrink-0" />}
+                        <span
+                          className={cn('flex-1', isSelected && 'text-monday-primary font-medium')}
+                        >
+                          {col.column_name}
+                        </span>
+                        <span className="text-xs text-text-tertiary capitalize">
+                          {col.column_type.replace(/_/g, ' ')}
+                        </span>
+                        {isSelected && (
+                          <Check className="w-4 h-4 text-monday-primary shrink-0 ml-1" />
+                        )}
+                      </button>
+                    )
+                  })
+                )}
               </div>
             </div>
           </>,

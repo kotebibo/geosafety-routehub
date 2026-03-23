@@ -50,7 +50,7 @@ const DEFAULT_OPERATOR: Partial<Record<ColumnType, string>> = {
 }
 
 // Column type icons
-const COLUMN_TYPE_ICONS: Record<ColumnType, React.ElementType> = {
+export const COLUMN_TYPE_ICONS: Record<ColumnType, React.ElementType> = {
   text: Type,
   number: Hash,
   date: Calendar,
