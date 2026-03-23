@@ -116,8 +116,8 @@ export const MemoizedTableRow = memo(
     return (
       <tr
         className={cn(
-          'hover:bg-[#f0f3ff] transition-colors cursor-pointer group/row relative',
-          isSelected && 'bg-[#e5e9ff]',
+          'hover:bg-bg-hover transition-colors cursor-pointer group/row relative',
+          isSelected && 'bg-bg-selected',
           isDragging && 'opacity-50',
           showDropIndicatorBefore &&
             'before:absolute before:left-0 before:right-0 before:top-0 before:h-[2px] before:bg-[#0073ea] before:z-20',
@@ -136,8 +136,8 @@ export const MemoizedTableRow = memo(
         {hasSelectionChange && (
           <td
             className={cn(
-              'sticky left-0 z-10 border border-[#c3c6d4] p-0 align-middle',
-              isSelected ? 'bg-[#e5e9ff]' : 'bg-bg-primary'
+              'sticky left-0 z-10 border border-border-medium p-0 align-middle',
+              isSelected ? 'bg-bg-selected' : 'bg-bg-primary'
             )}
             style={{ width: checkboxWidth, height: 36 }}
             onClick={e => e.stopPropagation()}
@@ -161,7 +161,7 @@ export const MemoizedTableRow = memo(
         {/* Color bar */}
         <td
           className={cn(
-            'sticky z-10 border border-[#c3c6d4] p-0',
+            'sticky z-10 border border-border-medium p-0',
             isLast && 'rounded-bl',
             hasSelectionChange ? '' : 'left-0'
           )}
@@ -176,10 +176,10 @@ export const MemoizedTableRow = memo(
         <td
           className={cn(
             'sticky z-10 border p-0 align-middle',
-            isSelected ? 'bg-[#e5e9ff]' : 'bg-bg-primary',
+            isSelected ? 'bg-bg-selected' : 'bg-bg-primary',
             isCellFocused(globalRowIndex, 0, focusedRowIndex, focusedColumnIndex)
               ? 'border-2 border-[#0073ea] z-20'
-              : 'border-[#c3c6d4]'
+              : 'border-border-medium'
           )}
           style={{
             width: firstColumnWidth,
@@ -235,9 +235,9 @@ export const MemoizedTableRow = memo(
               className={cn(
                 'border align-middle relative',
                 isBeingEditedByOther ? 'p-[2px]' : 'p-0',
-                isSelected ? 'bg-[#e5e9ff]' : 'bg-bg-primary',
+                isSelected ? 'bg-bg-selected' : 'bg-bg-primary',
                 isBeingEditedByOther && 'ring-2 ring-inset ring-yellow-400',
-                isFocused ? 'border-2 border-[#0073ea] z-10' : 'border-[#c3c6d4]'
+                isFocused ? 'border-2 border-[#0073ea] z-10' : 'border-border-medium'
               )}
               style={{ width: getColumnWidth(column), height: 36 }}
               onClick={e => {
@@ -273,8 +273,8 @@ export const MemoizedTableRow = memo(
         {/* Empty cell for add column */}
         <td
           className={cn(
-            'border border-[#c3c6d4] p-0',
-            isSelected ? 'bg-[#e5e9ff]' : 'bg-bg-primary'
+            'border border-border-medium p-0',
+            isSelected ? 'bg-bg-selected' : 'bg-bg-primary'
           )}
           style={{ width: addColumnWidth, height: 36 }}
         />

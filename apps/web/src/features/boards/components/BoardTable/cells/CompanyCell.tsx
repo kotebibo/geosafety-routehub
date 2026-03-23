@@ -15,7 +15,7 @@ import { useCompaniesWithLocationCount, useCompanyLocations } from '@/hooks/useC
 import type { CompanyCellValue } from '@/types/company'
 
 interface CompanyCellProps {
-  value?: CompanyCellValue | string | null  // Support both formats
+  value?: CompanyCellValue | string | null // Support both formats
   onEdit?: (value: CompanyCellValue | null) => void
   readOnly?: boolean
   onEditStart?: () => void
@@ -85,7 +85,9 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
   useEffect(() => {
     if (!isEditing) return
     const handleScroll = () => setIsEditing(false)
-    const scrollParent = containerRef.current?.closest('.overflow-auto, .overflow-y-auto, [style*="overflow"]')
+    const scrollParent = containerRef.current?.closest(
+      '.overflow-auto, .overflow-y-auto, [style*="overflow"]'
+    )
     scrollParent?.addEventListener('scroll', handleScroll, { passive: true })
     return () => scrollParent?.removeEventListener('scroll', handleScroll)
   }, [isEditing])
@@ -100,7 +102,9 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
   // Empty state
   if (!parsedValue?.company_id) {
     if (readOnly) {
-      return <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+      return (
+        <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+      )
     }
 
     return (
@@ -110,23 +114,24 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
             setIsEditing(true)
             onEditStart?.()
           }}
-          className="h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left hover:bg-[#f0f3ff] cursor-pointer"
+          className="h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left hover:bg-bg-hover cursor-pointer"
         >
           <span className="text-sm text-[#9699a6]">აირჩიეთ კომპანია...</span>
         </button>
 
-        {isEditing && createPortal(
-          <>
-            <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
-            <CompanyPicker
-              value={parsedValue}
-              onChange={handleChange}
-              onClose={() => setIsEditing(false)}
-              positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
-            />
-          </>,
-          document.body
-        )}
+        {isEditing &&
+          createPortal(
+            <>
+              <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
+              <CompanyPicker
+                value={parsedValue}
+                onChange={handleChange}
+                onClose={() => setIsEditing(false)}
+                positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
+              />
+            </>,
+            document.body
+          )}
       </div>
     )
   }
@@ -139,11 +144,11 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
           <Building2 className="w-3 h-3 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm text-[#323338] truncate">
+          <div className="text-sm text-text-primary truncate">
             {selectedCompany?.name || 'კომპანია იტვირთება...'}
           </div>
           {hasMultipleLocations && displayLocation && (
-            <div className="flex items-center gap-1 text-xs text-[#676879] truncate">
+            <div className="flex items-center gap-1 text-xs text-text-secondary truncate">
               <MapPin className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">{displayLocation.name}</span>
             </div>
@@ -161,17 +166,17 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
           setIsEditing(true)
           onEditStart?.()
         }}
-        className="h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left hover:bg-[#f0f3ff] cursor-pointer"
+        className="h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left hover:bg-bg-hover cursor-pointer"
       >
         <div className="flex-shrink-0 w-6 h-6 rounded bg-[#6161ff] flex items-center justify-center">
           <Building2 className="w-3 h-3 text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm text-[#323338] truncate">
+          <div className="text-sm text-text-primary truncate">
             {selectedCompany?.name || 'კომპანია იტვირთება...'}
           </div>
           {hasMultipleLocations && displayLocation && (
-            <div className="flex items-center gap-1 text-xs text-[#676879] truncate">
+            <div className="flex items-center gap-1 text-xs text-text-secondary truncate">
               <MapPin className="w-3 h-3 flex-shrink-0" />
               <span className="truncate">{displayLocation.name}</span>
             </div>
@@ -179,18 +184,19 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
         </div>
       </button>
 
-      {isEditing && createPortal(
-        <>
-          <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
-          <CompanyPicker
-            value={parsedValue}
-            onChange={handleChange}
-            onClose={() => setIsEditing(false)}
-            positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
-          />
-        </>,
-        document.body
-      )}
+      {isEditing &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
+            <CompanyPicker
+              value={parsedValue}
+              onChange={handleChange}
+              onClose={() => setIsEditing(false)}
+              positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
+            />
+          </>,
+          document.body
+        )}
     </div>
   )
 }

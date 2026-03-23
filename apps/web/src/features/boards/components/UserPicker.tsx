@@ -105,7 +105,7 @@ export function UserPicker({
               onChange(null)
               onClose()
             }}
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-[#676879] hover:bg-[#f5f6f8] rounded transition-colors"
+            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-text-secondary hover:bg-bg-hover rounded transition-colors"
           >
             <X className="w-4 h-4" />
             <span>Clear selection</span>
@@ -131,8 +131,8 @@ export function UserPicker({
                   onClose()
                 }}
                 className={cn(
-                  'w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-[#f5f6f8] transition-colors',
-                  value === inspector.id && 'bg-[#e5e9ff]'
+                  'w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-bg-hover transition-colors',
+                  value === inspector.id && 'bg-bg-selected'
                 )}
               >
                 {/* Avatar */}
@@ -142,7 +142,7 @@ export function UserPicker({
 
                 {/* Name and Email */}
                 <div className="flex-1 text-left overflow-hidden">
-                  <div className="font-medium text-[#323338] truncate">
+                  <div className="font-medium text-text-primary truncate">
                     {inspector.full_name || 'Unknown'}
                   </div>
                   {inspector.email && (

@@ -66,7 +66,7 @@ const NumberSummaryCell = memo(function NumberSummaryCell({
   }
 
   return (
-    <div className="w-full h-full px-2 flex items-center justify-end text-xs font-semibold text-[#323338]">
+    <div className="w-full h-full px-2 flex items-center justify-end text-xs font-semibold text-text-primary">
       {formatted}
     </div>
   )
@@ -203,12 +203,12 @@ const StatusSummaryCell = memo(function StatusSummaryCell({
               left: tooltipPos.left,
               transform: 'translate(-50%, -100%)',
             }}
-            className="fixed z-[9999] bg-bg-primary rounded-lg shadow-xl border border-[#e6e9ef] pointer-events-none min-w-[200px]"
+            className="fixed z-[9999] bg-bg-primary rounded-lg shadow-xl border border-border-light pointer-events-none min-w-[200px]"
           >
             {/* Header */}
-            <div className="px-3 py-2 border-b border-[#e6e9ef]">
-              <span className="text-xs font-semibold text-[#323338]">{column.column_name}</span>
-              <span className="text-xs text-[#676879] ml-1">({total} items)</span>
+            <div className="px-3 py-2 border-b border-border-light">
+              <span className="text-xs font-semibold text-text-primary">{column.column_name}</span>
+              <span className="text-xs text-text-secondary ml-1">({total} items)</span>
             </div>
             {/* Segments */}
             <div className="px-3 py-1.5">
@@ -218,11 +218,11 @@ const StatusSummaryCell = memo(function StatusSummaryCell({
                     className="w-3 h-3 rounded-sm flex-shrink-0"
                     style={{ backgroundColor: segment.hex }}
                   />
-                  <span className="text-xs text-[#323338] flex-1 truncate">{segment.label}</span>
-                  <span className="text-xs font-medium text-[#323338] tabular-nums">
+                  <span className="text-xs text-text-primary flex-1 truncate">{segment.label}</span>
+                  <span className="text-xs font-medium text-text-primary tabular-nums">
                     {segment.count}
                   </span>
-                  <span className="text-xs text-[#676879] tabular-nums w-9 text-right">
+                  <span className="text-xs text-text-secondary tabular-nums w-9 text-right">
                     {segment.percentage}%
                   </span>
                 </div>

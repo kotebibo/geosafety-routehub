@@ -94,8 +94,10 @@ export function FilePreviewModal({
     // Unsupported type
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
-        <FileText className="w-12 h-12 text-[#676879]" />
-        <span className="text-sm text-[#676879]">Preview not available for this file type</span>
+        <FileText className="w-12 h-12 text-text-secondary" />
+        <span className="text-sm text-text-secondary">
+          Preview not available for this file type
+        </span>
         <button
           onClick={handleDownload}
           className="px-4 py-2 text-sm bg-[#0073ea] text-white rounded-md hover:bg-[#0060b9] transition-colors"
@@ -114,11 +116,11 @@ export function FilePreviewModal({
       }}
     >
       {/* Modal */}
-      <div className="relative w-[90vw] h-[90vh] max-w-[1200px] bg-[#f5f6f8] rounded-xl shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative w-[90vw] h-[90vh] max-w-[1200px] bg-bg-secondary rounded-xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-bg-primary border-b border-[#e6e9ef]">
+        <div className="flex items-center justify-between px-4 py-3 bg-bg-primary border-b border-border-light">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="text-sm font-medium text-[#323338] truncate">{file.name}</span>
+            <span className="text-sm font-medium text-text-primary truncate">{file.name}</span>
             {canNavigate && (
               <span className="text-xs text-[#9699a6]">
                 {currentIndex + 1} / {files?.length}
@@ -129,7 +131,7 @@ export function FilePreviewModal({
             <Tooltip content="Download" side="top" delayDuration={200}>
               <button
                 onClick={handleDownload}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-[#323338] hover:bg-[#f0f1f3] rounded-md transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-primary hover:bg-bg-secondary rounded-md transition-colors"
               >
                 <Download className="w-4 h-4" />
                 <span className="hidden sm:inline">Download</span>
@@ -137,9 +139,9 @@ export function FilePreviewModal({
             </Tooltip>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-[#f0f1f3] rounded-md transition-colors"
+              className="p-1.5 hover:bg-bg-secondary rounded-md transition-colors"
             >
-              <X className="w-5 h-5 text-[#676879]" />
+              <X className="w-5 h-5 text-text-secondary" />
             </button>
           </div>
         </div>
@@ -159,7 +161,7 @@ export function FilePreviewModal({
                 'hover:bg-bg-primary transition-colors'
               )}
             >
-              <ChevronLeft className="w-5 h-5 text-[#323338]" />
+              <ChevronLeft className="w-5 h-5 text-text-primary" />
             </button>
           )}
           {hasNext && (
@@ -172,7 +174,7 @@ export function FilePreviewModal({
                 'hover:bg-bg-primary transition-colors'
               )}
             >
-              <ChevronRight className="w-5 h-5 text-[#323338]" />
+              <ChevronRight className="w-5 h-5 text-text-primary" />
             </button>
           )}
         </div>

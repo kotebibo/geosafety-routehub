@@ -87,9 +87,9 @@ function ColumnMenu({
           e.stopPropagation()
           onMenuToggle(isMenuOpen ? null : column.id)
         }}
-        className="column-menu-btn opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto p-0.5 hover:bg-[#c3c6d4] rounded transition-colors"
+        className="column-menu-btn opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto p-0.5 hover:bg-border-medium rounded transition-colors"
       >
-        <MoreHorizontal className="w-4 h-4 text-[#676879]" />
+        <MoreHorizontal className="w-4 h-4 text-text-secondary" />
       </button>
       {isMenuOpen &&
         createPortal(
@@ -137,7 +137,7 @@ function ColumnMenu({
                         'w-8 h-[18px] rounded-full transition-colors flex items-center px-0.5',
                         column.config?.is_due_date
                           ? 'bg-[#0073ea] justify-end'
-                          : 'bg-[#c3c6d4] justify-start'
+                          : 'bg-border-medium justify-start'
                       )}
                     >
                       <div className="w-3.5 h-3.5 bg-bg-primary rounded-full shadow-sm" />
@@ -206,10 +206,10 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'relative bg-[#f5f6f8] border text-left px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide cursor-pointer hover:bg-[#ecedf0] transition-colors group',
+        'relative bg-bg-secondary border text-left px-3 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wide cursor-pointer hover:bg-bg-hover transition-colors group',
         isDragging && 'bg-blue-50 shadow-lg',
-        isSorted && 'bg-[#f0f1f3]',
-        'border-[#c3c6d4]'
+        isSorted && 'bg-bg-secondary',
+        'border-border-medium'
       )}
       onClick={e => {
         if ((e.target as HTMLElement).tagName === 'INPUT') return
@@ -225,7 +225,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
     >
       {/* Sort indicator - positioned at top center of header cell */}
       {isSorted ? (
-        <div className="absolute top-[1px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#c3c6d4] text-[#323338] shadow-sm">
+        <div className="absolute top-[1px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-border-medium text-text-primary shadow-sm">
           {sortDirection === 'asc' ? (
             <ArrowUp className="w-[10px] h-[10px]" />
           ) : (
@@ -233,7 +233,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
           )}
         </div>
       ) : (
-        <div className="absolute top-[1px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[#c3c6d4] text-[#676879] opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="absolute top-[1px] left-1/2 -translate-x-1/2 z-10 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-border-medium text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity">
           <ArrowUp className="w-[10px] h-[10px]" />
         </div>
       )}
@@ -245,7 +245,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
             {...listeners}
             className="drag-handle opacity-0 group-hover:opacity-100 hover:opacity-100 cursor-grab active:cursor-grabbing -ml-1 p-0.5"
           >
-            <GripVertical className="w-3 h-3 text-[#9699a6]" />
+            <GripVertical className="w-3 h-3 text-text-tertiary" />
           </div>
         )}
         <span className="flex-1 truncate">
@@ -259,7 +259,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
               onKeyDown={onColumnNameKeyDown}
               onClick={e => e.stopPropagation()}
               onMouseDown={e => e.stopPropagation()}
-              className="w-full bg-bg-primary border border-[#0073ea] rounded px-1 py-0.5 text-xs font-semibold text-[#323338] uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
+              className="w-full bg-bg-primary border border-[#0073ea] rounded px-1 py-0.5 text-xs font-semibold text-text-primary uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
             />
           ) : (
             <OverflowTooltip text={column.column_name} className="truncate block">

@@ -146,7 +146,7 @@ export function UpdatesModal({
       case 'created':
         return <PlusCircle className="w-4 h-4 text-[#00c875]" />
       case 'updated':
-        return <FileEdit className="w-4 h-4 text-[#0073ea]" />
+        return <FileEdit className="w-4 h-4 text-text-link" />
       case 'status_changed':
         return <ArrowRightLeft className="w-4 h-4 text-[#fdab3d]" />
       case 'assigned':
@@ -155,7 +155,7 @@ export function UpdatesModal({
       case 'comment':
         return <MessageSquare className="w-4 h-4 text-[#579bfc]" />
       default:
-        return <History className="w-4 h-4 text-[#676879]" />
+        return <History className="w-4 h-4 text-text-secondary" />
     }
   }
 
@@ -336,7 +336,7 @@ export function UpdatesModal({
       // Every odd index is a mention name (captured group)
       if (index % 2 === 1) {
         return (
-          <span key={index} className="text-[#0073ea] font-medium bg-[#e5f4ff] px-1 rounded">
+          <span key={index} className="text-text-link font-medium bg-bg-selected px-1 rounded">
             @{part}
           </span>
         )
@@ -385,14 +385,14 @@ export function UpdatesModal({
             className={cn(
               'px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2',
               activeTab === 'updates'
-                ? 'border-[#0073ea] text-[#0073ea]'
-                : 'border-transparent text-[#676879] hover:text-[#323338] hover:border-border-medium'
+                ? 'border-[#0073ea] text-text-link'
+                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-medium'
             )}
           >
             <MessageSquare className="w-4 h-4" />
             Updates
             {comments.length > 0 && (
-              <span className="bg-[#e6e9ef] text-[#676879] text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+              <span className="bg-border-light text-text-secondary text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
                 {comments.length}
               </span>
             )}
@@ -402,14 +402,14 @@ export function UpdatesModal({
             className={cn(
               'px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2',
               activeTab === 'activity'
-                ? 'border-[#0073ea] text-[#0073ea]'
-                : 'border-transparent text-[#676879] hover:text-[#323338] hover:border-border-medium'
+                ? 'border-[#0073ea] text-text-link'
+                : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-medium'
             )}
           >
             <History className="w-4 h-4" />
             Activity Log
             {activities.length > 0 && (
-              <span className="bg-[#e6e9ef] text-[#676879] text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
+              <span className="bg-border-light text-text-secondary text-xs rounded-full px-1.5 py-0.5 min-w-[20px] text-center">
                 {activities.length}
               </span>
             )}
@@ -419,7 +419,7 @@ export function UpdatesModal({
         {/* Updates Tab (Comments) */}
         <div
           className={cn(
-            'flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8f9fa]',
+            'flex-1 overflow-y-auto p-6 space-y-4 bg-bg-secondary',
             activeTab !== 'updates' && 'hidden'
           )}
         >
@@ -429,11 +429,11 @@ export function UpdatesModal({
             </div>
           ) : comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-20 h-20 rounded-full bg-[#e6e9ef] flex items-center justify-center mb-4">
+              <div className="w-20 h-20 rounded-full bg-border-light flex items-center justify-center mb-4">
                 <MessageSquare className="w-10 h-10 text-[#c5c7d0]" />
               </div>
-              <span className="text-lg font-medium text-[#323338] mb-1">No updates yet</span>
-              <span className="text-sm text-[#676879]">
+              <span className="text-lg font-medium text-text-primary mb-1">No updates yet</span>
+              <span className="text-sm text-text-secondary">
                 Be the first to add an update to this item
               </span>
             </div>
@@ -452,7 +452,7 @@ export function UpdatesModal({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-semibold text-[#323338]">
+                      <span className="text-sm font-semibold text-text-primary">
                         {comment.user_name || 'Unknown User'}
                       </span>
                       <span className="text-xs text-[#9699a6] flex items-center gap-1">
@@ -487,14 +487,14 @@ export function UpdatesModal({
                               setEditingComment(null)
                               setEditContent('')
                             }}
-                            className="px-3 py-1.5 text-xs text-[#676879] hover:bg-bg-hover rounded-lg transition-colors"
+                            className="px-3 py-1.5 text-xs text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
                           >
                             Cancel
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-sm text-[#323338] whitespace-pre-wrap break-words leading-relaxed">
+                      <p className="text-sm text-text-primary whitespace-pre-wrap break-words leading-relaxed">
                         {renderContentWithMentions(comment.content)}
                       </p>
                     )}
@@ -507,7 +507,7 @@ export function UpdatesModal({
                             setReplyingTo(comment)
                             inputRef.current?.focus()
                           }}
-                          className="flex items-center gap-1 text-xs text-[#676879] hover:text-[#0073ea] transition-colors"
+                          className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-link transition-colors"
                         >
                           <Reply className="w-3.5 h-3.5" />
                           Reply
@@ -519,14 +519,14 @@ export function UpdatesModal({
                                 setEditingComment(comment)
                                 setEditContent(comment.content)
                               }}
-                              className="flex items-center gap-1 text-xs text-[#676879] hover:text-[#0073ea] transition-colors"
+                              className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-link transition-colors"
                             >
                               <Edit2 className="w-3.5 h-3.5" />
                               Edit
                             </button>
                             <button
                               onClick={() => handleDeleteComment(comment.id)}
-                              className="flex items-center gap-1 text-xs text-[#676879] hover:text-[#e2445c] transition-colors"
+                              className="flex items-center gap-1 text-xs text-text-secondary hover:text-[#e2445c] transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                               Delete
@@ -540,7 +540,7 @@ export function UpdatesModal({
 
                 {/* Replies */}
                 {comment.replies && comment.replies.length > 0 && (
-                  <div className="border-t border-border-light bg-[#f8f9fa]">
+                  <div className="border-t border-border-light bg-bg-secondary">
                     {comment.replies.map(reply => (
                       <div
                         key={reply.id}
@@ -553,7 +553,7 @@ export function UpdatesModal({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium text-[#323338]">
+                            <span className="text-sm font-medium text-text-primary">
                               {reply.user_name || 'Unknown'}
                             </span>
                             <span className="text-xs text-[#9699a6]">
@@ -563,14 +563,14 @@ export function UpdatesModal({
                               <span className="text-xs text-[#9699a6]">(edited)</span>
                             )}
                           </div>
-                          <p className="text-sm text-[#323338] whitespace-pre-wrap break-words">
+                          <p className="text-sm text-text-primary whitespace-pre-wrap break-words">
                             {renderContentWithMentions(reply.content)}
                           </p>
                           {reply.user_id === inspectorId && (
                             <div className="flex items-center gap-3 mt-2">
                               <button
                                 onClick={() => handleDeleteComment(reply.id)}
-                                className="flex items-center gap-1 text-xs text-[#676879] hover:text-[#e2445c] transition-colors"
+                                className="flex items-center gap-1 text-xs text-text-secondary hover:text-[#e2445c] transition-colors"
                               >
                                 <Trash2 className="w-3 h-3" />
                                 Delete
@@ -590,7 +590,7 @@ export function UpdatesModal({
         {/* Activity Log Tab */}
         <div
           className={cn(
-            'flex-1 overflow-y-auto p-6 bg-[#f8f9fa]',
+            'flex-1 overflow-y-auto p-6 bg-bg-secondary',
             activeTab !== 'activity' && 'hidden'
           )}
         >
@@ -600,32 +600,36 @@ export function UpdatesModal({
             </div>
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="w-20 h-20 rounded-full bg-[#e6e9ef] flex items-center justify-center mb-4">
+              <div className="w-20 h-20 rounded-full bg-border-light flex items-center justify-center mb-4">
                 <History className="w-10 h-10 text-[#c5c7d0]" />
               </div>
-              <span className="text-lg font-medium text-[#323338] mb-1">No activity yet</span>
-              <span className="text-sm text-[#676879]">Changes to this item will appear here</span>
+              <span className="text-lg font-medium text-text-primary mb-1">No activity yet</span>
+              <span className="text-sm text-text-secondary">
+                Changes to this item will appear here
+              </span>
             </div>
           ) : (
             <div className="relative">
               {/* Timeline line */}
-              <div className="absolute left-5 top-0 bottom-0 w-px bg-[#e6e9ef]" />
+              <div className="absolute left-5 top-0 bottom-0 w-px bg-border-light" />
 
               <div className="space-y-0">
                 {activities.map(activity => (
                   <div key={activity.id} className="relative flex items-start gap-4 py-3 pl-2">
                     {/* Timeline dot */}
-                    <div className="relative z-10 w-7 h-7 rounded-full bg-bg-primary border-2 border-[#e6e9ef] flex items-center justify-center flex-shrink-0">
+                    <div className="relative z-10 w-7 h-7 rounded-full bg-bg-primary border-2 border-border-light flex items-center justify-center flex-shrink-0">
                       {getActivityIcon(activity.update_type)}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 min-w-0 pt-0.5">
                       <div className="text-sm">
-                        <span className="font-medium text-[#323338]">
+                        <span className="font-medium text-text-primary">
                           {activity.user_name || 'System'}
                         </span>{' '}
-                        <span className="text-[#676879]">{getActivityDescription(activity)}</span>
+                        <span className="text-text-secondary">
+                          {getActivityDescription(activity)}
+                        </span>
                       </div>
                       <div className="flex items-center gap-1 mt-1 text-xs text-[#9699a6]">
                         <Clock className="w-3 h-3" />
@@ -641,8 +645,8 @@ export function UpdatesModal({
 
         {/* Reply indicator - only show on updates tab */}
         {activeTab === 'updates' && replyingTo && (
-          <div className="px-6 py-2 bg-[#e5f4ff] border-t border-[#0073ea]/20 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-[#0073ea]">
+          <div className="px-6 py-2 bg-bg-selected border-t border-[#0073ea]/20 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-text-link">
               <CornerDownRight className="w-4 h-4" />
               <span>
                 Replying to <strong>{replyingTo.user_name}</strong>
@@ -652,7 +656,7 @@ export function UpdatesModal({
               onClick={() => setReplyingTo(null)}
               className="p-1 hover:bg-[#0073ea]/10 rounded transition-colors"
             >
-              <X className="w-4 h-4 text-[#0073ea]" />
+              <X className="w-4 h-4 text-text-link" />
             </button>
           </div>
         )}
@@ -670,7 +674,7 @@ export function UpdatesModal({
               ref={mentionListRef}
               className="absolute bottom-full left-4 right-4 mb-2 bg-bg-primary rounded-lg shadow-lg border border-border-light overflow-hidden z-10"
             >
-              <div className="px-3 py-2 text-xs font-medium text-[#676879] bg-[#f5f6f8] border-b border-border-light">
+              <div className="px-3 py-2 text-xs font-medium text-text-secondary bg-bg-secondary border-b border-border-light">
                 <AtSign className="w-3 h-3 inline mr-1" />
                 Mention someone
               </div>
@@ -680,7 +684,7 @@ export function UpdatesModal({
                   onClick={() => insertMention(suggestion)}
                   className={cn(
                     'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                    index === mentionIndex ? 'bg-[#e5f4ff]' : 'hover:bg-[#f5f6f8]'
+                    index === mentionIndex ? 'bg-bg-selected' : 'hover:bg-bg-hover'
                   )}
                 >
                   <div className="w-8 h-8 rounded-full bg-[#0073ea] flex items-center justify-center">
@@ -689,7 +693,7 @@ export function UpdatesModal({
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-[#323338]">{suggestion.name}</div>
+                    <div className="text-sm font-medium text-text-primary">{suggestion.name}</div>
                     {suggestion.email && (
                       <div className="text-xs text-[#9699a6] truncate">{suggestion.email}</div>
                     )}

@@ -93,8 +93,8 @@ export function CompanyAddressCell({
   // Display address
   return (
     <div className="h-full min-h-[36px] flex items-center gap-2 px-3">
-      <MapPin className="w-4 h-4 text-[#676879] flex-shrink-0" />
-      <OverflowTooltip text={displayAddress} className="text-sm text-[#323338] truncate block">
+      <MapPin className="w-4 h-4 text-text-secondary flex-shrink-0" />
+      <OverflowTooltip text={displayAddress} className="text-sm text-text-primary truncate block">
         {displayAddress}
       </OverflowTooltip>
     </div>

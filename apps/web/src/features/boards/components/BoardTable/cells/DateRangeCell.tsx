@@ -172,13 +172,13 @@ export const DateRangeCell = memo(function DateRangeCell({
           'w-full h-full min-h-[36px] px-2',
           'flex items-center gap-2',
           'text-sm cursor-pointer',
-          'hover:bg-[#f0f3ff]'
+          'hover:bg-bg-hover'
         )}
       >
         <Calendar className="w-4 h-4 flex-shrink-0 text-[#9699a6]" />
         {displayText ? (
           <div className="flex items-center gap-1 overflow-hidden">
-            <span className="text-[#323338] truncate">{displayText}</span>
+            <span className="text-text-primary truncate">{displayText}</span>
             {durationDays !== null && (
               <span className="text-[10px] text-[#9699a6] flex-shrink-0">({durationDays}d)</span>
             )}

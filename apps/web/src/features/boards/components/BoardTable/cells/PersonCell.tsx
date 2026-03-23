@@ -116,7 +116,7 @@ export const PersonCell = memo(function PersonCell({
         onClick={handleOpen}
         className={cn(
           'h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left',
-          !readOnly && 'hover:bg-[#f0f3ff] cursor-pointer',
+          !readOnly && 'hover:bg-bg-hover cursor-pointer',
           readOnly && 'cursor-default'
         )}
       >

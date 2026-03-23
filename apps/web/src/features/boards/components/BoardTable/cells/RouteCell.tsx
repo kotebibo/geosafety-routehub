@@ -56,7 +56,9 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
   useEffect(() => {
     if (!isEditing) return
     const handleScroll = () => setIsEditing(false)
-    const scrollParent = containerRef.current?.closest('.overflow-auto, .overflow-y-auto, [style*="overflow"]')
+    const scrollParent = containerRef.current?.closest(
+      '.overflow-auto, .overflow-y-auto, [style*="overflow"]'
+    )
     scrollParent?.addEventListener('scroll', handleScroll, { passive: true })
     return () => scrollParent?.removeEventListener('scroll', handleScroll)
   }, [isEditing])
@@ -69,7 +71,9 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
   }
 
   if (readOnly && !value) {
-    return <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+    return (
+      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+    )
   }
 
   if (readOnly && value && selectedRoute) {
@@ -81,7 +85,7 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
         >
           <MapPin className="w-3 h-3 text-white" />
         </div>
-        <span className="text-sm text-[#323338] truncate">
+        <span className="text-sm text-text-primary truncate">
           {selectedRoute.name || 'Unnamed Route'}
         </span>
       </div>
@@ -99,7 +103,7 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
         }}
         className={cn(
           'h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left',
-          !readOnly && 'hover:bg-[#f0f3ff] cursor-pointer',
+          !readOnly && 'hover:bg-bg-hover cursor-pointer',
           readOnly && 'cursor-default'
         )}
       >
@@ -112,7 +116,7 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
               <MapPin className="w-3 h-3 text-white" />
             </div>
             <div className="flex-1 overflow-hidden">
-              <span className="text-sm text-[#323338] truncate block">
+              <span className="text-sm text-text-primary truncate block">
                 {selectedRoute.name || 'Unnamed Route'}
               </span>
               <span className="text-xs text-[#9699a6] flex items-center gap-1">
@@ -126,18 +130,20 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
         )}
       </button>
 
-      {isEditing && !readOnly && createPortal(
-        <>
-          <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
-          <RoutePicker
-            value={value}
-            onChange={handleChange}
-            onClose={() => setIsEditing(false)}
-            positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
-          />
-        </>,
-        document.body
-      )}
+      {isEditing &&
+        !readOnly &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
+            <RoutePicker
+              value={value}
+              onChange={handleChange}
+              onClose={() => setIsEditing(false)}
+              positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
+            />
+          </>,
+          document.body
+        )}
     </div>
   )
 }

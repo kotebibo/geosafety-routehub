@@ -116,14 +116,14 @@ export function Header({ className, onMenuToggle }: HeaderProps) {
               onClick={() => setIsSearchOpen(true)}
               className={cn(
                 'flex items-center gap-2 px-3 py-1.5 rounded-lg',
-                'border border-[#c3c6d4] bg-[#f0f1f3] hover:bg-[#e6e7ea]',
+                'border border-border-medium bg-bg-secondary hover:bg-bg-hover',
                 'text-[#555766] text-sm transition-colors',
                 'min-w-0 sm:min-w-[200px] lg:min-w-[280px]'
               )}
             >
               <Search className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="hidden sm:block flex-1 text-left">{t('common.search')}</span>
-              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-bg-primary border border-[#c3c6d4] text-[10px] text-[#676879] font-mono">
+              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-bg-primary border border-border-medium text-[10px] text-text-secondary font-mono">
                 {isMac ? '⌘K' : 'Ctrl+K'}
               </kbd>
             </button>

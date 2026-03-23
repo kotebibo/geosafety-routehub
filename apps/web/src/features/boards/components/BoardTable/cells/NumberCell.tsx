@@ -70,7 +70,7 @@ export const NumberCell = memo(function NumberCell({
         className={cn(
           'w-full h-full min-h-[36px] px-2',
           'bg-bg-primary border-2 border-[#6161ff] rounded',
-          'text-[#323338] text-sm text-right',
+          'text-text-primary text-sm text-right',
           'focus:outline-none'
         )}
       />
@@ -87,13 +87,13 @@ export const NumberCell = memo(function NumberCell({
         'w-full h-full min-h-[36px] px-2',
         'flex items-center justify-end',
         'text-sm',
-        'cursor-pointer hover:bg-[#f0f3ff]'
+        'cursor-pointer hover:bg-bg-hover'
       )}
     >
       {value !== null && value !== undefined ? (
         <OverflowTooltip
           text={String(formatNumber(value) ?? value)}
-          className="text-[#323338] truncate block"
+          className="text-text-primary truncate block"
         >
           {highlightQuery ? (
             <HighlightText text={String(formatNumber(value) ?? value)} query={highlightQuery} />

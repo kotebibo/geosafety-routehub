@@ -61,7 +61,7 @@ export const TextCell = memo(function TextCell({
         className={cn(
           'w-full h-full min-h-[36px] px-2',
           'bg-bg-primary border-2 border-[#6161ff] rounded',
-          'text-[#323338] text-sm',
+          'text-text-primary text-sm',
           'focus:outline-none'
         )}
       />
@@ -74,12 +74,12 @@ export const TextCell = memo(function TextCell({
       className={cn(
         'w-full h-full min-h-[36px] flex items-center px-2',
         'text-sm',
-        'cursor-pointer hover:bg-[#f0f3ff]'
+        'cursor-pointer hover:bg-bg-hover'
       )}
     >
       <OverflowTooltip
         text={value ? String(value) : undefined}
-        className="text-[#323338] truncate block"
+        className="text-text-primary truncate block"
       >
         {value ? (
           highlightQuery ? (

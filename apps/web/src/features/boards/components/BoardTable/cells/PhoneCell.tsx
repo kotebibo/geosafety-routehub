@@ -40,7 +40,13 @@ function formatPhoneNumber(phone: string): string {
   return phone
 }
 
-export function PhoneCell({ value, onEdit, readOnly = false, onEditStart, highlightQuery }: PhoneCellProps) {
+export function PhoneCell({
+  value,
+  onEdit,
+  readOnly = false,
+  onEditStart,
+  highlightQuery,
+}: PhoneCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -87,7 +93,9 @@ export function PhoneCell({ value, onEdit, readOnly = false, onEditStart, highli
   }
 
   if (readOnly && !value) {
-    return <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+    return (
+      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+    )
   }
 
   if (readOnly && value) {
@@ -97,7 +105,7 @@ export function PhoneCell({ value, onEdit, readOnly = false, onEditStart, highli
         <a
           href={`tel:${value}`}
           className="text-sm text-[#579bfc] hover:underline truncate"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           {formatPhoneNumber(value)}
         </a>
@@ -112,7 +120,7 @@ export function PhoneCell({ value, onEdit, readOnly = false, onEditStart, highli
           ref={inputRef}
           type="tel"
           value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
+          onChange={e => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
           placeholder="Enter phone..."
@@ -133,14 +141,17 @@ export function PhoneCell({ value, onEdit, readOnly = false, onEditStart, highli
         }}
         className={cn(
           'h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left',
-          !readOnly && 'hover:bg-[#f0f3ff] cursor-pointer',
+          !readOnly && 'hover:bg-bg-hover cursor-pointer',
           readOnly && 'cursor-default'
         )}
       >
         {value ? (
           <>
             <Phone className="w-4 h-4 text-[#579bfc] flex-shrink-0" />
-            <OverflowTooltip text={formatPhoneNumber(value)} className="text-sm text-[#323338] truncate block">
+            <OverflowTooltip
+              text={formatPhoneNumber(value)}
+              className="text-sm text-text-primary truncate block"
+            >
               {highlightQuery ? (
                 <HighlightText text={formatPhoneNumber(value)} query={highlightQuery} />
               ) : (

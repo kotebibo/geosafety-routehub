@@ -71,7 +71,7 @@ export const DateCell = memo(function DateCell({
       default:
         return {
           bg: '',
-          text: 'text-[#323338]',
+          text: 'text-text-primary',
           icon: 'text-[#9699a6]',
           border: '',
         }
@@ -108,7 +108,7 @@ export const DateCell = memo(function DateCell({
         className={cn(
           'w-full h-full min-h-[36px] px-2',
           'bg-bg-primary border-2 border-[#6161ff] rounded',
-          'text-[#323338] text-sm',
+          'text-text-primary text-sm',
           'focus:outline-none'
         )}
       />
@@ -148,7 +148,7 @@ export const DateCell = memo(function DateCell({
         'w-full h-full min-h-[36px] px-2',
         'flex items-center gap-2',
         'text-sm',
-        'cursor-pointer hover:bg-[#f0f3ff]',
+        'cursor-pointer hover:bg-bg-hover',
         styles.bg,
         styles.border
       )}

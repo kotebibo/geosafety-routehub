@@ -15,7 +15,13 @@ interface UpdatesCellProps {
   onEditStart?: () => void
 }
 
-export function UpdatesCell({ value, itemId, itemName, itemType = 'board_item', onEditStart }: UpdatesCellProps) {
+export function UpdatesCell({
+  value,
+  itemId,
+  itemName,
+  itemType = 'board_item',
+  onEditStart,
+}: UpdatesCellProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [commentCount, setCommentCount] = useState(value || 0)
   const buttonRef = React.useRef<HTMLButtonElement>(null)
@@ -36,15 +42,14 @@ export function UpdatesCell({ value, itemId, itemName, itemType = 'board_item', 
         onClick={handleOpen}
         className={cn(
           'h-full min-h-[36px] w-full flex items-center justify-center gap-1.5 px-3',
-          'hover:bg-[#f0f3ff] cursor-pointer transition-colors'
+          'hover:bg-bg-hover cursor-pointer transition-colors'
         )}
       >
-        <MessageSquare className={cn(
-          'w-4 h-4',
-          commentCount > 0 ? 'text-[#0073ea]' : 'text-[#676879]'
-        )} />
+        <MessageSquare
+          className={cn('w-4 h-4', commentCount > 0 ? 'text-text-link' : 'text-text-secondary')}
+        />
         {commentCount > 0 && (
-          <span className="text-sm font-medium text-[#0073ea]">{commentCount}</span>
+          <span className="text-sm font-medium text-text-link">{commentCount}</span>
         )}
       </button>
 

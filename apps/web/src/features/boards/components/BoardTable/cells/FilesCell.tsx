@@ -135,7 +135,7 @@ export const FilesCell = memo(function FilesCell({
     if (type === 'application/pdf') {
       return <FileText className="w-4 h-4 text-[#e2445c]" />
     }
-    return <File className="w-4 h-4 text-[#676879]" />
+    return <File className="w-4 h-4 text-text-secondary" />
   }
 
   const formatFileSize = (bytes: number) => {
@@ -240,27 +240,27 @@ export const FilesCell = memo(function FilesCell({
         onClick={handleOpen}
         className={cn(
           'h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left',
-          !readOnly && 'hover:bg-[#f0f3ff] cursor-pointer',
+          !readOnly && 'hover:bg-bg-hover cursor-pointer',
           readOnly && 'cursor-default'
         )}
       >
-        <Paperclip className="w-4 h-4 text-[#676879] flex-shrink-0" />
+        <Paperclip className="w-4 h-4 text-text-secondary flex-shrink-0" />
         {files.length > 0 ? (
           <div className="flex items-center gap-1">
-            <span className="text-sm text-[#323338]">
+            <span className="text-sm text-text-primary">
               {files.length} file{files.length !== 1 ? 's' : ''}
             </span>
             <div className="flex -space-x-1">
               {files.slice(0, 3).map((file, i) => (
                 <div
                   key={file.id}
-                  className="w-5 h-5 rounded bg-[#f5f6f8] border border-white flex items-center justify-center"
+                  className="w-5 h-5 rounded bg-bg-secondary border border-white flex items-center justify-center"
                 >
                   {getFileIcon(file.type)}
                 </div>
               ))}
               {files.length > 3 && (
-                <div className="w-5 h-5 rounded bg-[#e6e9ef] border border-white flex items-center justify-center text-[10px] text-[#676879] font-medium">
+                <div className="w-5 h-5 rounded bg-border-light border border-white flex items-center justify-center text-[10px] text-text-secondary font-medium">
                   +{files.length - 3}
                 </div>
               )}
@@ -291,9 +291,9 @@ export const FilesCell = memo(function FilesCell({
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-medium text-[#323338]">Attachments</span>
+              <span className="text-sm font-medium text-text-primary">Attachments</span>
               {!readOnly && (
-                <label className="flex items-center gap-1 px-2 py-1 text-xs text-[#0073ea] hover:bg-[#f0f3ff] rounded cursor-pointer transition-colors">
+                <label className="flex items-center gap-1 px-2 py-1 text-xs text-text-link hover:bg-bg-hover rounded cursor-pointer transition-colors">
                   <Plus className="w-3 h-3" />
                   Add
                   <input
@@ -314,10 +314,10 @@ export const FilesCell = memo(function FilesCell({
               <div className="py-6 text-center">
                 {!readOnly ? (
                   <label className="flex flex-col items-center gap-2 cursor-pointer">
-                    <div className="w-12 h-12 rounded-full bg-[#f5f6f8] flex items-center justify-center">
-                      <Upload className="w-6 h-6 text-[#676879]" />
+                    <div className="w-12 h-12 rounded-full bg-bg-secondary flex items-center justify-center">
+                      <Upload className="w-6 h-6 text-text-secondary" />
                     </div>
-                    <span className="text-sm text-[#676879]">
+                    <span className="text-sm text-text-secondary">
                       {uploading ? 'Uploading...' : 'Click to upload files'}
                     </span>
                     <span className="text-xs text-[#9699a6]">Max 10MB per file</span>
@@ -340,7 +340,7 @@ export const FilesCell = memo(function FilesCell({
                 {files.map((file, index) => (
                   <div
                     key={file.id}
-                    className="flex items-center gap-2 p-2 rounded hover:bg-[#f5f6f8] group"
+                    className="flex items-center gap-2 p-2 rounded hover:bg-bg-hover group"
                   >
                     {/* Thumbnail or Icon — click to preview */}
                     <Tooltip content="Preview" side="top" delayDuration={200}>
@@ -352,7 +352,7 @@ export const FilesCell = memo(function FilesCell({
                         className="flex-shrink-0 cursor-pointer"
                       >
                         {file.type.startsWith('image/') ? (
-                          <div className="w-10 h-10 rounded overflow-hidden bg-[#f5f6f8]">
+                          <div className="w-10 h-10 rounded overflow-hidden bg-bg-secondary">
                             <img
                               src={file.url}
                               alt={file.name}
@@ -360,7 +360,7 @@ export const FilesCell = memo(function FilesCell({
                             />
                           </div>
                         ) : (
-                          <div className="w-10 h-10 rounded bg-[#f5f6f8] flex items-center justify-center">
+                          <div className="w-10 h-10 rounded bg-bg-secondary flex items-center justify-center">
                             {getFileIcon(file.type)}
                           </div>
                         )}
@@ -376,7 +376,7 @@ export const FilesCell = memo(function FilesCell({
                         }}
                         className="flex-1 min-w-0 text-left cursor-pointer"
                       >
-                        <div className="text-sm text-[#323338] truncate hover:text-[#0073ea] transition-colors">
+                        <div className="text-sm text-text-primary truncate hover:text-text-link transition-colors">
                           {file.name}
                         </div>
                         <div className="text-xs text-[#9699a6]">{formatFileSize(file.size)}</div>
@@ -391,17 +391,17 @@ export const FilesCell = memo(function FilesCell({
                             setPreviewIndex(index)
                             setIsOpen(false)
                           }}
-                          className="p-1 rounded hover:bg-[#e6e9ef]"
+                          className="p-1 rounded hover:bg-bg-hover"
                         >
-                          <Eye className="w-4 h-4 text-[#676879]" />
+                          <Eye className="w-4 h-4 text-text-secondary" />
                         </button>
                       </Tooltip>
                       <Tooltip content="Download" side="top" delayDuration={200}>
                         <button
                           onClick={() => handleDownload(file)}
-                          className="p-1 rounded hover:bg-[#e6e9ef]"
+                          className="p-1 rounded hover:bg-bg-hover"
                         >
-                          <Download className="w-4 h-4 text-[#676879]" />
+                          <Download className="w-4 h-4 text-text-secondary" />
                         </button>
                       </Tooltip>
                       {!readOnly && (
@@ -423,7 +423,7 @@ export const FilesCell = memo(function FilesCell({
             {/* Upload indicator */}
             {uploading && (
               <div className="mt-2 pt-2 border-t border-border-light">
-                <div className="flex items-center gap-2 text-sm text-[#676879]">
+                <div className="flex items-center gap-2 text-sm text-text-secondary">
                   <div className="w-4 h-4 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
                   Uploading...
                 </div>

@@ -16,33 +16,38 @@ interface ServiceTypeCellProps {
 
 // Icon mapping for service types
 const SERVICE_ICONS: Record<string, React.ElementType> = {
-  'labor_safety': HardHat,
-  'fire_safety': Flame,
-  'environmental': Leaf,
-  'food_safety': Utensils,
-  'construction': HardHat,
-  'electrical': Zap,
-  'gas_safety': Gauge,
-  'elevator': Gauge,
-  'pressure_vessels': Gauge,
-  'radiation': Shield,
+  labor_safety: HardHat,
+  fire_safety: Flame,
+  environmental: Leaf,
+  food_safety: Utensils,
+  construction: HardHat,
+  electrical: Zap,
+  gas_safety: Gauge,
+  elevator: Gauge,
+  pressure_vessels: Gauge,
+  radiation: Shield,
 }
 
 // Color mapping for service types
 const SERVICE_COLORS: Record<string, string> = {
-  'labor_safety': '#fdab3d',
-  'fire_safety': '#e2445c',
-  'environmental': '#00c875',
-  'food_safety': '#579bfc',
-  'construction': '#784bd1',
-  'electrical': '#ffcb00',
-  'gas_safety': '#ff642e',
-  'elevator': '#a25ddc',
-  'pressure_vessels': '#00d2d2',
-  'radiation': '#bb3354',
+  labor_safety: '#fdab3d',
+  fire_safety: '#e2445c',
+  environmental: '#00c875',
+  food_safety: '#579bfc',
+  construction: '#784bd1',
+  electrical: '#ffcb00',
+  gas_safety: '#ff642e',
+  elevator: '#a25ddc',
+  pressure_vessels: '#00d2d2',
+  radiation: '#bb3354',
 }
 
-export function ServiceTypeCell({ value, onEdit, readOnly = false, onEditStart }: ServiceTypeCellProps) {
+export function ServiceTypeCell({
+  value,
+  onEdit,
+  readOnly = false,
+  onEditStart,
+}: ServiceTypeCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const { serviceTypes } = useServiceTypes()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -80,7 +85,9 @@ export function ServiceTypeCell({ value, onEdit, readOnly = false, onEditStart }
   useEffect(() => {
     if (!isEditing) return
     const handleScroll = () => setIsEditing(false)
-    const scrollParent = containerRef.current?.closest('.overflow-auto, .overflow-y-auto, [style*="overflow"]')
+    const scrollParent = containerRef.current?.closest(
+      '.overflow-auto, .overflow-y-auto, [style*="overflow"]'
+    )
     scrollParent?.addEventListener('scroll', handleScroll, { passive: true })
     return () => scrollParent?.removeEventListener('scroll', handleScroll)
   }, [isEditing])
@@ -93,7 +100,9 @@ export function ServiceTypeCell({ value, onEdit, readOnly = false, onEditStart }
   }
 
   if (readOnly && !value) {
-    return <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+    return (
+      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+    )
   }
 
   if (readOnly && value && selectedType) {
@@ -107,9 +116,7 @@ export function ServiceTypeCell({ value, onEdit, readOnly = false, onEditStart }
         >
           <IconComponent className="w-3 h-3 text-white" />
         </div>
-        <span className="text-sm text-[#323338] truncate">
-          {selectedType.name}
-        </span>
+        <span className="text-sm text-text-primary truncate">{selectedType.name}</span>
       </div>
     )
   }
@@ -128,7 +135,7 @@ export function ServiceTypeCell({ value, onEdit, readOnly = false, onEditStart }
         }}
         className={cn(
           'h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left',
-          !readOnly && 'hover:bg-[#f0f3ff] cursor-pointer',
+          !readOnly && 'hover:bg-bg-hover cursor-pointer',
           readOnly && 'cursor-default'
         )}
       >
@@ -140,27 +147,27 @@ export function ServiceTypeCell({ value, onEdit, readOnly = false, onEditStart }
             >
               <IconComponent className="w-3 h-3 text-white" />
             </div>
-            <span className="text-sm text-[#323338] truncate">
-              {selectedType.name}
-            </span>
+            <span className="text-sm text-text-primary truncate">{selectedType.name}</span>
           </>
         ) : (
           <span className="text-sm text-[#9699a6]">Select service...</span>
         )}
       </button>
 
-      {isEditing && !readOnly && createPortal(
-        <>
-          <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
-          <ServiceTypePicker
-            value={value}
-            onChange={handleChange}
-            onClose={() => setIsEditing(false)}
-            positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
-          />
-        </>,
-        document.body
-      )}
+      {isEditing &&
+        !readOnly &&
+        createPortal(
+          <>
+            <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
+            <ServiceTypePicker
+              value={value}
+              onChange={handleChange}
+              onClose={() => setIsEditing(false)}
+              positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
+            />
+          </>,
+          document.body
+        )}
     </div>
   )
 }
