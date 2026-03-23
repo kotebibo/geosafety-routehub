@@ -358,7 +358,7 @@ export default function WorkspaceSettingsPage() {
                 }}
                 className={cn(
                   'relative w-12 h-6 rounded-full transition-colors',
-                  allowBoardCreation ? 'bg-monday-primary' : 'bg-gray-300'
+                  allowBoardCreation ? 'bg-monday-primary' : 'bg-text-disabled'
                 )}
               >
                 <div
@@ -519,7 +519,7 @@ export default function WorkspaceSettingsPage() {
                           </button>
                         </>
                       ) : (
-                        <span className="px-2 py-1 bg-gray-100 text-text-secondary text-xs font-medium rounded capitalize">
+                        <span className="px-2 py-1 bg-bg-tertiary text-text-secondary text-xs font-medium rounded capitalize">
                           {member.role}
                         </span>
                       )}
@@ -605,7 +605,7 @@ export default function WorkspaceSettingsPage() {
                         className="flex items-center justify-between p-3 rounded-lg hover:bg-bg-hover opacity-60"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded bg-gray-400 flex items-center justify-center text-white text-sm font-medium">
+                          <div className="w-8 h-8 rounded bg-text-tertiary flex items-center justify-center text-white text-sm font-medium">
                             {board.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -647,7 +647,7 @@ export default function WorkspaceSettingsPage() {
             {/* Delete Board Confirmation Modal */}
             {deleteBoardId && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
+                <div className="bg-bg-primary rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
                   <h3 className="text-lg font-semibold text-text-primary mb-2">Delete Board</h3>
                   <p className="text-text-secondary mb-4">
                     Permanently delete <strong>{deleteBoardName}</strong>? All items, groups, and
@@ -706,7 +706,7 @@ export default function WorkspaceSettingsPage() {
             {/* Delete Confirmation Modal */}
             {showDeleteConfirm && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
+                <div className="bg-bg-primary rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
                   <h3 className="text-lg font-semibold text-text-primary mb-4">Delete Workspace</h3>
                   <p className="text-text-secondary mb-4">
                     This action cannot be undone. Please type <strong>{workspace.name}</strong> to

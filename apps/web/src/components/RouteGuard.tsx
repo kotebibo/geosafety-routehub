@@ -44,7 +44,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin text-4xl mb-4">⚙️</div>
-          <p className="text-gray-600">იტვირთება...</p>
+          <p className="text-text-secondary">იტვირთება...</p>
         </div>
       </div>
     )

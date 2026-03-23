@@ -55,7 +55,9 @@ export function BoardPresenceIndicator({
   if (presence.length === 0) {
     return (
       <div className="flex items-center gap-2">
-        <div className={cn('w-2 h-2 rounded-full', isConnected ? 'bg-green-500' : 'bg-gray-400')} />
+        <div
+          className={cn('w-2 h-2 rounded-full', isConnected ? 'bg-green-500' : 'bg-text-tertiary')}
+        />
         <span className="text-xs text-text-tertiary">
           {isConnected ? 'Connected' : 'Connecting...'}
         </span>
@@ -74,7 +76,10 @@ export function BoardPresenceIndicator({
     >
       {/* Connection indicator */}
       <div
-        className={cn('w-2 h-2 rounded-full mr-2', isConnected ? 'bg-green-500' : 'bg-gray-400')}
+        className={cn(
+          'w-2 h-2 rounded-full mr-2',
+          isConnected ? 'bg-green-500' : 'bg-text-tertiary'
+        )}
       />
 
       {/* Avatar stack */}
@@ -96,7 +101,7 @@ export function BoardPresenceIndicator({
               {/* Editing indicator */}
               {user.is_editing && (
                 <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-yellow-400 rounded-full flex items-center justify-center">
-                  <span className="w-1.5 h-1.5 bg-white rounded-sm" />
+                  <span className="w-1.5 h-1.5 bg-bg-primary rounded-sm" />
                 </span>
               )}
             </div>
@@ -106,7 +111,7 @@ export function BoardPresenceIndicator({
         {/* Overflow indicator */}
         {remainingCount > 0 && (
           <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium bg-gray-200 text-gray-600 border-2 border-white"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium bg-bg-tertiary text-text-secondary border-2 border-bg-primary"
             style={{ zIndex: 0 }}
           >
             +{remainingCount}
@@ -116,7 +121,7 @@ export function BoardPresenceIndicator({
 
       {/* Tooltip */}
       {showTooltip && presence.length > 0 && (
-        <div className="absolute top-full left-0 mt-2 z-50 bg-white rounded-lg shadow-lg border border-border-light py-2 px-3 min-w-[200px]">
+        <div className="absolute top-full left-0 mt-2 z-50 bg-bg-primary rounded-lg shadow-lg border border-border-light py-2 px-3 min-w-[200px]">
           <div className="text-xs font-semibold text-text-secondary mb-2">
             {presence.length} viewer{presence.length !== 1 ? 's' : ''} online
           </div>

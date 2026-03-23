@@ -11,7 +11,13 @@ import { boardsService } from '../../services/boards.service'
 import { VirtualizedBoardTable } from '../BoardTable'
 import { queryKeys } from '@/lib/react-query'
 
-import type { GlobalSearchBoardGroup, BoardItem, BoardColumn, BoardGroup, BoardType } from '../../types/board'
+import type {
+  GlobalSearchBoardGroup,
+  BoardItem,
+  BoardColumn,
+  BoardGroup,
+  BoardType,
+} from '../../types/board'
 
 interface GlobalSearchModalProps {
   isOpen: boolean
@@ -49,7 +55,10 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
     boardInfos.forEach((info, i) => {
       const data = columnQueries[i]?.data
       if (data) {
-        map.set(info.boardId, data.filter((c: BoardColumn) => c.is_visible))
+        map.set(
+          info.boardId,
+          data.filter((c: BoardColumn) => c.is_visible)
+        )
       }
     })
     return map
@@ -76,10 +85,13 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [isOpen, onClose])
 
-  const handleRowDoubleClick = useCallback((boardId: string) => (row: BoardItem) => {
-    onClose()
-    router.push(`/boards/${boardId}?item=${row.id}`)
-  }, [onClose, router])
+  const handleRowDoubleClick = useCallback(
+    (boardId: string) => (row: BoardItem) => {
+      onClose()
+      router.push(`/boards/${boardId}?item=${row.id}`)
+    },
+    [onClose, router]
+  )
 
   if (!isOpen) return null
 
@@ -98,7 +110,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
             type="text"
             placeholder="Search across all boards..."
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={e => setQuery(e.target.value)}
             className="flex-1 bg-transparent text-text-primary text-sm outline-none placeholder:text-text-tertiary"
             autoFocus
           />
@@ -107,7 +119,8 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
           )}
           {totalCount > 0 && (
             <span className="text-xs text-text-tertiary flex-shrink-0">
-              {totalCount} result{totalCount !== 1 ? 's' : ''} in {groupedResults.length} board{groupedResults.length !== 1 ? 's' : ''}
+              {totalCount} result{totalCount !== 1 ? 's' : ''} in {groupedResults.length} board
+              {groupedResults.length !== 1 ? 's' : ''}
             </span>
           )}
           <button
@@ -164,7 +177,13 @@ interface SearchBoardSectionProps {
   highlightQuery?: string
 }
 
-function SearchBoardSection({ group, columns, columnsLoading, onRowDoubleClick, highlightQuery }: SearchBoardSectionProps) {
+function SearchBoardSection({
+  group,
+  columns,
+  columnsLoading,
+  onRowDoubleClick,
+  highlightQuery,
+}: SearchBoardSectionProps) {
   // Convert GlobalSearchResult[] to BoardItem[] for VirtualizedBoardTable
   const boardItems: BoardItem[] = useMemo(() => {
     return group.items.map(item => ({
@@ -184,13 +203,18 @@ function SearchBoardSection({ group, columns, columnsLoading, onRowDoubleClick, 
   }, [group.items])
 
   // Use the board name as the group name — this IS the header
-  const groups: BoardGroup[] = useMemo(() => [{
-    id: 'search-group',
-    board_id: group.boardId,
-    name: `${group.boardName} (${group.items.length})`,
-    color: group.boardColor || '#579bfc',
-    position: 0,
-  }], [group.boardId, group.boardName, group.boardColor, group.items.length])
+  const groups: BoardGroup[] = useMemo(
+    () => [
+      {
+        id: 'search-group',
+        board_id: group.boardId,
+        name: `${group.boardName} (${group.items.length})`,
+        color: group.boardColor || '#579bfc',
+        position: 0,
+      },
+    ],
+    [group.boardId, group.boardName, group.boardColor, group.items.length]
+  )
 
   if (columnsLoading) {
     return (
@@ -209,7 +233,7 @@ function SearchBoardSection({ group, columns, columnsLoading, onRowDoubleClick, 
       data={boardItems}
       groups={groups}
       onRowDoubleClick={onRowDoubleClick}
-      scrollContainerClassName="overflow-visible bg-white"
+      scrollContainerClassName="overflow-visible bg-bg-primary"
       highlightQuery={highlightQuery}
     />
   )

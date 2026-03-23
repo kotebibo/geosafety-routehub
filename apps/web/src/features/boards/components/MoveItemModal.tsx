@@ -122,27 +122,27 @@ export function MoveItemModal({
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div
-          className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
+          className="bg-bg-primary rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col"
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
                 <ArrowRightLeft className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <h2 className="font-semibold text-gray-900">
+                <h2 className="font-semibold text-text-primary">
                   Move {isSingleItem ? 'Item' : `${itemIds.length} Items`}
                 </h2>
-                <p className="text-sm text-gray-500">Select destination board</p>
+                <p className="text-sm text-text-tertiary">Select destination board</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-lg hover:bg-bg-hover transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-text-tertiary" />
             </button>
           </div>
 
@@ -150,7 +150,7 @@ export function MoveItemModal({
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
             {/* Board Selector */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-text-secondary mb-2">
                 Destination Board
               </label>
               <div className="relative">
@@ -161,29 +161,29 @@ export function MoveItemModal({
                     'hover:border-monday-primary transition-colors',
                     showBoardDropdown
                       ? 'border-monday-primary ring-2 ring-monday-primary/20'
-                      : 'border-gray-300'
+                      : 'border-border-medium'
                   )}
                 >
-                  <span className={selectedBoard ? 'text-gray-900' : 'text-gray-500'}>
+                  <span className={selectedBoard ? 'text-text-primary' : 'text-text-tertiary'}>
                     {selectedBoard?.name || 'Select a board...'}
                   </span>
                   <ChevronDown
                     className={cn(
-                      'w-5 h-5 text-gray-400 transition-transform',
+                      'w-5 h-5 text-text-tertiary transition-transform',
                       showBoardDropdown && 'rotate-180'
                     )}
                   />
                 </button>
 
                 {showBoardDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto">
+                  <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-80 overflow-y-auto">
                     {boardsLoading ? (
-                      <div className="px-4 py-8 text-center text-gray-500">
+                      <div className="px-4 py-8 text-center text-text-tertiary">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                         Loading boards...
                       </div>
                     ) : availableBoards.length === 0 ? (
-                      <div className="px-4 py-8 text-center text-gray-500">
+                      <div className="px-4 py-8 text-center text-text-tertiary">
                         No other boards available
                       </div>
                     ) : (
@@ -195,13 +195,15 @@ export function MoveItemModal({
                             setShowBoardDropdown(false)
                           }}
                           className={cn(
-                            'w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center justify-between',
+                            'w-full px-4 py-3 text-left hover:bg-bg-hover flex items-center justify-between',
                             board.id === selectedBoardId && 'bg-monday-primary/5'
                           )}
                         >
                           <div>
-                            <p className="font-medium text-gray-900">{board.name}</p>
-                            <p className="text-xs text-gray-500 capitalize">{board.board_type}</p>
+                            <p className="font-medium text-text-primary">{board.name}</p>
+                            <p className="text-xs text-text-tertiary capitalize">
+                              {board.board_type}
+                            </p>
                           </div>
                           {board.id === selectedBoardId && (
                             <Check className="w-5 h-5 text-monday-primary" />
@@ -216,7 +218,7 @@ export function MoveItemModal({
 
             {/* Column Mapping Section */}
             {selectedBoardId && mappingLoading && (
-              <div className="py-8 text-center text-gray-500">
+              <div className="py-8 text-center text-text-tertiary">
                 <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                 Analyzing columns...
               </div>
@@ -225,7 +227,7 @@ export function MoveItemModal({
             {selectedBoardId && mappingData && !mappingData.sameBoardType && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-gray-900">Column Mapping</h3>
+                  <h3 className="font-medium text-text-primary">Column Mapping</h3>
                   {mappingData.needsMapping.length > 0 && (
                     <span className="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">
                       {mappingData.needsMapping.length} unmapped
@@ -233,18 +235,18 @@ export function MoveItemModal({
                   )}
                 </div>
 
-                <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                <div className="border border-border-light rounded-lg divide-y divide-border-light max-h-80 overflow-y-auto">
                   {mappingData.sourceColumns.map(srcCol => (
                     <div key={srcCol.column_id} className="px-4 py-3 flex items-center gap-3">
                       {/* Source Column */}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate text-sm">
+                        <p className="font-medium text-text-primary truncate text-sm">
                           {srcCol.column_name}
                         </p>
-                        <p className="text-xs text-gray-500">{srcCol.column_type}</p>
+                        <p className="text-xs text-text-tertiary">{srcCol.column_type}</p>
                       </div>
 
-                      <ArrowRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                      <ArrowRight className="w-4 h-4 text-text-tertiary flex-shrink-0" />
 
                       {/* Target Column Selector */}
                       <div className="flex-1 min-w-0">
@@ -257,7 +259,7 @@ export function MoveItemModal({
                             'w-full px-2 py-1.5 text-sm border rounded-md',
                             !columnMapping[srcCol.column_id]
                               ? 'border-amber-300 bg-amber-50'
-                              : 'border-gray-300'
+                              : 'border-border-medium'
                           )}
                         >
                           <option value="">-- Skip --</option>
@@ -278,16 +280,16 @@ export function MoveItemModal({
                 </div>
 
                 {/* Preserve Unmapped Option */}
-                <label className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-lg cursor-pointer">
+                <label className="flex items-center gap-3 px-4 py-3 bg-bg-secondary rounded-lg cursor-pointer">
                   <input
                     type="checkbox"
                     checked={preserveUnmapped}
                     onChange={e => setPreserveUnmapped(e.target.checked)}
-                    className="w-4 h-4 text-monday-primary border-gray-300 rounded focus:ring-monday-primary"
+                    className="w-4 h-4 text-monday-primary border-border-medium rounded focus:ring-monday-primary"
                   />
                   <div>
-                    <p className="font-medium text-gray-900 text-sm">Preserve unmapped data</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="font-medium text-text-primary text-sm">Preserve unmapped data</p>
+                    <p className="text-xs text-text-tertiary">
                       Store skipped column values in metadata for recovery
                     </p>
                   </div>
@@ -329,7 +331,7 @@ export function MoveItemModal({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-light bg-bg-secondary">
             <Button variant="secondary" onClick={onClose} disabled={isMoving}>
               Cancel
             </Button>

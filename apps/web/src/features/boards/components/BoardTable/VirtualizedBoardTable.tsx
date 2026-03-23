@@ -668,16 +668,16 @@ export function VirtualizedBoardTable({
               style={{ tableLayout: 'fixed', width: totalTableWidth }}
             >
               <tbody>
-                <tr className="h-9 bg-white">
+                <tr className="h-9 bg-bg-primary">
                   {/* Checkbox column */}
                   {onSelectionChange && (
                     <td
-                      className="w-10 h-9 text-center align-middle bg-white"
+                      className="w-10 h-9 text-center align-middle bg-bg-primary"
                       style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
                     >
                       <input
                         type="checkbox"
-                        className="w-4 h-4 rounded border-gray-300 text-[#0073ea] focus:ring-[#0073ea]"
+                        className="w-4 h-4 rounded border-border-medium text-[#0073ea] focus:ring-[#0073ea]"
                       />
                     </td>
                   )}
@@ -694,7 +694,7 @@ export function VirtualizedBoardTable({
                   />
                   {/* Group info - sticky first col */}
                   <td
-                    className="h-9 px-3 align-middle bg-white"
+                    className="h-9 px-3 align-middle bg-bg-primary"
                     style={{
                       width: getColumnWidth(visibleColumns[0]),
                       position: 'sticky',
@@ -729,7 +729,7 @@ export function VirtualizedBoardTable({
                           onChange={e => setEditingGroupName(e.target.value)}
                           onBlur={handleGroupNameSave}
                           onKeyDown={handleGroupNameKeyDown}
-                          className="font-semibold text-sm bg-white border border-[#0073ea] rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
+                          className="font-semibold text-sm bg-bg-primary border border-[#0073ea] rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
                           style={{ color: group.color || '#579bfc', minWidth: '80px' }}
                           onClick={e => e.stopPropagation()}
                         />
@@ -769,20 +769,20 @@ export function VirtualizedBoardTable({
                             />
                             <div
                               ref={groupMenuRef}
-                              className="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50 py-1"
+                              className="absolute left-0 top-full mt-1 w-48 bg-bg-primary rounded-lg shadow-lg border border-border-light z-50 py-1"
                             >
                               <button
                                 onClick={e => {
                                   e.stopPropagation()
                                   handleGroupNameDoubleClick(e, group)
                                 }}
-                                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2"
+                                className="w-full px-3 py-2 text-left text-sm hover:bg-bg-hover flex items-center gap-2"
                               >
                                 <Type className="w-4 h-4" />
                                 Rename group
                               </button>
                               <div className="px-3 py-2">
-                                <div className="text-xs text-gray-500 mb-2">Change color</div>
+                                <div className="text-xs text-text-tertiary mb-2">Change color</div>
                                 <div className="flex flex-wrap gap-1">
                                   {MONDAY_GROUP_COLORS.map(color => (
                                     <button
@@ -824,12 +824,12 @@ export function VirtualizedBoardTable({
                   {visibleColumns.slice(1).map(col => (
                     <td
                       key={`group-${group.id}-${col.id}`}
-                      className="h-9 bg-white"
+                      className="h-9 bg-bg-primary"
                       style={{ width: getColumnWidth(col) }}
                     />
                   ))}
                   {/* Empty cell for add column */}
-                  <td className="h-9 bg-white w-10" />
+                  <td className="h-9 bg-bg-primary w-10" />
                 </tr>
               </tbody>
             </table>
@@ -969,7 +969,7 @@ export function VirtualizedBoardTable({
                 >
                   {onSelectionChange && (
                     <td
-                      className="bg-white border border-[#c3c6d4] w-10 h-9"
+                      className="bg-bg-primary border border-[#c3c6d4] w-10 h-9"
                       style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
                     />
                   )}
@@ -985,7 +985,7 @@ export function VirtualizedBoardTable({
                     }}
                   />
                   <td
-                    className="bg-white border border-[#c3c6d4] px-3 h-9 text-sm text-[#676879]"
+                    className="bg-bg-primary border border-[#c3c6d4] px-3 h-9 text-sm text-[#676879]"
                     style={{
                       width: getColumnWidth(visibleColumns[0]),
                       position: 'sticky',
@@ -1004,12 +1004,12 @@ export function VirtualizedBoardTable({
                   {visibleColumns.slice(1).map(col => (
                     <td
                       key={`add-${col.id}`}
-                      className="border border-[#c3c6d4] bg-white h-9"
+                      className="border border-[#c3c6d4] bg-bg-primary h-9"
                       style={{ width: getColumnWidth(col) }}
                     />
                   ))}
                   {/* Empty cell for add column */}
-                  <td className="border border-[#c3c6d4] bg-white w-10 h-9" />
+                  <td className="border border-[#c3c6d4] bg-bg-primary w-10 h-9" />
                 </tr>
               </tbody>
             </table>
@@ -1060,7 +1060,7 @@ export function VirtualizedBoardTable({
                 {/* Checkbox column */}
                 {onSelectionChange && (
                   <td
-                    className="bg-white border border-[#c3c6d4] w-10 h-9 text-center"
+                    className="bg-bg-primary border border-[#c3c6d4] w-10 h-9 text-center"
                     style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
                   >
                     <input
@@ -1077,7 +1077,7 @@ export function VirtualizedBoardTable({
                         onSelectionChange(newSelection)
                       }}
                       onClick={e => e.stopPropagation()}
-                      className="w-4 h-4 rounded border-gray-300 text-[#0073ea] focus:ring-[#0073ea]"
+                      className="w-4 h-4 rounded border-border-medium text-[#0073ea] focus:ring-[#0073ea]"
                     />
                   </td>
                 )}
@@ -1105,7 +1105,7 @@ export function VirtualizedBoardTable({
                     <td
                       key={col.id}
                       className={cn(
-                        'bg-white border border-[#c3c6d4] px-0 py-0 text-sm h-9 relative',
+                        'bg-bg-primary border border-[#c3c6d4] px-0 py-0 text-sm h-9 relative',
                         isFocused && !isEditing && 'ring-2 ring-inset ring-[#0073ea]'
                       )}
                       style={{
@@ -1132,7 +1132,7 @@ export function VirtualizedBoardTable({
                   )
                 })}
                 {/* Empty cell for add column alignment */}
-                <td className="bg-white border border-[#c3c6d4] w-10 h-9" />
+                <td className="bg-bg-primary border border-[#c3c6d4] w-10 h-9" />
               </tr>
             </tbody>
           </table>
@@ -1216,7 +1216,7 @@ export function VirtualizedBoardTable({
           ref={scrollContainerRef}
           className={
             scrollContainerClassName ||
-            'h-full overflow-auto border border-[#e6e9ef] rounded-lg bg-white'
+            'h-full overflow-auto border border-[#e6e9ef] rounded-lg bg-bg-primary'
           }
         >
           {/* Horizontal scroll wrapper */}
@@ -1332,7 +1332,7 @@ export function VirtualizedBoardTable({
         {/* Column drag overlay */}
         <DragOverlay>
           {activeColumnId && (
-            <div className="bg-white border-2 border-[#0073ea] rounded px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide shadow-lg">
+            <div className="bg-bg-primary border-2 border-[#0073ea] rounded px-3 py-2 text-xs font-semibold text-[#676879] uppercase tracking-wide shadow-lg">
               {visibleColumns.find(c => c.id === activeColumnId)?.column_name || activeColumnId}
             </div>
           )}

@@ -210,6 +210,18 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.walkthrough.title': 'ინტერაქტიული ტური',
     'settings.walkthrough.description': 'ხელახლა გაიარეთ პლატფორმის ტური',
     'settings.walkthrough.restart': 'ტურის გავლა',
+
+    // Theme settings
+    'settings.tab.appearance': 'გარეგნობა',
+    'settings.appearance.title': 'გარეგნობის პარამეტრები',
+    'settings.appearance.theme': 'თემა',
+    'settings.appearance.themeDesc': 'აირჩიეთ სასურველი ფერთა სქემა',
+    'settings.theme.light': 'ნათელი',
+    'settings.theme.lightDesc': 'კლასიკური ნათელი ინტერფეისი',
+    'settings.theme.dark': 'მუქი',
+    'settings.theme.darkDesc': 'მუქი ფერები, იცავს თვალებს',
+    'settings.theme.night': 'ღამის',
+    'settings.theme.nightDesc': 'ღრმა ლურჯი, კონცენტრაციისთვის',
   },
   en: {
     // Navigation
@@ -406,6 +418,18 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.walkthrough.title': 'Interactive Tour',
     'settings.walkthrough.description': 'Restart the platform walkthrough tour',
     'settings.walkthrough.restart': 'Start Tour',
+
+    // Theme settings
+    'settings.tab.appearance': 'Appearance',
+    'settings.appearance.title': 'Appearance Settings',
+    'settings.appearance.theme': 'Theme',
+    'settings.appearance.themeDesc': 'Choose your preferred color scheme',
+    'settings.theme.light': 'Light',
+    'settings.theme.lightDesc': 'Classic light interface',
+    'settings.theme.dark': 'Dark',
+    'settings.theme.darkDesc': 'Dark colors, easy on the eyes',
+    'settings.theme.night': 'Night',
+    'settings.theme.nightDesc': 'Deep blue, for focused work',
   },
 }
 

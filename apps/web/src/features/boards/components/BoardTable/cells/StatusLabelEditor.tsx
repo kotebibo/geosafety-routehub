@@ -134,20 +134,20 @@ export function StatusLabelEditor({
       {/* Modal */}
       <div
         className={cn(
-          'relative bg-white rounded-lg shadow-xl',
+          'relative bg-bg-primary rounded-lg shadow-xl',
           'w-full max-w-md mx-4',
           'flex flex-col max-h-[80vh]'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Edit Status Labels</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
+          <h2 className="text-lg font-semibold text-text-primary">Edit Status Labels</h2>
           <button
             onClick={handleCancel}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            className="p-1 hover:bg-bg-hover rounded transition-colors"
           >
             <svg
-              className="w-5 h-5 text-gray-500"
+              className="w-5 h-5 text-text-tertiary"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -194,7 +194,7 @@ export function StatusLabelEditor({
                       onChange={e => handleLabelChange(index, e.target.value)}
                       className={cn(
                         'flex-1 px-3 py-2 rounded-md',
-                        'border border-gray-300',
+                        'border border-border-medium',
                         'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                         'text-sm'
                       )}
@@ -206,7 +206,7 @@ export function StatusLabelEditor({
                         onClick={() => handleDelete(index)}
                         className={cn(
                           'p-2 hover:bg-red-50 rounded-md',
-                          'text-gray-400 hover:text-red-500',
+                          'text-text-tertiary hover:text-red-500',
                           'transition-colors',
                           options.length <= 1 && 'opacity-30 cursor-not-allowed'
                         )}
@@ -232,7 +232,10 @@ export function StatusLabelEditor({
                   {/* Color Picker Grid */}
                   {isEditingColor && (
                     <div
-                      className={cn('ml-11 p-3 bg-gray-50 rounded-lg', 'border border-gray-200')}
+                      className={cn(
+                        'ml-11 p-3 bg-bg-secondary rounded-lg',
+                        'border border-border-light'
+                      )}
                     >
                       <div className="grid grid-cols-6 gap-2">
                         {COLOR_PALETTE.map(colorKey => {
@@ -288,9 +291,9 @@ export function StatusLabelEditor({
             onClick={handleAddNew}
             className={cn(
               'mt-4 w-full py-2 px-4',
-              'border-2 border-dashed border-gray-300 rounded-lg',
-              'text-sm text-gray-500 font-medium',
-              'hover:border-gray-400 hover:text-gray-600',
+              'border-2 border-dashed border-border-medium rounded-lg',
+              'text-sm text-text-tertiary font-medium',
+              'hover:border-text-tertiary hover:text-text-secondary',
               'transition-colors',
               'flex items-center justify-center gap-2'
             )}
@@ -308,13 +311,13 @@ export function StatusLabelEditor({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-light">
           <button
             onClick={handleCancel}
             className={cn(
               'px-4 py-2 rounded-md',
-              'text-sm font-medium text-gray-700',
-              'hover:bg-gray-100',
+              'text-sm font-medium text-text-secondary',
+              'hover:bg-bg-hover',
               'transition-colors'
             )}
           >

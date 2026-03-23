@@ -30,7 +30,9 @@ import {
 
 interface ImportBoardModalProps {
   columns: BoardColumn[]
-  onImport: (items: Array<{ name: string; data: Record<string, any>; group_id: string }>) => Promise<void>
+  onImport: (
+    items: Array<{ name: string; data: Record<string, any>; group_id: string }>
+  ) => Promise<void>
   onClose: () => void
   defaultGroupId?: string
 }
@@ -56,63 +58,69 @@ export function ImportBoardModal({
   const dropZoneRef = useRef<HTMLDivElement>(null)
 
   // Handle file selection
-  const handleFileSelect = useCallback(async (selectedFile: File) => {
-    setFile(selectedFile)
-    setErrors([])
+  const handleFileSelect = useCallback(
+    async (selectedFile: File) => {
+      setFile(selectedFile)
+      setErrors([])
 
-    try {
-      let parsedHeaders: string[]
-      let parsedRows: ParsedRow[]
+      try {
+        let parsedHeaders: string[]
+        let parsedRows: ParsedRow[]
 
-      // Use different parsing methods based on file type
-      if (isModernExcel(selectedFile.name)) {
-        // Modern Excel files (.xlsx, .xls) - read as ArrayBuffer
-        const buffer = await readFileAsArrayBuffer(selectedFile)
-        const result = await parseExcelFile(buffer)
-        parsedHeaders = result.headers
-        parsedRows = result.rows
-      } else {
-        // CSV and old XML-based files - read as text
-        const content = await readFileAsText(selectedFile)
-        const result = parseFile(content, selectedFile.name)
-        parsedHeaders = result.headers
-        parsedRows = result.rows
+        // Use different parsing methods based on file type
+        if (isModernExcel(selectedFile.name)) {
+          // Modern Excel files (.xlsx, .xls) - read as ArrayBuffer
+          const buffer = await readFileAsArrayBuffer(selectedFile)
+          const result = await parseExcelFile(buffer)
+          parsedHeaders = result.headers
+          parsedRows = result.rows
+        } else {
+          // CSV and old XML-based files - read as text
+          const content = await readFileAsText(selectedFile)
+          const result = parseFile(content, selectedFile.name)
+          parsedHeaders = result.headers
+          parsedRows = result.rows
+        }
+
+        if (parsedHeaders.length === 0) {
+          setErrors([{ row: 0, message: 'No data found in file. Please check the file format.' }])
+          return
+        }
+
+        setHeaders(parsedHeaders)
+        setRows(parsedRows)
+
+        // Auto-map columns
+        const autoMappings = autoMapColumns(parsedHeaders, columns)
+        setMappings(autoMappings)
+
+        setStep('mapping')
+      } catch (error) {
+        console.error('Error parsing file:', error)
+        setErrors([{ row: 0, message: 'Failed to parse file. Please check the file format.' }])
       }
-
-      if (parsedHeaders.length === 0) {
-        setErrors([{ row: 0, message: 'No data found in file. Please check the file format.' }])
-        return
-      }
-
-      setHeaders(parsedHeaders)
-      setRows(parsedRows)
-
-      // Auto-map columns
-      const autoMappings = autoMapColumns(parsedHeaders, columns)
-      setMappings(autoMappings)
-
-      setStep('mapping')
-    } catch (error) {
-      console.error('Error parsing file:', error)
-      setErrors([{ row: 0, message: 'Failed to parse file. Please check the file format.' }])
-    }
-  }, [columns])
+    },
+    [columns]
+  )
 
   // Handle drag and drop
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
 
-    const droppedFile = e.dataTransfer.files[0]
-    if (droppedFile) {
-      const extension = droppedFile.name.toLowerCase().split('.').pop()
-      if (['csv', 'xls', 'xlsx'].includes(extension || '')) {
-        handleFileSelect(droppedFile)
-      } else {
-        setErrors([{ row: 0, message: 'Please upload a CSV or Excel file.' }])
+      const droppedFile = e.dataTransfer.files[0]
+      if (droppedFile) {
+        const extension = droppedFile.name.toLowerCase().split('.').pop()
+        if (['csv', 'xls', 'xlsx'].includes(extension || '')) {
+          handleFileSelect(droppedFile)
+        } else {
+          setErrors([{ row: 0, message: 'Please upload a CSV or Excel file.' }])
+        }
       }
-    }
-  }, [handleFileSelect])
+    },
+    [handleFileSelect]
+  )
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -126,7 +134,8 @@ export function ImportBoardModal({
       setMappings(prev => prev.filter(m => m.sourceColumn !== sourceColumn))
     } else {
       const targetCol = columns.find(c => c.column_id === targetColumn)
-      const targetType: ColumnType = targetColumn === 'name' ? 'text' : (targetCol?.column_type || 'text')
+      const targetType: ColumnType =
+        targetColumn === 'name' ? 'text' : targetCol?.column_type || 'text'
 
       setMappings(prev => {
         const existing = prev.find(m => m.sourceColumn === sourceColumn)
@@ -212,7 +221,7 @@ export function ImportBoardModal({
                 ref={fileInputRef}
                 type="file"
                 accept=".csv,.xls,.xlsx"
-                onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                onChange={e => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                 className="hidden"
               />
 
@@ -221,9 +230,7 @@ export function ImportBoardModal({
               <h3 className="text-lg font-semibold text-text-primary mb-2">
                 Drop your file here or click to upload
               </h3>
-              <p className="text-sm text-text-secondary mb-4">
-                Supported formats: CSV, XLS, XLSX
-              </p>
+              <p className="text-sm text-text-secondary mb-4">Supported formats: CSV, XLS, XLSX</p>
 
               <div className="flex items-center justify-center gap-2 text-sm text-text-tertiary">
                 <Upload className="w-4 h-4" />
@@ -268,57 +275,54 @@ export function ImportBoardModal({
                 Map columns from your file to board columns
               </h3>
               <p className="text-xs text-text-tertiary mb-2">
-                Columns are mapped by position (same order as your board). First column becomes item name.
+                Columns are mapped by position (same order as your board). First column becomes item
+                name.
               </p>
-              <p className="text-xs text-text-tertiary mb-4">
-                Adjust mappings below if needed.
-              </p>
+              <p className="text-xs text-text-tertiary mb-4">Adjust mappings below if needed.</p>
             </div>
 
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {headers.map((sourceHeader, index) => {
                 const mapping = mappings.find(m => m.sourceColumn === sourceHeader)
                 return (
-                <div
-                  key={sourceHeader}
-                  className="flex items-center gap-3 p-3 bg-bg-secondary rounded-lg"
-                >
-                  <div className="w-6 text-xs text-text-tertiary text-center">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium text-text-primary truncate">
-                      {sourceHeader}
-                    </div>
-                    <div className="text-xs text-text-tertiary truncate">
-                      Sample: {rows[0]?.[sourceHeader] || '(empty)'}
-                    </div>
-                  </div>
-
-                  <ArrowRight className="w-4 h-4 text-text-tertiary flex-shrink-0" />
-
-                  <div className="flex-1 min-w-0">
-                    <select
-                      value={getMappedTarget(sourceHeader) || ''}
-                      onChange={(e) => updateMapping(sourceHeader, e.target.value || null)}
-                      className="w-full px-3 py-2 border border-border-light rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-monday-primary"
-                    >
-                      <option value="">-- Skip this column --</option>
-                      <option value="name">Name (Item Title)</option>
-                      {columns.map(col => (
-                        <option key={col.id} value={col.column_id}>
-                          {col.column_name} ({col.column_type})
-                        </option>
-                      ))}
-                    </select>
-                    {mapping && (
-                      <div className="text-xs text-text-tertiary mt-1">
-                        Type: {mapping.targetColumnType}
+                  <div
+                    key={sourceHeader}
+                    className="flex items-center gap-3 p-3 bg-bg-secondary rounded-lg"
+                  >
+                    <div className="w-6 text-xs text-text-tertiary text-center">{index + 1}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-text-primary truncate">
+                        {sourceHeader}
                       </div>
-                    )}
+                      <div className="text-xs text-text-tertiary truncate">
+                        Sample: {rows[0]?.[sourceHeader] || '(empty)'}
+                      </div>
+                    </div>
+
+                    <ArrowRight className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+
+                    <div className="flex-1 min-w-0">
+                      <select
+                        value={getMappedTarget(sourceHeader) || ''}
+                        onChange={e => updateMapping(sourceHeader, e.target.value || null)}
+                        className="w-full px-3 py-2 border border-border-light rounded-md text-sm bg-bg-primary focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                      >
+                        <option value="">-- Skip this column --</option>
+                        <option value="name">Name (Item Title)</option>
+                        {columns.map(col => (
+                          <option key={col.id} value={col.column_id}>
+                            {col.column_name} ({col.column_type})
+                          </option>
+                        ))}
+                      </select>
+                      {mapping && (
+                        <div className="text-xs text-text-tertiary mt-1">
+                          Type: {mapping.targetColumnType}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )
+                )
               })}
             </div>
 
@@ -362,9 +366,7 @@ export function ImportBoardModal({
                         Row {error.row}: {error.message}
                       </li>
                     ))}
-                    {errors.length > 5 && (
-                      <li>...and {errors.length - 5} more</li>
-                    )}
+                    {errors.length > 5 && <li>...and {errors.length - 5} more</li>}
                   </ul>
                 </div>
               )}
@@ -383,7 +385,10 @@ export function ImportBoardModal({
                       .map(mapping => {
                         const col = columns.find(c => c.column_id === mapping.targetColumn)
                         return (
-                          <th key={mapping.targetColumn} className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                          <th
+                            key={mapping.targetColumn}
+                            className="px-3 py-2 text-left text-xs font-semibold text-text-secondary"
+                          >
                             {col?.column_name || mapping.targetColumn}
                           </th>
                         )
@@ -434,12 +439,8 @@ export function ImportBoardModal({
         return (
           <div className="p-6 text-center">
             <Loader2 className="w-12 h-12 mx-auto mb-4 text-monday-primary animate-spin" />
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
-              Importing items...
-            </h3>
-            <p className="text-sm text-text-secondary mb-4">
-              Please don't close this window
-            </p>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Importing items...</h3>
+            <p className="text-sm text-text-secondary mb-4">Please don't close this window</p>
 
             <div className="w-full bg-bg-secondary rounded-full h-2 mb-2">
               <div
@@ -455,9 +456,7 @@ export function ImportBoardModal({
         return (
           <div className="p-6 text-center">
             <CheckCircle className="w-16 h-16 mx-auto mb-4 text-status-done" />
-            <h3 className="text-lg font-semibold text-text-primary mb-2">
-              Import Complete!
-            </h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">Import Complete!</h3>
             <p className="text-sm text-text-secondary mb-4">
               Successfully imported {importResult?.success} items
               {importResult?.failed ? ` (${importResult.failed} failed)` : ''}
@@ -477,25 +476,17 @@ export function ImportBoardModal({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="relative bg-bg-primary rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
           <div>
             <h2 className="text-lg font-semibold text-text-primary">Import Data</h2>
-            <p className="text-sm text-text-tertiary">
-              Import items from CSV or Excel file
-            </p>
+            <p className="text-sm text-text-tertiary">Import items from CSV or Excel file</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-bg-hover rounded-md transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-bg-hover rounded-md transition-colors">
             <X className="w-5 h-5 text-text-tertiary" />
           </button>
         </div>
@@ -516,7 +507,8 @@ export function ImportBoardModal({
                       'w-6 h-6 rounded-full flex items-center justify-center text-xs',
                       step === s
                         ? 'bg-monday-primary text-white'
-                        : (['mapping', 'preview'].indexOf(step) > ['upload', 'mapping', 'preview'].indexOf(s))
+                        : ['mapping', 'preview'].indexOf(step) >
+                            ['upload', 'mapping', 'preview'].indexOf(s)
                           ? 'bg-status-done text-white'
                           : 'bg-bg-secondary border border-border-light'
                     )}
@@ -527,9 +519,7 @@ export function ImportBoardModal({
                     {s === 'upload' ? 'Upload' : s === 'mapping' ? 'Map Columns' : 'Preview'}
                   </span>
                 </div>
-                {index < 2 && (
-                  <div className="flex-1 h-px bg-border-light" />
-                )}
+                {index < 2 && <div className="flex-1 h-px bg-border-light" />}
               </React.Fragment>
             ))}
           </div>

@@ -332,7 +332,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               {showExportMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
-                  <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-lg shadow-lg border border-border-light z-50 py-1">
+                  <div className="absolute right-0 top-full mt-1 w-44 bg-bg-primary rounded-lg shadow-lg border border-border-light z-50 py-1">
                     <button
                       onClick={() => handlers.handleExport('csv', filteredItems)}
                       className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"

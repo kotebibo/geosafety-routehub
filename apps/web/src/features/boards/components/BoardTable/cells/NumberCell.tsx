@@ -4,7 +4,13 @@ import { HighlightText } from '@/shared/components/HighlightText'
 import { OverflowTooltip } from './OverflowTooltip'
 import type { CellRendererProps } from '../types'
 
-export const NumberCell = memo(function NumberCell({ value, onEdit, column, onEditStart, highlightQuery }: CellRendererProps) {
+export const NumberCell = memo(function NumberCell({
+  value,
+  onEdit,
+  column,
+  onEditStart,
+  highlightQuery,
+}: CellRendererProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value?.toString() || '')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -58,12 +64,12 @@ export const NumberCell = memo(function NumberCell({ value, onEdit, column, onEd
         ref={inputRef}
         type="number"
         value={editValue}
-        onChange={(e) => setEditValue(e.target.value)}
+        onChange={e => setEditValue(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyDown}
         className={cn(
           'w-full h-full min-h-[36px] px-2',
-          'bg-white border-2 border-[#6161ff] rounded',
+          'bg-bg-primary border-2 border-[#6161ff] rounded',
           'text-[#323338] text-sm text-right',
           'focus:outline-none'
         )}
@@ -85,7 +91,10 @@ export const NumberCell = memo(function NumberCell({ value, onEdit, column, onEd
       )}
     >
       {value !== null && value !== undefined ? (
-        <OverflowTooltip text={String(formatNumber(value) ?? value)} className="text-[#323338] truncate block">
+        <OverflowTooltip
+          text={String(formatNumber(value) ?? value)}
+          className="text-[#323338] truncate block"
+        >
           {highlightQuery ? (
             <HighlightText text={String(formatNumber(value) ?? value)} query={highlightQuery} />
           ) : (

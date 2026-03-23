@@ -1,6 +1,6 @@
 /**
  * Error Boundary Component
- * 
+ *
  * Catches JavaScript errors anywhere in the component tree,
  * logs those errors, and displays a fallback UI.
  */
@@ -60,8 +60,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
       // Default fallback UI
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-          <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
+        <div className="min-h-screen flex items-center justify-center bg-bg-secondary px-4">
+          <div className="max-w-md w-full bg-bg-primary rounded-lg shadow-lg p-6">
             <div className="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
               <svg
                 className="w-6 h-6 text-red-600"
@@ -78,21 +78,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
               </svg>
             </div>
 
-            <h2 className="text-2xl font-bold text-center text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-center text-text-primary mb-2">
               რაღაც შეცდომა მოხდა
             </h2>
-            
-            <p className="text-center text-gray-600 mb-6">
+
+            <p className="text-center text-text-secondary mb-6">
               ვწუხვართ, მოხდა მოულოდნელი შეცდომა. გთხოვთ სცადოთ თავიდან.
             </p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="mb-6 p-4 bg-gray-100 rounded-lg overflow-auto max-h-48">
-                <p className="text-sm font-mono text-red-600 mb-2">
-                  {this.state.error.toString()}
-                </p>
+              <div className="mb-6 p-4 bg-bg-tertiary rounded-lg overflow-auto max-h-48">
+                <p className="text-sm font-mono text-red-600 mb-2">{this.state.error.toString()}</p>
                 {this.state.errorInfo && (
-                  <pre className="text-xs text-gray-700 whitespace-pre-wrap">
+                  <pre className="text-xs text-text-secondary whitespace-pre-wrap">
                     {this.state.errorInfo.componentStack}
                   </pre>
                 )}
@@ -107,8 +105,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 თავიდან ცდა
               </button>
               <button
-                onClick={() => window.location.href = '/'}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                onClick={() => (window.location.href = '/')}
+                className="flex-1 px-4 py-2 bg-bg-tertiary text-text-secondary rounded-lg hover:bg-bg-hover transition-colors"
               >
                 მთავარ გვერდზე დაბრუნება
               </button>
@@ -129,14 +127,10 @@ export function PageErrorBoundary({ children }: { children: ReactNode }) {
   return (
     <ErrorBoundary
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-bg-secondary">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              რაღაც შეცდომა მოხდა
-            </h1>
-            <p className="text-gray-600 mb-6">
-              გვერდის ჩატვირთვისას მოხდა შეცდომა
-            </p>
+            <h1 className="text-4xl font-bold text-text-primary mb-4">რაღაც შეცდომა მოხდა</h1>
+            <p className="text-text-secondary mb-6">გვერდის ჩატვირთვისას მოხდა შეცდომა</p>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -155,12 +149,12 @@ export function PageErrorBoundary({ children }: { children: ReactNode }) {
 /**
  * Component-level error boundary (smaller fallback)
  */
-export function ComponentErrorBoundary({ 
+export function ComponentErrorBoundary({
   children,
-  componentName 
-}: { 
+  componentName,
+}: {
   children: ReactNode
-  componentName?: string 
+  componentName?: string
 }) {
   return (
     <ErrorBoundary

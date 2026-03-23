@@ -116,7 +116,7 @@ export function FilePreviewModal({
       {/* Modal */}
       <div className="relative w-[90vw] h-[90vh] max-w-[1200px] bg-[#f5f6f8] rounded-xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-[#e6e9ef]">
+        <div className="flex items-center justify-between px-4 py-3 bg-bg-primary border-b border-[#e6e9ef]">
           <div className="flex items-center gap-3 min-w-0">
             <span className="text-sm font-medium text-[#323338] truncate">{file.name}</span>
             {canNavigate && (
@@ -156,7 +156,7 @@ export function FilePreviewModal({
                 'absolute left-3 top-1/2 -translate-y-1/2',
                 'w-10 h-10 rounded-full bg-white/90 shadow-md',
                 'flex items-center justify-center',
-                'hover:bg-white transition-colors'
+                'hover:bg-bg-primary transition-colors'
               )}
             >
               <ChevronLeft className="w-5 h-5 text-[#323338]" />
@@ -169,7 +169,7 @@ export function FilePreviewModal({
                 'absolute right-3 top-1/2 -translate-y-1/2',
                 'w-10 h-10 rounded-full bg-white/90 shadow-md',
                 'flex items-center justify-center',
-                'hover:bg-white transition-colors'
+                'hover:bg-bg-primary transition-colors'
               )}
             >
               <ChevronRight className="w-5 h-5 text-[#323338]" />

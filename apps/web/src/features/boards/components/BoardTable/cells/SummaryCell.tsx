@@ -1,6 +1,11 @@
 import { memo, useMemo, useState, useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { MONDAY_COLORS, getColorInfo, DEFAULT_STATUS_OPTIONS, type StatusOption } from './StatusCell'
+import {
+  MONDAY_COLORS,
+  getColorInfo,
+  DEFAULT_STATUS_OPTIONS,
+  type StatusOption,
+} from './StatusCell'
 import type { BoardColumn } from '@/types/board'
 import type { BoardItem } from '../../../types/board'
 
@@ -111,13 +116,11 @@ const StatusSummaryCell = memo(function StatusSummaryCell({
           color: opt.color || 'explosive',
         }))
       } else {
-        statusOptions = Object.entries(column.config.options).map(
-          ([key, opt]: [string, any]) => ({
-            key,
-            label: opt.label || key,
-            color: opt.color || 'explosive',
-          })
-        )
+        statusOptions = Object.entries(column.config.options).map(([key, opt]: [string, any]) => ({
+          key,
+          label: opt.label || key,
+          color: opt.color || 'explosive',
+        }))
       }
     }
 
@@ -178,7 +181,7 @@ const StatusSummaryCell = memo(function StatusSummaryCell({
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="w-full h-4 rounded-sm overflow-hidden flex">
-        {distribution.map((segment) => (
+        {distribution.map(segment => (
           <div
             key={segment.key}
             className="h-full"
@@ -192,51 +195,60 @@ const StatusSummaryCell = memo(function StatusSummaryCell({
       </div>
 
       {/* Detailed breakdown popup - portaled */}
-      {isHovered && createPortal(
-        <div
-          style={{ top: tooltipPos.top, left: tooltipPos.left, transform: 'translate(-50%, -100%)' }}
-          className="fixed z-[9999] bg-white rounded-lg shadow-xl border border-[#e6e9ef] pointer-events-none min-w-[200px]"
-        >
-          {/* Header */}
-          <div className="px-3 py-2 border-b border-[#e6e9ef]">
-            <span className="text-xs font-semibold text-[#323338]">{column.column_name}</span>
-            <span className="text-xs text-[#676879] ml-1">({total} items)</span>
-          </div>
-          {/* Segments */}
-          <div className="px-3 py-1.5">
-            {distribution.map((segment) => (
-              <div key={segment.key} className="flex items-center gap-2 py-1">
-                <div
-                  className="w-3 h-3 rounded-sm flex-shrink-0"
-                  style={{ backgroundColor: segment.hex }}
-                />
-                <span className="text-xs text-[#323338] flex-1 truncate">{segment.label}</span>
-                <span className="text-xs font-medium text-[#323338] tabular-nums">{segment.count}</span>
-                <span className="text-xs text-[#676879] tabular-nums w-9 text-right">{segment.percentage}%</span>
-              </div>
-            ))}
-          </div>
-          {/* Bar preview at bottom */}
-          <div className="px-3 pb-2 pt-1">
-            <div className="w-full h-2 rounded-full overflow-hidden flex">
-              {distribution.map((segment) => (
-                <div
-                  key={segment.key}
-                  className="h-full"
-                  style={{
-                    width: `${segment.percentage}%`,
-                    backgroundColor: segment.hex,
-                    minWidth: segment.percentage > 0 ? '2px' : '0px',
-                  }}
-                />
+      {isHovered &&
+        createPortal(
+          <div
+            style={{
+              top: tooltipPos.top,
+              left: tooltipPos.left,
+              transform: 'translate(-50%, -100%)',
+            }}
+            className="fixed z-[9999] bg-bg-primary rounded-lg shadow-xl border border-[#e6e9ef] pointer-events-none min-w-[200px]"
+          >
+            {/* Header */}
+            <div className="px-3 py-2 border-b border-[#e6e9ef]">
+              <span className="text-xs font-semibold text-[#323338]">{column.column_name}</span>
+              <span className="text-xs text-[#676879] ml-1">({total} items)</span>
+            </div>
+            {/* Segments */}
+            <div className="px-3 py-1.5">
+              {distribution.map(segment => (
+                <div key={segment.key} className="flex items-center gap-2 py-1">
+                  <div
+                    className="w-3 h-3 rounded-sm flex-shrink-0"
+                    style={{ backgroundColor: segment.hex }}
+                  />
+                  <span className="text-xs text-[#323338] flex-1 truncate">{segment.label}</span>
+                  <span className="text-xs font-medium text-[#323338] tabular-nums">
+                    {segment.count}
+                  </span>
+                  <span className="text-xs text-[#676879] tabular-nums w-9 text-right">
+                    {segment.percentage}%
+                  </span>
+                </div>
               ))}
             </div>
-          </div>
-          {/* Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-white drop-shadow-sm" />
-        </div>,
-        document.body
-      )}
+            {/* Bar preview at bottom */}
+            <div className="px-3 pb-2 pt-1">
+              <div className="w-full h-2 rounded-full overflow-hidden flex">
+                {distribution.map(segment => (
+                  <div
+                    key={segment.key}
+                    className="h-full"
+                    style={{
+                      width: `${segment.percentage}%`,
+                      backgroundColor: segment.hex,
+                      minWidth: segment.percentage > 0 ? '2px' : '0px',
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            {/* Arrow */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-white drop-shadow-sm" />
+          </div>,
+          document.body
+        )}
     </div>
   )
 })

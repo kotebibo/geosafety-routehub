@@ -149,10 +149,10 @@ export function ActivityLog({
 
   if (isLoading) {
     return (
-      <div className={cn('bg-white rounded-lg border border-gray-200', className)}>
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
-          <History className="w-5 h-5 text-gray-400 animate-pulse" />
-          <span className="font-medium text-gray-600">Loading activity...</span>
+      <div className={cn('bg-bg-primary rounded-lg border border-border-light', className)}>
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-border-light">
+          <History className="w-5 h-5 text-text-tertiary animate-pulse" />
+          <span className="font-medium text-text-secondary">Loading activity...</span>
         </div>
         <div className="p-4 space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
@@ -165,10 +165,15 @@ export function ActivityLog({
 
   if (updates.length === 0) {
     return (
-      <div className={cn('bg-white rounded-lg border border-gray-200 p-8 text-center', className)}>
-        <History className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-        <p className="text-gray-500 font-medium text-lg">No activity yet</p>
-        <p className="text-gray-400 text-sm mt-1">Changes to board items will appear here</p>
+      <div
+        className={cn(
+          'bg-bg-primary rounded-lg border border-border-light p-8 text-center',
+          className
+        )}
+      >
+        <History className="w-16 h-16 text-text-disabled mx-auto mb-4" />
+        <p className="text-text-tertiary font-medium text-lg">No activity yet</p>
+        <p className="text-text-tertiary text-sm mt-1">Changes to board items will appear here</p>
       </div>
     )
   }
@@ -176,16 +181,16 @@ export function ActivityLog({
   return (
     <div
       className={cn(
-        'bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col',
+        'bg-bg-primary rounded-lg border border-border-light overflow-hidden flex flex-col',
         className
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 bg-gray-50 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-border-light bg-bg-secondary flex-shrink-0">
         <div className="flex items-center gap-2">
-          <History className="w-5 h-5 text-gray-600" />
-          <span className="font-semibold text-gray-800">Activity History</span>
-          <span className="text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full border">
+          <History className="w-5 h-5 text-text-secondary" />
+          <span className="font-semibold text-text-primary">Activity History</span>
+          <span className="text-xs text-text-tertiary bg-bg-primary px-2 py-0.5 rounded-full border">
             {updates.length} changes
           </span>
         </div>
@@ -193,9 +198,9 @@ export function ActivityLog({
           <Tooltip content="Refresh" side="top" delayDuration={200}>
             <button
               onClick={onRefresh}
-              className="p-1.5 rounded hover:bg-gray-200 transition-colors"
+              className="p-1.5 rounded hover:bg-bg-hover transition-colors"
             >
-              <RefreshCw className="w-4 h-4 text-gray-600" />
+              <RefreshCw className="w-4 h-4 text-text-secondary" />
             </button>
           </Tooltip>
         )}
@@ -204,17 +209,19 @@ export function ActivityLog({
       {/* Table - scrolls both horizontally and vertically */}
       <div className="flex-1 overflow-auto" style={{ maxHeight }}>
         <table className="w-full text-sm min-w-[900px]">
-          <thead className="bg-gray-50 sticky top-0">
-            <tr className="border-b border-gray-200">
-              <th className="text-left px-4 py-2 font-medium text-gray-600 w-36">Time</th>
-              <th className="text-left px-4 py-2 font-medium text-gray-600 w-32">User</th>
-              <th className="text-left px-4 py-2 font-medium text-gray-600 w-28">Type</th>
-              <th className="text-left px-4 py-2 font-medium text-gray-600 w-32">Column</th>
-              <th className="text-left px-4 py-2 font-medium text-gray-600">Old Value</th>
+          <thead className="bg-bg-secondary sticky top-0">
+            <tr className="border-b border-border-light">
+              <th className="text-left px-4 py-2 font-medium text-text-secondary w-36">Time</th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary w-32">User</th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary w-28">Type</th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary w-32">Column</th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary">Old Value</th>
               <th className="text-center px-2 py-2 w-8"></th>
-              <th className="text-left px-4 py-2 font-medium text-gray-600">New Value</th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary">New Value</th>
               {showRollback && (
-                <th className="text-center px-4 py-2 font-medium text-gray-600 w-20">Action</th>
+                <th className="text-center px-4 py-2 font-medium text-text-secondary w-20">
+                  Action
+                </th>
               )}
             </tr>
           </thead>
@@ -240,9 +247,9 @@ export function ActivityLog({
                   onMouseLeave={() => setHoveredRow(null)}
                 >
                   {/* Time */}
-                  <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                  <td className="px-4 py-3 text-text-tertiary whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-gray-400" />
+                      <Clock className="w-3.5 h-3.5 text-text-tertiary" />
                       <span>{formatDateTime(update.created_at)}</span>
                     </div>
                   </td>
@@ -250,7 +257,7 @@ export function ActivityLog({
                   {/* User */}
                   <td className="px-4 py-3">
                     <Tooltip content={update.user_name} side="top" delayDuration={200}>
-                      <span className="font-medium text-gray-700 truncate block max-w-[120px]">
+                      <span className="font-medium text-text-secondary truncate block max-w-[120px]">
                         {update.user_name || 'System'}
                       </span>
                     </Tooltip>
@@ -270,7 +277,7 @@ export function ActivityLog({
 
                   {/* Column */}
                   <td className="px-4 py-3">
-                    <span className="text-gray-700 font-medium">
+                    <span className="text-text-secondary font-medium">
                       {update.column_name ||
                         update.metadata?.displayName ||
                         update.field_name ||
@@ -280,7 +287,7 @@ export function ActivityLog({
                     {update.update_type === 'moved_to_board' &&
                       update.source_board_name &&
                       update.target_board_name && (
-                        <span className="block text-xs text-gray-500 mt-0.5">
+                        <span className="block text-xs text-text-tertiary mt-0.5">
                           {update.source_board_name} → {update.target_board_name}
                         </span>
                       )}
@@ -299,7 +306,7 @@ export function ActivityLog({
                         </span>
                       </Tooltip>
                     ) : (
-                      <span className="text-gray-300">-</span>
+                      <span className="text-text-disabled">-</span>
                     )}
                   </td>
 
@@ -308,7 +315,7 @@ export function ActivityLog({
                     {(update.old_value || update.new_value) &&
                     update.update_type !== 'created' &&
                     update.update_type !== 'deleted' ? (
-                      <ArrowRight className="w-4 h-4 text-gray-400 inline" />
+                      <ArrowRight className="w-4 h-4 text-text-tertiary inline" />
                     ) : null}
                   </td>
 
@@ -326,12 +333,12 @@ export function ActivityLog({
                       </Tooltip>
                     ) : update.content ? (
                       <Tooltip content={update.content} side="top" delayDuration={200}>
-                        <span className="text-gray-600 text-xs truncate block max-w-[150px]">
+                        <span className="text-text-secondary text-xs truncate block max-w-[150px]">
                           {update.content}
                         </span>
                       </Tooltip>
                     ) : (
-                      <span className="text-gray-300">-</span>
+                      <span className="text-text-disabled">-</span>
                     )}
                   </td>
 
@@ -354,7 +361,7 @@ export function ActivityLog({
                           </button>
                         </Tooltip>
                       ) : (
-                        <span className="text-gray-300">-</span>
+                        <span className="text-text-disabled">-</span>
                       )}
                     </td>
                   )}
@@ -383,20 +390,20 @@ export function ActivityLogPanel({ isOpen, onClose, ...props }: ActivityLogPanel
       <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
 
       {/* Side Panel */}
-      <div className="fixed inset-y-0 right-0 w-[600px] max-w-[95vw] bg-white shadow-2xl z-50 flex flex-col">
+      <div className="fixed inset-y-0 right-0 w-[600px] max-w-[95vw] bg-bg-primary shadow-2xl z-50 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 bg-white flex-shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-light bg-bg-primary flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
               <History className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <h2 className="font-semibold text-gray-900">Activity Log</h2>
-              <p className="text-xs text-gray-500">Track all changes</p>
+              <h2 className="font-semibold text-text-primary">Activity Log</h2>
+              <p className="text-xs text-text-tertiary">Track all changes</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-bg-hover transition-colors">
+            <X className="w-5 h-5 text-text-tertiary" />
           </button>
         </div>
 

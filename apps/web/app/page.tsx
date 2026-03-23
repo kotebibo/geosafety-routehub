@@ -32,7 +32,7 @@ export default function HomePage() {
             <div className="w-24 h-24 border-4 border-blue-200 rounded-full animate-pulse"></div>
             <div className="absolute inset-0 w-24 h-24 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div>
           </div>
-          <p className="mt-4 text-gray-600 animate-pulse">{t('common.loading')}</p>
+          <p className="mt-4 text-text-secondary animate-pulse">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -114,18 +114,18 @@ export default function HomePage() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6 animate-fade-in">
+            <h1 className="text-5xl md:text-6xl font-bold text-text-primary mb-6 animate-fade-in">
               {t('home.title')}
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-600 mb-4 animate-fade-in animation-delay-200">
+            <p className="text-xl md:text-2xl text-text-secondary mb-4 animate-fade-in animation-delay-200">
               {t('home.subtitle')}
             </p>
 
             {user && (
               <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg animate-fade-in animation-delay-400">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-gray-700">
+                <span className="text-text-secondary">
                   {t('home.greeting')}, <strong>{user.email}</strong>
                 </span>
               </div>
@@ -138,7 +138,7 @@ export default function HomePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-10">
         {quickLinks.length > 0 && (
           <div className="mb-12">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            <h2 className="text-2xl font-bold text-text-primary mb-6 text-center">
               {t('home.quickActions')}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -148,7 +148,7 @@ export default function HomePage() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className="group relative overflow-hidden bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                    className="group relative overflow-hidden bg-bg-primary rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
                     style={{
                       animation: `fadeInUp 0.5s ease-out ${index * 0.1}s both`,
                     }}
@@ -163,12 +163,12 @@ export default function HomePage() {
                         >
                           <Icon className="w-8 h-8" />
                         </div>
-                        <ArrowRight className="w-6 h-6 text-gray-400 group-hover:text-white transform group-hover:translate-x-2 transition-all duration-300" />
+                        <ArrowRight className="w-6 h-6 text-text-tertiary group-hover:text-white transform group-hover:translate-x-2 transition-all duration-300" />
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900 group-hover:text-white mb-1 transition-colors duration-300">
+                      <h3 className="text-lg font-bold text-text-primary group-hover:text-white mb-1 transition-colors duration-300">
                         {t(link.labelKey)}
                       </h3>
-                      <p className="text-sm text-gray-600 group-hover:text-white/90 transition-colors duration-300">
+                      <p className="text-sm text-text-secondary group-hover:text-white/90 transition-colors duration-300">
                         {t(link.descriptionKey)}
                       </p>
                     </div>
@@ -182,8 +182,8 @@ export default function HomePage() {
         {/* Call to Action */}
         {!user && (
           <div className="text-center py-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">{t('home.readyToStart')}</h2>
-            <p className="text-lg text-gray-600 mb-8">{t('home.joinCompanies')}</p>
+            <h2 className="text-3xl font-bold text-text-primary mb-4">{t('home.readyToStart')}</h2>
+            <p className="text-lg text-text-secondary mb-8">{t('home.joinCompanies')}</p>
             <div className="flex gap-4 justify-center">
               <Link
                 href="/auth/login"
@@ -193,7 +193,7 @@ export default function HomePage() {
               </Link>
               <Link
                 href="/auth/register"
-                className="px-8 py-3 bg-white text-blue-600 font-semibold rounded-xl border-2 border-blue-600 hover:bg-blue-50 transform hover:scale-105 transition-all duration-300"
+                className="px-8 py-3 bg-bg-primary text-blue-600 font-semibold rounded-xl border-2 border-blue-600 hover:bg-blue-50 transform hover:scale-105 transition-all duration-300"
               >
                 {t('home.register')}
               </Link>
@@ -203,23 +203,35 @@ export default function HomePage() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-20 border-t border-gray-200 bg-white/50 backdrop-blur-sm">
+      <footer className="mt-20 border-t border-border-light bg-bg-primary/50 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-4 md:mb-0">
-              <p className="text-sm text-gray-600">{t('home.copyright')}</p>
+              <p className="text-sm text-text-secondary">{t('home.copyright')}</p>
             </div>
             <div className="flex gap-6">
-              <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+              <a
+                href="#"
+                className="text-sm text-text-secondary hover:text-blue-600 transition-colors"
+              >
                 {t('home.about')}
               </a>
-              <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+              <a
+                href="#"
+                className="text-sm text-text-secondary hover:text-blue-600 transition-colors"
+              >
                 {t('home.documentation')}
               </a>
-              <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+              <a
+                href="#"
+                className="text-sm text-text-secondary hover:text-blue-600 transition-colors"
+              >
                 {t('home.support')}
               </a>
-              <a href="#" className="text-sm text-gray-600 hover:text-blue-600 transition-colors">
+              <a
+                href="#"
+                className="text-sm text-text-secondary hover:text-blue-600 transition-colors"
+              >
                 {t('home.contact')}
               </a>
             </div>

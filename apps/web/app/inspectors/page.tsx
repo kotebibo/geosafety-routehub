@@ -34,7 +34,7 @@ export default function InspectorsPage() {
   const inactiveInspectors = inspectors.filter(i => i.status === 'inactive')
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-bg-secondary">
       <PageHeader
         title="ოფიცრები"
         description="ყველა რეგისტრირებული ოფიცერი"

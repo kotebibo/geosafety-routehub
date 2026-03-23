@@ -24,7 +24,7 @@ function TableSkeleton({ rows = 8 }: { rows?: number }) {
   return (
     <div className="space-y-3">
       {/* Table header */}
-      <div className="flex gap-4 p-4 bg-gray-50 rounded-lg">
+      <div className="flex gap-4 p-4 bg-bg-secondary rounded-lg">
         <SkeletonPulse className="h-4 w-32" />
         <SkeletonPulse className="h-4 w-24" />
         <SkeletonPulse className="h-4 w-28" />
@@ -33,7 +33,7 @@ function TableSkeleton({ rows = 8 }: { rows?: number }) {
       </div>
       {/* Table rows */}
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex gap-4 p-4 border-b border-gray-100">
+        <div key={i} className="flex gap-4 p-4 border-b border-border-light">
           <SkeletonPulse className="h-4 w-32" />
           <SkeletonPulse className="h-4 w-24" />
           <SkeletonPulse className="h-4 w-28" />
@@ -49,23 +49,23 @@ function BoardSkeleton() {
   return (
     <div className="space-y-4">
       {/* Board toolbar */}
-      <div className="flex items-center gap-4 p-4 bg-white border-b">
+      <div className="flex items-center gap-4 p-4 bg-bg-primary border-b">
         <SkeletonPulse className="h-8 w-48" />
         <div className="flex-1" />
         <SkeletonPulse className="h-8 w-24" />
         <SkeletonPulse className="h-8 w-24" />
       </div>
       {/* Board groups */}
-      {[1, 2].map((group) => (
-        <div key={group} className="bg-white rounded-lg border">
+      {[1, 2].map(group => (
+        <div key={group} className="bg-bg-primary rounded-lg border">
           {/* Group header */}
-          <div className="flex items-center gap-3 p-3 border-b bg-gray-50">
+          <div className="flex items-center gap-3 p-3 border-b bg-bg-secondary">
             <SkeletonPulse className="h-5 w-5 rounded" />
             <SkeletonPulse className="h-5 w-32" />
             <SkeletonPulse className="h-4 w-16 ml-2" />
           </div>
           {/* Column headers */}
-          <div className="flex gap-2 p-3 border-b bg-gray-50/50">
+          <div className="flex gap-2 p-3 border-b bg-bg-secondary/50">
             <SkeletonPulse className="h-4 w-48" />
             <SkeletonPulse className="h-4 w-24" />
             <SkeletonPulse className="h-4 w-20" />
@@ -74,7 +74,7 @@ function BoardSkeleton() {
           </div>
           {/* Rows */}
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex gap-2 p-3 border-b border-gray-100">
+            <div key={i} className="flex gap-2 p-3 border-b border-border-light">
               <SkeletonPulse className="h-4 w-48" />
               <SkeletonPulse className="h-6 w-24 rounded-full" />
               <SkeletonPulse className="h-4 w-20" />
@@ -111,7 +111,7 @@ function DefaultSkeleton() {
       <SkeletonPulse className="h-8 w-64" />
       <SkeletonPulse className="h-4 w-96" />
       <div className="grid grid-cols-3 gap-4 mt-6">
-        {[1, 2, 3].map((i) => (
+        {[1, 2, 3].map(i => (
           <div key={i} className="p-6 border rounded-lg">
             <SkeletonPulse className="h-6 w-20 mb-4" />
             <SkeletonPulse className="h-8 w-16" />
@@ -125,7 +125,7 @@ function DefaultSkeleton() {
 export function PageSkeleton({
   variant = 'default',
   showHeader = true,
-  rows = 8
+  rows = 8,
 }: PageSkeletonProps) {
   return (
     <div className="p-6">

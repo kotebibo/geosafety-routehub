@@ -459,7 +459,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                         <div className="border-t border-border-light bg-bg-primary/50">
                           {comment.replies.map(reply => (
                             <div key={reply.id} className="flex items-start gap-3 p-4 pl-14">
-                              <div className="w-6 h-6 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
+                              <div className="w-6 h-6 rounded-full bg-text-tertiary flex items-center justify-center flex-shrink-0">
                                 <span className="text-white text-xs font-medium">
                                   {(reply.user_name || 'U').charAt(0).toUpperCase()}
                                 </span>
@@ -521,18 +521,18 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                                     href={file.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="p-2 bg-white rounded-full hover:bg-gray-100"
+                                    className="p-2 bg-bg-primary rounded-full hover:bg-bg-hover"
                                   >
-                                    <ExternalLink className="w-4 h-4 text-gray-700" />
+                                    <ExternalLink className="w-4 h-4 text-text-secondary" />
                                   </a>
                                 </Tooltip>
                                 <Tooltip content="Download" side="top" delayDuration={200}>
                                   <a
                                     href={file.url}
                                     download={file.name}
-                                    className="p-2 bg-white rounded-full hover:bg-gray-100"
+                                    className="p-2 bg-bg-primary rounded-full hover:bg-bg-hover"
                                   >
-                                    <Download className="w-4 h-4 text-gray-700" />
+                                    <Download className="w-4 h-4 text-text-secondary" />
                                   </a>
                                 </Tooltip>
                               </div>

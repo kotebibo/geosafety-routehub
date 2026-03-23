@@ -100,7 +100,7 @@ export const PersonCell = memo(function PersonCell({
             </div>
           ))}
           {selectedInspectors.length > 4 && (
-            <div className="w-7 h-7 rounded-full bg-gray-400 text-white flex items-center justify-center text-xs font-semibold border-2 border-white">
+            <div className="w-7 h-7 rounded-full bg-text-tertiary text-white flex items-center justify-center text-xs font-semibold border-2 border-white">
               +{selectedInspectors.length - 4}
             </div>
           )}
@@ -135,22 +135,22 @@ export const PersonCell = memo(function PersonCell({
                 </div>
               ))}
               {selectedInspectors.length > 3 && (
-                <div className="w-7 h-7 rounded-full bg-gray-400 text-white flex items-center justify-center text-xs font-semibold border-2 border-white">
+                <div className="w-7 h-7 rounded-full bg-text-tertiary text-white flex items-center justify-center text-xs font-semibold border-2 border-white">
                   +{selectedInspectors.length - 3}
                 </div>
               )}
             </div>
             {/* Add more button */}
             {!readOnly && (
-              <div className="w-6 h-6 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200 transition-colors">
+              <div className="w-6 h-6 rounded-full bg-bg-tertiary text-text-tertiary flex items-center justify-center hover:bg-bg-hover transition-colors">
                 <Plus className="w-4 h-4" />
               </div>
             )}
           </div>
         ) : (
           <div className="flex items-center gap-2 text-sm text-[#9699a6]">
-            <div className="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center">
-              <Plus className="w-4 h-4 text-gray-400" />
+            <div className="w-7 h-7 rounded-full border-2 border-dashed border-border-medium flex items-center justify-center">
+              <Plus className="w-4 h-4 text-text-tertiary" />
             </div>
             <span>დაამატე...</span>
           </div>

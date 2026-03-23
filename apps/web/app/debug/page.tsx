@@ -10,11 +10,8 @@ export default function DebugPage() {
   useEffect(() => {
     async function fetchServiceTypes() {
       try {
-        const { data, error } = await supabase
-          .from('service_types')
-          .select('*')
-          .order('name')
-        
+        const { data, error } = await supabase.from('service_types').select('*').order('name')
+
         if (error) {
           console.error('Error fetching service types:', error)
         } else {
@@ -39,7 +36,7 @@ export default function DebugPage() {
       ) : (
         <div>
           <p className="mb-4">Found {serviceTypes.length} service types in database:</p>
-          <pre className="bg-gray-100 p-4 rounded overflow-auto">
+          <pre className="bg-bg-tertiary p-4 rounded overflow-auto">
             {JSON.stringify(serviceTypes, null, 2)}
           </pre>
         </div>

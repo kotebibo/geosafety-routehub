@@ -746,7 +746,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                         onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
                         className={cn(
                           'flex items-center gap-2 w-full px-2.5 py-2 rounded-md text-sm transition-all',
-                          'hover:bg-bg-hover text-text-primary border border-border-medium bg-white',
+                          'hover:bg-bg-hover text-text-primary border border-border-medium bg-bg-primary',
                           workspaceDropdownOpen && 'border-monday-primary bg-bg-hover shadow-sm'
                         )}
                       >
@@ -772,7 +772,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
 
                       {/* Dropdown Menu */}
                       {workspaceDropdownOpen && (
-                        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-white rounded-lg border border-monday-primary shadow-lg py-1 max-h-[280px] overflow-y-auto">
+                        <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-bg-primary rounded-lg border border-monday-primary shadow-lg py-1 max-h-[280px] overflow-y-auto">
                           {workspaces.map((ws: any) => {
                             const boardCount = (boardsByWorkspace.get(ws.id) || []).filter(
                               (b: any) => !b.settings?.is_archived
@@ -801,7 +801,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                                 <span
                                   role="button"
                                   tabIndex={0}
-                                  className="p-0.5 hover:bg-gray-200 rounded transition-opacity flex-shrink-0"
+                                  className="p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
                                   onClick={e => {
                                     e.stopPropagation()
                                     setWorkspaceDropdownOpen(false)
@@ -1136,7 +1136,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
         createPortal(
           <div
             ref={menuRef}
-            className="fixed z-[9999] bg-white rounded-lg border border-gray-200 shadow-lg py-1 min-w-[200px]"
+            className="fixed z-[9999] bg-bg-primary rounded-lg border border-border-light shadow-lg py-1 min-w-[200px]"
             style={{
               top: menuState.position.top,
               left: menuState.position.left,
@@ -1155,19 +1155,19 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                       if (e.key === 'Enter') handleRename()
                       if (e.key === 'Escape') setRenameMode(false)
                     }}
-                    className="flex-1 px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:border-monday-primary"
+                    className="flex-1 px-2 py-1 text-sm border border-border-light rounded focus:outline-none focus:border-monday-primary"
                     placeholder="Board name"
                   />
                   <button
                     onClick={handleRename}
                     disabled={actionLoading || !renameValue.trim()}
-                    className="p-1.5 rounded hover:bg-gray-100 text-status-done disabled:opacity-50"
+                    className="p-1.5 rounded hover:bg-bg-hover text-status-done disabled:opacity-50"
                   >
                     <Check className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setRenameMode(false)}
-                    className="p-1.5 rounded hover:bg-gray-100 text-text-tertiary"
+                    className="p-1.5 rounded hover:bg-bg-hover text-text-tertiary"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -1180,7 +1180,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                   <span className="text-xs font-medium text-text-secondary">Choose color</span>
                   <button
                     onClick={() => setShowColorPicker(false)}
-                    className="p-1 rounded hover:bg-gray-100 text-text-tertiary"
+                    className="p-1 rounded hover:bg-bg-hover text-text-tertiary"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -1223,7 +1223,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(false)}
-                    className="flex-1 px-3 py-1.5 bg-gray-100 text-text-primary text-sm rounded hover:bg-gray-200"
+                    className="flex-1 px-3 py-1.5 bg-bg-tertiary text-text-primary text-sm rounded hover:bg-bg-hover"
                   >
                     Cancel
                   </button>
@@ -1234,7 +1234,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
               <>
                 <button
                   onClick={handleOpenInNewTab}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
                 >
                   <ExternalLink className="w-4 h-4 text-text-tertiary" />
                   Open in new tab
@@ -1242,7 +1242,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
 
                 <button
                   onClick={handleStartRename}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
                 >
                   <Pencil className="w-4 h-4 text-text-tertiary" />
                   Rename
@@ -1251,7 +1251,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                 <button
                   onClick={handleDuplicate}
                   disabled={actionLoading}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors disabled:opacity-50"
                 >
                   <Copy className="w-4 h-4 text-text-tertiary" />
                   {actionLoading ? 'Duplicating...' : 'Duplicate'}
@@ -1259,17 +1259,17 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
 
                 <button
                   onClick={() => setShowColorPicker(true)}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
                 >
                   <Palette className="w-4 h-4 text-text-tertiary" />
                   Change color
                 </button>
 
-                <div className="my-1 border-t border-gray-100" />
+                <div className="my-1 border-t border-border-light" />
 
                 <button
                   onClick={handleExport}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
                 >
                   <Download className="w-4 h-4 text-text-tertiary" />
                   Export
@@ -1278,7 +1278,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                 <button
                   onClick={handleToggleFavorite}
                   disabled={actionLoading}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors disabled:opacity-50"
                 >
                   <Star
                     className={cn(
@@ -1291,12 +1291,12 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                   {menuState.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                 </button>
 
-                <div className="my-1 border-t border-gray-100" />
+                <div className="my-1 border-t border-border-light" />
 
                 <button
                   onClick={handleArchive}
                   disabled={actionLoading}
-                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors disabled:opacity-50"
                 >
                   <Archive className="w-4 h-4 text-text-tertiary" />
                   {menuState.isArchived ? 'Unarchive' : 'Archive'}
@@ -1440,7 +1440,7 @@ function WorkspaceActionsMenu({
   return (
     <div
       ref={menuRef}
-      className="fixed z-[9999] bg-white rounded-lg border border-gray-200 shadow-lg py-1 min-w-[200px]"
+      className="fixed z-[9999] bg-bg-primary rounded-lg border border-border-light shadow-lg py-1 min-w-[200px]"
       style={{
         top: menuState.position.top,
         left: menuState.position.left,
@@ -1459,19 +1459,19 @@ function WorkspaceActionsMenu({
                 if (e.key === 'Enter') handleRename()
                 if (e.key === 'Escape') onCancelRename()
               }}
-              className="flex-1 px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:border-monday-primary"
+              className="flex-1 px-2 py-1 text-sm border border-border-light rounded focus:outline-none focus:border-monday-primary"
               placeholder="Workspace name"
             />
             <button
               onClick={handleRename}
               disabled={actionLoading || !renameValue.trim()}
-              className="p-1.5 rounded hover:bg-gray-100 text-status-done disabled:opacity-50"
+              className="p-1.5 rounded hover:bg-bg-hover text-status-done disabled:opacity-50"
             >
               <Check className="w-4 h-4" />
             </button>
             <button
               onClick={onCancelRename}
-              className="p-1.5 rounded hover:bg-gray-100 text-text-tertiary"
+              className="p-1.5 rounded hover:bg-bg-hover text-text-tertiary"
             >
               <X className="w-4 h-4" />
             </button>
@@ -1494,7 +1494,7 @@ function WorkspaceActionsMenu({
             </button>
             <button
               onClick={onCancelDelete}
-              className="flex-1 px-3 py-1.5 bg-gray-100 text-text-primary text-sm rounded hover:bg-gray-200"
+              className="flex-1 px-3 py-1.5 bg-bg-tertiary text-text-primary text-sm rounded hover:bg-bg-hover"
             >
               Cancel
             </button>
@@ -1505,7 +1505,7 @@ function WorkspaceActionsMenu({
         <>
           <button
             onClick={handleOpenInNewTab}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
           >
             <ExternalLink className="w-4 h-4 text-text-tertiary" />
             Open in new tab
@@ -1514,7 +1514,7 @@ function WorkspaceActionsMenu({
           {menuState.canEditSettings && (
             <button
               onClick={onStartRename}
-              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
             >
               <Pencil className="w-4 h-4 text-text-tertiary" />
               Rename
@@ -1523,7 +1523,7 @@ function WorkspaceActionsMenu({
 
           <button
             onClick={handleGoToSettings}
-            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 text-sm text-text-primary hover:bg-bg-hover transition-colors"
           >
             <Settings className="w-4 h-4 text-text-tertiary" />
             Settings
@@ -1531,7 +1531,7 @@ function WorkspaceActionsMenu({
 
           {menuState.canDelete && (
             <>
-              <div className="my-1 border-t border-gray-100" />
+              <div className="my-1 border-t border-border-light" />
               <button
                 onClick={onShowDeleteConfirm}
                 className="w-full flex items-center gap-3 px-3 py-2 text-sm text-status-stuck hover:bg-red-50 transition-colors"

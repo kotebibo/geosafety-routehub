@@ -55,14 +55,14 @@ export function Navigation() {
   const filteredNavItems = navItems.filter(item => !userRole || item.roles.includes(userRole.role))
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <nav className="bg-bg-primary border-b border-border-light sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo and Nav Items */}
           <div className="flex">
             <Link href="/" className="flex items-center">
               <Shield className="w-8 h-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">RouteHub</span>
+              <span className="ml-2 text-xl font-bold text-text-primary">RouteHub</span>
             </Link>
 
             {user && (
@@ -78,7 +78,7 @@ export function Navigation() {
                       className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive
                           ? 'bg-blue-50 text-blue-700'
-                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                          : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
                       }`}
                     >
                       <Icon className="w-4 h-4 mr-2" />
@@ -95,9 +95,9 @@ export function Navigation() {
             {user ? (
               <>
                 <div className="hidden md:block text-sm text-right">
-                  <div className="font-medium text-gray-900">{user.email}</div>
+                  <div className="font-medium text-text-primary">{user.email}</div>
                   {userRole && (
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-text-tertiary">
                       {userRole.role === 'admin' && '👑 ადმინისტრატორი'}
                       {userRole.role === 'dispatcher' && '📋 დისპეტჩერი'}
                       {userRole.role === 'officer' && '🔍 ოფიცერი'}
@@ -106,7 +106,7 @@ export function Navigation() {
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  className="inline-flex items-center px-3 py-2 border border-border-medium rounded-md text-sm font-medium text-text-secondary bg-bg-primary hover:bg-bg-hover transition-colors"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   გასვლა

@@ -5,7 +5,12 @@ import type { CellRendererProps } from '../types'
 
 type DateStatus = 'overdue' | 'today' | 'upcoming' | 'future' | 'none'
 
-export const DateCell = memo(function DateCell({ value, column, onEdit, onEditStart }: CellRendererProps) {
+export const DateCell = memo(function DateCell({
+  value,
+  column,
+  onEdit,
+  onEditStart,
+}: CellRendererProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editValue, setEditValue] = useState(value || '')
 
@@ -96,13 +101,13 @@ export const DateCell = memo(function DateCell({ value, column, onEdit, onEditSt
       <input
         type="date"
         value={editValue}
-        onChange={(e) => setEditValue(e.target.value)}
+        onChange={e => setEditValue(e.target.value)}
         onBlur={handleSave}
         onKeyDown={handleKeyDown}
         autoFocus
         className={cn(
           'w-full h-full min-h-[36px] px-2',
-          'bg-white border-2 border-[#6161ff] rounded',
+          'bg-bg-primary border-2 border-[#6161ff] rounded',
           'text-[#323338] text-sm',
           'focus:outline-none'
         )}

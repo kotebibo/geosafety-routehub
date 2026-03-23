@@ -15,7 +15,13 @@ interface UserPickerProps {
   triggerRect?: DOMRect | null
 }
 
-export function UserPicker({ value, onChange, onClose, placeholder = 'Search people...', triggerRect }: UserPickerProps) {
+export function UserPicker({
+  value,
+  onChange,
+  onClose,
+  placeholder = 'Search people...',
+  triggerRect,
+}: UserPickerProps) {
   const [search, setSearch] = useState('')
   const { inspectors, loading } = useInspectors()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -49,12 +55,13 @@ export function UserPicker({ value, onChange, onClose, placeholder = 'Search peo
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [onClose])
 
-  const filteredInspectors = inspectors?.filter((inspector) => {
-    const name = (inspector.full_name || '').toLowerCase()
-    const email = (inspector.email || '').toLowerCase()
-    const searchLower = search.toLowerCase()
-    return name.includes(searchLower) || email.includes(searchLower)
-  }) || []
+  const filteredInspectors =
+    inspectors?.filter(inspector => {
+      const name = (inspector.full_name || '').toLowerCase()
+      const email = (inspector.email || '').toLowerCase()
+      const searchLower = search.toLowerCase()
+      return name.includes(searchLower) || email.includes(searchLower)
+    }) || []
 
   const selectedInspector = inspectors?.find(i => i.id === value)
 
@@ -71,28 +78,28 @@ export function UserPicker({ value, onChange, onClose, placeholder = 'Search peo
       ref={containerRef}
       className={cn(
         triggerRect ? 'fixed z-[9999]' : 'absolute top-0 left-0 z-50',
-        'min-w-[280px] bg-white rounded-md shadow-lg border border-gray-200 overflow-hidden'
+        'min-w-[280px] bg-bg-primary rounded-md shadow-lg border border-border-light overflow-hidden'
       )}
       style={triggerRect ? { top: position.top, left: position.left } : undefined}
     >
       {/* Search Input */}
-      <div className="p-2 border-b border-gray-200">
+      <div className="p-2 border-b border-border-light">
         <div className="relative">
           <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#9699a6]" />
           <input
             ref={inputRef}
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             placeholder={placeholder}
-            className="w-full pl-8 pr-2 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#0073ea]"
+            className="w-full pl-8 pr-2 py-1.5 text-sm border border-border-light rounded focus:outline-none focus:border-[#0073ea]"
           />
         </div>
       </div>
 
       {/* Clear Selection */}
       {value && (
-        <div className="px-2 py-1 border-b border-gray-200">
+        <div className="px-2 py-1 border-b border-border-light">
           <button
             onClick={() => {
               onChange(null)
@@ -113,12 +120,10 @@ export function UserPicker({ value, onChange, onClose, placeholder = 'Search peo
             <div className="w-6 h-6 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredInspectors.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-[#9699a6]">
-            No people found
-          </div>
+          <div className="px-4 py-8 text-center text-sm text-[#9699a6]">No people found</div>
         ) : (
           <div className="py-1">
-            {filteredInspectors.map((inspector) => (
+            {filteredInspectors.map(inspector => (
               <button
                 key={inspector.id}
                 onClick={() => {
@@ -141,16 +146,22 @@ export function UserPicker({ value, onChange, onClose, placeholder = 'Search peo
                     {inspector.full_name || 'Unknown'}
                   </div>
                   {inspector.email && (
-                    <div className="text-xs text-[#9699a6] truncate">
-                      {inspector.email}
-                    </div>
+                    <div className="text-xs text-[#9699a6] truncate">{inspector.email}</div>
                   )}
                 </div>
 
                 {/* Selected Indicator */}
                 {value === inspector.id && (
-                  <svg className="w-5 h-5 text-[#0073ea] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5 text-[#0073ea] flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 )}
               </button>

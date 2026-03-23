@@ -363,7 +363,7 @@ export const BoardToolbar = memo(function BoardToolbar({
           <>
             <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
             <div
-              className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light w-[300px] overflow-hidden"
+              className="fixed z-50 bg-bg-primary rounded-lg shadow-lg border border-border-light w-[300px] overflow-hidden"
               style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
             >
               {/* Current sort indicator */}
@@ -494,7 +494,7 @@ export const BoardToolbar = memo(function BoardToolbar({
           <>
             <div className="fixed inset-0 z-40" onClick={closeAllDropdowns} />
             <div
-              className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light w-[300px] overflow-hidden"
+              className="fixed z-50 bg-bg-primary rounded-lg shadow-lg border border-border-light w-[300px] overflow-hidden"
               style={{ top: dropdownPosition.top, left: dropdownPosition.left }}
             >
               {/* Current group indicator */}

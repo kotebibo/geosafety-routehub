@@ -48,7 +48,7 @@ const ROLE_CONFIG: Record<
     label: 'Viewer',
     icon: <Eye className="w-4 h-4" />,
     description: 'Can only view',
-    color: 'text-gray-600',
+    color: 'text-text-secondary',
   },
 }
 
@@ -501,7 +501,7 @@ function RoleDropdown({ currentRole, onSelect, excludeOwner }: RoleDropdownProps
     <div
       className={cn(
         'absolute right-0 top-full mt-1 z-50',
-        'bg-white rounded-md shadow-lg border border-border-light',
+        'bg-bg-primary rounded-md shadow-lg border border-border-light',
         'min-w-[180px] py-1'
       )}
     >

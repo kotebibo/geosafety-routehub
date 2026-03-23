@@ -43,7 +43,7 @@ export function BoardPageSkeleton() {
         </div>
 
         {/* Table Header */}
-        <div className="border border-[#e6e9ef] rounded-t-lg bg-white">
+        <div className="border border-[#e6e9ef] rounded-t-lg bg-bg-primary">
           <div className="flex items-center h-9 border-b border-[#e6e9ef] px-3 gap-4">
             <div className="h-3 w-4 bg-[#e6e9ef] rounded" />
             <div className="h-3 w-32 bg-[#d0d4e4] rounded" />
@@ -58,7 +58,10 @@ export function BoardPageSkeleton() {
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="flex items-center h-9 border-b border-[#e6e9ef] px-3 gap-4">
               <div className="h-3 w-4 bg-[#f0f1f3] rounded" />
-              <div className="h-3 bg-[#f0f1f3] rounded" style={{ width: `${120 + (i % 3) * 30}px` }} />
+              <div
+                className="h-3 bg-[#f0f1f3] rounded"
+                style={{ width: `${120 + (i % 3) * 30}px` }}
+              />
               <div className="h-5 w-16 bg-[#e6e9ef] rounded-full" />
               <div className="h-3 w-20 bg-[#f0f1f3] rounded" />
               <div className="h-3 w-24 bg-[#f0f1f3] rounded" />

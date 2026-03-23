@@ -250,17 +250,17 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
       <div
         ref={tooltipRef}
         style={getTooltipStyle()}
-        className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-[10002]"
+        className="bg-bg-primary rounded-xl shadow-2xl border border-border-light overflow-hidden z-[10002]"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
           <div className="flex items-center gap-2">
             {isCentered && <Sparkles className="w-5 h-5 text-blue-500" />}
-            <h3 className="text-lg font-bold text-gray-900">{t(step.titleKey)}</h3>
+            <h3 className="text-lg font-bold text-text-primary">{t(step.titleKey)}</h3>
           </div>
           <button
             onClick={onComplete}
-            className="p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1 rounded-md hover:bg-bg-hover text-text-tertiary hover:text-text-secondary transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -268,11 +268,11 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
 
         {/* Body */}
         <div className="px-5 pb-4">
-          <p className="text-sm text-gray-600 leading-relaxed">{t(step.descriptionKey)}</p>
+          <p className="text-sm text-text-secondary leading-relaxed">{t(step.descriptionKey)}</p>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
+        <div className="flex items-center justify-between px-5 py-3 bg-bg-secondary border-t border-border-light">
           {/* Step indicator */}
           <div className="flex items-center gap-1.5">
             {steps.map((_, i) => (
@@ -283,7 +283,7 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
                     ? 'bg-blue-500'
                     : i < currentStep
                       ? 'bg-blue-300'
-                      : 'bg-gray-300'
+                      : 'bg-text-disabled'
                 }`}
               />
             ))}
@@ -294,7 +294,7 @@ export function Walkthrough({ onComplete }: WalkthroughProps) {
             {!isFirstStep && (
               <button
                 onClick={handlePrev}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+                className="flex items-center gap-1 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-md transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
                 {t('common.previous')}

@@ -6,7 +6,9 @@ import { calculatePopupPosition } from './usePopupPosition'
 import { OverflowTooltip } from './OverflowTooltip'
 
 // Lazy load the heavy editor component (~10KB) - only loaded when user clicks "Edit Labels"
-const StatusLabelEditor = lazy(() => import('./StatusLabelEditor').then(m => ({ default: m.StatusLabelEditor })))
+const StatusLabelEditor = lazy(() =>
+  import('./StatusLabelEditor').then(m => ({ default: m.StatusLabelEditor }))
+)
 
 export interface StatusOption {
   key: string
@@ -87,7 +89,12 @@ export function getColorInfo(colorKey: string): { hex: string; text: string } {
   return MONDAY_COLORS.explosive
 }
 
-export const StatusCell = memo(function StatusCell({ value, column, onEdit, onEditStart }: CellRendererProps) {
+export const StatusCell = memo(function StatusCell({
+  value,
+  column,
+  onEdit,
+  onEditStart,
+}: CellRendererProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [showEditor, setShowEditor] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
@@ -180,72 +187,81 @@ export const StatusCell = memo(function StatusCell({ value, column, onEdit, onEd
           color: currentColor.text,
         }}
       >
-        <OverflowTooltip text={currentOption?.label} className="truncate px-1 block">{currentOption?.label || 'Select'}</OverflowTooltip>
+        <OverflowTooltip text={currentOption?.label} className="truncate px-1 block">
+          {currentOption?.label || 'Select'}
+        </OverflowTooltip>
       </button>
 
       {/* Dropdown Portal */}
-      {isOpen && typeof document !== 'undefined' && createPortal(
-        <div
-          ref={dropdownRef}
-          className={cn(
-            'fixed z-[9999]',
-            'bg-white rounded-lg',
-            'border border-gray-200',
-            'shadow-[0_8px_30px_rgba(0,0,0,0.12)]',
-            'p-1.5 min-w-[140px]'
-          )}
-          style={{
-            top: dropdownPosition.top,
-            left: dropdownPosition.left,
-          }}
-        >
-          {/* Status Options - Full Width Colored Rows */}
-          <div className="flex flex-col gap-1">
-            {statusOptions.map((option) => {
-              const colorInfo = getColorInfo(option.color)
-              const isSelected = option.key === currentStatusKey
-              return (
-                <button
-                  key={option.key}
-                  onClick={() => handleSelect(option.key)}
-                  className={cn(
-                    'w-full h-8 rounded text-sm font-medium',
-                    'transition-all hover:brightness-95',
-                    'focus:outline-none',
-                    isSelected && 'ring-2 ring-offset-1 ring-gray-400'
-                  )}
-                  style={{
-                    backgroundColor: colorInfo.hex,
-                    color: colorInfo.text,
-                  }}
-                >
-                  {option.label}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-gray-200 my-2" />
-
-          {/* Footer - Edit Labels */}
-          <button
-            onClick={handleOpenEditor}
+      {isOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={dropdownRef}
             className={cn(
-              'w-full px-2 py-1.5 text-xs text-gray-500',
-              'hover:bg-gray-100 rounded',
-              'flex items-center gap-1.5',
-              'transition-colors'
+              'fixed z-[9999]',
+              'bg-bg-primary rounded-lg',
+              'border border-border-light',
+              'shadow-[0_8px_30px_rgba(0,0,0,0.12)]',
+              'p-1.5 min-w-[140px]'
             )}
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+            }}
           >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-            Edit Labels
-          </button>
-        </div>,
-        document.body
-      )}
+            {/* Status Options - Full Width Colored Rows */}
+            <div className="flex flex-col gap-1">
+              {statusOptions.map(option => {
+                const colorInfo = getColorInfo(option.color)
+                const isSelected = option.key === currentStatusKey
+                return (
+                  <button
+                    key={option.key}
+                    onClick={() => handleSelect(option.key)}
+                    className={cn(
+                      'w-full h-8 rounded text-sm font-medium',
+                      'transition-all hover:brightness-95',
+                      'focus:outline-none',
+                      isSelected && 'ring-2 ring-offset-1 ring-gray-400'
+                    )}
+                    style={{
+                      backgroundColor: colorInfo.hex,
+                      color: colorInfo.text,
+                    }}
+                  >
+                    {option.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-border-light my-2" />
+
+            {/* Footer - Edit Labels */}
+            <button
+              onClick={handleOpenEditor}
+              className={cn(
+                'w-full px-2 py-1.5 text-xs text-text-tertiary',
+                'hover:bg-bg-hover rounded',
+                'flex items-center gap-1.5',
+                'transition-colors'
+              )}
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                />
+              </svg>
+              Edit Labels
+            </button>
+          </div>,
+          document.body
+        )}
 
       {/* Status Label Editor Modal - Lazy loaded */}
       {showEditor && (

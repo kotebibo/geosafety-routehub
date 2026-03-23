@@ -21,11 +21,11 @@ interface Company {
 }
 
 interface CompanyPickerProps {
-  value?: CompanyCellValue | string | null  // Support both old (string) and new (object) format
+  value?: CompanyCellValue | string | null // Support both old (string) and new (object) format
   onChange: (value: CompanyCellValue | null) => void
   onClose: () => void
   placeholder?: string
-  companies?: Company[]  // Optional: pass companies directly
+  companies?: Company[] // Optional: pass companies directly
   /** Fixed position style when rendered via portal */
   positionStyle?: React.CSSProperties
 }
@@ -48,9 +48,8 @@ export function CompanyPicker({
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Parse value - handle both string (legacy) and object formats
-  const parsedValue: CompanyCellValue | null = typeof value === 'string' 
-    ? { company_id: value, location_id: null }
-    : value || null
+  const parsedValue: CompanyCellValue | null =
+    typeof value === 'string' ? { company_id: value, location_id: null } : value || null
 
   // Load companies on mount
   useEffect(() => {
@@ -119,7 +118,7 @@ export function CompanyPicker({
     onClose()
   }
 
-  const filteredCompanies = companies.filter((company) => {
+  const filteredCompanies = companies.filter(company => {
     const name = (company.name || '').toLowerCase()
     const address = (company.primary_location_address || company.address || '').toLowerCase()
     const searchLower = search.toLowerCase()
@@ -133,7 +132,7 @@ export function CompanyPicker({
         <div
           style={positionStyle}
           className={cn(
-            'min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
+            'min-w-[300px] bg-bg-primary rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
             positionStyle ? 'fixed w-[300px]' : 'absolute top-0 left-0 w-full'
           )}
         >
@@ -163,7 +162,7 @@ export function CompanyPicker({
     <div
       style={positionStyle}
       className={cn(
-        'min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
+        'min-w-[300px] bg-bg-primary rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
         positionStyle ? 'fixed w-[300px]' : 'absolute top-0 left-0 w-full'
       )}
     >
@@ -175,7 +174,7 @@ export function CompanyPicker({
             ref={inputRef}
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             placeholder={placeholder}
             className="w-full pl-8 pr-2 py-1.5 text-sm border border-border-light rounded focus:outline-none focus:border-monday-primary"
           />
@@ -207,7 +206,7 @@ export function CompanyPicker({
           </div>
         ) : (
           <div className="py-1">
-            {filteredCompanies.map((company) => {
+            {filteredCompanies.map(company => {
               const isSelected = parsedValue?.company_id === company.id
               const hasMultipleLocations = (company.location_count || 0) > 1
               const displayAddress = company.primary_location_address || company.address
@@ -248,10 +247,18 @@ export function CompanyPicker({
 
                   {/* Arrow for multi-location or checkmark for selected */}
                   {hasMultipleLocations ? (
-                    <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-text-tertiary flex-shrink-0" />
                   ) : isSelected ? (
-                    <svg className="w-5 h-5 text-monday-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    <svg
+                      className="w-5 h-5 text-monday-primary flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   ) : null}
                 </button>

@@ -3,7 +3,24 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
-import { MessageSquare, Send, X, Clock, User, Reply, CornerDownRight, AtSign, Trash2, Edit2, Check, History, ArrowRightLeft, UserCheck, FileEdit, PlusCircle } from 'lucide-react'
+import {
+  MessageSquare,
+  Send,
+  X,
+  Clock,
+  User,
+  Reply,
+  CornerDownRight,
+  AtSign,
+  Trash2,
+  Edit2,
+  Check,
+  History,
+  ArrowRightLeft,
+  UserCheck,
+  FileEdit,
+  PlusCircle,
+} from 'lucide-react'
 import { activityService } from '@/features/boards/services/activity.service'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInspectorId } from '@/hooks/useInspectorId'
@@ -60,19 +77,20 @@ export function UpdatesModal({
   const modalRef = useRef<HTMLDivElement>(null)
 
   // Filter inspectors for mention suggestions
-  const mentionSuggestions: MentionSuggestion[] = inspectors
-    ?.filter((inspector) => {
-      const name = (inspector.full_name || '').toLowerCase()
-      const email = (inspector.email || '').toLowerCase()
-      const search = mentionSearch.toLowerCase()
-      return name.includes(search) || email.includes(search)
-    })
-    .map((inspector) => ({
-      id: inspector.id,
-      name: inspector.full_name || 'Unknown',
-      email: inspector.email,
-    }))
-    .slice(0, 5) || []
+  const mentionSuggestions: MentionSuggestion[] =
+    inspectors
+      ?.filter(inspector => {
+        const name = (inspector.full_name || '').toLowerCase()
+        const email = (inspector.email || '').toLowerCase()
+        const search = mentionSearch.toLowerCase()
+        return name.includes(search) || email.includes(search)
+      })
+      .map(inspector => ({
+        id: inspector.id,
+        name: inspector.full_name || 'Unknown',
+        email: inspector.email,
+      }))
+      .slice(0, 5) || []
 
   // Load data when modal opens or tab changes
   useEffect(() => {
@@ -125,24 +143,36 @@ export function UpdatesModal({
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'created': return <PlusCircle className="w-4 h-4 text-[#00c875]" />
-      case 'updated': return <FileEdit className="w-4 h-4 text-[#0073ea]" />
-      case 'status_changed': return <ArrowRightLeft className="w-4 h-4 text-[#fdab3d]" />
+      case 'created':
+        return <PlusCircle className="w-4 h-4 text-[#00c875]" />
+      case 'updated':
+        return <FileEdit className="w-4 h-4 text-[#0073ea]" />
+      case 'status_changed':
+        return <ArrowRightLeft className="w-4 h-4 text-[#fdab3d]" />
       case 'assigned':
-      case 'reassigned': return <UserCheck className="w-4 h-4 text-[#a25ddc]" />
-      case 'comment': return <MessageSquare className="w-4 h-4 text-[#579bfc]" />
-      default: return <History className="w-4 h-4 text-[#676879]" />
+      case 'reassigned':
+        return <UserCheck className="w-4 h-4 text-[#a25ddc]" />
+      case 'comment':
+        return <MessageSquare className="w-4 h-4 text-[#579bfc]" />
+      default:
+        return <History className="w-4 h-4 text-[#676879]" />
     }
   }
 
   const getActivityDescription = (update: ItemUpdate) => {
-    const fieldName = update.metadata?.displayName || update.column_name || update.field_name || 'field'
+    const fieldName =
+      update.metadata?.displayName || update.column_name || update.field_name || 'field'
     switch (update.update_type) {
-      case 'created': return 'created this item'
-      case 'status_changed': return `changed ${fieldName} from "${update.old_value || '-'}" to "${update.new_value || '-'}"`
-      case 'assigned': return update.content || `assigned ${fieldName}`
-      case 'reassigned': return update.content || `reassigned ${fieldName}`
-      case 'comment': return `commented: "${update.content?.substring(0, 60) || ''}${(update.content?.length || 0) > 60 ? '...' : ''}"`
+      case 'created':
+        return 'created this item'
+      case 'status_changed':
+        return `changed ${fieldName} from "${update.old_value || '-'}" to "${update.new_value || '-'}"`
+      case 'assigned':
+        return update.content || `assigned ${fieldName}`
+      case 'reassigned':
+        return update.content || `reassigned ${fieldName}`
+      case 'comment':
+        return `commented: "${update.content?.substring(0, 60) || ''}${(update.content?.length || 0) > 60 ? '...' : ''}"`
       case 'updated':
         if (update.old_value && update.new_value) {
           return `changed ${fieldName} from "${update.old_value}" to "${update.new_value}"`
@@ -151,7 +181,8 @@ export function UpdatesModal({
           return `set ${fieldName} to "${update.new_value}"`
         }
         return `updated ${fieldName}`
-      default: return update.content || `updated ${fieldName}`
+      default:
+        return update.content || `updated ${fieldName}`
     }
   }
 
@@ -228,33 +259,36 @@ export function UpdatesModal({
   }
 
   // Insert mention into text
-  const insertMention = useCallback((suggestion: MentionSuggestion) => {
-    const textBeforeCursor = newComment.slice(0, cursorPosition)
-    const textAfterCursor = newComment.slice(cursorPosition)
+  const insertMention = useCallback(
+    (suggestion: MentionSuggestion) => {
+      const textBeforeCursor = newComment.slice(0, cursorPosition)
+      const textAfterCursor = newComment.slice(cursorPosition)
 
-    // Find and replace the @mention trigger
-    const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
-    if (mentionMatch) {
-      const beforeMention = textBeforeCursor.slice(0, mentionMatch.index)
-      const newText = `${beforeMention}@${suggestion.name} ${textAfterCursor}`
-      setNewComment(newText)
-      setSelectedMentions([...selectedMentions, suggestion.id])
-    }
+      // Find and replace the @mention trigger
+      const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
+      if (mentionMatch) {
+        const beforeMention = textBeforeCursor.slice(0, mentionMatch.index)
+        const newText = `${beforeMention}@${suggestion.name} ${textAfterCursor}`
+        setNewComment(newText)
+        setSelectedMentions([...selectedMentions, suggestion.id])
+      }
 
-    setShowMentions(false)
-    setMentionSearch('')
-    inputRef.current?.focus()
-  }, [newComment, cursorPosition, selectedMentions])
+      setShowMentions(false)
+      setMentionSearch('')
+      inputRef.current?.focus()
+    },
+    [newComment, cursorPosition, selectedMentions]
+  )
 
   // Handle keyboard navigation in mention list
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (showMentions && mentionSuggestions.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault()
-        setMentionIndex((prev) => (prev + 1) % mentionSuggestions.length)
+        setMentionIndex(prev => (prev + 1) % mentionSuggestions.length)
       } else if (e.key === 'ArrowUp') {
         e.preventDefault()
-        setMentionIndex((prev) => (prev - 1 + mentionSuggestions.length) % mentionSuggestions.length)
+        setMentionIndex(prev => (prev - 1 + mentionSuggestions.length) % mentionSuggestions.length)
       } else if (e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault()
         insertMention(mentionSuggestions[mentionIndex])
@@ -284,7 +318,13 @@ export function UpdatesModal({
 
   const getInitials = (name: string) => {
     const parts = name.split(' ')
-    return parts.map((p) => p.charAt(0)).join('').toUpperCase().slice(0, 2) || '?'
+    return (
+      parts
+        .map(p => p.charAt(0))
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || '?'
+    )
   }
 
   // Render content with highlighted @mentions
@@ -310,23 +350,20 @@ export function UpdatesModal({
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div
         ref={modalRef}
         className={cn(
-          'relative bg-white rounded-xl shadow-2xl',
+          'relative bg-bg-primary rounded-xl shadow-2xl',
           'w-[600px] max-w-[90vw] h-[700px] max-h-[85vh]',
           'flex flex-col overflow-hidden',
           'animate-in fade-in-0 zoom-in-95 duration-200'
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-[#0073ea] to-[#0060c0]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-light bg-gradient-to-r from-[#0073ea] to-[#0060c0]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-white" />
@@ -336,23 +373,20 @@ export function UpdatesModal({
               <p className="text-sm text-white/80 truncate max-w-[400px]">{itemName}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/20 transition-colors"
-          >
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-white/20 transition-colors">
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
 
         {/* Tab Bar */}
-        <div className="flex border-b border-gray-200 bg-white px-6">
+        <div className="flex border-b border-border-light bg-bg-primary px-6">
           <button
             onClick={() => setActiveTab('updates')}
             className={cn(
               'px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2',
               activeTab === 'updates'
                 ? 'border-[#0073ea] text-[#0073ea]'
-                : 'border-transparent text-[#676879] hover:text-[#323338] hover:border-gray-300'
+                : 'border-transparent text-[#676879] hover:text-[#323338] hover:border-border-medium'
             )}
           >
             <MessageSquare className="w-4 h-4" />
@@ -369,7 +403,7 @@ export function UpdatesModal({
               'px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2',
               activeTab === 'activity'
                 ? 'border-[#0073ea] text-[#0073ea]'
-                : 'border-transparent text-[#676879] hover:text-[#323338] hover:border-gray-300'
+                : 'border-transparent text-[#676879] hover:text-[#323338] hover:border-border-medium'
             )}
           >
             <History className="w-4 h-4" />
@@ -383,7 +417,12 @@ export function UpdatesModal({
         </div>
 
         {/* Updates Tab (Comments) */}
-        <div className={cn('flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8f9fa]', activeTab !== 'updates' && 'hidden')}>
+        <div
+          className={cn(
+            'flex-1 overflow-y-auto p-6 space-y-4 bg-[#f8f9fa]',
+            activeTab !== 'updates' && 'hidden'
+          )}
+        >
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <div className="w-8 h-8 border-3 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
@@ -394,11 +433,16 @@ export function UpdatesModal({
                 <MessageSquare className="w-10 h-10 text-[#c5c7d0]" />
               </div>
               <span className="text-lg font-medium text-[#323338] mb-1">No updates yet</span>
-              <span className="text-sm text-[#676879]">Be the first to add an update to this item</span>
+              <span className="text-sm text-[#676879]">
+                Be the first to add an update to this item
+              </span>
             </div>
           ) : (
-            comments.map((comment) => (
-              <div key={comment.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            comments.map(comment => (
+              <div
+                key={comment.id}
+                className="bg-bg-primary rounded-xl shadow-sm border border-border-light overflow-hidden"
+              >
                 {/* Comment Header */}
                 <div className="flex items-start gap-3 p-4">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0073ea] to-[#6161ff] flex items-center justify-center flex-shrink-0">
@@ -425,8 +469,8 @@ export function UpdatesModal({
                       <div className="mt-2">
                         <textarea
                           value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-[#0073ea] focus:ring-1 focus:ring-[#0073ea]"
+                          onChange={e => setEditContent(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-border-light rounded-lg resize-none focus:outline-none focus:border-[#0073ea] focus:ring-1 focus:ring-[#0073ea]"
                           rows={3}
                           autoFocus
                         />
@@ -443,7 +487,7 @@ export function UpdatesModal({
                               setEditingComment(null)
                               setEditContent('')
                             }}
-                            className="px-3 py-1.5 text-xs text-[#676879] hover:bg-gray-100 rounded-lg transition-colors"
+                            className="px-3 py-1.5 text-xs text-[#676879] hover:bg-bg-hover rounded-lg transition-colors"
                           >
                             Cancel
                           </button>
@@ -496,9 +540,12 @@ export function UpdatesModal({
 
                 {/* Replies */}
                 {comment.replies && comment.replies.length > 0 && (
-                  <div className="border-t border-gray-100 bg-[#f8f9fa]">
-                    {comment.replies.map((reply) => (
-                      <div key={reply.id} className="flex items-start gap-3 p-4 pl-16 border-b border-gray-50 last:border-b-0">
+                  <div className="border-t border-border-light bg-[#f8f9fa]">
+                    {comment.replies.map(reply => (
+                      <div
+                        key={reply.id}
+                        className="flex items-start gap-3 p-4 pl-16 border-b border-bg-secondary last:border-b-0"
+                      >
                         <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#579bfc] to-[#0073ea] flex items-center justify-center flex-shrink-0">
                           <span className="text-xs font-semibold text-white">
                             {getInitials(reply.user_name || 'Unknown')}
@@ -541,7 +588,12 @@ export function UpdatesModal({
         </div>
 
         {/* Activity Log Tab */}
-        <div className={cn('flex-1 overflow-y-auto p-6 bg-[#f8f9fa]', activeTab !== 'activity' && 'hidden')}>
+        <div
+          className={cn(
+            'flex-1 overflow-y-auto p-6 bg-[#f8f9fa]',
+            activeTab !== 'activity' && 'hidden'
+          )}
+        >
           {activityLoading ? (
             <div className="flex items-center justify-center py-16">
               <div className="w-8 h-8 border-3 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
@@ -560,10 +612,10 @@ export function UpdatesModal({
               <div className="absolute left-5 top-0 bottom-0 w-px bg-[#e6e9ef]" />
 
               <div className="space-y-0">
-                {activities.map((activity) => (
+                {activities.map(activity => (
                   <div key={activity.id} className="relative flex items-start gap-4 py-3 pl-2">
                     {/* Timeline dot */}
-                    <div className="relative z-10 w-7 h-7 rounded-full bg-white border-2 border-[#e6e9ef] flex items-center justify-center flex-shrink-0">
+                    <div className="relative z-10 w-7 h-7 rounded-full bg-bg-primary border-2 border-[#e6e9ef] flex items-center justify-center flex-shrink-0">
                       {getActivityIcon(activity.update_type)}
                     </div>
 
@@ -573,9 +625,7 @@ export function UpdatesModal({
                         <span className="font-medium text-[#323338]">
                           {activity.user_name || 'System'}
                         </span>{' '}
-                        <span className="text-[#676879]">
-                          {getActivityDescription(activity)}
-                        </span>
+                        <span className="text-[#676879]">{getActivityDescription(activity)}</span>
                       </div>
                       <div className="flex items-center gap-1 mt-1 text-xs text-[#9699a6]">
                         <Clock className="w-3 h-3" />
@@ -594,7 +644,9 @@ export function UpdatesModal({
           <div className="px-6 py-2 bg-[#e5f4ff] border-t border-[#0073ea]/20 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-[#0073ea]">
               <CornerDownRight className="w-4 h-4" />
-              <span>Replying to <strong>{replyingTo.user_name}</strong></span>
+              <span>
+                Replying to <strong>{replyingTo.user_name}</strong>
+              </span>
             </div>
             <button
               onClick={() => setReplyingTo(null)}
@@ -606,14 +658,19 @@ export function UpdatesModal({
         )}
 
         {/* Input Area - only show on updates tab */}
-        <div className={cn('p-4 border-t border-gray-200 bg-white relative', activeTab !== 'updates' && 'hidden')}>
+        <div
+          className={cn(
+            'p-4 border-t border-border-light bg-bg-primary relative',
+            activeTab !== 'updates' && 'hidden'
+          )}
+        >
           {/* Mention suggestions dropdown */}
           {showMentions && mentionSuggestions.length > 0 && (
             <div
               ref={mentionListRef}
-              className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-10"
+              className="absolute bottom-full left-4 right-4 mb-2 bg-bg-primary rounded-lg shadow-lg border border-border-light overflow-hidden z-10"
             >
-              <div className="px-3 py-2 text-xs font-medium text-[#676879] bg-[#f5f6f8] border-b border-gray-100">
+              <div className="px-3 py-2 text-xs font-medium text-[#676879] bg-[#f5f6f8] border-b border-border-light">
                 <AtSign className="w-3 h-3 inline mr-1" />
                 Mention someone
               </div>
@@ -652,10 +709,14 @@ export function UpdatesModal({
                 value={newComment}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder={replyingTo ? `Reply to ${replyingTo.user_name}...` : 'Write an update... Type @ to mention someone'}
+                placeholder={
+                  replyingTo
+                    ? `Reply to ${replyingTo.user_name}...`
+                    : 'Write an update... Type @ to mention someone'
+                }
                 rows={3}
                 className={cn(
-                  'w-full px-4 py-3 text-sm border border-gray-200 rounded-xl resize-none',
+                  'w-full px-4 py-3 text-sm border border-border-light rounded-xl resize-none',
                   'focus:outline-none focus:border-[#0073ea] focus:ring-2 focus:ring-[#0073ea]/20',
                   'placeholder:text-[#9699a6]'
                 )}
@@ -674,7 +735,7 @@ export function UpdatesModal({
                     'flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all',
                     newComment.trim() && !submitting && inspectorId
                       ? 'bg-[#0073ea] text-white hover:bg-[#0060c0] shadow-md hover:shadow-lg'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   )}
                 >
                   {submitting ? (

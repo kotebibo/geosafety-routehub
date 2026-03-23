@@ -25,7 +25,7 @@ const TYPE_COLORS: Record<NotificationType, string> = {
   assignment_changed: 'bg-green-100 text-green-700',
   route_updated: 'bg-purple-100 text-purple-700',
   item_mention: 'bg-amber-100 text-amber-700',
-  item_comment: 'bg-gray-100 text-gray-700',
+  item_comment: 'bg-bg-tertiary text-text-secondary',
   announcement_new: 'bg-indigo-100 text-indigo-700',
 }
 
@@ -128,10 +128,10 @@ export function NotificationBell({ className }: NotificationBellProps) {
       <button
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
-        className={cn('relative p-2 rounded-lg hover:bg-gray-100 transition-colors', className)}
+        className={cn('relative p-2 rounded-lg hover:bg-bg-hover transition-colors', className)}
         aria-label="Notifications"
       >
-        <Bell className="w-5 h-5 text-gray-600" />
+        <Bell className="w-5 h-5 text-text-secondary" />
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-xs font-medium text-white bg-red-500 rounded-full">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -144,7 +144,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-[9999] overflow-hidden"
+            className="fixed w-96 bg-bg-primary rounded-lg shadow-xl border border-border-light z-[9999] overflow-hidden"
             style={{
               top: dropdownPos.top,
               left: dropdownPos.left,
@@ -152,8 +152,8 @@ export function NotificationBell({ className }: NotificationBellProps) {
             }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
-              <h3 className="font-semibold text-gray-900">შეტყობინებები</h3>
+            <div className="flex items-center justify-between px-4 py-3 border-b bg-bg-secondary">
+              <h3 className="font-semibold text-text-primary">შეტყობინებები</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={() => markAllAsRead()}
@@ -173,8 +173,8 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : notifications.length === 0 ? (
-                <div className="py-12 text-center text-gray-500">
-                  <Bell className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                <div className="py-12 text-center text-text-tertiary">
+                  <Bell className="w-10 h-10 mx-auto mb-3 text-text-disabled" />
                   <p>შეტყობინებები არ არის</p>
                 </div>
               ) : (
@@ -182,7 +182,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   <div
                     key={notification.id}
                     className={cn(
-                      'flex items-start gap-3 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors',
+                      'flex items-start gap-3 px-4 py-3 border-b border-border-light hover:bg-bg-hover cursor-pointer transition-colors',
                       !notification.is_read && 'bg-blue-50/50'
                     )}
                     onClick={() => handleNotificationClick(notification)}
@@ -199,11 +199,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate">
+                      <p className="font-medium text-sm text-text-primary truncate">
                         {notification.title}
                       </p>
-                      <p className="text-sm text-gray-600 line-clamp-2">{notification.message}</p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-sm text-text-secondary line-clamp-2">
+                        {notification.message}
+                      </p>
+                      <p className="text-xs text-text-tertiary mt-1">
                         {formatDistanceToNow(new Date(notification.created_at), {
                           addSuffix: true,
                           locale: ka,
@@ -220,7 +222,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
                               e.stopPropagation()
                               markAsRead(notification.id)
                             }}
-                            className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600"
+                            className="p-1 rounded hover:bg-bg-hover text-text-tertiary hover:text-text-secondary"
                           >
                             <Check className="w-4 h-4" />
                           </button>
@@ -232,7 +234,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
                             e.stopPropagation()
                             deleteNotification(notification.id)
                           }}
-                          className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-600"
+                          className="p-1 rounded hover:bg-red-100 text-text-tertiary hover:text-red-600"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -245,7 +247,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div className="px-4 py-2 border-t bg-gray-50 text-center">
+              <div className="px-4 py-2 border-t bg-bg-secondary text-center">
                 <button
                   onClick={() => {
                     router.push('/settings?tab=notifications')

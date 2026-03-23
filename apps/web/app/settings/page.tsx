@@ -8,13 +8,28 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useWalkthrough } from '@/components/Walkthrough'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/shared/components/ui'
-import { ArrowLeft, User, Bell, Globe, Shield, Save, Check, PlayCircle } from 'lucide-react'
+import {
+  ArrowLeft,
+  User,
+  Bell,
+  Globe,
+  Shield,
+  Save,
+  Check,
+  PlayCircle,
+  Palette,
+  Sun,
+  Moon,
+  Star,
+} from 'lucide-react'
+import { useTheme } from '@/contexts/ThemeContext'
+import type { Theme } from '@/contexts/ThemeContext'
 import { cn } from '@/lib/utils'
 
-type TabType = 'profile' | 'notifications' | 'language' | 'security'
+type TabType = 'profile' | 'notifications' | 'language' | 'security' | 'appearance'
 
 interface UserSettings {
-  theme: 'light' | 'dark' | 'auto'
+  theme: Theme
   language: 'ka' | 'en'
   notification_settings: {
     email_notifications: boolean
@@ -39,6 +54,7 @@ export default function SettingsPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { t } = useLanguage()
+  const { theme: currentTheme, setTheme } = useTheme()
   const { restartWalkthrough } = useWalkthrough()
   const [activeTab, setActiveTab] = useState<TabType>('profile')
   const [isLoading, setIsLoading] = useState(true)
@@ -95,12 +111,17 @@ export default function SettingsPage() {
       }
 
       if (userSettings) {
+        const savedTheme = (userSettings.theme as Theme) || 'light'
         setSettings({
-          theme: (userSettings.theme as UserSettings['theme']) || 'light',
+          theme: savedTheme,
           language: (userSettings.language as UserSettings['language']) || 'ka',
           notification_settings:
             userSettings.notification_settings || defaultSettings.notification_settings,
         })
+        // Sync theme context with saved preference
+        if (['light', 'dark', 'night'].includes(savedTheme)) {
+          setTheme(savedTheme)
+        }
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
@@ -253,6 +274,18 @@ export default function SettingsPage() {
               {t('settings.tab.language')}
             </button>
             <button
+              onClick={() => setActiveTab('appearance')}
+              className={cn(
+                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
+                activeTab === 'appearance'
+                  ? 'bg-bg-secondary text-text-primary'
+                  : 'text-text-secondary hover:text-text-primary'
+              )}
+            >
+              <Palette className="w-4 h-4 inline mr-2" />
+              {t('settings.tab.appearance')}
+            </button>
+            <button
               onClick={() => setActiveTab('security')}
               className={cn(
                 'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
@@ -318,7 +351,7 @@ export default function SettingsPage() {
                 disabled
                 className={cn(
                   'w-full max-w-md px-3 py-2 border border-border-default rounded-lg',
-                  'bg-gray-50 text-text-tertiary cursor-not-allowed'
+                  'bg-bg-secondary text-text-tertiary cursor-not-allowed'
                 )}
               />
               <p className="text-sm text-text-tertiary mt-1">
@@ -405,7 +438,7 @@ export default function SettingsPage() {
                   'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
                   settings.notification_settings.email_notifications
                     ? 'bg-monday-primary'
-                    : 'bg-gray-300'
+                    : 'bg-text-disabled'
                 )}
               >
                 <div
@@ -443,7 +476,7 @@ export default function SettingsPage() {
                   'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
                   settings.notification_settings.assignment_alerts
                     ? 'bg-monday-primary'
-                    : 'bg-gray-300'
+                    : 'bg-text-disabled'
                 )}
               >
                 <div
@@ -479,7 +512,9 @@ export default function SettingsPage() {
                 aria-checked={settings.notification_settings.route_updates}
                 className={cn(
                   'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
-                  settings.notification_settings.route_updates ? 'bg-monday-primary' : 'bg-gray-300'
+                  settings.notification_settings.route_updates
+                    ? 'bg-monday-primary'
+                    : 'bg-text-disabled'
                 )}
               >
                 <div
@@ -543,6 +578,193 @@ export default function SettingsPage() {
                   {settings.language === 'en' && (
                     <Check className="w-5 h-5 text-monday-primary ml-2" />
                   )}
+                </button>
+              </div>
+            </div>
+
+            <SaveButton onClick={handleSaveSettings} />
+          </div>
+        )}
+
+        {/* Appearance Tab */}
+        {activeTab === 'appearance' && (
+          <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              {t('settings.appearance.title')}
+            </h3>
+
+            <div>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                {t('settings.appearance.theme')}
+              </label>
+              <p className="text-sm text-text-tertiary mb-4">
+                {t('settings.appearance.themeDesc')}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+                {/* Light Theme */}
+                <button
+                  onClick={() => {
+                    setTheme('light')
+                    setSettings(s => ({ ...s, theme: 'light' }))
+                  }}
+                  className={cn(
+                    'group relative rounded-lg border-2 p-1 transition-all',
+                    currentTheme === 'light'
+                      ? 'border-monday-primary ring-2 ring-monday-primary/20'
+                      : 'border-border-light hover:border-monday-primary/40'
+                  )}
+                >
+                  {/* Theme preview */}
+                  <div className="rounded-md overflow-hidden bg-white">
+                    {/* Mini sidebar + content preview */}
+                    <div className="flex h-[100px]">
+                      <div className="w-10 bg-[#f7f7f7] border-r border-[#e6e9ef] flex flex-col items-center pt-2 gap-1.5">
+                        <div className="w-5 h-5 rounded bg-[#6161ff]" />
+                        <div className="w-5 h-1.5 rounded bg-[#e6e9ef]" />
+                        <div className="w-5 h-1.5 rounded bg-[#e6e9ef]" />
+                        <div className="w-5 h-1.5 rounded bg-[#e6e9ef]" />
+                      </div>
+                      <div className="flex-1 p-2">
+                        <div className="h-3 w-16 rounded bg-[#323338] mb-2" />
+                        <div className="space-y-1.5">
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#f7f7f7]" />
+                            <div className="h-2 w-8 rounded bg-[#00c875]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#f7f7f7]" />
+                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#f7f7f7]" />
+                            <div className="h-2 w-8 rounded bg-[#6161ff]" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Label */}
+                  <div className="flex items-center gap-2 px-2 py-2">
+                    <Sun className="w-4 h-4 text-text-secondary" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-text-primary">
+                        {t('settings.theme.light')}
+                      </p>
+                      <p className="text-xs text-text-tertiary">{t('settings.theme.lightDesc')}</p>
+                    </div>
+                    {currentTheme === 'light' && (
+                      <Check className="w-4 h-4 text-monday-primary ml-auto shrink-0" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Dark Theme */}
+                <button
+                  onClick={() => {
+                    setTheme('dark')
+                    setSettings(s => ({ ...s, theme: 'dark' }))
+                  }}
+                  className={cn(
+                    'group relative rounded-lg border-2 p-1 transition-all',
+                    currentTheme === 'dark'
+                      ? 'border-monday-primary ring-2 ring-monday-primary/20'
+                      : 'border-border-light hover:border-monday-primary/40'
+                  )}
+                >
+                  <div className="rounded-md overflow-hidden bg-[#1e1e2e]">
+                    <div className="flex h-[100px]">
+                      <div className="w-10 bg-[#262637] border-r border-[#35354d] flex flex-col items-center pt-2 gap-1.5">
+                        <div className="w-5 h-5 rounded bg-[#7c7cff]" />
+                        <div className="w-5 h-1.5 rounded bg-[#35354d]" />
+                        <div className="w-5 h-1.5 rounded bg-[#35354d]" />
+                        <div className="w-5 h-1.5 rounded bg-[#35354d]" />
+                      </div>
+                      <div className="flex-1 p-2">
+                        <div className="h-3 w-16 rounded bg-[#e2e2e8] mb-2" />
+                        <div className="space-y-1.5">
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#262637]" />
+                            <div className="h-2 w-8 rounded bg-[#00c875]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#262637]" />
+                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#262637]" />
+                            <div className="h-2 w-8 rounded bg-[#7c7cff]" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-2">
+                    <Moon className="w-4 h-4 text-text-secondary" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-text-primary">
+                        {t('settings.theme.dark')}
+                      </p>
+                      <p className="text-xs text-text-tertiary">{t('settings.theme.darkDesc')}</p>
+                    </div>
+                    {currentTheme === 'dark' && (
+                      <Check className="w-4 h-4 text-monday-primary ml-auto shrink-0" />
+                    )}
+                  </div>
+                </button>
+
+                {/* Night Theme */}
+                <button
+                  onClick={() => {
+                    setTheme('night')
+                    setSettings(s => ({ ...s, theme: 'night' }))
+                  }}
+                  className={cn(
+                    'group relative rounded-lg border-2 p-1 transition-all',
+                    currentTheme === 'night'
+                      ? 'border-monday-primary ring-2 ring-monday-primary/20'
+                      : 'border-border-light hover:border-monday-primary/40'
+                  )}
+                >
+                  <div className="rounded-md overflow-hidden bg-[#0d1b2a]">
+                    <div className="flex h-[100px]">
+                      <div className="w-10 bg-[#142233] border-r border-[#1e3045] flex flex-col items-center pt-2 gap-1.5">
+                        <div className="w-5 h-5 rounded bg-[#64b5f6]" />
+                        <div className="w-5 h-1.5 rounded bg-[#1e3045]" />
+                        <div className="w-5 h-1.5 rounded bg-[#1e3045]" />
+                        <div className="w-5 h-1.5 rounded bg-[#1e3045]" />
+                      </div>
+                      <div className="flex-1 p-2">
+                        <div className="h-3 w-16 rounded bg-[#d8e2ec] mb-2" />
+                        <div className="space-y-1.5">
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#142233]" />
+                            <div className="h-2 w-8 rounded bg-[#00c875]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#142233]" />
+                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
+                          </div>
+                          <div className="flex gap-1.5">
+                            <div className="h-2 flex-1 rounded bg-[#142233]" />
+                            <div className="h-2 w-8 rounded bg-[#64b5f6]" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 px-2 py-2">
+                    <Star className="w-4 h-4 text-text-secondary" />
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-text-primary">
+                        {t('settings.theme.night')}
+                      </p>
+                      <p className="text-xs text-text-tertiary">{t('settings.theme.nightDesc')}</p>
+                    </div>
+                    {currentTheme === 'night' && (
+                      <Check className="w-4 h-4 text-monday-primary ml-auto shrink-0" />
+                    )}
+                  </div>
                 </button>
               </div>
             </div>

@@ -241,7 +241,7 @@ export default function WorkspacesPage() {
       {/* Delete Workspace Confirmation Modal */}
       {deleteWorkspace && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
+          <div className="bg-bg-primary rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
             <h3 className="text-lg font-semibold text-text-primary mb-4">Delete Workspace</h3>
             <p className="text-text-secondary mb-4">
               This action cannot be undone. All boards in this workspace will be permanently
@@ -475,7 +475,7 @@ function RenameWorkspaceModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
+      <div className="bg-bg-primary rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
         <h3 className="text-lg font-semibold text-text-primary mb-4">Rename Workspace</h3>
         <form onSubmit={handleSubmit}>
           <input

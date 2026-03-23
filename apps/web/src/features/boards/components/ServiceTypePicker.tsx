@@ -16,33 +16,39 @@ interface ServiceTypePickerProps {
 
 // Icon mapping for service types
 const SERVICE_ICONS: Record<string, React.ElementType> = {
-  'labor_safety': HardHat,
-  'fire_safety': Flame,
-  'environmental': Leaf,
-  'food_safety': Utensils,
-  'construction': HardHat,
-  'electrical': Zap,
-  'gas_safety': Gauge,
-  'elevator': Gauge,
-  'pressure_vessels': Gauge,
-  'radiation': Shield,
+  labor_safety: HardHat,
+  fire_safety: Flame,
+  environmental: Leaf,
+  food_safety: Utensils,
+  construction: HardHat,
+  electrical: Zap,
+  gas_safety: Gauge,
+  elevator: Gauge,
+  pressure_vessels: Gauge,
+  radiation: Shield,
 }
 
 // Color mapping for service types
 const SERVICE_COLORS: Record<string, string> = {
-  'labor_safety': '#fdab3d',
-  'fire_safety': '#e2445c',
-  'environmental': '#00c875',
-  'food_safety': '#579bfc',
-  'construction': '#784bd1',
-  'electrical': '#ffcb00',
-  'gas_safety': '#ff642e',
-  'elevator': '#a25ddc',
-  'pressure_vessels': '#00d2d2',
-  'radiation': '#bb3354',
+  labor_safety: '#fdab3d',
+  fire_safety: '#e2445c',
+  environmental: '#00c875',
+  food_safety: '#579bfc',
+  construction: '#784bd1',
+  electrical: '#ffcb00',
+  gas_safety: '#ff642e',
+  elevator: '#a25ddc',
+  pressure_vessels: '#00d2d2',
+  radiation: '#bb3354',
 }
 
-export function ServiceTypePicker({ value, onChange, onClose, placeholder = 'Search service types...', positionStyle }: ServiceTypePickerProps) {
+export function ServiceTypePicker({
+  value,
+  onChange,
+  onClose,
+  placeholder = 'Search service types...',
+  positionStyle,
+}: ServiceTypePickerProps) {
   const [search, setSearch] = useState('')
   const { serviceTypes, loading } = useServiceTypes()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -51,12 +57,13 @@ export function ServiceTypePicker({ value, onChange, onClose, placeholder = 'Sea
     inputRef.current?.focus()
   }, [])
 
-  const filteredTypes = serviceTypes?.filter((type) => {
-    const name = (type.name || '').toLowerCase()
-    const nameKa = (type.name_ka || '').toLowerCase()
-    const searchLower = search.toLowerCase()
-    return name.includes(searchLower) || nameKa.includes(searchLower)
-  }) || []
+  const filteredTypes =
+    serviceTypes?.filter(type => {
+      const name = (type.name || '').toLowerCase()
+      const nameKa = (type.name_ka || '').toLowerCase()
+      const searchLower = search.toLowerCase()
+      return name.includes(searchLower) || nameKa.includes(searchLower)
+    }) || []
 
   const getIcon = (inspectorType?: string) => {
     return SERVICE_ICONS[inspectorType || ''] || Shield
@@ -70,7 +77,7 @@ export function ServiceTypePicker({ value, onChange, onClose, placeholder = 'Sea
     <div
       style={positionStyle}
       className={cn(
-        'min-w-[280px] bg-white rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
+        'min-w-[280px] bg-bg-primary rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
         positionStyle ? 'fixed w-[300px]' : 'absolute top-0 left-0 w-full'
       )}
     >
@@ -82,7 +89,7 @@ export function ServiceTypePicker({ value, onChange, onClose, placeholder = 'Sea
             ref={inputRef}
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             placeholder={placeholder}
             className="w-full pl-8 pr-2 py-1.5 text-sm border border-border-light rounded focus:outline-none focus:border-monday-primary"
           />
@@ -117,7 +124,7 @@ export function ServiceTypePicker({ value, onChange, onClose, placeholder = 'Sea
           </div>
         ) : (
           <div className="py-1">
-            {filteredTypes.map((type) => {
+            {filteredTypes.map(type => {
               const IconComponent = getIcon(type.required_inspector_type)
               const color = getColor(type.required_inspector_type)
               return (
@@ -142,18 +149,22 @@ export function ServiceTypePicker({ value, onChange, onClose, placeholder = 'Sea
 
                   {/* Service Info */}
                   <div className="flex-1 text-left overflow-hidden">
-                    <div className="font-medium text-text-primary truncate">
-                      {type.name}
-                    </div>
-                    <div className="text-xs text-text-tertiary truncate">
-                      {type.name_ka}
-                    </div>
+                    <div className="font-medium text-text-primary truncate">{type.name}</div>
+                    <div className="text-xs text-text-tertiary truncate">{type.name_ka}</div>
                   </div>
 
                   {/* Selected Indicator */}
                   {value === type.id && (
-                    <svg className="w-5 h-5 text-monday-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    <svg
+                      className="w-5 h-5 text-monday-primary flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                   )}
                 </button>

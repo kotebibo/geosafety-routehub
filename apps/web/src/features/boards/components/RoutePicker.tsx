@@ -21,7 +21,13 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: '#e2445c',
 }
 
-export function RoutePicker({ value, onChange, onClose, placeholder = 'Search routes...', positionStyle }: RoutePickerProps) {
+export function RoutePicker({
+  value,
+  onChange,
+  onClose,
+  placeholder = 'Search routes...',
+  positionStyle,
+}: RoutePickerProps) {
   const [search, setSearch] = useState('')
   const { routes, loading } = useRoutes()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -30,11 +36,12 @@ export function RoutePicker({ value, onChange, onClose, placeholder = 'Search ro
     inputRef.current?.focus()
   }, [])
 
-  const filteredRoutes = routes?.filter((route) => {
-    const name = (route.name || '').toLowerCase()
-    const searchLower = search.toLowerCase()
-    return name.includes(searchLower)
-  }) || []
+  const filteredRoutes =
+    routes?.filter(route => {
+      const name = (route.name || '').toLowerCase()
+      const searchLower = search.toLowerCase()
+      return name.includes(searchLower)
+    }) || []
 
   const formatDate = (date: string) => {
     if (!date) return ''
@@ -55,7 +62,7 @@ export function RoutePicker({ value, onChange, onClose, placeholder = 'Search ro
     <div
       style={positionStyle}
       className={cn(
-        'min-w-[300px] bg-white rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
+        'min-w-[300px] bg-bg-primary rounded-md shadow-lg border border-border-light z-[9999] overflow-hidden',
         positionStyle ? 'fixed w-[300px]' : 'absolute top-0 left-0 w-full'
       )}
     >
@@ -67,7 +74,7 @@ export function RoutePicker({ value, onChange, onClose, placeholder = 'Search ro
             ref={inputRef}
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             placeholder={placeholder}
             className="w-full pl-8 pr-2 py-1.5 text-sm border border-border-light rounded focus:outline-none focus:border-monday-primary"
           />
@@ -97,12 +104,10 @@ export function RoutePicker({ value, onChange, onClose, placeholder = 'Search ro
             <div className="w-6 h-6 border-2 border-monday-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredRoutes.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-text-tertiary">
-            No routes found
-          </div>
+          <div className="px-4 py-8 text-center text-sm text-text-tertiary">No routes found</div>
         ) : (
           <div className="py-1">
-            {filteredRoutes.map((route) => (
+            {filteredRoutes.map(route => (
               <button
                 key={route.id}
                 onClick={() => {
@@ -130,7 +135,10 @@ export function RoutePicker({ value, onChange, onClose, placeholder = 'Search ro
                   <div className="flex items-center gap-2 text-xs text-text-tertiary">
                     <Calendar className="w-3 h-3" />
                     <span>{formatDate(route.date)}</span>
-                    <span className="px-1.5 py-0.5 rounded text-white text-[10px]" style={{ backgroundColor: STATUS_COLORS[route.status] || '#579bfc' }}>
+                    <span
+                      className="px-1.5 py-0.5 rounded text-white text-[10px]"
+                      style={{ backgroundColor: STATUS_COLORS[route.status] || '#579bfc' }}
+                    >
                       {getStatusLabel(route.status)}
                     </span>
                   </div>
@@ -138,8 +146,16 @@ export function RoutePicker({ value, onChange, onClose, placeholder = 'Search ro
 
                 {/* Selected Indicator */}
                 {value === route.id && (
-                  <svg className="w-5 h-5 text-monday-primary flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  <svg
+                    className="w-5 h-5 text-monday-primary flex-shrink-0"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 )}
               </button>

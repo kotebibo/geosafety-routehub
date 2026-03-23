@@ -123,7 +123,7 @@ export function Header({ className, onMenuToggle }: HeaderProps) {
             >
               <Search className="w-3.5 h-3.5 flex-shrink-0" />
               <span className="hidden sm:block flex-1 text-left">{t('common.search')}</span>
-              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-white border border-[#c3c6d4] text-[10px] text-[#676879] font-mono">
+              <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-bg-primary border border-[#c3c6d4] text-[10px] text-[#676879] font-mono">
                 {isMac ? '⌘K' : 'Ctrl+K'}
               </kbd>
             </button>

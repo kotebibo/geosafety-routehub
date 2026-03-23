@@ -21,7 +21,7 @@ function sortData<T>(data: T[], columns: Column<T>[], sort: SortState): T[] {
     return data
   }
 
-  const column = columns.find((c) => c.id === sort.column)
+  const column = columns.find(c => c.id === sort.column)
   if (!column) {
     return data
   }
@@ -61,7 +61,15 @@ function sortData<T>(data: T[], columns: Column<T>[], sort: SortState): T[] {
   })
 }
 
-function TableSkeleton({ columns, rows, selectable }: { columns: number; rows: number; selectable?: boolean }) {
+function TableSkeleton({
+  columns,
+  rows,
+  selectable,
+}: {
+  columns: number
+  rows: number
+  selectable?: boolean
+}) {
   const totalColumns = selectable ? columns + 1 : columns
 
   return (
@@ -69,10 +77,13 @@ function TableSkeleton({ columns, rows, selectable }: { columns: number; rows: n
       {Array.from({ length: rows }).map((_, rowIndex) => (
         <tr key={rowIndex} className="border-b border-border-light">
           {Array.from({ length: totalColumns }).map((_, colIndex) => (
-            <td key={colIndex} className={cn(
-              'px-4 py-3 border-r border-border-light',
-              colIndex === totalColumns - 1 && 'border-r-0'
-            )}>
+            <td
+              key={colIndex}
+              className={cn(
+                'px-4 py-3 border-r border-border-light',
+                colIndex === totalColumns - 1 && 'border-r-0'
+              )}
+            >
               <div className="h-4 bg-bg-secondary rounded animate-pulse" />
             </td>
           ))}
@@ -106,7 +117,7 @@ export function DataTable<T>({
   const sortedData = useMemo(() => sortData(data, columns, sort), [data, columns, sort])
 
   const handleSort = useCallback((columnId: string) => {
-    setSort((prev) => {
+    setSort(prev => {
       if (prev.column !== columnId) {
         return { column: columnId, direction: 'asc' }
       }
@@ -119,12 +130,12 @@ export function DataTable<T>({
 
   const allSelected = useMemo(() => {
     if (!selectable || data.length === 0) return false
-    return data.every((row) => selectedRows?.has(getRowId(row)))
+    return data.every(row => selectedRows?.has(getRowId(row)))
   }, [selectable, data, selectedRows, getRowId])
 
   const someSelected = useMemo(() => {
     if (!selectable || data.length === 0) return false
-    const selectedCount = data.filter((row) => selectedRows?.has(getRowId(row))).length
+    const selectedCount = data.filter(row => selectedRows?.has(getRowId(row))).length
     return selectedCount > 0 && selectedCount < data.length
   }, [selectable, data, selectedRows, getRowId])
 
@@ -158,22 +169,19 @@ export function DataTable<T>({
     [getRowId, onSelectionChange, selectedRows]
   )
 
-  const renderCell = useCallback(
-    (row: T, column: Column<T>, rowIndex: number) => {
-      const value = getCellValue(row, column)
+  const renderCell = useCallback((row: T, column: Column<T>, rowIndex: number) => {
+    const value = getCellValue(row, column)
 
-      if (column.cell) {
-        return column.cell({ row, value, rowIndex })
-      }
+    if (column.cell) {
+      return column.cell({ row, value, rowIndex })
+    }
 
-      if (value == null) {
-        return <span className="text-text-tertiary">-</span>
-      }
+    if (value == null) {
+      return <span className="text-text-tertiary">-</span>
+    }
 
-      return String(value)
-    },
-    []
-  )
+    return String(value)
+  }, [])
 
   const getColumnStyle = (column: Column<T>): React.CSSProperties => {
     const style: React.CSSProperties = {}
@@ -197,7 +205,12 @@ export function DataTable<T>({
   }
 
   return (
-    <div className={cn('w-full overflow-x-auto rounded-lg border border-border-light bg-white', className)}>
+    <div
+      className={cn(
+        'w-full overflow-x-auto rounded-lg border border-border-light bg-bg-primary',
+        className
+      )}
+    >
       <table className="w-full border-collapse">
         {caption && <caption className="sr-only">{caption}</caption>}
         <thead>
@@ -232,15 +245,21 @@ export function DataTable<T>({
                 style={getColumnStyle(column)}
                 onClick={column.sortable ? () => handleSort(column.id) : undefined}
               >
-                <div className={cn('flex items-center gap-1', column.align === 'right' && 'justify-end', column.align === 'center' && 'justify-center')}>
+                <div
+                  className={cn(
+                    'flex items-center gap-1',
+                    column.align === 'right' && 'justify-end',
+                    column.align === 'center' && 'justify-center'
+                  )}
+                >
                   <span>{column.header}</span>
-                  {column.sortable && sort.column === column.id && (
-                    sort.direction === 'asc' ? (
+                  {column.sortable &&
+                    sort.column === column.id &&
+                    (sort.direction === 'asc' ? (
                       <ChevronUp className="h-4 w-4" />
                     ) : (
                       <ChevronDown className="h-4 w-4" />
-                    )
-                  )}
+                    ))}
                 </div>
               </th>
             ))}
@@ -253,9 +272,7 @@ export function DataTable<T>({
             <tr>
               <td colSpan={selectable ? columns.length + 1 : columns.length} className="px-4 py-12">
                 {emptyState || (
-                  <div className="text-center text-text-secondary">
-                    მონაცემები არ მოიძებნა
-                  </div>
+                  <div className="text-center text-text-secondary">მონაცემები არ მოიძებნა</div>
                 )}
               </td>
             </tr>
@@ -279,7 +296,7 @@ export function DataTable<T>({
                     <td className="w-12 px-4 py-3 border-r border-border-light">
                       <button
                         type="button"
-                        onClick={(e) => handleSelectRow(row, e)}
+                        onClick={e => handleSelectRow(row, e)}
                         className="flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
                         aria-label={isSelected ? 'Deselect row' : 'Select row'}
                       >
@@ -291,7 +308,7 @@ export function DataTable<T>({
                       </button>
                     </td>
                   )}
-                  {columns.map((column) => (
+                  {columns.map(column => (
                     <td
                       key={column.id}
                       className={cn(

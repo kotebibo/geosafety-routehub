@@ -56,7 +56,11 @@ function formatDateForInput(dateString: string | null): string {
   return date.toISOString().split('T')[0]
 }
 
-export const DateRangeCell = memo(function DateRangeCell({ value, onEdit, onEditStart }: CellRendererProps) {
+export const DateRangeCell = memo(function DateRangeCell({
+  value,
+  onEdit,
+  onEditStart,
+}: CellRendererProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef<HTMLDivElement>(null)
@@ -176,9 +180,7 @@ export const DateRangeCell = memo(function DateRangeCell({ value, onEdit, onEdit
           <div className="flex items-center gap-1 overflow-hidden">
             <span className="text-[#323338] truncate">{displayText}</span>
             {durationDays !== null && (
-              <span className="text-[10px] text-[#9699a6] flex-shrink-0">
-                ({durationDays}d)
-              </span>
+              <span className="text-[10px] text-[#9699a6] flex-shrink-0">({durationDays}d)</span>
             )}
           </div>
         ) : (
@@ -187,82 +189,86 @@ export const DateRangeCell = memo(function DateRangeCell({ value, onEdit, onEdit
       </div>
 
       {/* Dropdown */}
-      {isOpen && typeof document !== 'undefined' && createPortal(
-        <div
-          ref={dropdownRef}
-          className="fixed z-[9999] bg-white rounded-lg shadow-lg border border-gray-200 p-4 min-w-[280px]"
-          style={{
-            top: dropdownPosition.top,
-            left: dropdownPosition.left,
-          }}
-        >
-          <div className="flex flex-col gap-3">
-            {/* Start Date */}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={editStart}
-                onChange={(e) => setEditStart(e.target.value)}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0073ea] focus:border-transparent"
-              />
-            </div>
-
-            {/* Arrow */}
-            <div className="flex justify-center">
-              <ArrowRight className="w-4 h-4 text-gray-400" />
-            </div>
-
-            {/* End Date */}
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
-                End Date
-              </label>
-              <input
-                type="date"
-                value={editEnd}
-                onChange={(e) => setEditEnd(e.target.value)}
-                min={editStart || undefined}
-                className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0073ea] focus:border-transparent"
-              />
-            </div>
-
-            {/* Duration display */}
-            {editStart && editEnd && (
-              <div className="text-center text-xs text-gray-500">
-                {(() => {
-                  const start = new Date(editStart)
-                  const end = new Date(editEnd)
-                  const diffDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-                  if (diffDays >= 0) {
-                    return `Duration: ${diffDays} day${diffDays !== 1 ? 's' : ''}`
-                  }
-                  return <span className="text-red-500">End date must be after start date</span>
-                })()}
+      {isOpen &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed z-[9999] bg-bg-primary rounded-lg shadow-lg border border-border-light p-4 min-w-[280px]"
+            style={{
+              top: dropdownPosition.top,
+              left: dropdownPosition.left,
+            }}
+          >
+            <div className="flex flex-col gap-3">
+              {/* Start Date */}
+              <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  Start Date
+                </label>
+                <input
+                  type="date"
+                  value={editStart}
+                  onChange={e => setEditStart(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[#0073ea] focus:border-transparent"
+                />
               </div>
-            )}
 
-            {/* Actions */}
-            <div className="flex justify-between pt-2 border-t border-gray-100">
-              <button
-                onClick={handleClear}
-                className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-              >
-                Clear
-              </button>
-              <button
-                onClick={handleSave}
-                className="px-3 py-1.5 text-xs bg-[#0073ea] text-white rounded hover:bg-[#0060c7] transition-colors"
-              >
-                Save
-              </button>
+              {/* Arrow */}
+              <div className="flex justify-center">
+                <ArrowRight className="w-4 h-4 text-text-tertiary" />
+              </div>
+
+              {/* End Date */}
+              <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  End Date
+                </label>
+                <input
+                  type="date"
+                  value={editEnd}
+                  onChange={e => setEditEnd(e.target.value)}
+                  min={editStart || undefined}
+                  className="w-full px-3 py-2 text-sm border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[#0073ea] focus:border-transparent"
+                />
+              </div>
+
+              {/* Duration display */}
+              {editStart && editEnd && (
+                <div className="text-center text-xs text-text-tertiary">
+                  {(() => {
+                    const start = new Date(editStart)
+                    const end = new Date(editEnd)
+                    const diffDays = Math.ceil(
+                      (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+                    )
+                    if (diffDays >= 0) {
+                      return `Duration: ${diffDays} day${diffDays !== 1 ? 's' : ''}`
+                    }
+                    return <span className="text-red-500">End date must be after start date</span>
+                  })()}
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="flex justify-between pt-2 border-t border-border-light">
+                <button
+                  onClick={handleClear}
+                  className="px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded transition-colors"
+                >
+                  Clear
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="px-3 py-1.5 text-xs bg-[#0073ea] text-white rounded hover:bg-[#0060c7] transition-colors"
+                >
+                  Save
+                </button>
+              </div>
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   )
 })

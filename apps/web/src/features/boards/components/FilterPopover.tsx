@@ -434,7 +434,7 @@ export function FilterPopover({
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div
-        className="fixed z-50 bg-white rounded-lg shadow-lg border border-border-light w-[340px] overflow-hidden"
+        className="fixed z-50 bg-bg-primary rounded-lg shadow-lg border border-border-light w-[340px] overflow-hidden"
         style={{ top: anchorPosition.top, left: anchorPosition.left }}
       >
         {/* Active filters section */}

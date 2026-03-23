@@ -279,8 +279,8 @@ export const FilesCell = memo(function FilesCell({
             ref={dropdownRef}
             className={cn(
               'fixed z-[9999]',
-              'bg-white rounded-lg',
-              'border border-gray-200',
+              'bg-bg-primary rounded-lg',
+              'border border-border-light',
               'shadow-[0_8px_30px_rgba(0,0,0,0.12)]',
               'p-3 min-w-[280px] max-w-[360px]'
             )}
@@ -422,7 +422,7 @@ export const FilesCell = memo(function FilesCell({
 
             {/* Upload indicator */}
             {uploading && (
-              <div className="mt-2 pt-2 border-t border-gray-100">
+              <div className="mt-2 pt-2 border-t border-border-light">
                 <div className="flex items-center gap-2 text-sm text-[#676879]">
                   <div className="w-4 h-4 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
                   Uploading...

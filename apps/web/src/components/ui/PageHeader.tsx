@@ -12,14 +12,12 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, action }: PageHeaderProps) {
   return (
-    <div className="bg-white border-b">
+    <div className="bg-bg-primary border-b">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-            {description && (
-              <p className="mt-1 text-sm text-gray-600">{description}</p>
-            )}
+            <h1 className="text-2xl font-bold text-text-primary">{title}</h1>
+            {description && <p className="mt-1 text-sm text-text-secondary">{description}</p>}
           </div>
           {action && (
             <button

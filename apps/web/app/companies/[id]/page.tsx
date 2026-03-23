@@ -79,7 +79,12 @@ const statusConfig: Record<string, { label: string; bg: string; text: string; do
     text: 'text-emerald-700',
     dot: 'bg-emerald-500',
   },
-  inactive: { label: 'არააქტიური', bg: 'bg-gray-100', text: 'text-gray-600', dot: 'bg-gray-400' },
+  inactive: {
+    label: 'არააქტიური',
+    bg: 'bg-bg-tertiary',
+    text: 'text-text-secondary',
+    dot: 'bg-text-tertiary',
+  },
   suspended: { label: 'შეჩერებული', bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
 }
 
@@ -269,9 +274,9 @@ export default function CompanyDetailsPage() {
   if (!company) {
     return (
       <div className="max-w-5xl mx-auto px-6 py-16 text-center">
-        <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h1 className="text-xl font-semibold text-gray-900 mb-2">კომპანია არ მოიძებნა</h1>
-        <p className="text-gray-500 mb-6">მოთხოვნილი კომპანია არ არსებობს ან წაშლილია</p>
+        <Building2 className="w-16 h-16 text-text-disabled mx-auto mb-4" />
+        <h1 className="text-xl font-semibold text-text-primary mb-2">კომპანია არ მოიძებნა</h1>
+        <p className="text-text-tertiary mb-6">მოთხოვნილი კომპანია არ არსებობს ან წაშლილია</p>
         <button
           onClick={() => router.push('/companies')}
           className="inline-flex items-center gap-2 px-4 py-2 bg-[#6161FF] text-white rounded-lg hover:bg-[#4f4fd9] transition-colors"
@@ -291,15 +296,15 @@ export default function CompanyDetailsPage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-1.5 text-sm text-gray-500 mb-6">
+      <nav className="flex items-center gap-1.5 text-sm text-text-tertiary mb-6">
         <button
           onClick={() => router.push('/companies')}
-          className="hover:text-gray-900 transition-colors"
+          className="hover:text-text-primary transition-colors"
         >
           კომპანიები
         </button>
         <ChevronRight className="w-3.5 h-3.5" />
-        <span className="text-gray-900 font-medium truncate max-w-[200px]">{company.name}</span>
+        <span className="text-text-primary font-medium truncate max-w-[200px]">{company.name}</span>
       </nav>
 
       {/* Header */}
@@ -309,7 +314,7 @@ export default function CompanyDetailsPage() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-1">
-            <h1 className="text-2xl font-bold text-gray-900 truncate">{company.name}</h1>
+            <h1 className="text-2xl font-bold text-text-primary truncate">{company.name}</h1>
             <span
               className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.text}`}
             >
@@ -317,7 +322,7 @@ export default function CompanyDetailsPage() {
               {status.label}
             </span>
           </div>
-          <div className="flex items-center gap-4 text-sm text-gray-500">
+          <div className="flex items-center gap-4 text-sm text-text-tertiary">
             {primaryLocation && (
               <span className="flex items-center gap-1">
                 <MapPin className="w-3.5 h-3.5" />
@@ -336,47 +341,47 @@ export default function CompanyDetailsPage() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-bg-primary border border-border-light rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
               <MapPin className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{locations.length}</p>
-              <p className="text-xs text-gray-500">ლოკაცია</p>
+              <p className="text-2xl font-bold text-text-primary">{locations.length}</p>
+              <p className="text-xs text-text-tertiary">ლოკაცია</p>
             </div>
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="bg-bg-primary border border-border-light rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
               <Shield className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-900">{services.length}</p>
-              <p className="text-xs text-gray-500">სერვისი</p>
+              <p className="text-2xl font-bold text-text-primary">{services.length}</p>
+              <p className="text-xs text-text-tertiary">სერვისი</p>
             </div>
           </div>
         </div>
         <div
-          className={`border rounded-xl p-4 ${overdueServices.length > 0 ? 'bg-red-50 border-red-200' : 'bg-white border-gray-200'}`}
+          className={`border rounded-xl p-4 ${overdueServices.length > 0 ? 'bg-red-50 border-red-200' : 'bg-bg-primary border-border-light'}`}
         >
           <div className="flex items-center gap-3">
             <div
-              className={`w-10 h-10 rounded-lg flex items-center justify-center ${overdueServices.length > 0 ? 'bg-red-100' : 'bg-gray-50'}`}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center ${overdueServices.length > 0 ? 'bg-red-100' : 'bg-bg-secondary'}`}
             >
               <AlertTriangle
-                className={`w-5 h-5 ${overdueServices.length > 0 ? 'text-red-600' : 'text-gray-400'}`}
+                className={`w-5 h-5 ${overdueServices.length > 0 ? 'text-red-600' : 'text-text-tertiary'}`}
               />
             </div>
             <div>
               <p
-                className={`text-2xl font-bold ${overdueServices.length > 0 ? 'text-red-700' : 'text-gray-900'}`}
+                className={`text-2xl font-bold ${overdueServices.length > 0 ? 'text-red-700' : 'text-text-primary'}`}
               >
                 {overdueServices.length}
               </p>
               <p
-                className={`text-xs ${overdueServices.length > 0 ? 'text-red-600' : 'text-gray-500'}`}
+                className={`text-xs ${overdueServices.length > 0 ? 'text-red-600' : 'text-text-tertiary'}`}
               >
                 ვადაგადაცილებული
               </p>
@@ -386,10 +391,10 @@ export default function CompanyDetailsPage() {
       </div>
 
       {/* Company Info Card */}
-      <div className="bg-white border border-gray-200 rounded-xl mb-6 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-          <FileText className="w-4.5 h-4.5 text-gray-400" />
-          <h2 className="font-semibold text-gray-900">ძირითადი ინფორმაცია</h2>
+      <div className="bg-bg-primary border border-border-light rounded-xl mb-6 overflow-hidden">
+        <div className="px-6 py-4 border-b border-border-light flex items-center gap-2">
+          <FileText className="w-4.5 h-4.5 text-text-tertiary" />
+          <h2 className="font-semibold text-text-primary">ძირითადი ინფორმაცია</h2>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-5">
@@ -442,30 +447,30 @@ export default function CompanyDetailsPage() {
             )}
           </div>
           {company.notes && (
-            <div className="mt-5 pt-5 border-t border-gray-100">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
+            <div className="mt-5 pt-5 border-t border-border-light">
+              <p className="text-xs font-medium text-text-tertiary uppercase tracking-wide mb-1.5">
                 შენიშვნები
               </p>
-              <p className="text-sm text-gray-700 leading-relaxed">{company.notes}</p>
+              <p className="text-sm text-text-secondary leading-relaxed">{company.notes}</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Locations Card */}
-      <div className="bg-white border border-gray-200 rounded-xl mb-6 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div className="bg-bg-primary border border-border-light rounded-xl mb-6 overflow-hidden">
+        <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <MapPin className="w-4.5 h-4.5 text-gray-400" />
-            <h2 className="font-semibold text-gray-900">ლოკაციები</h2>
-            <span className="text-xs text-gray-400 font-medium bg-gray-100 px-1.5 py-0.5 rounded">
+            <MapPin className="w-4.5 h-4.5 text-text-tertiary" />
+            <h2 className="font-semibold text-text-primary">ლოკაციები</h2>
+            <span className="text-xs text-text-tertiary font-medium bg-bg-tertiary px-1.5 py-0.5 rounded">
               {locations.length}
             </span>
           </div>
           {!editingLocations && (
             <button
               onClick={handleStartEditLocations}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
             >
               <Edit2 className="w-3.5 h-3.5" />
               რედაქტირება
@@ -477,7 +482,7 @@ export default function CompanyDetailsPage() {
           {editingLocations ? (
             <div>
               <LocationManager locations={editableLocations} onChange={setEditableLocations} />
-              <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border-light">
                 <button
                   onClick={handleSaveLocations}
                   disabled={saving}
@@ -489,7 +494,7 @@ export default function CompanyDetailsPage() {
                 <button
                   onClick={() => setEditingLocations(false)}
                   disabled={saving}
-                  className="flex items-center gap-2 px-5 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-5 py-2 text-sm text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
                 >
                   <X className="w-4 h-4" />
                   გაუქმება
@@ -500,8 +505,8 @@ export default function CompanyDetailsPage() {
             <div className="space-y-3">
               {locations.length === 0 ? (
                 <div className="text-center py-10">
-                  <MapPin className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500 mb-4">ლოკაციები არ არის დამატებული</p>
+                  <MapPin className="w-10 h-10 text-text-disabled mx-auto mb-3" />
+                  <p className="text-sm text-text-tertiary mb-4">ლოკაციები არ არის დამატებული</p>
                   <button
                     onClick={handleStartEditLocations}
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-[#6161FF] text-white rounded-lg hover:bg-[#4f4fd9] transition-colors"
@@ -517,33 +522,35 @@ export default function CompanyDetailsPage() {
                     className={`rounded-lg border p-4 transition-colors ${
                       location.is_primary
                         ? 'border-amber-200 bg-amber-50/50'
-                        : 'border-gray-150 bg-gray-50/50 hover:bg-gray-50'
+                        : 'border-border-light bg-bg-secondary/50 hover:bg-bg-secondary'
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       <div
                         className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          location.is_primary ? 'bg-amber-100' : 'bg-gray-100'
+                          location.is_primary ? 'bg-amber-100' : 'bg-bg-tertiary'
                         }`}
                       >
                         <MapPin
-                          className={`w-4 h-4 ${location.is_primary ? 'text-amber-600' : 'text-gray-500'}`}
+                          className={`w-4 h-4 ${location.is_primary ? 'text-amber-600' : 'text-text-tertiary'}`}
                         />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-medium text-gray-900 text-sm">{location.name}</span>
+                          <span className="font-medium text-text-primary text-sm">
+                            {location.name}
+                          </span>
                           {location.is_primary && (
                             <span className="text-[10px] font-semibold uppercase tracking-wider bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded">
                               მთავარი
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gray-500">{location.address}</p>
+                        <p className="text-sm text-text-tertiary">{location.address}</p>
                         {(location.contact_phone ||
                           location.contact_email ||
                           location.contact_name) && (
-                          <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                          <div className="flex items-center gap-4 mt-2 text-xs text-text-tertiary">
                             {location.contact_name && (
                               <span className="flex items-center gap-1">
                                 <User className="w-3 h-3" />
@@ -553,7 +560,7 @@ export default function CompanyDetailsPage() {
                             {location.contact_phone && (
                               <a
                                 href={`tel:${location.contact_phone}`}
-                                className="flex items-center gap-1 hover:text-gray-700"
+                                className="flex items-center gap-1 hover:text-text-secondary"
                               >
                                 <Phone className="w-3 h-3" />
                                 {location.contact_phone}
@@ -562,7 +569,7 @@ export default function CompanyDetailsPage() {
                             {location.contact_email && (
                               <a
                                 href={`mailto:${location.contact_email}`}
-                                className="flex items-center gap-1 hover:text-gray-700"
+                                className="flex items-center gap-1 hover:text-text-secondary"
                               >
                                 <Mail className="w-3 h-3" />
                                 {location.contact_email}
@@ -581,19 +588,19 @@ export default function CompanyDetailsPage() {
       </div>
 
       {/* Services Card */}
-      <div className="bg-white border border-gray-200 rounded-xl mb-6 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <div className="bg-bg-primary border border-border-light rounded-xl mb-6 overflow-hidden">
+        <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Shield className="w-4.5 h-4.5 text-gray-400" />
-            <h2 className="font-semibold text-gray-900">სერვისები</h2>
-            <span className="text-xs text-gray-400 font-medium bg-gray-100 px-1.5 py-0.5 rounded">
+            <Shield className="w-4.5 h-4.5 text-text-tertiary" />
+            <h2 className="font-semibold text-text-primary">სერვისები</h2>
+            <span className="text-xs text-text-tertiary font-medium bg-bg-tertiary px-1.5 py-0.5 rounded">
               {services.length}
             </span>
           </div>
           {!editingServices && (
             <button
               onClick={() => setEditingServices(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
             >
               <Edit2 className="w-3.5 h-3.5" />
               რედაქტირება
@@ -610,7 +617,7 @@ export default function CompanyDetailsPage() {
                   // Phase change handled by PDPOnboardingManager
                 }}
               />
-              <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-100">
+              <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border-light">
                 <button
                   onClick={() => {
                     setEditingServices(false)
@@ -627,7 +634,7 @@ export default function CompanyDetailsPage() {
                     setEditingServices(false)
                     fetchCompanyData()
                   }}
-                  className="flex items-center gap-2 px-5 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-5 py-2 text-sm text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
                 >
                   <X className="w-4 h-4" />
                   გაუქმება
@@ -638,8 +645,8 @@ export default function CompanyDetailsPage() {
             <div>
               {services.length === 0 ? (
                 <div className="text-center py-10">
-                  <Shield className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500 mb-4">სერვისები არ არის დამატებული</p>
+                  <Shield className="w-10 h-10 text-text-disabled mx-auto mb-3" />
+                  <p className="text-sm text-text-tertiary mb-4">სერვისები არ არის დამატებული</p>
                   <button
                     onClick={() => setEditingServices(true)}
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-[#6161FF] text-white rounded-lg hover:bg-[#4f4fd9] transition-colors"
@@ -663,13 +670,13 @@ export default function CompanyDetailsPage() {
                         className={`rounded-lg border p-4 transition-colors ${
                           overdue
                             ? 'border-red-200 bg-red-50/50'
-                            : 'border-gray-150 bg-gray-50/50 hover:bg-gray-50'
+                            : 'border-border-light bg-bg-secondary/50 hover:bg-bg-secondary'
                         }`}
                       >
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2.5 mb-2">
-                              <h3 className="font-semibold text-gray-900 text-sm">
+                              <h3 className="font-semibold text-text-primary text-sm">
                                 {service.service_types?.name_ka || service.service_types?.name}
                               </h3>
                               <span
@@ -680,7 +687,7 @@ export default function CompanyDetailsPage() {
                               </span>
                             </div>
 
-                            <div className="flex items-center gap-5 text-xs text-gray-500">
+                            <div className="flex items-center gap-5 text-xs text-text-tertiary">
                               <span className="flex items-center gap-1.5">
                                 <User className="w-3.5 h-3.5" />
                                 {service.inspectors?.full_name || (
@@ -699,14 +706,14 @@ export default function CompanyDetailsPage() {
                             {service.next_inspection_date ? (
                               <div>
                                 <p
-                                  className={`text-sm font-medium ${overdue ? 'text-red-600' : 'text-gray-900'}`}
+                                  className={`text-sm font-medium ${overdue ? 'text-red-600' : 'text-text-primary'}`}
                                 >
                                   {new Date(service.next_inspection_date).toLocaleDateString(
                                     'ka-GE'
                                   )}
                                 </p>
                                 <p
-                                  className={`text-xs mt-0.5 ${overdue ? 'text-red-500' : 'text-gray-400'}`}
+                                  className={`text-xs mt-0.5 ${overdue ? 'text-red-500' : 'text-text-tertiary'}`}
                                 >
                                   {overdue
                                     ? `${Math.abs(days!)} დღით ვადაგადაცილებული`
@@ -716,7 +723,7 @@ export default function CompanyDetailsPage() {
                                 </p>
                               </div>
                             ) : (
-                              <p className="text-xs text-gray-400">არ არის დაგეგმილი</p>
+                              <p className="text-xs text-text-tertiary">არ არის დაგეგმილი</p>
                             )}
                           </div>
                         </div>
@@ -732,36 +739,36 @@ export default function CompanyDetailsPage() {
 
       {/* Recent Check-ins Card */}
       {checkins.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-            <MapPinned className="w-4.5 h-4.5 text-gray-400" />
-            <h2 className="font-semibold text-gray-900">ბოლო ჩეკ-ინები</h2>
-            <span className="text-xs text-gray-400 font-medium bg-gray-100 px-1.5 py-0.5 rounded">
+        <div className="bg-bg-primary border border-border-light rounded-xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-border-light flex items-center gap-2">
+            <MapPinned className="w-4.5 h-4.5 text-text-tertiary" />
+            <h2 className="font-semibold text-text-primary">ბოლო ჩეკ-ინები</h2>
+            <span className="text-xs text-text-tertiary font-medium bg-bg-tertiary px-1.5 py-0.5 rounded">
               {checkins.length}
             </span>
           </div>
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-border-light">
             {checkins.map(checkin => (
               <div key={checkin.id} className="px-6 py-3 flex items-center gap-3">
                 <div
                   className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
                     checkin.location_updated
                       ? 'bg-green-100 text-green-600'
-                      : 'bg-gray-100 text-gray-500'
+                      : 'bg-bg-tertiary text-text-tertiary'
                   }`}
                 >
                   <MapPinned className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-sm font-medium text-text-primary">
                       {checkin.inspector_name}
                     </span>
                     {checkin.location_name && (
-                      <span className="text-xs text-gray-400">— {checkin.location_name}</span>
+                      <span className="text-xs text-text-tertiary">— {checkin.location_name}</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
+                  <div className="flex items-center gap-3 text-xs text-text-tertiary mt-0.5">
                     <span>
                       {new Date(checkin.created_at).toLocaleDateString('ka-GE', {
                         day: 'numeric',
@@ -812,7 +819,7 @@ interface InfoFieldProps {
 function InfoField({ icon, label, value, badge, href }: InfoFieldProps) {
   return (
     <div>
-      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1 flex items-center gap-1.5">
+      <p className="text-xs font-medium text-text-tertiary uppercase tracking-wide mb-1 flex items-center gap-1.5">
         {icon}
         {label}
       </p>
@@ -822,7 +829,7 @@ function InfoField({ icon, label, value, badge, href }: InfoFieldProps) {
             {value}
           </a>
         ) : (
-          <p className="text-sm font-medium text-gray-900">{value}</p>
+          <p className="text-sm font-medium text-text-primary">{value}</p>
         ))}
     </div>
   )
