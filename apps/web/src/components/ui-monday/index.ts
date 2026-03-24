@@ -9,6 +9,3 @@ export {
   getStatusLabel,
   getStatusColor,
 } from './StatusPill'
-export { Sidebar } from './Sidebar'
-export { Header } from './Header'
-export { MondayLayout } from './MondayLayout'

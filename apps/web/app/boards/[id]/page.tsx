@@ -351,7 +351,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
   // Get all item IDs for batch subitem count fetch
   const allItemIds = (items || []).map(i => i.id)
-  const { data: subitemCounts } = useBoardSubitemCounts(allItemIds, allItemIds.length > 0)
+  const { data: subitemCounts } = useBoardSubitemCounts(
+    params.id,
+    allItemIds,
+    allItemIds.length > 0
+  )
 
   // Track loaded subitems per expanded parent
   const [subitemsByParent, setSubitemsByParent] = useState<Map<string, BoardSubitem[]>>(new Map())

@@ -99,7 +99,7 @@ export const queryKeys = {
   boardSubitems: {
     all: ['board-subitems'] as const,
     byParent: (parentItemId: string) => ['board-subitems', 'parent', parentItemId] as const,
-    counts: (parentItemIds: string[]) => ['board-subitems', 'counts', ...parentItemIds] as const,
+    counts: (boardId: string) => ['board-subitems', 'counts', boardId] as const,
   },
 
   // Board subitem columns

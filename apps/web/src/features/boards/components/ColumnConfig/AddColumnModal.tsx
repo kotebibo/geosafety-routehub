@@ -159,6 +159,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
   const [selectedType, setSelectedType] = useState<ColumnType>('text')
   const [width, setWidth] = useState(180)
   const [linkedCompanyColumnId, setLinkedCompanyColumnId] = useState<string>('')
+  const [nameBlurred, setNameBlurred] = useState(false)
 
   // Get existing company columns for linking
   const companyColumns = existingColumns.filter(col => col.column_type === 'company')
@@ -222,10 +223,19 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
               type="text"
               value={columnName}
               onChange={e => setColumnName(e.target.value)}
+              onBlur={() => setNameBlurred(true)}
               placeholder="მაგ: პრიორიტეტი, მფლობელი, ვადა"
-              className="w-full px-3 py-2 border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+              className={cn(
+                'w-full px-3 py-2 border rounded-md focus:outline-none focus:border-monday-primary',
+                nameBlurred && !columnName.trim()
+                  ? 'border-red-400 bg-red-50/50'
+                  : 'border-border-light'
+              )}
               autoFocus
             />
+            {nameBlurred && !columnName.trim() && (
+              <p className="text-xs text-red-500 mt-1">სვეტის სახელი სავალდებულოა</p>
+            )}
           </div>
 
           {/* Column Type */}

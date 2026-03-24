@@ -48,7 +48,7 @@ export const SubitemRow = memo(function SubitemRow({
     <tr
       className={cn(
         'h-8 hover:bg-bg-hover transition-colors cursor-pointer group/subitem relative',
-        'bg-bg-secondary/50'
+        'bg-bg-secondary'
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -56,27 +56,28 @@ export const SubitemRow = memo(function SubitemRow({
       {/* Checkbox placeholder */}
       {hasCheckbox && (
         <td
-          className="bg-bg-secondary/50 border border-border-medium p-0 h-8"
+          className="bg-bg-secondary border-b border-r border-border-medium p-0 h-8"
           style={{ width: checkboxWidth, position: 'sticky', left: 0, zIndex: 2 }}
         />
       )}
 
       {/* Color bar (dimmed) */}
       <td
-        className="border border-border-medium p-0 h-8"
+        className="border-b border-r border-border-medium p-0 h-8 relative"
         style={{
           width: colorBarWidth,
-          backgroundColor: groupColor,
-          opacity: 0.2,
           position: 'sticky',
           left: hasCheckbox ? checkboxWidth : 0,
           zIndex: 2,
+          backgroundColor: 'var(--bg-secondary)',
         }}
-      />
+      >
+        <div className="absolute inset-0" style={{ backgroundColor: groupColor, opacity: 0.2 }} />
+      </td>
 
       {/* Name cell (first sticky column) - indented with connecting line */}
       <td
-        className="bg-bg-secondary/50 border border-border-medium p-0 h-8"
+        className="bg-bg-secondary border-b border-r border-border-medium p-0 h-8"
         style={{
           width: firstColumnWidth,
           position: 'sticky',
@@ -131,7 +132,7 @@ export const SubitemRow = memo(function SubitemRow({
         return (
           <td
             key={`sub-${subitem.id}-${col.id}`}
-            className="bg-bg-secondary/50 border border-border-medium p-0 h-8 text-sm"
+            className="bg-bg-secondary border-b border-r border-border-medium p-0 h-8 text-sm"
             style={{ width: getColumnWidth(col) }}
           >
             <CellRenderer
@@ -156,7 +157,7 @@ export const SubitemRow = memo(function SubitemRow({
       })}
 
       {/* Empty cell for add column */}
-      <td className="bg-bg-secondary/50 border border-border-medium p-0 h-8 w-10" />
+      <td className="bg-bg-secondary border-b border-r border-border-medium p-0 h-8 w-10" />
     </tr>
   )
 })

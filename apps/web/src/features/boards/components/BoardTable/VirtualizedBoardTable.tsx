@@ -699,16 +699,37 @@ export function VirtualizedBoardTable({
             >
               <tbody>
                 <tr className="h-9 bg-bg-primary">
-                  {/* Checkbox column */}
+                  {/* Checkbox column — select all items in this group */}
                   {onSelectionChange && (
                     <td
                       className="w-10 h-9 text-center align-middle bg-bg-primary"
                       style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
                     >
-                      <input
-                        type="checkbox"
-                        className="w-4 h-4 rounded border-border-medium text-[#0073ea] focus:ring-[#0073ea]"
-                      />
+                      {(() => {
+                        const groupItems = data.filter(item => {
+                          const gid =
+                            item.group_id || (item.data as any)?.group_id || effectiveGroups[0]?.id
+                          return gid === group.id
+                        })
+                        const allSelected =
+                          groupItems.length > 0 && groupItems.every(item => selection.has(item.id))
+                        return (
+                          <input
+                            type="checkbox"
+                            checked={allSelected}
+                            onChange={e => {
+                              const newSelection = new Set(selection)
+                              if (e.target.checked) {
+                                groupItems.forEach(item => newSelection.add(item.id))
+                              } else {
+                                groupItems.forEach(item => newSelection.delete(item.id))
+                              }
+                              onSelectionChange(newSelection)
+                            }}
+                            className="w-4 h-4 rounded border-border-medium text-[#0073ea] focus:ring-[#0073ea]"
+                          />
+                        )
+                      })()}
                     </td>
                   )}
                   {/* Color bar */}
@@ -1067,23 +1088,27 @@ export function VirtualizedBoardTable({
                 <tr className="h-8">
                   {onSelectionChange && (
                     <td
-                      className="bg-bg-secondary/50 border border-border-medium w-10 h-8"
+                      className="bg-bg-secondary border-b border-r border-border-medium w-10 h-8"
                       style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
                     />
                   )}
                   <td
-                    className="border border-border-medium p-0 h-8"
+                    className="border-b border-r border-border-medium p-0 h-8 relative"
                     style={{
                       width: 6,
-                      backgroundColor: parentGroup?.color || '#579bfc',
-                      opacity: 0.2,
+                      backgroundColor: 'var(--bg-secondary)',
                       position: 'sticky',
                       left: stickyOffsets.colorBar,
                       zIndex: 2,
                     }}
-                  />
+                  >
+                    <div
+                      className="absolute inset-0"
+                      style={{ backgroundColor: parentGroup?.color || '#579bfc', opacity: 0.2 }}
+                    />
+                  </td>
                   <td
-                    className="bg-bg-secondary/50 border border-border-medium px-0 py-0 h-8"
+                    className="bg-bg-secondary border-b border-r border-border-medium px-0 py-0 h-8"
                     style={{
                       width: getColumnWidth(visibleColumns[0]),
                       position: 'sticky',
@@ -1104,11 +1129,11 @@ export function VirtualizedBoardTable({
                   {visibleColumns.slice(1).map(col => (
                     <td
                       key={`subhdr-${col.id}`}
-                      className="bg-bg-secondary/50 border border-border-medium h-8"
+                      className="bg-bg-secondary border-b border-r border-border-medium h-8"
                       style={{ width: getColumnWidth(col) }}
                     />
                   ))}
-                  <td className="bg-bg-secondary/50 border border-border-medium w-10 h-8" />
+                  <td className="bg-bg-secondary border-b border-r border-border-medium w-10 h-8" />
                 </tr>
               </tbody>
             </table>
@@ -1413,7 +1438,22 @@ export function VirtualizedBoardTable({
                       <th
                         className="bg-bg-secondary border border-border-medium p-0 w-10"
                         style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 12 }}
-                      />
+                      >
+                        <div className="flex items-center justify-center h-9">
+                          <input
+                            type="checkbox"
+                            checked={selection.size === data.length && data.length > 0}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                onSelectionChange(new Set(data.map(item => item.id)))
+                              } else {
+                                onSelectionChange(new Set())
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-border-medium text-[#0073ea] focus:ring-[#0073ea]"
+                          />
+                        </div>
+                      </th>
                     )}
                     <th
                       ref={stickyColorBarRef}

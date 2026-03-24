@@ -45,6 +45,7 @@ import {
   Megaphone,
   MapPinned,
   Globe,
+  Search,
 } from 'lucide-react'
 import { NotificationBell } from '@/shared/components/notifications'
 import { useAnnouncements } from '@/hooks/useAnnouncements'
@@ -128,6 +129,11 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
   const [workspaceRenameMode, setWorkspaceRenameMode] = React.useState(false)
   const [workspaceRenameValue, setWorkspaceRenameValue] = React.useState('')
   const [workspaceDeleteConfirm, setWorkspaceDeleteConfirm] = React.useState(false)
+  const [boardSearchQuery, setBoardSearchQuery] = React.useState('')
+  const [boardSearchOpen, setBoardSearchOpen] = React.useState(false)
+  const [boardSearchIndex, setBoardSearchIndex] = React.useState(0)
+  const boardSearchRef = React.useRef<HTMLDivElement>(null)
+  const boardSearchInputRef = React.useRef<HTMLInputElement>(null)
 
   // Persist collapsed state
   React.useEffect(() => {
@@ -297,6 +303,48 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       renameInputRef.current.select()
     }
   }, [renameMode])
+
+  // Board search
+  const boardSearchResults = React.useMemo(() => {
+    if (!boardSearchQuery.trim() || !allBoards) return []
+    const q = boardSearchQuery.toLowerCase()
+    return allBoards.filter((b: any) => b.name.toLowerCase().includes(q)).slice(0, 8)
+  }, [boardSearchQuery, allBoards])
+
+  React.useEffect(() => {
+    setBoardSearchIndex(0)
+  }, [boardSearchResults.length])
+
+  React.useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (boardSearchRef.current && !boardSearchRef.current.contains(e.target as Node)) {
+        setBoardSearchOpen(false)
+        setBoardSearchQuery('')
+      }
+    }
+    if (boardSearchOpen) {
+      document.addEventListener('mousedown', handleClick)
+      return () => document.removeEventListener('mousedown', handleClick)
+    }
+  }, [boardSearchOpen])
+
+  const handleBoardSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setBoardSearchOpen(false)
+      setBoardSearchQuery('')
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setBoardSearchIndex(i => Math.min(i + 1, boardSearchResults.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setBoardSearchIndex(i => Math.max(i - 1, 0))
+    } else if (e.key === 'Enter' && boardSearchResults[boardSearchIndex]) {
+      e.preventDefault()
+      router.push(`/boards/${boardSearchResults[boardSearchIndex].id}`)
+      setBoardSearchOpen(false)
+      setBoardSearchQuery('')
+    }
+  }
 
   const openMenu = (
     e: React.MouseEvent,
@@ -736,6 +784,82 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
           <div className="flex-1 flex flex-col min-h-0">
             {!collapsed ? (
               <div className="flex flex-col h-full px-2">
+                {/* Board Search */}
+                <div className="mb-2 relative" ref={boardSearchRef}>
+                  <div
+                    className={cn(
+                      'flex items-center gap-2 px-2.5 py-1.5 rounded-md border transition-colors',
+                      boardSearchOpen
+                        ? 'border-monday-primary bg-bg-primary'
+                        : 'border-border-light bg-bg-secondary hover:border-border-medium'
+                    )}
+                  >
+                    <Search className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />
+                    <input
+                      ref={boardSearchInputRef}
+                      type="text"
+                      value={boardSearchQuery}
+                      onChange={e => {
+                        setBoardSearchQuery(e.target.value)
+                        if (!boardSearchOpen) setBoardSearchOpen(true)
+                      }}
+                      onFocus={() => setBoardSearchOpen(true)}
+                      onKeyDown={handleBoardSearchKeyDown}
+                      placeholder="ბორდის ძიება..."
+                      className="flex-1 bg-transparent text-[13px] text-text-primary placeholder:text-text-tertiary outline-none min-w-0"
+                    />
+                    {boardSearchQuery && (
+                      <button
+                        onClick={() => {
+                          setBoardSearchQuery('')
+                          boardSearchInputRef.current?.focus()
+                        }}
+                        className="text-text-tertiary hover:text-text-secondary"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {boardSearchOpen && boardSearchQuery.trim() && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-bg-primary rounded-lg border border-border-light shadow-lg overflow-hidden">
+                      {boardSearchResults.length === 0 ? (
+                        <div className="px-3 py-3 text-[13px] text-text-tertiary text-center">
+                          ბორდი ვერ მოიძებნა
+                        </div>
+                      ) : (
+                        <div className="py-1 max-h-[240px] overflow-y-auto">
+                          {boardSearchResults.map((board: any, i: number) => (
+                            <Link
+                              key={board.id}
+                              href={`/boards/${board.id}`}
+                              onClick={() => {
+                                setBoardSearchOpen(false)
+                                setBoardSearchQuery('')
+                              }}
+                              onMouseEnter={() => setBoardSearchIndex(i)}
+                              className={cn(
+                                'flex items-center gap-2.5 px-3 py-1.5 text-[13px] transition-colors',
+                                i === boardSearchIndex
+                                  ? 'bg-bg-selected text-monday-primary'
+                                  : 'text-text-primary hover:bg-bg-hover'
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  'w-2.5 h-2.5 rounded-sm flex-shrink-0',
+                                  getBoardColor(board.color)
+                                )}
+                              />
+                              <span className="flex-1 truncate">{board.name}</span>
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Workspace Dropdown Selector */}
                 {workspacesLoading || boardsLoading ? (
                   <div className="px-3 py-2 text-sm text-text-tertiary">Loading...</div>
@@ -1002,8 +1126,85 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                 )}
               </div>
             ) : (
-              /* Collapsed Boards - workspace initial + board avatars */
+              /* Collapsed Boards - search icon + workspace initial + board avatars */
               <div className="px-2 py-1 space-y-1">
+                {/* Search icon */}
+                <div className="relative" ref={boardSearchRef}>
+                  <Tooltip content="ბორდის ძიება" side="right">
+                    <button
+                      onClick={() => {
+                        setBoardSearchOpen(!boardSearchOpen)
+                        setTimeout(() => boardSearchInputRef.current?.focus(), 0)
+                      }}
+                      className={cn(
+                        'flex items-center justify-center w-full py-1.5 rounded-md transition-all',
+                        'hover:bg-bg-hover text-text-secondary hover:text-text-primary'
+                      )}
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
+                  </Tooltip>
+
+                  {boardSearchOpen && (
+                    <div className="absolute left-full top-0 ml-2 z-50 w-64 bg-bg-primary rounded-lg border border-border-light shadow-lg overflow-hidden">
+                      <div className="flex items-center gap-2 px-3 py-2 border-b border-border-light">
+                        <Search className="w-3.5 h-3.5 text-text-tertiary flex-shrink-0" />
+                        <input
+                          ref={boardSearchInputRef}
+                          type="text"
+                          value={boardSearchQuery}
+                          onChange={e => setBoardSearchQuery(e.target.value)}
+                          onKeyDown={handleBoardSearchKeyDown}
+                          placeholder="ბორდის ძიება..."
+                          className="flex-1 bg-transparent text-[13px] text-text-primary placeholder:text-text-tertiary outline-none"
+                        />
+                        {boardSearchQuery && (
+                          <button
+                            onClick={() => setBoardSearchQuery('')}
+                            className="text-text-tertiary hover:text-text-secondary"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                      {boardSearchQuery.trim() &&
+                        (boardSearchResults.length === 0 ? (
+                          <div className="px-3 py-3 text-[13px] text-text-tertiary text-center">
+                            ბორდი ვერ მოიძებნა
+                          </div>
+                        ) : (
+                          <div className="py-1 max-h-[240px] overflow-y-auto">
+                            {boardSearchResults.map((board: any, i: number) => (
+                              <Link
+                                key={board.id}
+                                href={`/boards/${board.id}`}
+                                onClick={() => {
+                                  setBoardSearchOpen(false)
+                                  setBoardSearchQuery('')
+                                }}
+                                onMouseEnter={() => setBoardSearchIndex(i)}
+                                className={cn(
+                                  'flex items-center gap-2.5 px-3 py-1.5 text-[13px] transition-colors',
+                                  i === boardSearchIndex
+                                    ? 'bg-bg-selected text-monday-primary'
+                                    : 'text-text-primary hover:bg-bg-hover'
+                                )}
+                              >
+                                <div
+                                  className={cn(
+                                    'w-2.5 h-2.5 rounded-sm flex-shrink-0',
+                                    getBoardColor(board.color)
+                                  )}
+                                />
+                                <span className="flex-1 truncate">{board.name}</span>
+                              </Link>
+                            ))}
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* Workspace initial */}
                 {selectedWorkspace && (
                   <Tooltip content={selectedWorkspace.name} side="right">

@@ -30,7 +30,9 @@ export function useBoardPageData(boardId: string) {
   // Data queries
   const { data: board, isLoading: boardLoading, error: boardError } = useBoard(boardId)
   const { data: items, isLoading: itemsLoading, error: itemsError } = useBoardItems(boardId)
-  const { data: columns, refetch: refetchColumns } = useBoardColumns(board?.board_type || 'custom', boardId)
+  // Pass a stable board_type to avoid query key change when board loads
+  // The getColumns service ignores boardType and queries by boardId directly
+  const { data: columns, refetch: refetchColumns } = useBoardColumns('custom' as any, boardId)
   const { data: dbGroups, isLoading: groupsLoading } = useBoardGroups(boardId)
 
   const groups = useMemo(() => dbGroups || [], [dbGroups])

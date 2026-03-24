@@ -30,12 +30,12 @@ export const boardTransferService = {
       (getSupabase() as any)
         .from('board_columns')
         .select('*')
-        .eq('board_type', sourceBoard.board_type)
+        .eq('board_id', sourceBoardId)
         .order('position', { ascending: true }),
       (getSupabase() as any)
         .from('board_columns')
         .select('*')
-        .eq('board_type', targetBoard.board_type)
+        .eq('board_id', targetBoardId)
         .order('position', { ascending: true }),
     ])
 
@@ -102,7 +102,7 @@ export const boardTransferService = {
     const sameBoardType = sourceBoard.board_type === targetBoard.board_type
 
     let newData = { ...originalItem.data }
-    let unmappedData: Record<string, unknown> = {}
+    const unmappedData: Record<string, unknown> = {}
 
     if (!sameBoardType && columnMapping) {
       const mappedData: Record<string, unknown> = {}
@@ -119,6 +119,16 @@ export const boardTransferService = {
       newData = mappedData
     }
 
+    // Get the default group in the target board so the item doesn't become orphaned
+    const { data: targetGroups } = await (getSupabase() as any)
+      .from('board_groups')
+      .select('id')
+      .eq('board_id', targetBoardId)
+      .order('position', { ascending: true })
+      .limit(1)
+
+    const targetGroupId = targetGroups?.[0]?.id || null
+
     const moveMetadata = {
       moved_from_board_id: sourceBoardId,
       moved_from_board_name: sourceBoard.name,
@@ -131,6 +141,7 @@ export const boardTransferService = {
       .from('board_items')
       .update({
         board_id: targetBoardId,
+        group_id: targetGroupId,
         position: maxPosition + 1,
         data: newData,
         original_board_id: originalItem.original_board_id || sourceBoardId,
@@ -156,12 +167,7 @@ export const boardTransferService = {
 
     for (const itemId of itemIds) {
       try {
-        const movedItem = await this.moveItemToBoard(
-          itemId,
-          targetBoardId,
-          columnMapping,
-          options
-        )
+        const movedItem = await this.moveItemToBoard(itemId, targetBoardId, columnMapping, options)
         moved.push(movedItem)
       } catch (err) {
         failed.push({

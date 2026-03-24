@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { useInspectors } from '@/hooks/useInspectors'
+import { useUsers } from '@/hooks/useUsers'
 import { cn } from '@/lib/utils'
 import { Search, X, Check } from 'lucide-react'
 import { calculatePopupPosition } from './BoardTable/cells/usePopupPosition'
@@ -46,7 +46,7 @@ export function MultiUserPicker({
   triggerRect,
 }: MultiUserPickerProps) {
   const [search, setSearch] = useState('')
-  const { inspectors, loading } = useInspectors()
+  const { users, loading } = useUsers()
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -78,16 +78,16 @@ export function MultiUserPicker({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [onClose])
 
-  const filteredInspectors =
-    inspectors?.filter(inspector => {
-      const name = (inspector.full_name || '').toLowerCase()
-      const email = (inspector.email || '').toLowerCase()
+  const filteredUsers =
+    users?.filter(user => {
+      const name = (user.full_name || '').toLowerCase()
+      const email = (user.email || '').toLowerCase()
       const searchLower = search.toLowerCase()
       return name.includes(searchLower) || email.includes(searchLower)
     }) || []
 
-  // Get selected inspectors for display
-  const selectedInspectors = inspectors?.filter(i => value.includes(i.id)) || []
+  // Get selected users for display
+  const selectedUsers = users?.filter(u => value.includes(u.id)) || []
 
   const getInitials = (fullName?: string | null) => {
     if (!fullName) return '?'
@@ -137,22 +137,22 @@ export function MultiUserPicker({
       </div>
 
       {/* Selected users chips */}
-      {selectedInspectors.length > 0 && (
+      {selectedUsers.length > 0 && (
         <div className="px-3 py-2 border-b border-border-light flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
-          {selectedInspectors.map(inspector => (
+          {selectedUsers.map(user => (
             <div
-              key={inspector.id}
+              key={user.id}
               className="flex items-center gap-1.5 pl-1 pr-2 py-0.5 bg-blue-50 text-blue-700 rounded-full text-xs"
             >
               <div
                 className="w-5 h-5 rounded-full text-white flex items-center justify-center text-[10px] font-semibold"
-                style={{ backgroundColor: getAvatarColor(inspector.id) }}
+                style={{ backgroundColor: getAvatarColor(user.id) }}
               >
-                {getInitials(inspector.full_name)}
+                {getInitials(user.full_name)}
               </div>
-              <span className="max-w-[100px] truncate">{inspector.full_name || 'Unknown'}</span>
+              <span className="max-w-[100px] truncate">{user.full_name || 'Unknown'}</span>
               <button
-                onClick={() => removeUser(inspector.id)}
+                onClick={() => removeUser(user.id)}
                 className="w-4 h-4 rounded-full hover:bg-blue-100 flex items-center justify-center"
               >
                 <X className="w-3 h-3" />
@@ -183,18 +183,18 @@ export function MultiUserPicker({
           <div className="flex items-center justify-center py-8">
             <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : filteredInspectors.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-text-tertiary">
             მომხმარებლები არ მოიძებნა
           </div>
         ) : (
           <div className="py-1">
-            {filteredInspectors.map(inspector => {
-              const isSelected = value.includes(inspector.id)
+            {filteredUsers.map(user => {
+              const isSelected = value.includes(user.id)
               return (
                 <button
-                  key={inspector.id}
-                  onClick={() => toggleUser(inspector.id)}
+                  key={user.id}
+                  onClick={() => toggleUser(user.id)}
                   className={cn(
                     'w-full flex items-center gap-3 px-3 py-2.5 text-sm hover:bg-bg-hover transition-colors',
                     isSelected && 'bg-blue-50 hover:bg-blue-50'
@@ -215,9 +215,9 @@ export function MultiUserPicker({
                   {/* Avatar */}
                   <div
                     className="flex-shrink-0 w-8 h-8 rounded-full text-white flex items-center justify-center text-xs font-semibold"
-                    style={{ backgroundColor: getAvatarColor(inspector.id) }}
+                    style={{ backgroundColor: getAvatarColor(user.id) }}
                   >
-                    {getInitials(inspector.full_name)}
+                    {getInitials(user.full_name)}
                   </div>
 
                   {/* Name and Email */}
@@ -228,10 +228,10 @@ export function MultiUserPicker({
                         isSelected ? 'text-blue-700' : 'text-text-primary'
                       )}
                     >
-                      {inspector.full_name || 'Unknown'}
+                      {user.full_name || 'Unknown'}
                     </div>
-                    {inspector.email && (
-                      <div className="text-xs text-text-tertiary truncate">{inspector.email}</div>
+                    {user.email && (
+                      <div className="text-xs text-text-tertiary truncate">{user.email}</div>
                     )}
                   </div>
                 </button>

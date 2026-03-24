@@ -25,6 +25,10 @@ import {
   Plus,
   Pencil,
 } from 'lucide-react'
+import { useUsers } from '@/hooks/useUsers'
+import { useRoutes } from '@/hooks/useRoutes'
+import { useServiceTypes } from '@/hooks/useServiceTypes'
+import { useCompaniesWithLocationCount } from '@/hooks/useCompanyLocations'
 import type { BoardColumn, ColumnType } from '../types/board'
 import { MONDAY_COLORS, DEFAULT_STATUS_OPTIONS } from './BoardTable/cells/StatusCell'
 import type { StatusOption } from './BoardTable/cells/StatusCell'
@@ -263,9 +267,9 @@ export function FilterPopover({
     }
   }, [isOpen, initialEditFilterId, filters, columns])
 
-  // Filterable columns (exclude actions)
+  // Filterable columns (exclude actions and company_address which is derived/read-only)
   const filterableColumns = useMemo(
-    () => columns.filter(c => c.column_type !== 'actions'),
+    () => columns.filter(c => c.column_type !== 'actions' && c.column_type !== 'company_address'),
     [columns]
   )
 
@@ -275,6 +279,12 @@ export function FilterPopover({
     const q = searchQuery.toLowerCase()
     return filterableColumns.filter(col => col.column_name.toLowerCase().includes(q))
   }, [filterableColumns, searchQuery])
+
+  // Data hooks for filter pickers
+  const { users } = useUsers()
+  const { routes } = useRoutes()
+  const { serviceTypes } = useServiceTypes()
+  const { data: companies } = useCompaniesWithLocationCount()
 
   // Get status options for current column
   const statusOptions = useMemo(() => {
@@ -422,10 +432,26 @@ export function FilterPopover({
         const match = allOpts.find(o => o.key === filter.value)
         if (match) displayValue = match.label
       }
+      if (col.column_type === 'person' && filter.value) {
+        const person = users?.find(u => u.id === filter.value)
+        if (person) displayValue = person.full_name || person.email || filter.value
+      }
+      if (col.column_type === 'route' && filter.value) {
+        const route = routes?.find(r => r.id === filter.value)
+        if (route) displayValue = route.name || filter.value
+      }
+      if (col.column_type === 'company' && filter.value) {
+        const company = companies?.find(c => c.id === filter.value)
+        if (company) displayValue = company.name || filter.value
+      }
+      if (col.column_type === 'service_type' && filter.value) {
+        const st = serviceTypes?.find(s => s.id === filter.value)
+        if (st) displayValue = st.name_ka || st.name || filter.value
+      }
 
       return { name: col.column_name, condition: condLabel, value: displayValue, column: col }
     },
-    [columns]
+    [columns, users, routes, companies, serviceTypes]
   )
 
   if (!isOpen || typeof document === 'undefined') return null
@@ -640,7 +666,8 @@ export function FilterPopover({
                     setSelectedValue,
                     handleApplyFilter,
                     handleValueKeyDown,
-                    statusOptions
+                    statusOptions,
+                    { users, routes, serviceTypes, companies }
                   )}
                 </div>
               )}
@@ -648,8 +675,9 @@ export function FilterPopover({
               {/* Apply button for text/number inputs */}
               {selectedOperator &&
                 !NO_VALUE_CONDITIONS.includes(selectedOperator) &&
-                selectedColumn.column_type !== 'status' &&
-                selectedColumn.column_type !== 'checkbox' && (
+                !['status', 'person', 'checkbox', 'route', 'company', 'service_type'].includes(
+                  selectedColumn.column_type
+                ) && (
                   <button
                     onClick={() => handleApplyFilter()}
                     disabled={!selectedValue}
@@ -677,6 +705,93 @@ export function FilterPopover({
   )
 }
 
+// Searchable list wrapper for filter value pickers
+function SearchablePickerList({
+  items,
+  value,
+  onSelect,
+  getLabel,
+  getKey,
+  emptyMessage,
+  renderIcon,
+  searchPlaceholder = 'Search...',
+}: {
+  items: any[]
+  value: string
+  onSelect: (id: string) => void
+  getLabel: (item: any) => string
+  getKey: (item: any) => string
+  emptyMessage: string
+  renderIcon?: (item: any, isSelected: boolean) => React.ReactNode
+  searchPlaceholder?: string
+}) {
+  const [query, setQuery] = React.useState('')
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
+  React.useEffect(() => {
+    setTimeout(() => inputRef.current?.focus(), 50)
+  }, [])
+
+  const filtered = React.useMemo(() => {
+    if (!query.trim()) return items
+    const q = query.toLowerCase()
+    return items.filter(item => getLabel(item).toLowerCase().includes(q))
+  }, [items, query, getLabel])
+
+  return (
+    <div className="rounded-md border border-border-light overflow-hidden">
+      <div className="px-2 py-1.5 border-b border-border-light">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder={searchPlaceholder}
+            className="w-full pl-7 pr-2 py-1.5 text-xs bg-transparent border-0 focus:outline-none placeholder:text-text-tertiary"
+          />
+          {query && (
+            <button
+              onClick={() => setQuery('')}
+              className="absolute right-1.5 top-1/2 -translate-y-1/2"
+            >
+              <X className="w-3 h-3 text-text-tertiary hover:text-text-secondary" />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="max-h-[180px] overflow-y-auto">
+        {filtered.length === 0 ? (
+          <div className="px-3 py-4 text-center text-sm text-text-tertiary">
+            {query ? 'No matches' : emptyMessage}
+          </div>
+        ) : (
+          filtered.map(item => {
+            const key = getKey(item)
+            const isSelected = value === key
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onSelect(key)}
+                className={cn(
+                  'w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
+                  isSelected && 'bg-monday-primary/5'
+                )}
+              >
+                {renderIcon?.(item, isSelected)}
+                <span className="flex-1 text-text-primary truncate">{getLabel(item)}</span>
+                {isSelected && <Check className="w-4 h-4 text-monday-primary shrink-0" />}
+              </button>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+}
+
 // Render type-specific value input
 function renderValueInput(
   column: BoardColumn,
@@ -684,41 +799,129 @@ function renderValueInput(
   setValue: (v: string) => void,
   onApply: (v?: string) => void,
   onKeyDown: (e: React.KeyboardEvent) => void,
-  statusOptions: StatusOption[]
+  statusOptions: StatusOption[],
+  pickerData: { users?: any[]; routes?: any[]; serviceTypes?: any[]; companies?: any[] }
 ) {
   const colType = column.column_type
 
-  // Status → colored pills
-  if (colType === 'status') {
+  // Person → inspector list picker with search
+  if (colType === 'person') {
+    const handleSelect = (id: string) => {
+      setValue(id)
+      onApply(id)
+    }
     return (
-      <div className="max-h-[200px] overflow-y-auto rounded-md border border-border-light">
-        {statusOptions.map(opt => {
-          const colorInfo = MONDAY_COLORS[opt.color] || { hex: '#C4C4C4', text: '#FFFFFF' }
-          const isSelected = value === opt.key
+      <SearchablePickerList
+        items={pickerData.users || []}
+        value={value}
+        onSelect={handleSelect}
+        getKey={p => p.id}
+        getLabel={p => p.full_name || p.email || 'Unknown'}
+        emptyMessage="No people found"
+        searchPlaceholder="Search people..."
+        renderIcon={p => {
+          const initials = p.full_name
+            ? p.full_name
+                .split(/\s+/)
+                .map((n: string) => n[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2)
+            : '?'
           return (
-            <button
-              key={opt.key}
-              type="button"
-              onClick={() => {
-                setValue(opt.key)
-                // Apply immediately on selection for status
-                onApply(opt.key)
-              }}
-              className={cn(
-                'w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-bg-hover transition-colors',
-                isSelected && 'bg-monday-primary/5'
-              )}
-            >
-              <span
-                className="w-3.5 h-3.5 rounded-sm shrink-0"
-                style={{ backgroundColor: colorInfo.hex }}
-              />
-              <span className="flex-1 text-text-primary">{opt.label}</span>
-              {isSelected && <Check className="w-4 h-4 text-monday-primary shrink-0" />}
-            </button>
+            <span className="w-6 h-6 rounded-full bg-[#0073ea] text-white flex items-center justify-center text-[10px] font-semibold shrink-0">
+              {initials}
+            </span>
           )
-        })}
-      </div>
+        }}
+      />
+    )
+  }
+
+  // Route → route list picker with search
+  if (colType === 'route') {
+    const handleSelect = (id: string) => {
+      setValue(id)
+      onApply(id)
+    }
+    return (
+      <SearchablePickerList
+        items={pickerData.routes || []}
+        value={value}
+        onSelect={handleSelect}
+        getKey={r => r.id}
+        getLabel={r => r.name || 'Unnamed Route'}
+        emptyMessage="No routes found"
+        searchPlaceholder="Search routes..."
+        renderIcon={() => <MapPin className="w-4 h-4 text-text-tertiary shrink-0" />}
+      />
+    )
+  }
+
+  // Company → company list picker with search
+  if (colType === 'company') {
+    const handleSelect = (id: string) => {
+      setValue(id)
+      onApply(id)
+    }
+    return (
+      <SearchablePickerList
+        items={pickerData.companies || []}
+        value={value}
+        onSelect={handleSelect}
+        getKey={c => c.id}
+        getLabel={c => c.name}
+        emptyMessage="No companies found"
+        searchPlaceholder="Search companies..."
+        renderIcon={() => <Building2 className="w-4 h-4 text-text-tertiary shrink-0" />}
+      />
+    )
+  }
+
+  // Service Type → service type list picker with search
+  if (colType === 'service_type') {
+    const handleSelect = (id: string) => {
+      setValue(id)
+      onApply(id)
+    }
+    return (
+      <SearchablePickerList
+        items={pickerData.serviceTypes || []}
+        value={value}
+        onSelect={handleSelect}
+        getKey={s => s.id}
+        getLabel={s => s.name_ka || s.name}
+        emptyMessage="No service types found"
+        searchPlaceholder="Search service types..."
+      />
+    )
+  }
+
+  // Status → colored pills with search
+  if (colType === 'status') {
+    const handleSelect = (key: string) => {
+      setValue(key)
+      onApply(key)
+    }
+    return (
+      <SearchablePickerList
+        items={statusOptions}
+        value={value}
+        onSelect={handleSelect}
+        getKey={o => o.key}
+        getLabel={o => o.label}
+        emptyMessage="No statuses"
+        searchPlaceholder="Search statuses..."
+        renderIcon={o => {
+          const colorInfo = MONDAY_COLORS[o.color] || { hex: '#C4C4C4', text: '#FFFFFF' }
+          return (
+            <span
+              className="w-3.5 h-3.5 rounded-sm shrink-0"
+              style={{ backgroundColor: colorInfo.hex }}
+            />
+          )
+        }}
+      />
     )
   }
 

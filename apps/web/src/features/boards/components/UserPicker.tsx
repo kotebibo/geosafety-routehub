@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { useInspectors } from '@/hooks/useInspectors'
+import { useUsers } from '@/hooks/useUsers'
 import { cn } from '@/lib/utils'
 import { Search, X } from 'lucide-react'
 import { calculatePopupPosition } from './BoardTable/cells/usePopupPosition'
@@ -23,7 +23,7 @@ export function UserPicker({
   triggerRect,
 }: UserPickerProps) {
   const [search, setSearch] = useState('')
-  const { inspectors, loading } = useInspectors()
+  const { users, loading } = useUsers()
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ top: 0, left: 0 })
@@ -55,15 +55,15 @@ export function UserPicker({
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [onClose])
 
-  const filteredInspectors =
-    inspectors?.filter(inspector => {
-      const name = (inspector.full_name || '').toLowerCase()
-      const email = (inspector.email || '').toLowerCase()
+  const filteredUsers =
+    users?.filter(user => {
+      const name = (user.full_name || '').toLowerCase()
+      const email = (user.email || '').toLowerCase()
       const searchLower = search.toLowerCase()
       return name.includes(searchLower) || email.includes(searchLower)
     }) || []
 
-  const selectedInspector = inspectors?.find(i => i.id === value)
+  const selectedUser = users?.find(u => u.id === value)
 
   const getInitials = (fullName?: string | null) => {
     if (!fullName) return '?'
@@ -119,39 +119,39 @@ export function UserPicker({
           <div className="flex items-center justify-center py-8">
             <div className="w-6 h-6 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : filteredInspectors.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-[#9699a6]">No people found</div>
         ) : (
           <div className="py-1">
-            {filteredInspectors.map(inspector => (
+            {filteredUsers.map(user => (
               <button
-                key={inspector.id}
+                key={user.id}
                 onClick={() => {
-                  onChange(inspector.id)
+                  onChange(user.id)
                   onClose()
                 }}
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-bg-hover transition-colors',
-                  value === inspector.id && 'bg-bg-selected'
+                  value === user.id && 'bg-bg-selected'
                 )}
               >
                 {/* Avatar */}
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#0073ea] text-white flex items-center justify-center text-xs font-semibold">
-                  {getInitials(inspector.full_name)}
+                  {getInitials(user.full_name)}
                 </div>
 
                 {/* Name and Email */}
                 <div className="flex-1 text-left overflow-hidden">
                   <div className="font-medium text-text-primary truncate">
-                    {inspector.full_name || 'Unknown'}
+                    {user.full_name || 'Unknown'}
                   </div>
-                  {inspector.email && (
-                    <div className="text-xs text-[#9699a6] truncate">{inspector.email}</div>
+                  {user.email && (
+                    <div className="text-xs text-[#9699a6] truncate">{user.email}</div>
                   )}
                 </div>
 
                 {/* Selected Indicator */}
-                {value === inspector.id && (
+                {value === user.id && (
                   <svg
                     className="w-5 h-5 text-[#0073ea] flex-shrink-0"
                     fill="currentColor"

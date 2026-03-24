@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, memo } from 'react'
-import { useInspectors } from '@/hooks/useInspectors'
+import { useUsers } from '@/hooks/useUsers'
 import { MultiUserPicker } from '../../MultiUserPicker'
 import { cn } from '@/lib/utils'
 import { Tooltip } from '@/shared/components/ui/tooltip'
@@ -45,15 +45,15 @@ export const PersonCell = memo(function PersonCell({
 }: PersonCellProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null)
-  const { inspectors } = useInspectors()
+  const { users } = useUsers()
   const containerRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
 
   // Normalize value to always be an array
   const selectedIds: string[] = Array.isArray(value) ? value : value ? [value] : []
 
-  // Get selected inspectors
-  const selectedInspectors = inspectors?.filter(i => selectedIds.includes(i.id)) || []
+  // Get selected users
+  const selectedUsers = users?.filter(u => selectedIds.includes(u.id)) || []
 
   const getInitials = (fullName?: string | null) => {
     if (!fullName) return '?'
@@ -78,30 +78,30 @@ export const PersonCell = memo(function PersonCell({
   }
 
   // Read-only empty state
-  if (readOnly && selectedInspectors.length === 0) {
+  if (readOnly && selectedUsers.length === 0) {
     return (
       <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
     )
   }
 
   // Read-only with values
-  if (readOnly && selectedInspectors.length > 0) {
+  if (readOnly && selectedUsers.length > 0) {
     return (
       <div className="h-full min-h-[36px] flex items-center px-3">
         <div className="flex -space-x-2">
-          {selectedInspectors.slice(0, 4).map(inspector => (
+          {selectedUsers.slice(0, 4).map(user => (
             <div
-              key={inspector.id}
+              key={user.id}
               className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-semibold border-2 border-white"
-              style={{ backgroundColor: getAvatarColor(inspector.id) }}
-              title={inspector.full_name || ''}
+              style={{ backgroundColor: getAvatarColor(user.id) }}
+              title={user.full_name || ''}
             >
-              {getInitials(inspector.full_name)}
+              {getInitials(user.full_name)}
             </div>
           ))}
-          {selectedInspectors.length > 4 && (
+          {selectedUsers.length > 4 && (
             <div className="w-7 h-7 rounded-full bg-text-tertiary text-white flex items-center justify-center text-xs font-semibold border-2 border-white">
-              +{selectedInspectors.length - 4}
+              +{selectedUsers.length - 4}
             </div>
           )}
         </div>
@@ -120,23 +120,23 @@ export const PersonCell = memo(function PersonCell({
           readOnly && 'cursor-default'
         )}
       >
-        {selectedInspectors.length > 0 ? (
+        {selectedUsers.length > 0 ? (
           <div className="flex items-center gap-2">
             {/* Avatar stack */}
             <div className="flex -space-x-2">
-              {selectedInspectors.slice(0, 3).map(inspector => (
+              {selectedUsers.slice(0, 3).map(user => (
                 <div
-                  key={inspector.id}
+                  key={user.id}
                   className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-semibold border-2 border-white"
-                  style={{ backgroundColor: getAvatarColor(inspector.id) }}
-                  title={inspector.full_name || ''}
+                  style={{ backgroundColor: getAvatarColor(user.id) }}
+                  title={user.full_name || ''}
                 >
-                  {getInitials(inspector.full_name)}
+                  {getInitials(user.full_name)}
                 </div>
               ))}
-              {selectedInspectors.length > 3 && (
+              {selectedUsers.length > 3 && (
                 <div className="w-7 h-7 rounded-full bg-text-tertiary text-white flex items-center justify-center text-xs font-semibold border-2 border-white">
-                  +{selectedInspectors.length - 3}
+                  +{selectedUsers.length - 3}
                 </div>
               )}
             </div>

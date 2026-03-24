@@ -18,9 +18,9 @@ export function useBoardSubitems(parentItemId: string, enabled = false) {
 /**
  * Hook to fetch subitem counts for multiple parent items
  */
-export function useBoardSubitemCounts(parentItemIds: string[], enabled = true) {
+export function useBoardSubitemCounts(boardId: string, parentItemIds: string[], enabled = true) {
   return useQuery({
-    queryKey: queryKeys.boardSubitems.counts(parentItemIds),
+    queryKey: queryKeys.boardSubitems.counts(boardId),
     queryFn: () => boardSubitemsService.getSubitemCounts(parentItemIds),
     enabled: enabled && parentItemIds.length > 0,
     staleTime: 60 * 1000,

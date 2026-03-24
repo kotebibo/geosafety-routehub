@@ -91,16 +91,25 @@ export const boardSubitemsService = {
   },
 
   async getSubitemCounts(parentItemIds: string[]): Promise<Record<string, number>> {
-    const { data, error } = await subitemsTable()
-      .select('parent_item_id')
-      .in('parent_item_id', parentItemIds)
+    if (parentItemIds.length === 0) return {}
 
-    if (error) throw error
-
+    // Batch into chunks to avoid URL length limits (400 errors)
+    const BATCH_SIZE = 200
     const counts: Record<string, number> = {}
-    for (const row of data || []) {
-      counts[row.parent_item_id] = (counts[row.parent_item_id] || 0) + 1
+
+    for (let i = 0; i < parentItemIds.length; i += BATCH_SIZE) {
+      const batch = parentItemIds.slice(i, i + BATCH_SIZE)
+      const { data, error } = await subitemsTable()
+        .select('parent_item_id')
+        .in('parent_item_id', batch)
+
+      if (error) throw error
+
+      for (const row of data || []) {
+        counts[row.parent_item_id] = (counts[row.parent_item_id] || 0) + 1
+      }
     }
+
     return counts
   },
 
