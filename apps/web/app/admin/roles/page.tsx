@@ -75,7 +75,7 @@ interface DeleteModalState {
 
 export default function RoleManagementPage() {
   const router = useRouter()
-  const { isAdmin, loading: authLoading } = useAuth()
+  const { isAdmin, loading: authLoading, refreshUserRole } = useAuth()
 
   // Data state
   const [roles, setRoles] = useState<CustomRole[]>([])
@@ -251,6 +251,8 @@ export default function RoleManagementPage() {
       }
 
       await fetchData()
+      // Refresh the current user's role/permissions in case the admin modified their own role's permissions
+      await refreshUserRole()
       handleCancelEdit()
     } catch (error) {
       console.error('Error saving role:', error)

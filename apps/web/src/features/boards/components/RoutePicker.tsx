@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { useRoutes } from '@/hooks/useRoutes'
+import { useRoutes } from '@/features/routes/hooks/useRoutes'
 import { cn } from '@/lib/utils'
 import { Search, X, MapPin, Calendar } from 'lucide-react'
 
