@@ -1,10 +1,14 @@
 'use client'
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Legend, Tooltip } from 'recharts'
-import type { InspectorRevenue } from '@/services/board-analytics.service'
+
+interface RevenueShareItem {
+  name: string
+  total_amount: number
+}
 
 interface RevenueShareChartProps {
-  data: InspectorRevenue[]
+  data: RevenueShareItem[]
 }
 
 const COLORS = [
@@ -23,9 +27,9 @@ const COLORS = [
 ]
 
 export function RevenueShareChart({ data }: RevenueShareChartProps) {
-  // Take top 10, group rest as "სხვა"
-  const top = data.slice(0, 10)
-  const rest = data.slice(10)
+  const sorted = [...data].sort((a, b) => b.total_amount - a.total_amount)
+  const top = sorted.slice(0, 10)
+  const rest = sorted.slice(10)
   const restTotal = rest.reduce((sum, d) => sum + d.total_amount, 0)
 
   const chartData = top.map((d, i) => ({
