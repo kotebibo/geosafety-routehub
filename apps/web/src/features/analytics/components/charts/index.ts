@@ -1,8 +1,3 @@
-export { RoutesOverTimeChart } from './RoutesOverTimeChart'
-export { InspectorWorkloadChart } from './InspectorWorkloadChart'
-export { RouteStatusChart } from './RouteStatusChart'
-export { TopCompaniesChart } from './TopCompaniesChart'
-export { WeeklyDistanceChart } from './WeeklyDistanceChart'
 export { RevenueByInspectorChart } from './RevenueByInspectorChart'
 export { LocationsByInspectorChart } from './LocationsByInspectorChart'
 export { RevenueShareChart } from './RevenueShareChart'

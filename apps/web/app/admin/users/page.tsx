@@ -31,7 +31,7 @@ import { cn } from '@/lib/utils'
 
 export default function UserManagementPage() {
   const router = useRouter()
-  const { user: currentUser, isAdmin, loading: authLoading } = useAuth()
+  const { user: currentUser, isAdmin, loading: authLoading, refreshUserRole } = useAuth()
 
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<CustomRole[]>([])
@@ -76,7 +76,10 @@ export default function UserManagementPage() {
     try {
       setLoading(true)
       const [usersData, rolesData, statsData] = await Promise.all([
-        usersService.getUsers(),
+        fetch('/api/admin/users').then(async res => {
+          if (!res.ok) throw new Error((await res.json()).error || 'Failed to fetch users')
+          return res.json()
+        }),
         usersService.getRoles(),
         usersService.getUserStats(),
       ])
@@ -123,21 +126,38 @@ export default function UserManagementPage() {
     if (!editingUserId) return
 
     try {
-      // Update user profile
-      await usersService.updateUser(editingUserId, {
-        full_name: editForm.full_name,
-        phone: editForm.phone,
+      // Update user profile via API
+      const updateRes = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: editingUserId,
+          full_name: editForm.full_name,
+          phone: editForm.phone,
+        }),
       })
+      if (!updateRes.ok) {
+        throw new Error((await updateRes.json()).error || 'Failed to update user')
+      }
 
-      // Update role if changed
+      // Update role if changed via API
       const user = users.find(u => u.id === editingUserId)
       if (editForm.role && editForm.role !== user?.role?.role) {
-        await usersService.assignRole(editingUserId, editForm.role)
+        const roleRes = await fetch('/api/admin/assign-role', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: editingUserId, roleName: editForm.role }),
+        })
+        if (!roleRes.ok) {
+          throw new Error((await roleRes.json()).error || 'Failed to assign role')
+        }
       } else if (!editForm.role && user?.role) {
         await usersService.removeRole(editingUserId)
       }
 
       await fetchData()
+      // Refresh the current user's role in case the admin changed their own role
+      await refreshUserRole()
       setEditingUserId(null)
     } catch (error) {
       console.error('Error saving user:', error)
@@ -147,10 +167,13 @@ export default function UserManagementPage() {
 
   async function handleToggleUserStatus(user: User) {
     try {
-      if (user.is_active) {
-        await usersService.deactivateUser(user.id)
-      } else {
-        await usersService.activateUser(user.id)
+      const res = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, is_active: !user.is_active }),
+      })
+      if (!res.ok) {
+        throw new Error((await res.json()).error || 'Failed to update user status')
       }
       await fetchData()
     } catch (error) {

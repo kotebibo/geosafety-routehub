@@ -616,7 +616,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       label: 'ოფიცრები',
       labelEn: 'Officers',
       icon: Users,
-      permission: 'pages:inspectors',
+      permission: 'pages:officers',
     },
     {
       href: '/routes/manage',

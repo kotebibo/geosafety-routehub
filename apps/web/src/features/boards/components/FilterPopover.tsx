@@ -26,7 +26,7 @@ import {
   Pencil,
 } from 'lucide-react'
 import { useUsers } from '@/hooks/useUsers'
-import { useRoutes } from '@/hooks/useRoutes'
+import { useRoutes } from '@/features/routes/hooks/useRoutes'
 import { useServiceTypes } from '@/hooks/useServiceTypes'
 import { useCompaniesWithLocationCount } from '@/hooks/useCompanyLocations'
 import type { BoardColumn, ColumnType } from '../types/board'

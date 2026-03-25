@@ -1,10 +1,19 @@
-export { useAnalytics } from './hooks'
+export { useBoardAnalytics } from './hooks'
 export {
-  AnalyticsKPICards,
-  OverdueInspectionsList,
-  RoutesOverTimeChart,
-  InspectorWorkloadChart,
-  RouteStatusChart,
-  TopCompaniesChart,
-  WeeklyDistanceChart,
+  BoardAnalyticsKPICards,
+  CompanyAnalyticsTable,
+  ExpiringContractsTable,
+  RevenueByInspectorChart,
+  LocationsByInspectorChart,
+  RevenueShareChart,
+  TopLocationsChart,
+  ServiceTypeRevenueChart,
+  MonthlyTrendChart,
+  PaymentMethodChart,
+  TopCompaniesRevenueChart,
+  WorkloadScatterChart,
+  ExpiryTimelineChart,
+  ValueDistributionChart,
+  InspectorRevenueBarChart,
+  InspectorLocationsBarChart,
 } from './components'

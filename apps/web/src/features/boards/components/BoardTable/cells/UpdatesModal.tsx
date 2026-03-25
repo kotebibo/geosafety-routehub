@@ -24,7 +24,7 @@ import {
 import { activityService } from '@/features/boards/services/activity.service'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInspectorId } from '@/hooks/useInspectorId'
-import { useInspectors } from '@/hooks/useInspectors'
+import { useInspectors } from '@/features/inspectors/hooks/useInspectors'
 import type { ItemComment, ItemUpdate } from '@/types/board'
 
 interface UpdatesModalProps {
