@@ -578,13 +578,6 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     },
     {
       href: '/analytics',
-      label: 'ანალიტიკა',
-      labelEn: 'Analytics',
-      icon: BarChart3,
-      permission: 'pages:analytics',
-    },
-    {
-      href: '/analytics/boards',
       label: 'ფინანსური ანალიტიკა',
       labelEn: 'Financial Analytics',
       icon: BarChart3,

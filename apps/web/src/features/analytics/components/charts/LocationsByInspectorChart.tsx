@@ -1,10 +1,8 @@
 'use client'
 
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
-import type { InspectorRevenue } from '@/services/board-analytics.service'
-
 interface LocationsByInspectorChartProps {
-  data: InspectorRevenue[]
+  data: { name: string; locations: number }[]
 }
 
 export function LocationsByInspectorChart({ data }: LocationsByInspectorChartProps) {
