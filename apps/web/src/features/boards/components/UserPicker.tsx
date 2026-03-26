@@ -136,7 +136,7 @@ export function UserPicker({
                 )}
               >
                 {/* Avatar */}
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#0073ea] text-white flex items-center justify-center text-xs font-semibold">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-monday-primary text-text-inverse flex items-center justify-center text-xs font-semibold">
                   {getInitials(user.full_name)}
                 </div>
 

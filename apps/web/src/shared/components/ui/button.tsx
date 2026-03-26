@@ -17,9 +17,9 @@ const buttonVariants = cva(
         ghost: 'text-text-primary hover:bg-bg-hover hover:text-text-primary',
         link: 'text-monday-primary underline-offset-4 hover:underline',
         destructive:
-          'bg-status-stuck text-white hover:bg-[#E6364D] shadow-monday-sm hover:shadow-error',
+          'bg-status-stuck text-text-inverse hover:brightness-90 shadow-monday-sm hover:shadow-error',
         success:
-          'bg-status-done text-white hover:bg-[#00C041] shadow-monday-sm hover:shadow-success',
+          'bg-status-done text-text-inverse hover:brightness-90 shadow-monday-sm hover:shadow-success',
       },
       size: {
         xs: 'h-7 px-2 text-xs gap-1',
@@ -46,8 +46,7 @@ const buttonVariants = cva(
 )
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode

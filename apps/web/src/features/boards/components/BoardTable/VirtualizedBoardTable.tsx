@@ -1202,10 +1202,10 @@ export function VirtualizedBoardTable({
                   isDragging && 'opacity-50',
                   isDragOver &&
                     dragOverPosition === 'before' &&
-                    'before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-[#0073ea]',
+                    'before:absolute before:top-0 before:left-0 before:right-0 before:h-0.5 before:bg-monday-primary',
                   isDragOver &&
                     dragOverPosition === 'after' &&
-                    'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-[#0073ea]'
+                    'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-monday-primary'
                 )}
                 onClick={() => onRowClick?.(item)}
                 onDoubleClick={() => onRowDoubleClick?.(item)}
@@ -1539,7 +1539,7 @@ export function VirtualizedBoardTable({
             {onAddGroup && (
               <button
                 onClick={onAddGroup}
-                className="flex items-center h-10 px-4 mt-4 text-sm text-text-secondary hover:text-[#0073ea] hover:bg-[#0073ea]/5 transition-colors rounded-md border border-dashed border-border-light"
+                className="flex items-center h-10 px-4 mt-4 text-sm text-text-secondary hover:text-monday-primary hover:bg-monday-primary/5 transition-colors rounded-md border border-dashed border-border-light"
                 style={{ width: totalTableWidth, minWidth: totalTableWidth }}
               >
                 <Plus className="w-4 h-4 mr-2" />

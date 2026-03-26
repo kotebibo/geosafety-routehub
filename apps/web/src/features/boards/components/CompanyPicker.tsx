@@ -221,7 +221,7 @@ export function CompanyPicker({
                   )}
                 >
                   {/* Company Icon */}
-                  <div className="flex-shrink-0 w-8 h-8 rounded bg-[#6161ff] flex items-center justify-center">
+                  <div className="flex-shrink-0 w-8 h-8 rounded bg-monday-primary flex items-center justify-center">
                     <Building2 className="w-4 h-4 text-white" />
                   </div>
 

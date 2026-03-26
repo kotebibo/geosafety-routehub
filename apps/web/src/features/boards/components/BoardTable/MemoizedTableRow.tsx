@@ -120,9 +120,9 @@ export const MemoizedTableRow = memo(
           isSelected && 'bg-bg-selected',
           isDragging && 'opacity-50',
           showDropIndicatorBefore &&
-            'before:absolute before:left-0 before:right-0 before:top-0 before:h-[2px] before:bg-[#0073ea] before:z-20',
+            'before:absolute before:left-0 before:right-0 before:top-0 before:h-[2px] before:bg-monday-primary before:z-20',
           showDropIndicatorAfter &&
-            'after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[2px] after:bg-[#0073ea] after:z-20'
+            'after:absolute after:left-0 after:right-0 after:bottom-0 after:h-[2px] after:bg-monday-primary after:z-20'
         )}
         onClick={() => onRowClick?.(item)}
         draggable={hasItemMove}

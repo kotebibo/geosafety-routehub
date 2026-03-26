@@ -136,7 +136,7 @@ function ColumnMenu({
                       className={cn(
                         'w-8 h-[18px] rounded-full transition-colors flex items-center px-0.5',
                         column.config?.is_due_date
-                          ? 'bg-[#0073ea] justify-end'
+                          ? 'bg-monday-primary justify-end'
                           : 'bg-border-medium justify-start'
                       )}
                     >
@@ -284,7 +284,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
       <div
         className={cn(
           'absolute top-0 right-0 w-1 h-full cursor-col-resize group',
-          'hover:bg-[#0073ea] transition-colors'
+          'hover:bg-monday-primary transition-colors'
         )}
         onMouseDown={e => onResizeStart(e, column.id, width)}
       >

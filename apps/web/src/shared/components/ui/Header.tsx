@@ -117,7 +117,7 @@ export function Header({ className, onMenuToggle }: HeaderProps) {
               className={cn(
                 'flex items-center gap-2 px-3 py-1.5 rounded-lg',
                 'border border-border-medium bg-bg-secondary hover:bg-bg-hover',
-                'text-[#555766] text-sm transition-colors',
+                'text-text-tertiary text-sm transition-colors',
                 'min-w-0 sm:min-w-[200px] lg:min-w-[280px]'
               )}
             >

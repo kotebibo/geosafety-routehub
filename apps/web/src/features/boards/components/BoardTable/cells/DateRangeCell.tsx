@@ -260,7 +260,7 @@ export const DateRangeCell = memo(function DateRangeCell({
                 </button>
                 <button
                   onClick={handleSave}
-                  className="px-3 py-1.5 text-xs bg-[#0073ea] text-white rounded hover:bg-[#0060c7] transition-colors"
+                  className="px-3 py-1.5 text-xs bg-monday-primary text-text-inverse rounded hover:bg-[var(--monday-primary-hover)] transition-colors"
                 >
                   Save
                 </button>

@@ -126,13 +126,13 @@ function getUpdateTypeColor(type: ItemUpdate['update_type']): string {
     case 'completed':
       return 'bg-green-100 text-green-700'
     case 'comment':
-      return 'bg-gray-100 text-gray-700'
+      return 'bg-bg-tertiary text-text-secondary'
     case 'column_changed':
       return 'bg-cyan-100 text-cyan-700'
     case 'moved_to_board':
       return 'bg-amber-100 text-amber-700'
     default:
-      return 'bg-gray-100 text-gray-700'
+      return 'bg-bg-tertiary text-text-secondary'
   }
 }
 
@@ -156,7 +156,7 @@ export function ActivityLog({
         </div>
         <div className="p-4 space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-10 bg-gray-100 rounded animate-pulse" />
+            <div key={i} className="h-10 bg-bg-tertiary rounded animate-pulse" />
           ))}
         </div>
       </div>
