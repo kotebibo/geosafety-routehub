@@ -10,7 +10,7 @@ export const boardCrudService = {
   async getBoards(userId?: string): Promise<Board[]> {
     const { data, error } = await (getSupabase() as any)
       .from('boards')
-      .select('*')
+      .select('*, workspace:workspaces(id, name, icon, color)')
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -49,14 +49,12 @@ export const boardCrudService = {
     if (error) throw error
 
     // Create a default group so every board starts with one
-    await (getSupabase() as any)
-      .from('board_groups')
-      .insert({
-        board_id: data.id,
-        name: 'Items',
-        color: '#579bfc',
-        position: 0,
-      })
+    await (getSupabase() as any).from('board_groups').insert({
+      board_id: data.id,
+      name: 'Items',
+      color: '#579bfc',
+      position: 0,
+    })
 
     return data
   },
@@ -74,10 +72,7 @@ export const boardCrudService = {
   },
 
   async deleteBoard(boardId: string): Promise<void> {
-    const { error } = await (getSupabase() as any)
-      .from('boards')
-      .delete()
-      .eq('id', boardId)
+    const { error } = await (getSupabase() as any).from('boards').delete().eq('id', boardId)
 
     if (error) throw error
   },

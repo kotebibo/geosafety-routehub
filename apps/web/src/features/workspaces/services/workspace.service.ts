@@ -28,7 +28,7 @@ export const workspaceService = {
    */
   async getWorkspaces(): Promise<(Workspace & { current_user_role?: WorkspaceRole })[]> {
     const { data, error } = await (getSupabase().from('workspaces') as any)
-      .select('*, workspace_members!inner(role, user_id)')
+      .select('*, workspace_members(role, user_id)')
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -56,7 +56,7 @@ export const workspaceService = {
         `
         *,
         boards:boards(count),
-        workspace_members!inner(role, user_id)
+        workspace_members(role, user_id)
       `
       )
       .order('created_at', { ascending: false })
