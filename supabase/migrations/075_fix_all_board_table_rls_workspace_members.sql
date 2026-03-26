@@ -62,17 +62,8 @@ CREATE POLICY "board_subitems_delete" ON public.board_subitems
     FOR DELETE TO authenticated USING (public.can_edit_board(board_id));
 
 -- ============================================
--- BOARD_VIEWS
+-- BOARD_VIEWS — skipped, uses board_type (varchar) not board_id (UUID)
 -- ============================================
-DROP POLICY IF EXISTS "board_views_select_policy" ON public.board_views;
-DROP POLICY IF EXISTS "board_views_manage_policy" ON public.board_views;
-
-CREATE POLICY "board_views_select_policy" ON public.board_views
-    FOR SELECT TO authenticated USING (public.can_access_board(board_id));
-CREATE POLICY "board_views_manage_policy" ON public.board_views
-    FOR ALL TO authenticated
-    USING (public.can_edit_board(board_id))
-    WITH CHECK (public.can_edit_board(board_id));
 
 -- ============================================
 -- BOARD_GROUPS
