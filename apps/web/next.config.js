@@ -47,7 +47,7 @@ const nextConfig = {
       style-src 'self' 'unsafe-inline';
       img-src 'self' blob: data: https:;
       font-src 'self' data:;
-      connect-src 'self' *.supabase.co wss://*.supabase.co https://api.mapbox.com *.ably.io wss://*.ably.io *.ably.net wss://*.ably.net *.ably-realtime.com *.tile.openstreetmap.org;
+      connect-src 'self' *.supabase.co wss://*.supabase.co https://api.mapbox.com *.ably.io wss://*.ably.io *.ably.net wss://*.ably.net *.ably-realtime.com wss://*.ably-realtime.com *.tile.openstreetmap.org;
       frame-src 'self' *.supabase.co blob: https://view.officeapps.live.com;
       frame-ancestors 'none';
       base-uri 'self';
