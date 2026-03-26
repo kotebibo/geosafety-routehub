@@ -1,5 +1,4 @@
-import { useRouter } from 'next/navigation'
-import { ArrowLeft, History, FileCheck, Users, Columns, FileText } from 'lucide-react'
+import { History, FileCheck, Users, Columns, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/shared/components/ui'
 import { BoardPresenceIndicator } from './BoardPresence'
@@ -42,22 +41,27 @@ export function BoardPageHeader({
   onShowColumnConfig,
   onShowDocTemplates,
 }: BoardPageHeaderProps) {
-  const router = useRouter()
-
   return (
     <div className="flex-shrink-0 bg-bg-primary border-b border-border-light">
-      <div className="w-full mx-auto px-4 md:px-6 py-4">
-        {/* Top Bar */}
-        <div className="flex items-center justify-between mb-4 gap-2">
-          <button
-            onClick={() => router.push('/boards')}
-            className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="hidden sm:inline text-sm">Back to Boards</span>
-          </button>
+      <div className="w-full mx-auto px-4 md:px-6 py-2">
+        <div className="flex items-center justify-between gap-2">
+          {/* Board Title */}
+          <div className="flex items-center gap-3 min-w-0">
+            <div
+              className={cn(
+                'w-8 h-8 rounded-md flex-shrink-0 flex items-center justify-center',
+                getBoardColorClass(board.color)
+              )}
+            >
+              <span className="text-white text-sm font-bold">
+                {board.name.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <h1 className="text-base font-semibold text-text-primary truncate">{board.name}</h1>
+          </div>
 
-          <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+          {/* Actions */}
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <BoardPresenceIndicator presence={presence} isConnected={isConnected} />
 
             <Button variant="secondary" size="sm" onClick={onShowActivityLog}>
@@ -86,26 +90,6 @@ export function BoardPageHeader({
               <Columns className="w-4 h-4 mr-2" />
               Columns
             </Button>
-          </div>
-        </div>
-
-        {/* Board Title */}
-        <div className="flex items-center gap-4">
-          <div
-            className={cn(
-              'w-12 h-12 rounded-lg flex items-center justify-center',
-              getBoardColorClass(board.color)
-            )}
-          >
-            <span className="text-white text-xl font-bold">
-              {board.name.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div>
-            <h1 className="text-h2 font-bold text-text-primary">{board.name}</h1>
-            {board.description && (
-              <p className="text-sm text-text-tertiary mt-1">{board.description}</p>
-            )}
           </div>
         </div>
       </div>
