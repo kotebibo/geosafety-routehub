@@ -72,7 +72,7 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
 
   if (readOnly && !value) {
     return (
-      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+      <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">-</div>
     )
   }
 
@@ -119,14 +119,14 @@ export function RouteCell({ value, onEdit, readOnly = false, onEditStart }: Rout
               <span className="text-sm text-text-primary truncate block">
                 {selectedRoute.name || 'Unnamed Route'}
               </span>
-              <span className="text-xs text-[#9699a6] flex items-center gap-1">
+              <span className="text-xs text-text-tertiary flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
                 {formatDate(selectedRoute.date)}
               </span>
             </div>
           </>
         ) : (
-          <span className="text-sm text-[#9699a6]">Select route...</span>
+          <span className="text-sm text-text-tertiary">Select route...</span>
         )}
       </button>
 

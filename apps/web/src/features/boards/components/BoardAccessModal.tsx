@@ -198,7 +198,7 @@ export function BoardAccessModal({
                         placeholder="Search by name or email..."
                         autoFocus
                         className={cn(
-                          'w-full pl-9 pr-4 py-2 rounded-md',
+                          'w-full pl-9 pr-4 py-2 rounded-md bg-bg-primary',
                           'border border-border-default',
                           'focus:ring-2 focus:ring-monday-primary focus:border-transparent',
                           'text-text-primary placeholder-text-tertiary',

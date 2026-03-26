@@ -113,24 +113,24 @@ function getUpdateTypeLabel(type: ItemUpdate['update_type']): string {
 function getUpdateTypeColor(type: ItemUpdate['update_type']): string {
   switch (type) {
     case 'created':
-      return 'bg-green-100 text-green-700'
+      return 'bg-color-success/10 text-color-success'
     case 'updated':
-      return 'bg-blue-100 text-blue-700'
+      return 'bg-color-info/10 text-color-info'
     case 'deleted':
-      return 'bg-red-100 text-red-700'
+      return 'bg-color-error/10 text-color-error'
     case 'status_changed':
       return 'bg-purple-100 text-purple-700'
     case 'assigned':
     case 'reassigned':
-      return 'bg-orange-100 text-orange-700'
+      return 'bg-color-warning/10 text-color-warning'
     case 'completed':
-      return 'bg-green-100 text-green-700'
+      return 'bg-color-success/10 text-color-success'
     case 'comment':
       return 'bg-bg-tertiary text-text-secondary'
     case 'column_changed':
-      return 'bg-cyan-100 text-cyan-700'
+      return 'bg-color-info/10 text-color-info'
     case 'moved_to_board':
-      return 'bg-amber-100 text-amber-700'
+      return 'bg-color-warning/10 text-color-warning'
     default:
       return 'bg-bg-tertiary text-text-secondary'
   }
@@ -352,8 +352,8 @@ export function ActivityLog({
                             className={cn(
                               'inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-all',
                               hoveredRow === update.id
-                                ? 'bg-orange-500 text-white shadow-sm'
-                                : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
+                                ? 'bg-color-warning text-white shadow-sm'
+                                : 'bg-color-warning/10 text-color-warning hover:bg-color-warning/20'
                             )}
                           >
                             <Undo2 className="w-3 h-3" />
@@ -394,8 +394,8 @@ export function ActivityLogPanel({ isOpen, onClose, ...props }: ActivityLogPanel
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-light bg-bg-primary flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-              <History className="w-5 h-5 text-blue-600" />
+            <div className="w-9 h-9 rounded-lg bg-color-info/10 flex items-center justify-center">
+              <History className="w-5 h-5 text-color-info" />
             </div>
             <div>
               <h2 className="font-semibold text-text-primary">Activity Log</h2>

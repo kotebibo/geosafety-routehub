@@ -101,7 +101,7 @@ export function ServiceTypeCell({
 
   if (readOnly && !value) {
     return (
-      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+      <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">-</div>
     )
   }
 
@@ -150,7 +150,7 @@ export function ServiceTypeCell({
             <span className="text-sm text-text-primary truncate">{selectedType.name}</span>
           </>
         ) : (
-          <span className="text-sm text-[#9699a6]">Select service...</span>
+          <span className="text-sm text-text-tertiary">Select service...</span>
         )}
       </button>
 

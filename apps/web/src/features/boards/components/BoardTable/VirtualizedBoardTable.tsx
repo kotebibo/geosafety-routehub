@@ -688,7 +688,10 @@ export function VirtualizedBoardTable({
           <div
             key={virtualRow.id}
             style={{ ...style, zIndex: isMenuOpen ? 50 : 2 }}
-            className={cn('group', isGroupDragOver && 'ring-2 ring-[#0073ea] ring-inset rounded')}
+            className={cn(
+              'group',
+              isGroupDragOver && 'ring-2 ring-monday-primary ring-inset rounded'
+            )}
             onDragOver={e => handleGroupDragOver(e, group.id)}
             onDragLeave={handleGroupDragLeave}
             onDrop={e => handleGroupDrop(e, group.id)}
@@ -726,7 +729,7 @@ export function VirtualizedBoardTable({
                               }
                               onSelectionChange(newSelection)
                             }}
-                            className="w-4 h-4 rounded border-border-medium text-[#0073ea] focus:ring-[#0073ea]"
+                            className="w-4 h-4 rounded border-border-medium text-monday-primary focus:ring-monday-primary"
                           />
                         )
                       })()}
@@ -780,7 +783,7 @@ export function VirtualizedBoardTable({
                           onChange={e => setEditingGroupName(e.target.value)}
                           onBlur={handleGroupNameSave}
                           onKeyDown={handleGroupNameKeyDown}
-                          className="font-semibold text-sm bg-bg-primary border border-[#0073ea] rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
+                          className="font-semibold text-sm bg-bg-primary border border-monday-primary rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-monday-primary"
                           style={{ color: group.color || '#579bfc', minWidth: '80px' }}
                           onClick={e => e.stopPropagation()}
                         />
@@ -845,7 +848,7 @@ export function VirtualizedBoardTable({
                                       className={cn(
                                         'w-5 h-5 rounded-full border-2',
                                         group.color === color.value
-                                          ? 'border-gray-800'
+                                          ? 'border-text-primary'
                                           : 'border-transparent'
                                       )}
                                       style={{ backgroundColor: color.value }}
@@ -1230,7 +1233,7 @@ export function VirtualizedBoardTable({
                         onSelectionChange(newSelection)
                       }}
                       onClick={e => e.stopPropagation()}
-                      className="w-4 h-4 rounded border-border-medium text-[#0073ea] focus:ring-[#0073ea]"
+                      className="w-4 h-4 rounded border-border-medium text-monday-primary focus:ring-monday-primary"
                     />
                   </td>
                 )}
@@ -1265,7 +1268,7 @@ export function VirtualizedBoardTable({
                       key={col.id}
                       className={cn(
                         'bg-bg-primary border border-border-medium px-0 py-0 text-sm h-9 relative',
-                        isFocused && !isEditing && 'ring-2 ring-inset ring-[#0073ea]'
+                        isFocused && !isEditing && 'ring-2 ring-inset ring-monday-primary'
                       )}
                       style={{
                         width: getColumnWidth(col),
@@ -1450,7 +1453,7 @@ export function VirtualizedBoardTable({
                                 onSelectionChange(new Set())
                               }
                             }}
-                            className="w-4 h-4 rounded border-border-medium text-[#0073ea] focus:ring-[#0073ea]"
+                            className="w-4 h-4 rounded border-border-medium text-monday-primary focus:ring-monday-primary"
                           />
                         </div>
                       </th>
@@ -1552,7 +1555,7 @@ export function VirtualizedBoardTable({
         {/* Column drag overlay */}
         <DragOverlay>
           {activeColumnId && (
-            <div className="bg-bg-primary border-2 border-[#0073ea] rounded px-3 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wide shadow-lg">
+            <div className="bg-bg-primary border-2 border-monday-primary rounded px-3 py-2 text-xs font-semibold text-text-secondary uppercase tracking-wide shadow-lg">
               {visibleColumns.find(c => c.id === activeColumnId)?.column_name || activeColumnId}
             </div>
           )}

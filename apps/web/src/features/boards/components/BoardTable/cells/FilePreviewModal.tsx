@@ -122,7 +122,7 @@ export function FilePreviewModal({
           <div className="flex items-center gap-3 min-w-0">
             <span className="text-sm font-medium text-text-primary truncate">{file.name}</span>
             {canNavigate && (
-              <span className="text-xs text-[#9699a6]">
+              <span className="text-xs text-text-tertiary">
                 {currentIndex + 1} / {files?.length}
               </span>
             )}

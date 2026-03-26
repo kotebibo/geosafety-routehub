@@ -88,7 +88,7 @@ export const TextCell = memo(function TextCell({
             value
           )
         ) : (
-          <span className="text-[#9699a6]">Empty</span>
+          <span className="text-text-tertiary">Empty</span>
         )}
       </OverflowTooltip>
     </div>

@@ -103,7 +103,9 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
   if (!parsedValue?.company_id) {
     if (readOnly) {
       return (
-        <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+        <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">
+          -
+        </div>
       )
     }
 
@@ -116,7 +118,7 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
           }}
           className="h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left hover:bg-bg-hover cursor-pointer"
         >
-          <span className="text-sm text-[#9699a6]">აირჩიეთ კომპანია...</span>
+          <span className="text-sm text-text-tertiary">აირჩიეთ კომპანია...</span>
         </button>
 
         {isEditing &&

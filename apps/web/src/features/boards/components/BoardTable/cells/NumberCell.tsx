@@ -102,7 +102,7 @@ export const NumberCell = memo(function NumberCell({
           )}
         </OverflowTooltip>
       ) : (
-        <span className="text-[#9699a6]">-</span>
+        <span className="text-text-tertiary">-</span>
       )}
     </div>
   )

@@ -72,7 +72,7 @@ export const DateCell = memo(function DateCell({
         return {
           bg: '',
           text: 'text-text-primary',
-          icon: 'text-[#9699a6]',
+          icon: 'text-text-tertiary',
           border: '',
         }
     }
@@ -160,7 +160,7 @@ export const DateCell = memo(function DateCell({
           {getStatusLabel()}
         </div>
       ) : (
-        <span className="text-[#9699a6]">Set date</span>
+        <span className="text-text-tertiary">Set date</span>
       )}
     </div>
   )
