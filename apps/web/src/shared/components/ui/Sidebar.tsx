@@ -168,20 +168,41 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
   // Fetch all user's boards (using auth user ID, not inspector ID)
   const { data: allBoards, isLoading: allBoardsLoading } = useUserBoards(isAuthReady ? userId : '')
 
-  // Group boards by workspace, collecting shared boards separately
-  const { boardsByWorkspace, sharedBoards } = React.useMemo(() => {
-    if (!allBoards || !workspaces)
-      return { boardsByWorkspace: new Map(), sharedBoards: [] as any[] }
+  // Build workspace context from boards (includes workspaces where user is board-only member)
+  // and group boards by workspace
+  const { boardsByWorkspace, sharedBoards, allWorkspaceContexts } = React.useMemo(() => {
+    if (!allBoards)
+      return {
+        boardsByWorkspace: new Map(),
+        sharedBoards: [] as any[],
+        allWorkspaceContexts: new Map(),
+      }
 
+    // Build workspace context from board data (Approach D — embedded workspace info)
+    const wsContextMap = new Map<
+      string,
+      { id: string; name: string; icon: string; color: string }
+    >()
+
+    allBoards.forEach((board: any) => {
+      if (board.workspace_id && board.workspace && !wsContextMap.has(board.workspace_id)) {
+        wsContextMap.set(board.workspace_id, board.workspace)
+      }
+    })
+
+    // Merge full workspace data (workspace members get richer data)
+    if (workspaces) {
+      workspaces.forEach((ws: any) => {
+        wsContextMap.set(ws.id, ws) // Full workspace data overrides board-embedded data
+      })
+    }
+
+    // Group boards by workspace
     const grouped = new Map<string, typeof allBoards>()
     const shared: typeof allBoards = []
 
-    // Initialize with all workspaces
-    workspaces.forEach((ws: any) => {
-      grouped.set(ws.id, [])
-    })
+    wsContextMap.forEach((_, wsId) => grouped.set(wsId, []))
 
-    // Group boards — boards without a matching workspace go to "shared"
     allBoards.forEach((board: any) => {
       const wsId = board.workspace_id
       if (wsId && grouped.has(wsId)) {
@@ -191,12 +212,20 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       }
     })
 
-    return { boardsByWorkspace: grouped, sharedBoards: shared }
+    return { boardsByWorkspace: grouped, sharedBoards: shared, allWorkspaceContexts: wsContextMap }
   }, [allBoards, workspaces])
+
+  // Check if user is a full workspace member (vs board-only access)
+  const isWorkspaceMember = React.useCallback(
+    (wsId: string) => {
+      return workspaces?.some((ws: any) => ws.id === wsId && ws.current_user_role) ?? false
+    },
+    [workspaces]
+  )
 
   // Auto-select workspace based on current board or default
   React.useEffect(() => {
-    if (!workspaces || workspaces.length === 0) return
+    if (allWorkspaceContexts.size === 0 && sharedBoards.length === 0) return
 
     // If viewing a board, select its workspace
     if (pathname.startsWith('/boards/') && allBoards) {
@@ -204,8 +233,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       const board = allBoards.find((b: any) => b.id === boardId)
       if (board) {
         const wsId = board.workspace_id
-        const userWorkspaceIds = new Set(workspaces.map((ws: any) => ws.id))
-        if (wsId && userWorkspaceIds.has(wsId)) {
+        if (wsId && allWorkspaceContexts.has(wsId)) {
           setSelectedWorkspaceId(wsId)
           return
         } else {
@@ -217,9 +245,10 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
 
     // If no workspace selected yet, pick first
     if (!selectedWorkspaceId) {
-      setSelectedWorkspaceId(workspaces[0]?.id || null)
+      const firstWsId = allWorkspaceContexts.keys().next().value
+      setSelectedWorkspaceId(firstWsId || null)
     }
-  }, [pathname, allBoards, workspaces])
+  }, [pathname, allBoards, allWorkspaceContexts, sharedBoards])
 
   const workspaceDropdownRef = React.useRef<HTMLDivElement>(null)
 
@@ -246,7 +275,9 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     return []
   }, [selectedWorkspaceId, boardsByWorkspace, sharedBoards])
 
-  const selectedWorkspace = workspaces?.find((ws: any) => ws.id === selectedWorkspaceId)
+  const selectedWorkspace = selectedWorkspaceId
+    ? allWorkspaceContexts.get(selectedWorkspaceId)
+    : null
 
   // For backwards compatibility - set current workspace when creating board
   const getCurrentWorkspaceId = () => {
@@ -897,43 +928,47 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                       {/* Dropdown Menu */}
                       {workspaceDropdownOpen && (
                         <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-bg-primary rounded-lg border border-monday-primary shadow-lg py-1 max-h-[280px] overflow-y-auto">
-                          {workspaces.map((ws: any) => {
-                            const boardCount = (boardsByWorkspace.get(ws.id) || []).filter(
+                          {Array.from(allWorkspaceContexts.entries()).map(([wsId, ws]) => {
+                            const boardCount = (boardsByWorkspace.get(wsId) || []).filter(
                               (b: any) => !b.settings?.is_archived
                             ).length
+                            const isMember = isWorkspaceMember(wsId)
+                            const fullWs = workspaces?.find((w: any) => w.id === wsId)
                             return (
                               <button
-                                key={ws.id}
+                                key={wsId}
                                 onClick={() => {
-                                  setSelectedWorkspaceId(ws.id)
+                                  setSelectedWorkspaceId(wsId)
                                   setWorkspaceDropdownOpen(false)
                                 }}
                                 className={cn(
                                   'flex items-center gap-2 w-full px-3 py-2 text-sm transition-colors',
                                   'hover:bg-bg-hover',
-                                  selectedWorkspaceId === ws.id &&
+                                  selectedWorkspaceId === wsId &&
                                     'bg-bg-selected text-monday-primary'
                                 )}
                               >
                                 <div className="w-5 h-5 rounded bg-monday-primary flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0">
-                                  {ws.name.charAt(0).toUpperCase()}
+                                  {(ws.name || 'W').charAt(0).toUpperCase()}
                                 </div>
                                 <span className="flex-1 truncate text-left">{ws.name}</span>
                                 <span className="text-xs text-text-tertiary flex-shrink-0">
                                   {boardCount}
                                 </span>
-                                <span
-                                  role="button"
-                                  tabIndex={0}
-                                  className="p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    setWorkspaceDropdownOpen(false)
-                                    openWorkspaceMenu(e, ws.id, ws.name, ws.current_user_role)
-                                  }}
-                                >
-                                  <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
-                                </span>
+                                {isMember && (
+                                  <span
+                                    role="button"
+                                    tabIndex={0}
+                                    className="p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      setWorkspaceDropdownOpen(false)
+                                      openWorkspaceMenu(e, wsId, ws.name, fullWs?.current_user_role)
+                                    }}
+                                  >
+                                    <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
+                                  </span>
+                                )}
                               </button>
                             )
                           })}

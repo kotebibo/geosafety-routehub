@@ -112,18 +112,6 @@ export function BoardAccessModal({
         addedBy: user.id,
       })
 
-      // Auto-add to workspace if the board belongs to one
-      if (workspaceId) {
-        const isAlreadyWorkspaceMember = workspaceMembers.some(m => m.user_id === userId)
-        if (!isAlreadyWorkspaceMember) {
-          try {
-            await workspaceService.addWorkspaceMember(workspaceId, userId, 'member', user.id)
-          } catch {
-            // Ignore — user might already be a member via another path
-          }
-        }
-      }
-
       setSearchQuery('')
       setShowAddUser(false)
     } catch (error) {
