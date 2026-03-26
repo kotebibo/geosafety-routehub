@@ -894,7 +894,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                 {/* Workspace Dropdown Selector */}
                 {workspacesLoading || boardsLoading ? (
                   <div className="px-3 py-2 text-sm text-text-tertiary">Loading...</div>
-                ) : workspaces && workspaces.length > 0 ? (
+                ) : allWorkspaceContexts.size > 0 || (workspaces && workspaces.length > 0) ? (
                   <>
                     <div className="mb-1 relative" ref={workspaceDropdownRef}>
                       <button
