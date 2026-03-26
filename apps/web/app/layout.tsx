@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
-import { Poppins, Figtree, Noto_Sans_Georgian } from 'next/font/google'
+import { Poppins, Figtree } from 'next/font/google'
+import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from '@/components/providers'
 import { Toaster, MondayLayout, TooltipProvider } from '@/shared/components/ui'
@@ -23,12 +24,15 @@ const figtree = Figtree({
   display: 'swap',
 })
 
-// Georgian font - loaded with optional display for non-blocking
-const georgian = Noto_Sans_Georgian({
-  subsets: ['georgian'],
-  weight: ['400', '500', '600'],
+// FiraGO - Georgian font with full Unicode support, self-hosted
+const firaGO = localFont({
+  src: [
+    { path: '../public/fonts/FiraGO-Regular.woff2', weight: '400', style: 'normal' },
+    { path: '../public/fonts/FiraGO-Medium.woff2', weight: '500', style: 'normal' },
+    { path: '../public/fonts/FiraGO-SemiBold.woff2', weight: '600', style: 'normal' },
+  ],
   variable: '--font-georgian',
-  display: 'optional', // Won't block render, falls back to system font if slow
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -52,7 +56,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${figtree.variable} ${poppins.variable} ${georgian.variable} font-product`}>
+      <body className={`${figtree.variable} ${poppins.variable} ${firaGO.variable} font-product`}>
         <ErrorBoundary>
           <Providers>
             <TooltipProvider>
