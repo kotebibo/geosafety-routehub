@@ -226,7 +226,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
               onBlur={() => setNameBlurred(true)}
               placeholder="მაგ: პრიორიტეტი, მფლობელი, ვადა"
               className={cn(
-                'w-full px-3 py-2 border rounded-md focus:outline-none focus:border-monday-primary',
+                'w-full px-3 py-2 bg-bg-primary text-text-primary border rounded-md placeholder:text-text-tertiary focus:outline-none focus:border-monday-primary',
                 nameBlurred && !columnName.trim()
                   ? 'border-red-400 bg-red-50/50'
                   : 'border-border-light'
@@ -301,7 +301,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                   <select
                     value={linkedCompanyColumnId}
                     onChange={e => setLinkedCompanyColumnId(e.target.value)}
-                    className="w-full px-3 py-2 border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+                    className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
                   >
                     {companyColumns.map(col => (
                       <option key={col.id} value={col.id}>
@@ -331,7 +331,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
               onChange={e => setWidth(parseInt(e.target.value))}
               className="w-full h-2 bg-bg-tertiary rounded-lg appearance-none cursor-pointer"
               style={{
-                background: `linear-gradient(to right, #0073ea 0%, #0073ea ${((width - 80) / (500 - 80)) * 100}%, #e6e9ef ${((width - 80) / (500 - 80)) * 100}%, #e6e9ef 100%)`,
+                background: `linear-gradient(to right, var(--monday-primary) 0%, var(--monday-primary) ${((width - 80) / (500 - 80)) * 100}%, var(--border-light) ${((width - 80) / (500 - 80)) * 100}%, var(--border-light) 100%)`,
               }}
             />
             <div className="flex justify-between text-xs text-text-tertiary mt-1">

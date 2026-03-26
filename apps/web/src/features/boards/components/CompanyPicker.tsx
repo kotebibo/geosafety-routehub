@@ -176,7 +176,7 @@ export function CompanyPicker({
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={placeholder}
-            className="w-full pl-8 pr-2 py-1.5 text-sm border border-border-light rounded focus:outline-none focus:border-monday-primary"
+            className="w-full pl-8 pr-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded focus:outline-none focus:border-monday-primary placeholder:text-text-tertiary"
           />
         </div>
       </div>
@@ -232,7 +232,7 @@ export function CompanyPicker({
                         {company.name || 'უსახელო კომპანია'}
                       </span>
                       {hasMultipleLocations && (
-                        <span className="flex-shrink-0 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                        <span className="flex-shrink-0 text-xs bg-color-info/10 text-color-info px-1.5 py-0.5 rounded">
                           {company.location_count} ლოკაცია
                         </span>
                       )}

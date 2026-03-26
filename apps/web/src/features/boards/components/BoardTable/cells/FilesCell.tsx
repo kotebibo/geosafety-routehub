@@ -229,7 +229,7 @@ export const FilesCell = memo(function FilesCell({
 
   if (readOnly && files.length === 0) {
     return (
-      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+      <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">-</div>
     )
   }
 
@@ -267,7 +267,7 @@ export const FilesCell = memo(function FilesCell({
             </div>
           </div>
         ) : (
-          <span className="text-sm text-[#9699a6]">Add files...</span>
+          <span className="text-sm text-text-tertiary">Add files...</span>
         )}
       </button>
 
@@ -320,7 +320,7 @@ export const FilesCell = memo(function FilesCell({
                     <span className="text-sm text-text-secondary">
                       {uploading ? 'Uploading...' : 'Click to upload files'}
                     </span>
-                    <span className="text-xs text-[#9699a6]">Max 10MB per file</span>
+                    <span className="text-xs text-text-tertiary">Max 10MB per file</span>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -332,7 +332,7 @@ export const FilesCell = memo(function FilesCell({
                     />
                   </label>
                 ) : (
-                  <span className="text-sm text-[#9699a6]">No attachments</span>
+                  <span className="text-sm text-text-tertiary">No attachments</span>
                 )}
               </div>
             ) : (
@@ -379,7 +379,9 @@ export const FilesCell = memo(function FilesCell({
                         <div className="text-sm text-text-primary truncate hover:text-text-link transition-colors">
                           {file.name}
                         </div>
-                        <div className="text-xs text-[#9699a6]">{formatFileSize(file.size)}</div>
+                        <div className="text-xs text-text-tertiary">
+                          {formatFileSize(file.size)}
+                        </div>
                       </button>
                     </Tooltip>
 

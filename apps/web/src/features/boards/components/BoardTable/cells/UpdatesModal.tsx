@@ -455,12 +455,12 @@ export function UpdatesModal({
                       <span className="text-sm font-semibold text-text-primary">
                         {comment.user_name || 'Unknown User'}
                       </span>
-                      <span className="text-xs text-[#9699a6] flex items-center gap-1">
+                      <span className="text-xs text-text-tertiary flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {formatTimeAgo(comment.created_at)}
                       </span>
                       {comment.is_edited && (
-                        <span className="text-xs text-[#9699a6]">(edited)</span>
+                        <span className="text-xs text-text-tertiary">(edited)</span>
                       )}
                     </div>
 
@@ -470,7 +470,7 @@ export function UpdatesModal({
                         <textarea
                           value={editContent}
                           onChange={e => setEditContent(e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-border-light rounded-lg resize-none focus:outline-none focus:border-[#0073ea] focus:ring-1 focus:ring-[#0073ea]"
+                          className="w-full px-3 py-2 text-sm bg-bg-primary text-text-primary border border-border-light rounded-lg resize-none focus:outline-none focus:border-monday-primary focus:ring-1 focus:ring-monday-primary"
                           rows={3}
                           autoFocus
                         />
@@ -556,11 +556,11 @@ export function UpdatesModal({
                             <span className="text-sm font-medium text-text-primary">
                               {reply.user_name || 'Unknown'}
                             </span>
-                            <span className="text-xs text-[#9699a6]">
+                            <span className="text-xs text-text-tertiary">
                               {formatTimeAgo(reply.created_at)}
                             </span>
                             {reply.is_edited && (
-                              <span className="text-xs text-[#9699a6]">(edited)</span>
+                              <span className="text-xs text-text-tertiary">(edited)</span>
                             )}
                           </div>
                           <p className="text-sm text-text-primary whitespace-pre-wrap break-words">
@@ -631,7 +631,7 @@ export function UpdatesModal({
                           {getActivityDescription(activity)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1 mt-1 text-xs text-[#9699a6]">
+                      <div className="flex items-center gap-1 mt-1 text-xs text-text-tertiary">
                         <Clock className="w-3 h-3" />
                         {formatTimeAgo(activity.created_at)}
                       </div>
@@ -720,13 +720,13 @@ export function UpdatesModal({
                 }
                 rows={3}
                 className={cn(
-                  'w-full px-4 py-3 text-sm border border-border-light rounded-xl resize-none',
-                  'focus:outline-none focus:border-[#0073ea] focus:ring-2 focus:ring-[#0073ea]/20',
-                  'placeholder:text-[#9699a6]'
+                  'w-full px-4 py-3 text-sm bg-bg-primary text-text-primary border border-border-light rounded-xl resize-none',
+                  'focus:outline-none focus:border-monday-primary focus:ring-2 focus:ring-monday-primary/20',
+                  'placeholder:text-text-tertiary'
                 )}
               />
               <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-2 text-xs text-[#9699a6]">
+                <div className="flex items-center gap-2 text-xs text-text-tertiary">
                   <AtSign className="w-3.5 h-3.5" />
                   <span>Type @ to mention</span>
                   <span className="mx-2">•</span>

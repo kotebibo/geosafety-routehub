@@ -76,7 +76,7 @@ export function RoutePicker({
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={placeholder}
-            className="w-full pl-8 pr-2 py-1.5 text-sm border border-border-light rounded focus:outline-none focus:border-monday-primary"
+            className="w-full pl-8 pr-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded focus:outline-none focus:border-monday-primary placeholder:text-text-tertiary"
           />
         </div>
       </div>

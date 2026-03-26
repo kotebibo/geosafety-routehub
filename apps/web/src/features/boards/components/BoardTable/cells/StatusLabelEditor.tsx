@@ -180,8 +180,8 @@ export function StatusLabelEditor({
                         className={cn(
                           'w-8 h-8 rounded-md flex-shrink-0',
                           'transition-all hover:scale-105',
-                          'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500',
-                          isEditingColor && 'ring-2 ring-offset-2 ring-blue-500'
+                          'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-monday-primary',
+                          isEditingColor && 'ring-2 ring-offset-2 ring-monday-primary'
                         )}
                         style={{ backgroundColor: colorInfo.hex }}
                       />
@@ -195,7 +195,7 @@ export function StatusLabelEditor({
                       className={cn(
                         'flex-1 px-3 py-2 rounded-md',
                         'border border-border-medium',
-                        'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+                        'focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent',
                         'text-sm'
                       )}
                     />
@@ -329,7 +329,7 @@ export function StatusLabelEditor({
             className={cn(
               'px-4 py-2 rounded-md',
               'text-sm font-medium text-white',
-              'bg-blue-600 hover:bg-blue-700',
+              'bg-monday-primary hover:bg-[var(--monday-primary-hover)]',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'transition-colors'
             )}

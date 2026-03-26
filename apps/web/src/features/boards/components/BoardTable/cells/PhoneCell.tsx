@@ -94,7 +94,7 @@ export function PhoneCell({
 
   if (readOnly && !value) {
     return (
-      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+      <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">-</div>
     )
   }
 
@@ -160,7 +160,7 @@ export function PhoneCell({
             </OverflowTooltip>
           </>
         ) : (
-          <span className="text-sm text-[#9699a6]">Add phone...</span>
+          <span className="text-sm text-text-tertiary">Add phone...</span>
         )}
       </button>
     </div>

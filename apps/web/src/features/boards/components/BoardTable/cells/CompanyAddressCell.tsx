@@ -68,14 +68,14 @@ export function CompanyAddressCell({
   // Empty state
   if (!companyValue?.company_id) {
     return (
-      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+      <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">-</div>
     )
   }
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">
+      <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">
         <div className="w-4 h-4 border-2 border-border-medium border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -84,7 +84,7 @@ export function CompanyAddressCell({
   // No address found
   if (!displayAddress) {
     return (
-      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">
+      <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">
         მისამართი არ არის
       </div>
     )

@@ -80,7 +80,7 @@ export const PersonCell = memo(function PersonCell({
   // Read-only empty state
   if (readOnly && selectedUsers.length === 0) {
     return (
-      <div className="h-full min-h-[36px] flex items-center px-3 text-[#9699a6] text-sm">-</div>
+      <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">-</div>
     )
   }
 
@@ -148,7 +148,7 @@ export const PersonCell = memo(function PersonCell({
             )}
           </div>
         ) : (
-          <div className="flex items-center gap-2 text-sm text-[#9699a6]">
+          <div className="flex items-center gap-2 text-sm text-text-tertiary">
             <div className="w-7 h-7 rounded-full border-2 border-dashed border-border-medium flex items-center justify-center">
               <Plus className="w-4 h-4 text-text-tertiary" />
             </div>

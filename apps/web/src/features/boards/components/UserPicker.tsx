@@ -85,14 +85,14 @@ export function UserPicker({
       {/* Search Input */}
       <div className="p-2 border-b border-border-light">
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[#9699a6]" />
+          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary" />
           <input
             ref={inputRef}
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={placeholder}
-            className="w-full pl-8 pr-2 py-1.5 text-sm border border-border-light rounded focus:outline-none focus:border-[#0073ea]"
+            className="w-full pl-8 pr-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded focus:outline-none focus:border-monday-primary placeholder:text-text-tertiary"
           />
         </div>
       </div>
@@ -117,10 +117,10 @@ export function UserPicker({
       <div className="max-h-64 overflow-y-auto">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="w-6 h-6 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-monday-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="px-4 py-8 text-center text-sm text-[#9699a6]">No people found</div>
+          <div className="px-4 py-8 text-center text-sm text-text-tertiary">No people found</div>
         ) : (
           <div className="py-1">
             {filteredUsers.map(user => (
@@ -146,14 +146,14 @@ export function UserPicker({
                     {user.full_name || 'Unknown'}
                   </div>
                   {user.email && (
-                    <div className="text-xs text-[#9699a6] truncate">{user.email}</div>
+                    <div className="text-xs text-text-tertiary truncate">{user.email}</div>
                   )}
                 </div>
 
                 {/* Selected Indicator */}
                 {value === user.id && (
                   <svg
-                    className="w-5 h-5 text-[#0073ea] flex-shrink-0"
+                    className="w-5 h-5 text-monday-primary flex-shrink-0"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >

@@ -17,16 +17,56 @@ import type { ItemUpdate } from '@/types/board'
 
 // Activity item icons and colors based on update type
 const UPDATE_TYPE_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
-  created: { icon: <CheckCircle className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-100' },
-  updated: { icon: <Edit2 className="w-4 h-4" />, color: 'text-blue-600', bg: 'bg-blue-100' },
-  status_changed: { icon: <Activity className="w-4 h-4" />, color: 'text-purple-600', bg: 'bg-purple-100' },
-  assigned: { icon: <UserIcon className="w-4 h-4" />, color: 'text-orange-600', bg: 'bg-orange-100' },
-  reassigned: { icon: <UserIcon className="w-4 h-4" />, color: 'text-orange-600', bg: 'bg-orange-100' },
-  comment: { icon: <MessageSquare className="w-4 h-4" />, color: 'text-indigo-600', bg: 'bg-indigo-100' },
-  completed: { icon: <CheckCircle className="w-4 h-4" />, color: 'text-green-600', bg: 'bg-green-100' },
-  deleted: { icon: <Trash2 className="w-4 h-4" />, color: 'text-red-600', bg: 'bg-red-100' },
-  column_changed: { icon: <Columns className="w-4 h-4" />, color: 'text-cyan-600', bg: 'bg-cyan-100' },
-  moved_to_board: { icon: <ArrowRightLeft className="w-4 h-4" />, color: 'text-amber-600', bg: 'bg-amber-100' },
+  created: {
+    icon: <CheckCircle className="w-4 h-4" />,
+    color: 'text-color-success',
+    bg: 'bg-color-success/10',
+  },
+  updated: {
+    icon: <Edit2 className="w-4 h-4" />,
+    color: 'text-color-info',
+    bg: 'bg-color-info/10',
+  },
+  status_changed: {
+    icon: <Activity className="w-4 h-4" />,
+    color: 'text-purple-600',
+    bg: 'bg-purple-600/10',
+  },
+  assigned: {
+    icon: <UserIcon className="w-4 h-4" />,
+    color: 'text-color-warning',
+    bg: 'bg-color-warning/10',
+  },
+  reassigned: {
+    icon: <UserIcon className="w-4 h-4" />,
+    color: 'text-color-warning',
+    bg: 'bg-color-warning/10',
+  },
+  comment: {
+    icon: <MessageSquare className="w-4 h-4" />,
+    color: 'text-purple-600',
+    bg: 'bg-purple-600/10',
+  },
+  completed: {
+    icon: <CheckCircle className="w-4 h-4" />,
+    color: 'text-color-success',
+    bg: 'bg-color-success/10',
+  },
+  deleted: {
+    icon: <Trash2 className="w-4 h-4" />,
+    color: 'text-color-error',
+    bg: 'bg-color-error/10',
+  },
+  column_changed: {
+    icon: <Columns className="w-4 h-4" />,
+    color: 'text-color-info',
+    bg: 'bg-color-info/10',
+  },
+  moved_to_board: {
+    icon: <ArrowRightLeft className="w-4 h-4" />,
+    color: 'text-color-warning',
+    bg: 'bg-color-warning/10',
+  },
 }
 
 // Format relative time
@@ -109,9 +149,7 @@ export function ActivityTab({ updates, isLoading, itemCreatedAt }: ActivityTabPr
         <div className="text-center py-8">
           <Activity className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
           <p className="text-sm text-text-secondary">No activity yet</p>
-          <p className="text-xs text-text-tertiary mt-1">
-            Changes to this item will appear here
-          </p>
+          <p className="text-xs text-text-tertiary mt-1">Changes to this item will appear here</p>
         </div>
 
         {/* Item creation info */}
@@ -126,15 +164,18 @@ export function ActivityTab({ updates, isLoading, itemCreatedAt }: ActivityTabPr
         {/* Timeline line */}
         <div className="absolute left-4 top-6 bottom-6 w-0.5 bg-border-light" />
 
-        {updates.map((update) => {
+        {updates.map(update => {
           const config = UPDATE_TYPE_CONFIG[update.update_type] || UPDATE_TYPE_CONFIG.updated
           return (
             <div key={update.id} className="relative flex items-start gap-4 pb-6">
               {/* Icon */}
-              <div className={cn(
-                'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10',
-                config.bg, config.color
-              )}>
+              <div
+                className={cn(
+                  'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10',
+                  config.bg,
+                  config.color
+                )}
+              >
                 {config.icon}
               </div>
 
@@ -188,9 +229,7 @@ function CreationInfo({ createdAt }: { createdAt: string }) {
         <p className="text-sm text-text-primary">
           <span className="font-medium">Item created</span>
         </p>
-        <p className="text-xs text-text-tertiary mt-1">
-          {new Date(createdAt).toLocaleString()}
-        </p>
+        <p className="text-xs text-text-tertiary mt-1">{new Date(createdAt).toLocaleString()}</p>
       </div>
     </div>
   )

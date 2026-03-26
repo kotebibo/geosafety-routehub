@@ -1391,7 +1391,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                       if (e.key === 'Enter') handleRename()
                       if (e.key === 'Escape') setRenameMode(false)
                     }}
-                    className="flex-1 px-2 py-1 text-sm border border-border-light rounded focus:outline-none focus:border-monday-primary"
+                    className="flex-1 px-2 py-1 text-sm bg-bg-primary text-text-primary border border-border-light rounded focus:outline-none focus:border-monday-primary"
                     placeholder="Board name"
                   />
                   <button
@@ -1695,7 +1695,7 @@ function WorkspaceActionsMenu({
                 if (e.key === 'Enter') handleRename()
                 if (e.key === 'Escape') onCancelRename()
               }}
-              className="flex-1 px-2 py-1 text-sm border border-border-light rounded focus:outline-none focus:border-monday-primary"
+              className="flex-1 px-2 py-1 text-sm bg-bg-primary text-text-primary border border-border-light rounded focus:outline-none focus:border-monday-primary"
               placeholder="Workspace name"
             />
             <button
