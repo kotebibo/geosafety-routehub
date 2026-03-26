@@ -19,13 +19,13 @@ CREATE POLICY "workspaces_select_policy" ON public.workspaces
         -- Workspace member
         OR EXISTS (
             SELECT 1 FROM public.workspace_members wm
-            WHERE wm.workspace_id = id AND wm.user_id = auth.uid()
+            WHERE wm.workspace_id = workspaces.id AND wm.user_id = auth.uid()
         )
         -- Board-only member: can see workspace row for navigation context
         OR EXISTS (
             SELECT 1 FROM public.boards b
             INNER JOIN public.board_members bm ON bm.board_id = b.id
-            WHERE b.workspace_id = id
+            WHERE b.workspace_id = workspaces.id
             AND bm.user_id = auth.uid()
         )
         -- App admin
