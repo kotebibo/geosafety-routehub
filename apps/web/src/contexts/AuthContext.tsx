@@ -124,6 +124,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         permissions,
       })
     } catch (error) {
+      // AbortError happens when React StrictMode or rapid auth state changes
+      // cause a new fetchUserRole call before the previous one finishes.
+      // Don't clear userRole on abort — the newer call will set it.
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return
+      }
       console.error('Error fetching user role:', error)
       setUserRole(null)
     } finally {
