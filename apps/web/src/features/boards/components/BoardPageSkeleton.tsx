@@ -37,8 +37,8 @@ export function BoardPageSkeleton() {
       <div className="flex-1 px-4 md:px-6 py-4">
         {/* Group Header */}
         <div className="flex items-center gap-2 mb-3">
-          <div className="h-5 w-5 bg-[#579bfc] rounded opacity-40" />
-          <div className="h-5 w-32 bg-[#579bfc] rounded opacity-40" />
+          <div className="h-5 w-5 bg-monday-primary rounded opacity-40" />
+          <div className="h-5 w-32 bg-monday-primary rounded opacity-40" />
           <div className="h-4 w-16 bg-border-light rounded" />
         </div>
 

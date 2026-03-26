@@ -478,7 +478,7 @@ export function UpdatesModal({
                           <button
                             onClick={() => handleEditComment(comment)}
                             disabled={submitting}
-                            className="px-3 py-1.5 text-xs bg-[#0073ea] text-white rounded-lg hover:bg-[#0060c0] transition-colors"
+                            className="px-3 py-1.5 text-xs bg-monday-primary text-text-inverse rounded-lg hover:bg-[var(--monday-primary-hover)] transition-colors"
                           >
                             Save
                           </button>
@@ -654,7 +654,7 @@ export function UpdatesModal({
             </div>
             <button
               onClick={() => setReplyingTo(null)}
-              className="p-1 hover:bg-[#0073ea]/10 rounded transition-colors"
+              className="p-1 hover:bg-monday-primary/10 rounded transition-colors"
             >
               <X className="w-4 h-4 text-text-link" />
             </button>
@@ -687,15 +687,15 @@ export function UpdatesModal({
                     index === mentionIndex ? 'bg-bg-selected' : 'hover:bg-bg-hover'
                   )}
                 >
-                  <div className="w-8 h-8 rounded-full bg-[#0073ea] flex items-center justify-center">
-                    <span className="text-xs font-semibold text-white">
+                  <div className="w-8 h-8 rounded-full bg-monday-primary flex items-center justify-center">
+                    <span className="text-xs font-semibold text-text-inverse">
                       {getInitials(suggestion.name)}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium text-text-primary">{suggestion.name}</div>
                     {suggestion.email && (
-                      <div className="text-xs text-[#9699a6] truncate">{suggestion.email}</div>
+                      <div className="text-xs text-text-tertiary truncate">{suggestion.email}</div>
                     )}
                   </div>
                 </button>
@@ -738,7 +738,7 @@ export function UpdatesModal({
                   className={cn(
                     'flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all',
                     newComment.trim() && !submitting && inspectorId
-                      ? 'bg-[#0073ea] text-white hover:bg-[#0060c0] shadow-md hover:shadow-lg'
+                      ? 'bg-monday-primary text-text-inverse hover:bg-[var(--monday-primary-hover)] shadow-md hover:shadow-lg'
                       : 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   )}
                 >

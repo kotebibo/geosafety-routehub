@@ -63,9 +63,20 @@ module.exports = {
         'text-primary': 'var(--text-primary)',
         'text-secondary': 'var(--text-secondary)',
         'text-tertiary': 'var(--text-tertiary)',
+        'text-disabled': 'var(--text-disabled)',
+        'text-inverse': 'var(--text-inverse)',
+        'text-link': 'var(--text-link)',
         'border-light': 'var(--border-light)',
         'border-medium': 'var(--border-medium)',
         'border-strong': 'var(--border-strong)',
+        'border-focus': 'var(--border-focus)',
+
+        // Semantic Colors
+        'color-primary': 'var(--color-primary)',
+        'color-success': 'var(--color-success)',
+        'color-warning': 'var(--color-warning)',
+        'color-error': 'var(--color-error)',
+        'color-info': 'var(--color-info)',
 
         // Status Colors
         'status-done': 'var(--status-done)',

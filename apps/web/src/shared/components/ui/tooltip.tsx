@@ -32,7 +32,7 @@ export function Tooltip({
           align={align}
           sideOffset={6}
           className={cn(
-            'z-[10000] px-2.5 py-1.5 text-xs font-medium text-white bg-[#323338] rounded-md shadow-lg',
+            'z-[10000] px-2.5 py-1.5 text-xs font-medium text-text-inverse bg-text-primary rounded-md shadow-lg',
             'max-w-[240px] break-words leading-relaxed',
             'animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
             'data-[side=top]:slide-in-from-bottom-2 data-[side=bottom]:slide-in-from-top-2',
@@ -41,7 +41,7 @@ export function Tooltip({
           )}
         >
           {content}
-          <TooltipPrimitive.Arrow className="fill-[#323338]" width={8} height={4} />
+          <TooltipPrimitive.Arrow className="fill-text-primary" width={8} height={4} />
         </TooltipPrimitive.Content>
       </TooltipPrimitive.Portal>
     </TooltipPrimitive.Root>

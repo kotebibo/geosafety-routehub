@@ -140,7 +140,7 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
   if (readOnly) {
     return (
       <div className="h-full min-h-[36px] flex items-center gap-2 px-3">
-        <div className="flex-shrink-0 w-6 h-6 rounded bg-[#6161ff] flex items-center justify-center">
+        <div className="flex-shrink-0 w-6 h-6 rounded bg-monday-primary flex items-center justify-center">
           <Building2 className="w-3 h-3 text-white" />
         </div>
         <div className="flex-1 min-w-0">
@@ -168,7 +168,7 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
         }}
         className="h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left hover:bg-bg-hover cursor-pointer"
       >
-        <div className="flex-shrink-0 w-6 h-6 rounded bg-[#6161ff] flex items-center justify-center">
+        <div className="flex-shrink-0 w-6 h-6 rounded bg-monday-primary flex items-center justify-center">
           <Building2 className="w-3 h-3 text-white" />
         </div>
         <div className="flex-1 min-w-0">

@@ -829,7 +829,7 @@ function renderValueInput(
                 .slice(0, 2)
             : '?'
           return (
-            <span className="w-6 h-6 rounded-full bg-[#0073ea] text-white flex items-center justify-center text-[10px] font-semibold shrink-0">
+            <span className="w-6 h-6 rounded-full bg-monday-primary text-text-inverse flex items-center justify-center text-[10px] font-semibold shrink-0">
               {initials}
             </span>
           )

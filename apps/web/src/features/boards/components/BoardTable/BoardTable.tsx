@@ -19,7 +19,10 @@ export function BoardTable<TData extends Record<string, any>>({
   onSelectionChange,
   height = 600,
 }: BoardTableProps<TData>) {
-  const [sortConfig, setSortConfig] = useState<{ column: string; direction: 'asc' | 'desc' } | null>(null)
+  const [sortConfig, setSortConfig] = useState<{
+    column: string
+    direction: 'asc' | 'desc'
+  } | null>(null)
 
   // Sort data
   const sortedData = useMemo(() => {
@@ -50,7 +53,7 @@ export function BoardTable<TData extends Record<string, any>>({
   })
 
   const handleSort = (columnId: string) => {
-    setSortConfig((prev) => {
+    setSortConfig(prev => {
       if (!prev || prev.column !== columnId) {
         return { column: columnId, direction: 'asc' }
       }
@@ -83,20 +86,22 @@ export function BoardTable<TData extends Record<string, any>>({
     if (!onSelectionChange) return
 
     if (checked) {
-      const allIds = new Set(data.map((row) => row.id))
+      const allIds = new Set(data.map(row => row.id))
       onSelectionChange(allIds)
     } else {
       onSelectionChange(new Set())
     }
   }
 
-  const visibleColumns = columns.filter((col) => col.is_visible)
-  const totalWidth = visibleColumns.reduce((sum, col) => sum + col.width, 0) + (onSelectionChange ? 40 : 0)
+  const visibleColumns = columns.filter(col => col.is_visible)
+  const totalWidth =
+    visibleColumns.reduce((sum, col) => sum + col.width, 0) + (onSelectionChange ? 40 : 0)
 
   if (isLoading) {
     const skeletonRows = Array.from({ length: 8 })
-    const visibleColumns = columns.filter((col) => col.is_visible)
-    const totalWidth = visibleColumns.reduce((sum, col) => sum + col.width, 0) + (onSelectionChange ? 40 : 0)
+    const visibleColumns = columns.filter(col => col.is_visible)
+    const totalWidth =
+      visibleColumns.reduce((sum, col) => sum + col.width, 0) + (onSelectionChange ? 40 : 0)
 
     return (
       <div className="w-full bg-bg-primary rounded-lg border border-border-light overflow-hidden shadow-monday-sm">
@@ -107,16 +112,16 @@ export function BoardTable<TData extends Record<string, any>>({
         >
           {onSelectionChange && (
             <div className="w-10 h-10 flex items-center justify-center border-r border-border-light">
-              <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+              <div className="w-4 h-4 bg-bg-tertiary rounded animate-pulse" />
             </div>
           )}
-          {visibleColumns.map((column) => (
+          {visibleColumns.map(column => (
             <div
               key={column.id}
               className="flex items-center gap-2 px-3 h-10 border-r border-border-light"
               style={{ width: `${column.width}px`, minWidth: `${column.width}px` }}
             >
-              <div className="h-3 bg-gray-200 rounded animate-pulse flex-1" />
+              <div className="h-3 bg-bg-tertiary rounded animate-pulse flex-1" />
             </div>
           ))}
         </div>
@@ -131,16 +136,16 @@ export function BoardTable<TData extends Record<string, any>>({
             >
               {onSelectionChange && (
                 <div className="w-10 flex items-center justify-center border-r border-border-light">
-                  <div className="w-4 h-4 bg-gray-200 rounded animate-pulse" />
+                  <div className="w-4 h-4 bg-bg-tertiary rounded animate-pulse" />
                 </div>
               )}
-              {visibleColumns.map((column) => (
+              {visibleColumns.map(column => (
                 <div
                   key={column.id}
                   className="flex items-center px-3 border-r border-border-light"
                   style={{ width: `${column.width}px`, minWidth: `${column.width}px` }}
                 >
-                  <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4" />
+                  <div className="h-3 bg-bg-tertiary rounded animate-pulse w-3/4" />
                 </div>
               ))}
             </div>
@@ -163,14 +168,14 @@ export function BoardTable<TData extends Record<string, any>>({
             <input
               type="checkbox"
               checked={selection.size === data.length && data.length > 0}
-              onChange={(e) => handleSelectAll(e.target.checked)}
+              onChange={e => handleSelectAll(e.target.checked)}
               className="w-4 h-4 rounded border-border-default text-monday-primary focus:ring-monday-primary"
             />
           </div>
         )}
 
         {/* Column Headers */}
-        {visibleColumns.map((column) => (
+        {visibleColumns.map(column => (
           <BoardTableHeader
             key={column.id}
             column={column}
@@ -181,11 +186,7 @@ export function BoardTable<TData extends Record<string, any>>({
       </div>
 
       {/* Body - Virtualized Rows */}
-      <div
-        ref={parentRef}
-        className="overflow-auto"
-        style={{ height: `${height}px` }}
-      >
+      <div ref={parentRef} className="overflow-auto" style={{ height: `${height}px` }}>
         <div
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
@@ -193,7 +194,7 @@ export function BoardTable<TData extends Record<string, any>>({
             position: 'relative',
           }}
         >
-          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          {rowVirtualizer.getVirtualItems().map(virtualRow => {
             const row = sortedData[virtualRow.index]
             const isSelected = selection.has(row.id)
 
@@ -218,18 +219,18 @@ export function BoardTable<TData extends Record<string, any>>({
                     <input
                       type="checkbox"
                       checked={isSelected}
-                      onChange={(e) => {
+                      onChange={e => {
                         e.stopPropagation()
                         handleRowSelect(row.id, e.target.checked)
                       }}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                       className="w-4 h-4 rounded border-border-default text-monday-primary focus:ring-monday-primary"
                     />
                   </div>
                 )}
 
                 {/* Data Cells */}
-                {visibleColumns.map((column) => {
+                {visibleColumns.map(column => {
                   // Read from data JSONB field, fallback to top-level field for backward compatibility
                   const value = row.data?.[column.column_id] ?? row[column.column_id]
 
@@ -238,13 +239,13 @@ export function BoardTable<TData extends Record<string, any>>({
                       key={`${row.id}-${column.id}`}
                       className="border-r border-border-light overflow-hidden"
                       style={{ width: `${column.width}px`, minWidth: `${column.width}px` }}
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                     >
                       <CellRenderer
                         row={row}
                         column={column}
                         value={value}
-                        onEdit={(newValue) => handleCellEdit(row.id, column.column_id, newValue)}
+                        onEdit={newValue => handleCellEdit(row.id, column.column_id, newValue)}
                       />
                     </div>
                   )

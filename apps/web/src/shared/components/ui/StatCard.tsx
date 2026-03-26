@@ -9,11 +9,11 @@ interface StatCardProps {
 
 export function StatCard({ label, value, icon: Icon, color = 'blue' }: StatCardProps) {
   const colorClasses = {
-    blue: 'text-blue-600 bg-blue-50',
-    green: 'text-green-600 bg-green-50',
-    amber: 'text-amber-600 bg-amber-50',
-    red: 'text-red-600 bg-red-50',
-    purple: 'text-purple-600 bg-purple-50',
+    blue: 'text-color-info bg-color-info/10',
+    green: 'text-color-success bg-color-success/10',
+    amber: 'text-color-warning bg-color-warning/10',
+    red: 'text-color-error bg-color-error/10',
+    purple: 'text-monday-primary bg-monday-primary/10',
   }
 
   return (

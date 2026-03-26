@@ -34,7 +34,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     const id = Math.random().toString(36).substring(7)
     const newToast: Toast = { id, message, type, duration }
 
-    setToasts((prev) => [...prev, newToast])
+    setToasts(prev => [...prev, newToast])
 
     if (duration > 0) {
       setTimeout(() => {
@@ -44,14 +44,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const hideToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id))
+    setToasts(prev => prev.filter(toast => toast.id !== id))
   }, [])
 
   return (
     <ToastContext.Provider value={{ showToast, hideToast }}>
       {children}
       <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-md">
-        {toasts.map((toast) => (
+        {toasts.map(toast => (
           <ToastItem key={toast.id} toast={toast} onClose={() => hideToast(toast.id)} />
         ))}
       </div>
@@ -105,10 +105,10 @@ function ToastItem({ toast, onClose }: ToastItemProps) {
   }
 
   const styles = {
-    success: 'bg-green-50 text-green-800 border-green-200',
-    error: 'bg-red-50 text-red-800 border-red-200',
-    warning: 'bg-yellow-50 text-yellow-800 border-yellow-200',
-    info: 'bg-blue-50 text-blue-800 border-blue-200',
+    success: 'bg-bg-primary text-color-success border-color-success/30',
+    error: 'bg-bg-primary text-color-error border-color-error/30',
+    warning: 'bg-bg-primary text-color-warning border-color-warning/30',
+    info: 'bg-bg-primary text-color-info border-color-info/30',
   }
 
   return (
