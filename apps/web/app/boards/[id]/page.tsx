@@ -395,6 +395,10 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         if (!newMap.has(itemId)) {
           try {
             const subs = await boardSubitemsService.getSubitems(itemId)
+            console.log(
+              `[DEBUG] Subitems for item ${itemId}:`,
+              subs.map(s => ({ name: s.name, data: s.data }))
+            )
             newMap.set(itemId, subs)
           } catch {
             newMap.set(itemId, [])
