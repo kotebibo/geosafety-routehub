@@ -58,7 +58,7 @@ export default function NewInspectorPage() {
         <div className="mb-6">
           <Link
             href="/inspectors"
-            className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4"
+            className="inline-flex items-center text-monday-primary hover:text-monday-primary-hover mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             უკან ოფიცრებზე
@@ -81,7 +81,7 @@ export default function NewInspectorPage() {
                   required
                   value={formData.full_name}
                   onChange={e => setFormData({ ...formData, full_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                   placeholder="მაგ: გიორგი მელაძე"
                 />
               </div>
@@ -95,7 +95,7 @@ export default function NewInspectorPage() {
                   required
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                   placeholder="giorgi@example.com"
                 />
               </div>
@@ -106,7 +106,7 @@ export default function NewInspectorPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                   placeholder="+995 555 123 456"
                 />
               </div>
@@ -117,7 +117,7 @@ export default function NewInspectorPage() {
                   type="text"
                   value={formData.zone}
                   onChange={e => setFormData({ ...formData, zone: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                   placeholder="მაგ: ვაკე-საბურთალო"
                 />
               </div>
@@ -136,7 +136,7 @@ export default function NewInspectorPage() {
                   required
                   value={formData.specialty}
                   onChange={e => setFormData({ ...formData, specialty: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                 >
                   <option value="">აირჩიეთ სპეციალობა</option>
                   <option value="fire_safety">სახანძრო უსაფრთხოება</option>
@@ -156,7 +156,7 @@ export default function NewInspectorPage() {
                   required
                   value={formData.role}
                   onChange={e => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                 >
                   <option value="officer">ოფიცერი</option>
                   <option value="dispatcher">დისპეტჩერი</option>
@@ -180,7 +180,7 @@ export default function NewInspectorPage() {
                   required
                   value={formData.working_hours_start}
                   onChange={e => setFormData({ ...formData, working_hours_start: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                 />
               </div>
 
@@ -193,7 +193,7 @@ export default function NewInspectorPage() {
                   required
                   value={formData.working_hours_end}
                   onChange={e => setFormData({ ...formData, working_hours_end: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                 />
               </div>
             </div>
@@ -205,7 +205,7 @@ export default function NewInspectorPage() {
             <select
               value={formData.status}
               onChange={e => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             >
               <option value="active">აქტიური</option>
               <option value="inactive">არააქტიური</option>
@@ -224,7 +224,7 @@ export default function NewInspectorPage() {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5 mr-2" />
               {loading ? 'შენახვა...' : 'ოფიცრის შექმნა'}

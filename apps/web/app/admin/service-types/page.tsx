@@ -168,7 +168,7 @@ export default function ServiceTypesPage() {
         </div>
         <button
           onClick={startAdd}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          className="flex items-center gap-2 bg-monday-primary text-white px-4 py-2 rounded-lg hover:bg-monday-primary-hover transition"
         >
           <Plus size={20} />
           ახალი სერვისი
@@ -176,7 +176,7 @@ export default function ServiceTypesPage() {
       </div>
 
       {(isAddingNew || editingId) && (
-        <div className="bg-bg-primary border-2 border-blue-500 rounded-lg p-6 mb-6 shadow-lg">
+        <div className="bg-bg-primary border-2 border-monday-primary rounded-lg p-6 mb-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4">
             {editingId ? 'რედაქტირება' : 'ახალი სერვისის დამატება'}
           </h2>
@@ -189,7 +189,7 @@ export default function ServiceTypesPage() {
                 type="text"
                 value={formData.name || ''}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-monday-primary"
               />
             </div>
             <div>
@@ -200,7 +200,7 @@ export default function ServiceTypesPage() {
                 type="text"
                 value={formData.name_ka || ''}
                 onChange={e => setFormData({ ...formData, name_ka: e.target.value })}
-                className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-monday-primary"
               />
             </div>
             <div className="col-span-2">
@@ -250,7 +250,7 @@ export default function ServiceTypesPage() {
                 id="is_active"
                 checked={formData.is_active}
                 onChange={e => setFormData({ ...formData, is_active: e.target.checked })}
-                className="w-4 h-4 text-blue-600"
+                className="w-4 h-4 text-monday-primary"
               />
               <label htmlFor="is_active" className="ml-2 text-sm text-text-primary">
                 აქტიური
@@ -309,7 +309,7 @@ export default function ServiceTypesPage() {
                 </td>
                 <td className="px-6 py-4 text-sm text-text-secondary">{st.description}</td>
                 <td className="px-6 py-4">
-                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-monday-primary/10 text-monday-primary">
                     {INSPECTOR_TYPES.find(t => t.value === st.required_inspector_type)?.label_ka}
                   </span>
                 </td>
@@ -329,7 +329,7 @@ export default function ServiceTypesPage() {
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => startEdit(st)}
-                      className="text-blue-600 hover:text-blue-900"
+                      className="text-monday-primary hover:text-monday-primary-hover"
                     >
                       <Edit2 size={18} />
                     </button>

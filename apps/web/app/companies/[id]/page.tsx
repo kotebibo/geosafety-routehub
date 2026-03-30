@@ -343,8 +343,8 @@ export default function CompanyDetailsPage() {
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="bg-bg-primary border border-border-light rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 rounded-lg bg-monday-primary/10 flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-monday-primary" />
             </div>
             <div>
               <p className="text-2xl font-bold text-text-primary">{locations.length}</p>

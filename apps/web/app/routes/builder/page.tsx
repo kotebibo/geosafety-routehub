@@ -99,14 +99,14 @@ export default function RouteBuilderPage() {
     setLoading(true)
 
     try {
-      // TODO: Re-enable authentication before deployment
-      // Get the current session for authentication (disabled for dev)
-      // const { data: { session } } = await supabase.auth.getSession();
-      // if (!session) {
-      //   alert('გთხოვთ გაიაროთ ავტორიზაცია');
-      //   setLoading(false);
-      //   return;
-      // }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) {
+        alert('გთხოვთ გაიაროთ ავტორიზაცია')
+        setLoading(false)
+        return
+      }
 
       const locations = selectedCompanies.map(c => ({
         id: c.id,
@@ -119,7 +119,7 @@ export default function RouteBuilderPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${session.access_token}` // Disabled for dev
+          Authorization: `Bearer ${session.access_token}`,
         },
         credentials: 'include',
         body: JSON.stringify({
@@ -171,13 +171,13 @@ export default function RouteBuilderPage() {
       return
     }
 
-    // TODO: Re-enable authentication before deployment
-    // Get the current session for authentication (disabled for dev)
-    // const { data: { session } } = await supabase.auth.getSession();
-    // if (!session) {
-    //   alert('გთხოვთ გაიაროთ ავტორიზაცია');
-    //   return;
-    // }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (!session) {
+      alert('გთხოვთ გაიაროთ ავტორიზაცია')
+      return
+    }
 
     const totalDistance = optimizedRoute.reduce((sum, stop) => sum + (stop.distance || 0), 0)
 
@@ -185,7 +185,7 @@ export default function RouteBuilderPage() {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // 'Authorization': `Bearer ${session.access_token}` // Disabled for dev
+        Authorization: `Bearer ${session.access_token}`,
       },
       credentials: 'include',
       body: JSON.stringify({
@@ -241,13 +241,14 @@ export default function RouteBuilderPage() {
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-sm text-text-secondary">
-            არჩეული: <span className="font-bold text-blue-600">{selectedCompanies.length}</span>
+            არჩეული:{' '}
+            <span className="font-bold text-monday-primary">{selectedCompanies.length}</span>
           </div>
           {selectedCompanies.length >= 2 && (
             <button
               onClick={optimizeRoute}
               disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+              className="px-6 py-2 bg-monday-primary text-white rounded-lg font-semibold hover:bg-monday-primary-hover disabled:opacity-50"
             >
               {loading ? '⏳ ოპტიმიზაცია...' : '🚀 ოპტიმიზაცია'}
             </button>
@@ -264,7 +265,7 @@ export default function RouteBuilderPage() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="🔍 ძიება..."
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             />
           </div>
 
@@ -278,7 +279,9 @@ export default function RouteBuilderPage() {
                   onMouseEnter={() => setHoveredStop(company.id)}
                   onMouseLeave={() => setHoveredStop(null)}
                   className={`p-4 border-b cursor-pointer transition ${
-                    isSelected ? 'bg-blue-50 border-l-4 border-l-blue-600' : 'hover:bg-bg-secondary'
+                    isSelected
+                      ? 'bg-monday-primary/10 border-l-4 border-l-monday-primary'
+                      : 'hover:bg-bg-secondary'
                   } ${hoveredStop === company.id ? 'bg-bg-tertiary' : ''}`}
                 >
                   <div className="flex items-start justify-between">
@@ -287,7 +290,7 @@ export default function RouteBuilderPage() {
                       <div className="text-xs text-text-secondary mt-1">{company.address}</div>
                     </div>
                     {isSelected && (
-                      <div className="ml-2 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                      <div className="ml-2 w-6 h-6 bg-monday-primary rounded-full flex items-center justify-center text-white text-xs font-bold">
                         {selectedCompanies.findIndex(c => c.id === company.id) + 1}
                       </div>
                     )}
@@ -335,12 +338,12 @@ export default function RouteBuilderPage() {
                     onMouseLeave={() => setHoveredStop(null)}
                     className={`p-4 rounded-lg border-2 transition ${
                       hoveredStop === stop.company.id
-                        ? 'border-blue-500 bg-blue-50'
+                        ? 'border-monday-primary bg-monday-primary/10'
                         : 'border-border-light bg-bg-primary'
                     }`}
                   >
                     <div className="flex items-start">
-                      <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                      <div className="flex-shrink-0 w-8 h-8 bg-monday-primary text-white rounded-full flex items-center justify-center font-bold text-sm">
                         {stop.position}
                       </div>
                       <div className="ml-3 flex-1">
@@ -351,7 +354,7 @@ export default function RouteBuilderPage() {
                           📍 {stop.company.address}
                         </div>
                         {stop.distance && index > 0 && (
-                          <div className="text-xs text-blue-600 mt-2">
+                          <div className="text-xs text-monday-primary mt-2">
                             🚗 ~{stop.distance.toFixed(1)} კმ წინა პუნქტიდან
                           </div>
                         )}

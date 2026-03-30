@@ -141,7 +141,7 @@ function RouteCard({ route }: { route: Route }) {
         </div>
       </div>
 
-      <button className="mt-4 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+      <button className="mt-4 w-full px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors">
         ნახვა
       </button>
     </div>

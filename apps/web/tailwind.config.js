@@ -54,6 +54,7 @@ module.exports = {
 
         // Monday.com Design System Colors
         'monday-primary': 'var(--monday-primary)',
+        'monday-primary-hover': 'var(--monday-primary-hover)',
         'monday-dark': 'var(--monday-dark)',
         'bg-primary': 'var(--bg-primary)',
         'bg-secondary': 'var(--bg-secondary)',

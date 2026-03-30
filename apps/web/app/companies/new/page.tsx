@@ -105,7 +105,7 @@ export default function NewCompanyPage() {
                   type="text"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary"
                   required
                 />
               </div>
@@ -115,7 +115,7 @@ export default function NewCompanyPage() {
                 <select
                   value={formData.type}
                   onChange={e => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary"
                 >
                   <option value="commercial">კომერციული</option>
                   <option value="residential">საცხოვრებელი</option>
@@ -132,7 +132,7 @@ export default function NewCompanyPage() {
                 <select
                   value={formData.priority}
                   onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary"
                 >
                   <option value="low">დაბალი</option>
                   <option value="medium">საშუალო</option>
@@ -163,7 +163,7 @@ export default function NewCompanyPage() {
                   type="text"
                   value={formData.contact_name}
                   onChange={e => setFormData({ ...formData, contact_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary"
                 />
               </div>
 
@@ -173,7 +173,7 @@ export default function NewCompanyPage() {
                   type="tel"
                   value={formData.contact_phone}
                   onChange={e => setFormData({ ...formData, contact_phone: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary"
                 />
               </div>
 
@@ -185,7 +185,7 @@ export default function NewCompanyPage() {
                   type="email"
                   value={formData.contact_email}
                   onChange={e => setFormData({ ...formData, contact_email: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary"
                 />
               </div>
 
@@ -196,7 +196,7 @@ export default function NewCompanyPage() {
                 <textarea
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary"
                   rows={3}
                 />
               </div>

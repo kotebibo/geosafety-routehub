@@ -112,14 +112,14 @@ export default function SetupPDPServicesPage() {
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-bg-primary rounded-lg shadow p-6">
         <div className="flex items-center gap-3 mb-4">
-          <Shield className="w-8 h-8 text-blue-600" />
+          <Shield className="w-8 h-8 text-monday-primary" />
           <div>
             <h1 className="text-2xl font-bold">Setup PDP Service Types</h1>
             <p className="text-text-secondary">Add the 5 Personal Data Protection service phases</p>
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="bg-monday-primary/10 border border-monday-primary/20 rounded-lg p-4 mb-6">
           <h2 className="font-semibold mb-2">This will add:</h2>
           <ol className="list-decimal list-inside space-y-1 text-sm">
             <li>პირველადი შეფასება (Initial Assessment)</li>
@@ -133,7 +133,7 @@ export default function SetupPDPServicesPage() {
         <button
           onClick={addServiceTypes}
           disabled={loading}
-          className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50"
+          className="w-full py-3 bg-monday-primary text-white rounded-lg font-semibold hover:bg-monday-primary-hover disabled:opacity-50"
         >
           {loading ? 'Adding...' : 'Add PDP Service Types'}
         </button>

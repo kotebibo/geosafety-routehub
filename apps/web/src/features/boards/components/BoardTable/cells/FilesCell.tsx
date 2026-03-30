@@ -130,10 +130,10 @@ export const FilesCell = memo(function FilesCell({
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) {
-      return <Image className="w-4 h-4 text-[#579bfc]" />
+      return <Image className="w-4 h-4 text-blue-500" />
     }
     if (type === 'application/pdf') {
-      return <FileText className="w-4 h-4 text-[#e2445c]" />
+      return <FileText className="w-4 h-4 text-red-500" />
     }
     return <File className="w-4 h-4 text-text-secondary" />
   }
@@ -410,9 +410,9 @@ export const FilesCell = memo(function FilesCell({
                         <Tooltip content="Remove" side="top" delayDuration={200}>
                           <button
                             onClick={() => handleRemoveFile(file.id)}
-                            className="p-1 rounded hover:bg-[#ffebeb]"
+                            className="p-1 rounded hover:bg-red-50"
                           >
-                            <Trash2 className="w-4 h-4 text-[#e2445c]" />
+                            <Trash2 className="w-4 h-4 text-red-500" />
                           </button>
                         </Tooltip>
                       )}
@@ -426,7 +426,7 @@ export const FilesCell = memo(function FilesCell({
             {uploading && (
               <div className="mt-2 pt-2 border-t border-border-light">
                 <div className="flex items-center gap-2 text-sm text-text-secondary">
-                  <div className="w-4 h-4 border-2 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-monday-primary border-t-transparent rounded-full animate-spin" />
                   Uploading...
                 </div>
               </div>

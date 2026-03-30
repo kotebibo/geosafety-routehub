@@ -57,7 +57,7 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
           <h2 className="text-2xl font-semibold text-text-primary mb-2">კომპანია ვერ მოიძებნა</h2>
           <button
             onClick={() => router.push('/companies/pdp')}
-            className="text-blue-600 hover:text-blue-700"
+            className="text-monday-primary hover:text-monday-primary-hover"
           >
             უკან დაბრუნება
           </button>
@@ -87,8 +87,8 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
           <div className="lg:col-span-1">
             <div className="bg-bg-primary rounded-lg shadow p-6">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-monday-primary/10 rounded-lg flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-monday-primary" />
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-text-primary">{company.name}</h1>

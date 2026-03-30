@@ -395,10 +395,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         if (!newMap.has(itemId)) {
           try {
             const subs = await boardSubitemsService.getSubitems(itemId)
-            console.log(
-              `[DEBUG] Subitems for item ${itemId}:`,
-              subs.map(s => ({ name: s.name, data: s.data }))
-            )
             newMap.set(itemId, subs)
           } catch {
             newMap.set(itemId, [])
@@ -650,14 +646,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                       onClick={() => handlers.handleExport('csv', filteredItems)}
                       className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
                     >
-                      <Download className="w-4 h-4 text-[#00c875]" />
+                      <Download className="w-4 h-4 text-color-success" />
                       Export to CSV
                     </button>
                     <button
                       onClick={() => handlers.handleExport('excel', filteredItems)}
                       className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
                     >
-                      <Download className="w-4 h-4 text-[#579bfc]" />
+                      <Download className="w-4 h-4 text-monday-primary" />
                       Export to Excel
                     </button>
                   </div>
