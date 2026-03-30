@@ -326,7 +326,7 @@ export default function RoleManagementPage() {
   if (authLoading || !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -347,8 +347,8 @@ export default function RoleManagementPage() {
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <Shield className="w-6 h-6 text-indigo-600" />
+              <div className="p-2 bg-monday-primary/10 rounded-lg">
+                <Shield className="w-6 h-6 text-monday-primary" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-text-primary">როლების მართვა</h1>
@@ -367,7 +367,7 @@ export default function RoleManagementPage() {
               </button>
               <button
                 onClick={handleCreateNew}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-monday-primary rounded-lg hover:bg-monday-primary-hover transition-colors whitespace-nowrap"
               >
                 <Plus className="w-4 h-4" />
                 როლის შექმნა
@@ -383,8 +383,8 @@ export default function RoleManagementPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="bg-bg-primary rounded-lg border border-border-light p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-100 rounded-lg">
-                  <Shield className="w-5 h-5 text-indigo-600" />
+                <div className="p-2 bg-monday-primary/10 rounded-lg">
+                  <Shield className="w-5 h-5 text-monday-primary" />
                 </div>
                 <div>
                   <p className="text-sm text-text-secondary">სულ როლები</p>
@@ -394,8 +394,8 @@ export default function RoleManagementPage() {
             </div>
             <div className="bg-bg-primary rounded-lg border border-border-light p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Lock className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-monday-primary/10 rounded-lg">
+                  <Lock className="w-5 h-5 text-monday-primary" />
                 </div>
                 <div>
                   <p className="text-sm text-text-secondary">სისტემური</p>
@@ -438,13 +438,13 @@ export default function RoleManagementPage() {
                 placeholder="როლის ძებნა..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
               />
             </div>
             <select
               value={typeFilter}
               onChange={e => setTypeFilter(e.target.value as 'all' | 'system' | 'custom')}
-              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             >
               <option value="all">ყველა ტიპი</option>
               <option value="system">სისტემური</option>
@@ -463,7 +463,7 @@ export default function RoleManagementPage() {
 
               {loading ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-6 h-6 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : filteredRoles.length === 0 ? (
                 <div className="px-4 py-8 text-center">
@@ -477,7 +477,8 @@ export default function RoleManagementPage() {
                       key={role.id}
                       className={cn(
                         'px-4 py-3 hover:bg-bg-secondary cursor-pointer transition-colors',
-                        selectedRole?.id === role.id && 'bg-purple-50 border-l-4 border-indigo-600'
+                        selectedRole?.id === role.id &&
+                          'bg-monday-primary/10 border-l-4 border-monday-primary'
                       )}
                       onClick={() => handleSelectRole(role)}
                     >
@@ -515,7 +516,7 @@ export default function RoleManagementPage() {
                                 e.stopPropagation()
                                 handleDuplicateRole(role)
                               }}
-                              className="p-1.5 text-text-tertiary hover:text-indigo-600 hover:bg-purple-50 rounded transition-colors"
+                              className="p-1.5 text-text-tertiary hover:text-monday-primary hover:bg-monday-primary/10 rounded transition-colors"
                               title="დუბლირება"
                             >
                               <Copy className="w-4 h-4" />
@@ -573,7 +574,7 @@ export default function RoleManagementPage() {
                       <button
                         onClick={handleSaveRole}
                         disabled={saving || !formData.display_name.trim()}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-indigo-600 hover:bg-indigo-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-monday-primary hover:bg-monday-primary-hover rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                       >
                         <Save className="w-4 h-4" />
                         {saving ? 'ინახება...' : 'შენახვა'}
@@ -595,7 +596,7 @@ export default function RoleManagementPage() {
                         onChange={e => setFormData({ ...formData, display_name: e.target.value })}
                         placeholder="მაგ., მენეჯერი"
                         disabled={selectedRole?.is_system}
-                        className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-bg-tertiary disabled:cursor-not-allowed"
+                        className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary disabled:bg-bg-tertiary disabled:cursor-not-allowed"
                       />
                     </div>
                     <div>
@@ -641,7 +642,7 @@ export default function RoleManagementPage() {
                       placeholder="აღწერეთ რა შეუძლია ამ როლს..."
                       disabled={selectedRole?.is_system}
                       rows={2}
-                      className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-bg-tertiary disabled:cursor-not-allowed"
+                      className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary disabled:bg-bg-tertiary disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -685,7 +686,7 @@ export default function RoleManagementPage() {
                                   className={cn(
                                     'text-xs px-1.5 py-0.5 rounded',
                                     selectedCount > 0
-                                      ? 'bg-indigo-100 text-purple-700'
+                                      ? 'bg-monday-primary/10 text-monday-primary'
                                       : 'bg-bg-tertiary text-text-secondary'
                                   )}
                                 >
@@ -698,7 +699,7 @@ export default function RoleManagementPage() {
                                     e.stopPropagation()
                                     toggleAllPermissionsInCategory(category)
                                   }}
-                                  className="text-xs text-indigo-600 hover:text-purple-800 font-medium"
+                                  className="text-xs text-monday-primary hover:text-monday-primary-hover font-medium"
                                 >
                                   {allSelected ? 'გაუქმება' : 'ყველა'}
                                 </button>
@@ -721,7 +722,7 @@ export default function RoleManagementPage() {
                                       checked={formData.permissions.includes(perm.name)}
                                       onChange={() => togglePermission(perm.name)}
                                       disabled={!canEdit}
-                                      className="mt-0.5 rounded border-border-medium text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed"
+                                      className="mt-0.5 rounded border-border-medium text-monday-primary focus:ring-monday-primary disabled:cursor-not-allowed"
                                     />
                                     <div className="flex-1">
                                       <div className="text-sm font-medium text-text-primary">
@@ -755,7 +756,7 @@ export default function RoleManagementPage() {
                 </p>
                 <button
                   onClick={handleCreateNew}
-                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-monday-primary rounded-lg hover:bg-monday-primary-hover transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   ახალი როლის შექმნა

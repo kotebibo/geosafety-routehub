@@ -101,10 +101,10 @@ export function PhoneCell({
   if (readOnly && value) {
     return (
       <div className="h-full min-h-[36px] flex items-center gap-2 px-3">
-        <Phone className="w-4 h-4 text-[#579bfc] flex-shrink-0" />
+        <Phone className="w-4 h-4 text-blue-500 flex-shrink-0" />
         <a
           href={`tel:${value}`}
-          className="text-sm text-[#579bfc] hover:underline truncate"
+          className="text-sm text-blue-500 hover:underline truncate"
           onClick={e => e.stopPropagation()}
         >
           {formatPhoneNumber(value)}
@@ -124,7 +124,7 @@ export function PhoneCell({
           onKeyDown={handleKeyDown}
           onBlur={handleSave}
           placeholder="Enter phone..."
-          className="w-full h-7 px-2 text-sm border border-[#579bfc] rounded focus:outline-none focus:ring-1 focus:ring-[#579bfc]"
+          className="w-full h-7 px-2 text-sm border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
       </div>
     )
@@ -147,7 +147,7 @@ export function PhoneCell({
       >
         {value ? (
           <>
-            <Phone className="w-4 h-4 text-[#579bfc] flex-shrink-0" />
+            <Phone className="w-4 h-4 text-blue-500 flex-shrink-0" />
             <OverflowTooltip
               text={formatPhoneNumber(value)}
               className="text-sm text-text-primary truncate block"

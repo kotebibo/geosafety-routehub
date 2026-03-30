@@ -132,7 +132,7 @@ export function ColumnConfigPanel({
                         onChange={e => handleWidthChange(column, parseInt(e.target.value))}
                         className="flex-1 h-1 bg-bg-tertiary rounded-lg appearance-none cursor-pointer"
                         style={{
-                          background: `linear-gradient(to right, #0073ea 0%, #0073ea ${((column.width - 80) / (500 - 80)) * 100}%, #e6e9ef ${((column.width - 80) / (500 - 80)) * 100}%, #e6e9ef 100%)`,
+                          background: `linear-gradient(to right, var(--monday-primary) 0%, var(--monday-primary) ${((column.width - 80) / (500 - 80)) * 100}%, var(--border-light) ${((column.width - 80) / (500 - 80)) * 100}%, var(--border-light) 100%)`,
                         }}
                       />
                       <span className="text-xs text-text-secondary w-10 text-right">

@@ -60,7 +60,7 @@ export const TextCell = memo(function TextCell({
         onKeyDown={handleKeyDown}
         className={cn(
           'w-full h-full min-h-[36px] px-2',
-          'bg-bg-primary border-2 border-[#6161ff] rounded',
+          'bg-bg-primary border-2 border-indigo-500 rounded',
           'text-text-primary text-sm',
           'focus:outline-none'
         )}

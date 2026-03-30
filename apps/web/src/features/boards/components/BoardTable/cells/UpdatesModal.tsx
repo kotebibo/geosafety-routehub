@@ -144,16 +144,16 @@ export function UpdatesModal({
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'created':
-        return <PlusCircle className="w-4 h-4 text-[#00c875]" />
+        return <PlusCircle className="w-4 h-4 text-green-500" />
       case 'updated':
         return <FileEdit className="w-4 h-4 text-text-link" />
       case 'status_changed':
-        return <ArrowRightLeft className="w-4 h-4 text-[#fdab3d]" />
+        return <ArrowRightLeft className="w-4 h-4 text-orange-500" />
       case 'assigned':
       case 'reassigned':
-        return <UserCheck className="w-4 h-4 text-[#a25ddc]" />
+        return <UserCheck className="w-4 h-4 text-purple-500" />
       case 'comment':
-        return <MessageSquare className="w-4 h-4 text-[#579bfc]" />
+        return <MessageSquare className="w-4 h-4 text-blue-500" />
       default:
         return <History className="w-4 h-4 text-text-secondary" />
     }
@@ -363,7 +363,7 @@ export function UpdatesModal({
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border-light bg-gradient-to-r from-[#0073ea] to-[#0060c0]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-light bg-gradient-to-r from-monday-primary to-blue-700">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-white/20 flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-white" />
@@ -385,7 +385,7 @@ export function UpdatesModal({
             className={cn(
               'px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2',
               activeTab === 'updates'
-                ? 'border-[#0073ea] text-text-link'
+                ? 'border-monday-primary text-text-link'
                 : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-medium'
             )}
           >
@@ -402,7 +402,7 @@ export function UpdatesModal({
             className={cn(
               'px-4 py-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2',
               activeTab === 'activity'
-                ? 'border-[#0073ea] text-text-link'
+                ? 'border-monday-primary text-text-link'
                 : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-medium'
             )}
           >
@@ -425,12 +425,12 @@ export function UpdatesModal({
         >
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="w-8 h-8 border-3 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-3 border-monday-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : comments.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="w-20 h-20 rounded-full bg-border-light flex items-center justify-center mb-4">
-                <MessageSquare className="w-10 h-10 text-[#c5c7d0]" />
+                <MessageSquare className="w-10 h-10 text-border-medium" />
               </div>
               <span className="text-lg font-medium text-text-primary mb-1">No updates yet</span>
               <span className="text-sm text-text-secondary">
@@ -445,7 +445,7 @@ export function UpdatesModal({
               >
                 {/* Comment Header */}
                 <div className="flex items-start gap-3 p-4">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0073ea] to-[#6161ff] flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-monday-primary to-indigo-500 flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-semibold text-white">
                       {getInitials(comment.user_name || 'Unknown')}
                     </span>
@@ -526,7 +526,7 @@ export function UpdatesModal({
                             </button>
                             <button
                               onClick={() => handleDeleteComment(comment.id)}
-                              className="flex items-center gap-1 text-xs text-text-secondary hover:text-[#e2445c] transition-colors"
+                              className="flex items-center gap-1 text-xs text-text-secondary hover:text-red-500 transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                               Delete
@@ -546,7 +546,7 @@ export function UpdatesModal({
                         key={reply.id}
                         className="flex items-start gap-3 p-4 pl-16 border-b border-bg-secondary last:border-b-0"
                       >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#579bfc] to-[#0073ea] flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-monday-primary flex items-center justify-center flex-shrink-0">
                           <span className="text-xs font-semibold text-white">
                             {getInitials(reply.user_name || 'Unknown')}
                           </span>
@@ -570,7 +570,7 @@ export function UpdatesModal({
                             <div className="flex items-center gap-3 mt-2">
                               <button
                                 onClick={() => handleDeleteComment(reply.id)}
-                                className="flex items-center gap-1 text-xs text-text-secondary hover:text-[#e2445c] transition-colors"
+                                className="flex items-center gap-1 text-xs text-text-secondary hover:text-red-500 transition-colors"
                               >
                                 <Trash2 className="w-3 h-3" />
                                 Delete
@@ -596,12 +596,12 @@ export function UpdatesModal({
         >
           {activityLoading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="w-8 h-8 border-3 border-[#0073ea] border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-3 border-monday-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : activities.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <div className="w-20 h-20 rounded-full bg-border-light flex items-center justify-center mb-4">
-                <History className="w-10 h-10 text-[#c5c7d0]" />
+                <History className="w-10 h-10 text-border-medium" />
               </div>
               <span className="text-lg font-medium text-text-primary mb-1">No activity yet</span>
               <span className="text-sm text-text-secondary">
@@ -645,7 +645,7 @@ export function UpdatesModal({
 
         {/* Reply indicator - only show on updates tab */}
         {activeTab === 'updates' && replyingTo && (
-          <div className="px-6 py-2 bg-bg-selected border-t border-[#0073ea]/20 flex items-center justify-between">
+          <div className="px-6 py-2 bg-bg-selected border-t border-monday-primary/20 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-text-link">
               <CornerDownRight className="w-4 h-4" />
               <span>
@@ -704,7 +704,7 @@ export function UpdatesModal({
           )}
 
           <div className="flex gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#0073ea] to-[#6161ff] flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-monday-primary to-indigo-500 flex items-center justify-center flex-shrink-0">
               <User className="w-5 h-5 text-white" />
             </div>
             <div className="flex-1">

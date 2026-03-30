@@ -564,7 +564,8 @@ export default function LocationsMapPage() {
             <p className="text-sm text-text-secondary">ობიექტების რუკა ფილტრებით</p>
           </div>
           <div className="text-sm text-text-secondary">
-            ნაჩვენები: <span className="font-bold text-blue-600">{filteredCompanies.length}</span> /{' '}
+            ნაჩვენები:{' '}
+            <span className="font-bold text-monday-primary">{filteredCompanies.length}</span> /{' '}
             {mappableCompanies.length}
           </div>
         </div>
@@ -579,7 +580,7 @@ export default function LocationsMapPage() {
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="კომპანიის სახელი ან მისამართი..."
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             />
           </div>
 
@@ -592,7 +593,7 @@ export default function LocationsMapPage() {
                 setSelectedRegion(e.target.value)
                 setSelectedDistrict('all') // Reset district when region changes
               }}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             >
               <option value="all">ყველა რეგიონი</option>
               {availableFilters.regions.map(region => {
@@ -619,7 +620,7 @@ export default function LocationsMapPage() {
             <select
               value={selectedDistrict}
               onChange={e => setSelectedDistrict(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             >
               <option value="all">ყველა რაიონი</option>
               {availableDistrictsForRegion.map(district => {
@@ -641,7 +642,7 @@ export default function LocationsMapPage() {
             <select
               value={selectedCompanyType}
               onChange={e => setSelectedCompanyType(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             >
               <option value="all">ყველა ტიპი</option>
               {availableFilters.companyTypes.map(type => {
@@ -661,7 +662,7 @@ export default function LocationsMapPage() {
             <select
               value={selectedInspector}
               onChange={e => setSelectedInspector(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             >
               <option value="all">ყველა ოფიცერი</option>
               {inspectors.map(inspector => {

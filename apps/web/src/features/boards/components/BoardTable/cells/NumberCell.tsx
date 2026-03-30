@@ -69,7 +69,7 @@ export const NumberCell = memo(function NumberCell({
         onKeyDown={handleKeyDown}
         className={cn(
           'w-full h-full min-h-[36px] px-2',
-          'bg-bg-primary border-2 border-[#6161ff] rounded',
+          'bg-bg-primary border-2 border-indigo-500 rounded',
           'text-text-primary text-sm text-right',
           'focus:outline-none'
         )}

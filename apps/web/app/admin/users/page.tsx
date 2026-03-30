@@ -196,7 +196,7 @@ export default function UserManagementPage() {
   if (authLoading || !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -208,8 +208,8 @@ export default function UserManagementPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-6 h-6 text-blue-600" />
+              <div className="p-2 bg-monday-primary/10 rounded-lg">
+                <Users className="w-6 h-6 text-monday-primary" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-text-primary">User Management</h1>
@@ -226,7 +226,7 @@ export default function UserManagementPage() {
               </button>
               <button
                 onClick={fetchData}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-monday-primary rounded-lg hover:bg-monday-primary-hover"
               >
                 <RefreshCw className="w-4 h-4" />
                 Refresh
@@ -241,8 +241,8 @@ export default function UserManagementPage() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-bg-primary rounded-lg border border-border-light p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Users className="w-5 h-5 text-blue-600" />
+              <div className="p-2 bg-monday-primary/10 rounded-lg">
+                <Users className="w-5 h-5 text-monday-primary" />
               </div>
               <div>
                 <p className="text-sm text-text-secondary">Total Users</p>
@@ -296,7 +296,7 @@ export default function UserManagementPage() {
                 placeholder="Search by name or email..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
               />
             </div>
 
@@ -304,7 +304,7 @@ export default function UserManagementPage() {
             <select
               value={filterRole}
               onChange={e => setFilterRole(e.target.value)}
-              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
             >
               <option value="all">All Roles</option>
               <option value="none">No Role</option>
@@ -319,7 +319,7 @@ export default function UserManagementPage() {
             <select
               value={filterStatus}
               onChange={e => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -332,7 +332,7 @@ export default function UserManagementPage() {
         <div className="bg-bg-primary rounded-lg border border-border-light overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12">
@@ -473,7 +473,7 @@ export default function UserManagementPage() {
                           <>
                             <button
                               onClick={() => handleEditUser(user)}
-                              className="p-1.5 text-text-tertiary hover:text-blue-600 hover:bg-blue-50 rounded"
+                              className="p-1.5 text-text-tertiary hover:text-monday-primary hover:bg-monday-primary/10 rounded"
                               title="Edit user"
                             >
                               <Edit2 className="w-4 h-4" />

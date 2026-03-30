@@ -34,8 +34,8 @@ export const CheckboxCell = memo(function CheckboxCell({
         className={cn(
           'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
           isChecked
-            ? 'bg-[#00c875] border-[#00c875]'
-            : 'bg-bg-primary border-border-medium hover:border-[#00c875]',
+            ? 'bg-green-500 border-green-500'
+            : 'bg-bg-primary border-border-medium hover:border-green-500',
           readOnly && 'cursor-default opacity-70',
           !readOnly && 'cursor-pointer'
         )}

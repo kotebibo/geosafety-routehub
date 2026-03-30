@@ -26,11 +26,11 @@ export default function HomePage() {
 
   if (loading || !mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-bg-secondary via-bg-secondary to-bg-tertiary">
         <div className="text-center">
           <div className="relative">
-            <div className="w-24 h-24 border-4 border-blue-200 rounded-full animate-pulse"></div>
-            <div className="absolute inset-0 w-24 h-24 border-4 border-blue-600 rounded-full animate-spin border-t-transparent"></div>
+            <div className="w-24 h-24 border-4 border-monday-primary/20 rounded-full animate-pulse"></div>
+            <div className="absolute inset-0 w-24 h-24 border-4 border-monday-primary rounded-full animate-spin border-t-transparent"></div>
           </div>
           <p className="mt-4 text-text-secondary animate-pulse">{t('common.loading')}</p>
         </div>
@@ -71,7 +71,7 @@ export default function HomePage() {
       href: '/routes/builder',
       labelKey: 'home.createRoute',
       icon: MapIcon,
-      color: 'from-indigo-500 to-indigo-600',
+      color: 'from-monday-primary to-monday-primary-hover',
       descriptionKey: 'home.optimization',
       show: isAdmin || isDispatcher,
     },
@@ -102,14 +102,14 @@ export default function HomePage() {
   ].filter(link => link.show)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-bg-secondary via-bg-primary to-bg-tertiary">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-monday-primary/10 to-monday-primary/5"></div>
         <div className="absolute inset-0">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-monday-primary/40 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
           <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-          <div className="absolute top-40 left-40 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+          <div className="absolute top-40 left-40 w-80 h-80 bg-monday-primary/40 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -187,13 +187,13 @@ export default function HomePage() {
             <div className="flex gap-4 justify-center">
               <Link
                 href="/auth/login"
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="px-8 py-3 bg-gradient-to-r from-monday-primary to-monday-primary-hover text-white font-semibold rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-300"
               >
                 {t('home.signIn')}
               </Link>
               <Link
                 href="/auth/register"
-                className="px-8 py-3 bg-bg-primary text-blue-600 font-semibold rounded-xl border-2 border-blue-600 hover:bg-blue-50 transform hover:scale-105 transition-all duration-300"
+                className="px-8 py-3 bg-bg-primary text-monday-primary font-semibold rounded-xl border-2 border-monday-primary hover:bg-monday-primary/10 transform hover:scale-105 transition-all duration-300"
               >
                 {t('home.register')}
               </Link>
@@ -212,25 +212,25 @@ export default function HomePage() {
             <div className="flex gap-6">
               <a
                 href="#"
-                className="text-sm text-text-secondary hover:text-blue-600 transition-colors"
+                className="text-sm text-text-secondary hover:text-monday-primary transition-colors"
               >
                 {t('home.about')}
               </a>
               <a
                 href="#"
-                className="text-sm text-text-secondary hover:text-blue-600 transition-colors"
+                className="text-sm text-text-secondary hover:text-monday-primary transition-colors"
               >
                 {t('home.documentation')}
               </a>
               <a
                 href="#"
-                className="text-sm text-text-secondary hover:text-blue-600 transition-colors"
+                className="text-sm text-text-secondary hover:text-monday-primary transition-colors"
               >
                 {t('home.support')}
               </a>
               <a
                 href="#"
-                className="text-sm text-text-secondary hover:text-blue-600 transition-colors"
+                className="text-sm text-text-secondary hover:text-monday-primary transition-colors"
               >
                 {t('home.contact')}
               </a>

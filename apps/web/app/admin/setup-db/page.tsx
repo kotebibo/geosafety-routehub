@@ -11,7 +11,7 @@ export default function SetupPDPDatabasePage() {
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-bg-primary rounded-lg shadow p-6">
         <div className="flex items-center gap-3 mb-4">
-          <Database className="w-8 h-8 text-blue-600" />
+          <Database className="w-8 h-8 text-monday-primary" />
           <div>
             <h1 className="text-2xl font-bold">PDP Database Setup</h1>
             <p className="text-text-secondary">Database tables for PDP onboarding</p>

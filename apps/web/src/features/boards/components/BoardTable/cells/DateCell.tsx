@@ -49,24 +49,24 @@ export const DateCell = memo(function DateCell({
     switch (dateStatus) {
       case 'overdue':
         return {
-          bg: 'bg-[#ffebeb]',
-          text: 'text-[#d83a52]',
-          icon: 'text-[#d83a52]',
-          border: 'border-l-4 border-l-[#e2445c]',
+          bg: 'bg-red-50',
+          text: 'text-red-600',
+          icon: 'text-red-600',
+          border: 'border-l-4 border-l-red-500',
         }
       case 'today':
         return {
-          bg: 'bg-[#fff3cd]',
-          text: 'text-[#856404]',
-          icon: 'text-[#fdab3d]',
-          border: 'border-l-4 border-l-[#fdab3d]',
+          bg: 'bg-yellow-50',
+          text: 'text-yellow-700',
+          icon: 'text-orange-500',
+          border: 'border-l-4 border-l-orange-500',
         }
       case 'upcoming':
         return {
-          bg: 'bg-[#fff8e6]',
-          text: 'text-[#9a6700]',
-          icon: 'text-[#fdab3d]',
-          border: 'border-l-4 border-l-[#ffcb00]',
+          bg: 'bg-amber-50',
+          text: 'text-amber-700',
+          icon: 'text-orange-500',
+          border: 'border-l-4 border-l-yellow-500',
         }
       default:
         return {
@@ -107,7 +107,7 @@ export const DateCell = memo(function DateCell({
         autoFocus
         className={cn(
           'w-full h-full min-h-[36px] px-2',
-          'bg-bg-primary border-2 border-[#6161ff] rounded',
+          'bg-bg-primary border-2 border-indigo-500 rounded',
           'text-text-primary text-sm',
           'focus:outline-none'
         )}
@@ -130,9 +130,9 @@ export const DateCell = memo(function DateCell({
       case 'overdue':
         return null
       case 'today':
-        return <span className="text-[10px] font-medium text-[#856404] ml-1">Today</span>
+        return <span className="text-[10px] font-medium text-yellow-700 ml-1">Today</span>
       case 'upcoming':
-        return <span className="text-[10px] font-medium text-[#9a6700] ml-1">Soon</span>
+        return <span className="text-[10px] font-medium text-amber-700 ml-1">Soon</span>
       default:
         return null
     }

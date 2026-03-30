@@ -152,7 +152,7 @@ export default function LoginPage() {
 
         {/* Header */}
         <div className="text-center">
-          <div className="w-16 h-16 bg-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
+          <div className="w-16 h-16 bg-monday-primary rounded-xl flex items-center justify-center text-white font-bold text-2xl mx-auto mb-4">
             RH
           </div>
           <h2 className="text-3xl font-bold text-text-primary">{t('login.title')}</h2>
@@ -224,7 +224,7 @@ export default function LoginPage() {
                   autoComplete="name"
                   value={fullName}
                   onChange={e => setFullName(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="appearance-none block w-full px-3 py-2 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                   placeholder={t('login.fullNamePlaceholder')}
                 />
               </div>
@@ -243,7 +243,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="appearance-none block w-full px-3 py-2 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                 placeholder="your.email@example.com"
               />
             </div>
@@ -265,7 +265,7 @@ export default function LoginPage() {
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 pr-10 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="appearance-none block w-full px-3 py-2 pr-10 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                   placeholder="••••••••"
                 />
                 <button
@@ -285,7 +285,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={handleForgotPassword}
                     disabled={resetLoading}
-                    className="text-xs text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                    className="text-xs text-monday-primary hover:text-monday-primary-hover font-medium disabled:opacity-50"
                   >
                     {resetLoading ? t('common.loading') : t('login.forgotPassword')}
                   </button>
@@ -311,7 +311,7 @@ export default function LoginPage() {
                     required
                     value={confirmPassword}
                     onChange={e => setConfirmPassword(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 pr-10 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="appearance-none block w-full px-3 py-2 pr-10 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                     placeholder="••••••••"
                   />
                   <button
@@ -334,7 +334,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-monday-primary text-white font-medium rounded-lg hover:bg-monday-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-monday-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {mode === 'login' ? (
               <>
@@ -398,7 +398,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => switchMode('signup')}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-monday-primary hover:text-monday-primary-hover font-medium"
               >
                 {t('login.registerNow')}
               </button>
@@ -409,7 +409,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => switchMode('login')}
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-monday-primary hover:text-monday-primary-hover font-medium"
               >
                 {t('login.signIn')}
               </button>

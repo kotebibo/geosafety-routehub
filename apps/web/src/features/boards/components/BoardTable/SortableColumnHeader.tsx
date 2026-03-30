@@ -259,7 +259,7 @@ export const SortableColumnHeader = memo(function SortableColumnHeader({
               onKeyDown={onColumnNameKeyDown}
               onClick={e => e.stopPropagation()}
               onMouseDown={e => e.stopPropagation()}
-              className="w-full bg-bg-primary border border-[#0073ea] rounded px-1 py-0.5 text-xs font-semibold text-text-primary uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-[#0073ea]"
+              className="w-full bg-bg-primary border border-monday-primary rounded px-1 py-0.5 text-xs font-semibold text-text-primary uppercase tracking-wide focus:outline-none focus:ring-1 focus:ring-monday-primary"
             />
           ) : (
             <OverflowTooltip text={column.column_name} className="truncate block">

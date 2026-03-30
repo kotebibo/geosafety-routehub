@@ -212,7 +212,7 @@ export const DateRangeCell = memo(function DateRangeCell({
                   type="date"
                   value={editStart}
                   onChange={e => setEditStart(e.target.value)}
-                  className="w-full px-3 py-2 text-sm border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[#0073ea] focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                 />
               </div>
 
@@ -231,7 +231,7 @@ export const DateRangeCell = memo(function DateRangeCell({
                   value={editEnd}
                   onChange={e => setEditEnd(e.target.value)}
                   min={editStart || undefined}
-                  className="w-full px-3 py-2 text-sm border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-[#0073ea] focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm border border-border-medium rounded-md focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
                 />
               </div>
 

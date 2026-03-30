@@ -56,8 +56,8 @@ export default function CompaniesPage() {
         sortable: true,
         cell: ({ value }) => (
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Building2 className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-monday-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Building2 className="w-5 h-5 text-monday-primary" />
             </div>
             <span className="font-medium text-text-primary">{value as string}</span>
           </div>
@@ -111,7 +111,7 @@ export default function CompaniesPage() {
           <p className="text-red-600 mb-4">დაფიქსირდა შეცდომა</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover"
           >
             თავიდან ცდა
           </button>
@@ -154,7 +154,7 @@ export default function CompaniesPage() {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="ძებნა სახელით ან მისამართით..."
-              className="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
             />
           </div>
         </div>
@@ -201,7 +201,7 @@ export default function CompaniesPage() {
                   <select
                     value={pagination.pageSize}
                     onChange={e => setPageSize(Number(e.target.value))}
-                    className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
                   >
                     <option value={25}>25</option>
                     <option value={50}>50</option>
@@ -238,7 +238,7 @@ export default function CompaniesPage() {
                             onClick={() => goToPage(pageNum as number)}
                             className={`px-3 py-1 rounded-lg text-sm ${
                               pagination.page === pageNum
-                                ? 'bg-blue-600 text-white'
+                                ? 'bg-monday-primary text-white'
                                 : 'hover:bg-bg-hover'
                             }`}
                           >

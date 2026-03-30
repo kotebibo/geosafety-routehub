@@ -178,7 +178,7 @@ export const MemoizedTableRow = memo(
             'sticky z-10 border p-0 align-middle',
             isSelected ? 'bg-bg-selected' : 'bg-bg-primary',
             isCellFocused(globalRowIndex, 0, focusedRowIndex, focusedColumnIndex)
-              ? 'border-2 border-[#0073ea] z-20'
+              ? 'border-2 border-monday-primary z-20'
               : 'border-border-medium'
           )}
           style={{
@@ -237,7 +237,7 @@ export const MemoizedTableRow = memo(
                 isBeingEditedByOther ? 'p-[2px]' : 'p-0',
                 isSelected ? 'bg-bg-selected' : 'bg-bg-primary',
                 isBeingEditedByOther && 'ring-2 ring-inset ring-yellow-400',
-                isFocused ? 'border-2 border-[#0073ea] z-10' : 'border-border-medium'
+                isFocused ? 'border-2 border-monday-primary z-10' : 'border-border-medium'
               )}
               style={{ width: getColumnWidth(column), height: 36 }}
               onClick={e => {
