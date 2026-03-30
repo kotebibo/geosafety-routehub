@@ -324,7 +324,7 @@ export default function UserManagementPage() {
                     required
                     value={createForm.email}
                     onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                    className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
                     placeholder="user@example.com"
                   />
                 </div>
@@ -338,7 +338,7 @@ export default function UserManagementPage() {
                     required
                     value={createForm.full_name}
                     onChange={e => setCreateForm({ ...createForm, full_name: e.target.value })}
-                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                    className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
                     placeholder="John Doe"
                   />
                 </div>
@@ -351,7 +351,7 @@ export default function UserManagementPage() {
                     type="text"
                     value={createForm.phone}
                     onChange={e => setCreateForm({ ...createForm, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                    className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
                     placeholder="+995 ..."
                   />
                 </div>
@@ -367,7 +367,7 @@ export default function UserManagementPage() {
                       minLength={6}
                       value={createForm.password}
                       onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
-                      className="w-full px-3 py-2 pr-10 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                      className="w-full px-3 py-2 pr-10 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
                       placeholder="Min 6 characters"
                     />
                     <button
@@ -389,7 +389,7 @@ export default function UserManagementPage() {
                   <select
                     value={createForm.role}
                     onChange={e => setCreateForm({ ...createForm, role: e.target.value })}
-                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                    className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
                   >
                     <option value="">No Role</option>
                     {roles.map(role => (
@@ -488,7 +488,7 @@ export default function UserManagementPage() {
                 placeholder="Search by name or email..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                className="w-full pl-10 pr-4 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
               />
             </div>
 
@@ -496,7 +496,7 @@ export default function UserManagementPage() {
             <select
               value={filterRole}
               onChange={e => setFilterRole(e.target.value)}
-              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+              className="px-4 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
             >
               <option value="all">All Roles</option>
               <option value="none">No Role</option>
@@ -511,7 +511,7 @@ export default function UserManagementPage() {
             <select
               value={filterStatus}
               onChange={e => setFilterStatus(e.target.value)}
-              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+              className="px-4 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
