@@ -20,7 +20,13 @@ import {
   UserCheck,
   FileEdit,
   PlusCircle,
+  Paperclip,
+  File,
+  Image,
+  FileText,
+  Download,
 } from 'lucide-react'
+import { supabase } from '@/lib/supabase/client'
 import { activityService } from '@/features/boards/services/activity.service'
 import { formatTimeAgo } from '@/lib/formatTime'
 import { useAuth } from '@/contexts/AuthContext'
@@ -36,6 +42,17 @@ interface UpdatesModalProps {
   itemType?: string
   onCommentCountChange?: (count: number) => void
 }
+
+interface FileAttachment {
+  id: string
+  name: string
+  url: string
+  type: string
+  size: number
+  path?: string
+}
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 
 interface MentionSuggestion {
   id: string
@@ -72,6 +89,11 @@ export function UpdatesModal({
   const [mentionIndex, setMentionIndex] = useState(0)
   const [cursorPosition, setCursorPosition] = useState(0)
   const [selectedMentions, setSelectedMentions] = useState<string[]>([])
+
+  // File attachment state
+  const [pendingFiles, setPendingFiles] = useState<FileAttachment[]>([])
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const mentionListRef = useRef<HTMLDivElement>(null)
@@ -188,7 +210,8 @@ export function UpdatesModal({
   }
 
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || !itemId || submitting || !inspectorId) return
+    if ((!newComment.trim() && pendingFiles.length === 0) || !itemId || submitting || !inspectorId)
+      return
 
     setSubmitting(true)
     try {
@@ -196,11 +219,17 @@ export function UpdatesModal({
         item_type: itemType,
         item_id: itemId,
         user_id: inspectorId,
-        content: newComment.trim(),
+        content:
+          newComment.trim() ||
+          (pendingFiles.length > 0 ? `Attached ${pendingFiles.length} file(s)` : ''),
         parent_comment_id: replyingTo?.id,
         mentions: selectedMentions,
+        attachments: pendingFiles.map(f =>
+          JSON.stringify({ name: f.name, url: f.url, type: f.type, size: f.size, path: f.path })
+        ),
       })
       setNewComment('')
+      setPendingFiles([])
       setReplyingTo(null)
       setSelectedMentions([])
       await loadComments()
@@ -313,6 +342,69 @@ export function UpdatesModal({
         .toUpperCase()
         .slice(0, 2) || '?'
     )
+  }
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <Image className="w-4 h-4 text-blue-500" />
+    if (type === 'application/pdf') return <FileText className="w-4 h-4 text-red-500" />
+    return <File className="w-4 h-4 text-text-secondary" />
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files
+    if (!selectedFiles || selectedFiles.length === 0) return
+
+    setUploading(true)
+    try {
+      const newFiles: FileAttachment[] = []
+      for (const file of Array.from(selectedFiles)) {
+        if (file.size > MAX_FILE_SIZE) {
+          console.error(`File ${file.name} is too large (max 10MB)`)
+          continue
+        }
+
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${itemId}_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`
+        const filePath = `comment-attachments/${fileName}`
+
+        try {
+          const { error } = await supabase.storage.from('attachments').upload(filePath, file)
+          if (error) {
+            console.error('Upload error:', error)
+            continue
+          }
+
+          const { data: urlData } = await supabase.storage
+            .from('attachments')
+            .createSignedUrl(filePath, 60 * 60 * 24 * 365)
+
+          newFiles.push({
+            id: `file_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+            name: file.name,
+            url: urlData?.signedUrl || '',
+            type: file.type,
+            size: file.size,
+            path: filePath,
+          })
+        } catch (err) {
+          console.error('Upload failed:', err)
+        }
+      }
+      setPendingFiles(prev => [...prev, ...newFiles])
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  const removePendingFile = (fileId: string) => {
+    setPendingFiles(prev => prev.filter(f => f.id !== fileId))
   }
 
   // Render content with highlighted @mentions
@@ -485,6 +577,52 @@ export function UpdatesModal({
                       <p className="text-sm text-text-primary whitespace-pre-wrap break-words leading-relaxed">
                         {renderContentWithMentions(comment.content)}
                       </p>
+                    )}
+
+                    {/* Comment Attachments */}
+                    {comment.attachments && comment.attachments.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {comment.attachments.map((att, idx) => {
+                          let parsed: any = att
+                          try {
+                            parsed = typeof att === 'string' ? JSON.parse(att) : att
+                          } catch {
+                            // plain URL string
+                            parsed = { name: `File ${idx + 1}`, url: att, type: '', size: 0 }
+                          }
+                          const isImage = parsed.type?.startsWith('image/')
+                          return (
+                            <a
+                              key={idx}
+                              href={parsed.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group flex items-center gap-2 px-3 py-2 bg-bg-secondary border border-border-light rounded-lg hover:border-monday-primary/50 transition-colors max-w-[240px]"
+                            >
+                              {isImage ? (
+                                <img
+                                  src={parsed.url}
+                                  alt={parsed.name}
+                                  className="w-8 h-8 rounded object-cover flex-shrink-0"
+                                />
+                              ) : (
+                                getFileIcon(parsed.type || '')
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-medium text-text-primary truncate">
+                                  {parsed.name}
+                                </p>
+                                {parsed.size > 0 && (
+                                  <p className="text-[10px] text-text-tertiary">
+                                    {formatFileSize(parsed.size)}
+                                  </p>
+                                )}
+                              </div>
+                              <Download className="w-3.5 h-3.5 text-text-tertiary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                            </a>
+                          )
+                        })}
+                      </div>
                     )}
 
                     {/* Comment Actions */}
@@ -713,19 +851,68 @@ export function UpdatesModal({
                   'placeholder:text-text-tertiary'
                 )}
               />
+
+              {/* Pending file attachments */}
+              {pendingFiles.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {pendingFiles.map(file => (
+                    <div
+                      key={file.id}
+                      className="flex items-center gap-2 px-2.5 py-1.5 bg-bg-secondary border border-border-light rounded-lg text-xs max-w-[200px]"
+                    >
+                      {getFileIcon(file.type)}
+                      <span className="truncate text-text-primary">{file.name}</span>
+                      <button
+                        onClick={() => removePendingFile(file.id)}
+                        className="p-0.5 hover:bg-bg-hover rounded transition-colors flex-shrink-0"
+                      >
+                        <X className="w-3 h-3 text-text-tertiary" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Uploading indicator */}
+              {uploading && (
+                <div className="flex items-center gap-2 mt-2 text-xs text-text-secondary">
+                  <div className="w-3.5 h-3.5 border-2 border-monday-primary border-t-transparent rounded-full animate-spin" />
+                  Uploading...
+                </div>
+              )}
+
               <div className="flex items-center justify-between mt-3">
-                <div className="flex items-center gap-2 text-xs text-text-tertiary">
-                  <AtSign className="w-3.5 h-3.5" />
-                  <span>Type @ to mention</span>
-                  <span className="mx-2">•</span>
-                  <span>Shift+Enter for new line</span>
+                <div className="flex items-center gap-3">
+                  {/* File upload button */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,application/pdf,.doc,.docx"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-monday-primary transition-colors disabled:opacity-50"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                    <span>Attach</span>
+                  </button>
+                  <div className="flex items-center gap-2 text-xs text-text-tertiary">
+                    <AtSign className="w-3.5 h-3.5" />
+                    <span>@ to mention</span>
+                  </div>
                 </div>
                 <button
                   onClick={handleSubmitComment}
-                  disabled={!newComment.trim() || submitting || !inspectorId}
+                  disabled={
+                    (!newComment.trim() && pendingFiles.length === 0) || submitting || !inspectorId
+                  }
                   className={cn(
                     'flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all',
-                    newComment.trim() && !submitting && inspectorId
+                    (newComment.trim() || pendingFiles.length > 0) && !submitting && inspectorId
                       ? 'bg-monday-primary text-text-inverse hover:bg-[var(--monday-primary-hover)] shadow-md hover:shadow-lg'
                       : 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   )}
