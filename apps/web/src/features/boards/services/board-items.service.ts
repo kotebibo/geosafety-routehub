@@ -12,6 +12,7 @@ export const boardItemsService = {
       .from('board_items')
       .select('*')
       .eq('board_id', boardId)
+      .is('deleted_at', null)
       .order('position', { ascending: true })
 
     if (error) throw error
@@ -54,20 +55,17 @@ export const boardItemsService = {
     return data
   },
 
-  async updateBoardItemField(
-    itemId: string,
-    fieldName: string,
-    value: any
-  ): Promise<BoardItem> {
+  async updateBoardItemField(itemId: string, fieldName: string, value: any): Promise<BoardItem> {
     const item = await this.getBoardItem(itemId)
     const newData = { ...item.data, [fieldName]: value }
     return this.updateBoardItem(itemId, { data: newData })
   },
 
   async deleteBoardItem(itemId: string): Promise<void> {
+    // Soft delete: set deleted_at instead of actually removing the row
     const { error } = await (getSupabase() as any)
       .from('board_items')
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq('id', itemId)
 
     if (error) throw error
@@ -79,9 +77,7 @@ export const boardItemsService = {
   },
 
   async reorderItems(items: Array<{ id: string; position: number }>): Promise<void> {
-    const promises = items.map(({ id, position }) =>
-      this.updateBoardItem(id, { position })
-    )
+    const promises = items.map(({ id, position }) => this.updateBoardItem(id, { position }))
     await Promise.all(promises)
   },
 
@@ -96,6 +92,7 @@ export const boardItemsService = {
       .from('board_items')
       .select('position')
       .eq('board_id', targetBoardId)
+      .is('deleted_at', null)
       .order('position', { ascending: false })
       .limit(1)
 
@@ -117,10 +114,7 @@ export const boardItemsService = {
     return newItem
   },
 
-  async duplicateBoardItems(
-    itemIds: string[],
-    targetBoardId?: string
-  ): Promise<BoardItem[]> {
+  async duplicateBoardItems(itemIds: string[], targetBoardId?: string): Promise<BoardItem[]> {
     const duplicatedItems: BoardItem[] = []
 
     for (const itemId of itemIds) {
@@ -136,6 +130,7 @@ export const boardItemsService = {
       .from('board_items')
       .select('*')
       .eq('board_id', boardId)
+      .is('deleted_at', null)
       .ilike('name', `%${query}%`)
       .order('position', { ascending: true })
       .limit(50)
@@ -145,12 +140,11 @@ export const boardItemsService = {
   },
 
   async searchGlobal(query: string, maxPerBoard = 10, maxTotal = 100): Promise<any[]> {
-    const { data, error } = await (getSupabase() as any)
-      .rpc('search_board_items_global', {
-        search_query: query,
-        max_per_board: maxPerBoard,
-        max_total: maxTotal,
-      })
+    const { data, error } = await (getSupabase() as any).rpc('search_board_items_global', {
+      search_query: query,
+      max_per_board: maxPerBoard,
+      max_total: maxTotal,
+    })
 
     if (error) throw error
     return data || []

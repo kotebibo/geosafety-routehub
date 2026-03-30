@@ -4,17 +4,7 @@ import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { History, RefreshCw, Undo2, X, ArrowRight, Clock } from 'lucide-react'
 import { Tooltip } from '@/shared/components/ui/tooltip'
-// Using native Intl.DateTimeFormat instead of date-fns to reduce bundle size
-const formatDateTime = (dateStr: string): string => {
-  const date = new Date(dateStr)
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(date)
-}
+import { formatDateTime } from '@/lib/formatTime'
 
 export interface ItemUpdate {
   id: string

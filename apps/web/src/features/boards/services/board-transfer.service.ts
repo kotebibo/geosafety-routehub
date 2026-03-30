@@ -94,6 +94,7 @@ export const boardTransferService = {
       .from('board_items')
       .select('position')
       .eq('board_id', targetBoardId)
+      .is('deleted_at', null)
       .order('position', { ascending: false })
       .limit(1)
 

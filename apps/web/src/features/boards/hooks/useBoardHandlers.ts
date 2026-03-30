@@ -153,41 +153,14 @@ export function useBoardHandlers({
 
         publishItemChange('update', rowId, { [columnId]: value })
 
-        if (inspectorId) {
-          const updateType = columnId === 'status' ? 'status_changed' : 'updated'
-          const formatValue = (val: any): string => {
-            if (val === null || val === undefined) return ''
-            if (typeof val === 'object') return JSON.stringify(val)
-            return String(val)
-          }
-
-          createUpdate.mutate({
-            item_type: 'board_item',
-            item_id: rowId,
-            user_id: inspectorId,
-            update_type: updateType,
-            field_name: columnId,
-            old_value: formatValue(oldValue),
-            new_value: formatValue(value),
-            metadata: { displayName: fieldName },
-          })
-        }
+        // NOTE: Activity logging is handled by the DB trigger (create_item_update)
+        // on board_items INSERT/UPDATE. No need to create duplicate records here.
       } catch (error) {
         console.error('Failed to update item:', error)
         showToast('Failed to update item', 'error')
       }
     },
-    [
-      queryClient,
-      boardId,
-      columns,
-      updateItem,
-      publishItemChange,
-      pushAction,
-      createUpdate,
-      inspectorId,
-      showToast,
-    ]
+    [queryClient, boardId, columns, updateItem, publishItemChange, pushAction, showToast]
   )
 
   const handleDuplicateSelected = useCallback(
@@ -219,6 +192,7 @@ export function useBoardHandlers({
 
       try {
         const itemIds = Array.from(selection)
+        // Soft delete: sets deleted_at which triggers the DB create_item_update function
         for (const itemId of itemIds) {
           await deleteItem.mutateAsync(itemId)
           publishItemChange('delete', itemId)
@@ -286,6 +260,22 @@ export function useBoardHandlers({
           is_visible: true,
         } as any)
         await refetchColumns()
+
+        if (inspectorId) {
+          createUpdate.mutate({
+            item_type: 'board_item',
+            item_id: boardId,
+            user_id: inspectorId,
+            update_type: 'created',
+            content: `Added column: ${columnData.column_name}`,
+            metadata: {
+              entity_type: 'column',
+              column_name: columnData.column_name,
+              column_type: columnData.column_type,
+            },
+          })
+        }
+
         showToast('Column added successfully', 'success')
         setShowAddColumn(false)
       } catch (error) {
@@ -293,7 +283,16 @@ export function useBoardHandlers({
         showToast('Failed to add column', 'error')
       }
     },
-    [board, boardId, columns, refetchColumns, showToast, setShowAddColumn]
+    [
+      board,
+      boardId,
+      columns,
+      refetchColumns,
+      showToast,
+      setShowAddColumn,
+      inspectorId,
+      createUpdate,
+    ]
   )
 
   const handleDeleteColumn = useCallback(
@@ -301,6 +300,7 @@ export function useBoardHandlers({
       try {
         const column = columns?.find(col => col.id === columnId)
         const columnKey = column?.column_id
+        const columnName = column?.column_name
 
         await boardsService.deleteColumn(columnId)
 
@@ -319,13 +319,25 @@ export function useBoardHandlers({
         }
 
         await refetchColumns()
+
+        if (inspectorId && columnName) {
+          createUpdate.mutate({
+            item_type: 'board_item',
+            item_id: boardId,
+            user_id: inspectorId,
+            update_type: 'deleted',
+            content: `Deleted column: ${columnName}`,
+            metadata: { entity_type: 'column', column_name: columnName, column_id: columnKey },
+          })
+        }
+
         showToast('Column deleted', 'success')
       } catch (error) {
         console.error('Failed to delete column:', error)
         showToast('Failed to delete column', 'error')
       }
     },
-    [columns, items, updateItem, refetchColumns, showToast]
+    [columns, items, updateItem, refetchColumns, showToast, inspectorId, createUpdate, boardId]
   )
 
   const handleColumnResize = useCallback(
@@ -404,15 +416,30 @@ export function useBoardHandlers({
   const handleColumnRename = useCallback(
     async (columnId: string, newName: string) => {
       try {
+        const oldColumn = columns?.find(col => col.id === columnId)
         await boardsService.updateColumn(columnId, { column_name: newName })
         await refetchColumns()
+
+        if (inspectorId && oldColumn) {
+          createUpdate.mutate({
+            item_type: 'board_item',
+            item_id: boardId,
+            user_id: inspectorId,
+            update_type: 'updated',
+            field_name: 'column_name',
+            old_value: oldColumn.column_name,
+            new_value: newName,
+            metadata: { entity_type: 'column', column_id: oldColumn.column_id },
+          })
+        }
+
         showToast('Column renamed', 'success')
       } catch (error) {
         console.error('Failed to rename column:', error)
         showToast('Failed to rename column', 'error')
       }
     },
-    [refetchColumns, showToast]
+    [refetchColumns, showToast, columns, inspectorId, createUpdate, boardId]
   )
 
   const handleColumnConfigUpdate = useCallback(
@@ -473,44 +500,84 @@ export function useBoardHandlers({
         GROUP_COLORS.find(c => !usedColors.includes(c)) ||
         GROUP_COLORS[groups.length % GROUP_COLORS.length]
 
-      await createGroup.mutateAsync({
+      const newGroup = await createGroup.mutateAsync({
         name: 'New Group',
         color: availableColor,
         position: groups.length,
       })
+
+      if (inspectorId && newGroup?.id) {
+        createUpdate.mutate({
+          item_type: 'board_item',
+          item_id: newGroup.id,
+          user_id: inspectorId,
+          update_type: 'created',
+          content: 'Created group: New Group',
+          metadata: { entity_type: 'group', group_name: 'New Group' },
+        })
+      }
 
       showToast('Group added - click the name to rename it', 'success')
     } catch (error) {
       console.error('Failed to add group:', error)
       showToast('Failed to add group', 'error')
     }
-  }, [groups, createGroup, showToast])
+  }, [groups, createGroup, showToast, inspectorId, createUpdate])
 
   const handleGroupRename = useCallback(
     async (groupId: string, newName: string) => {
       if (groupId.startsWith('groupby_')) return
       try {
+        const oldGroup = groups.find(g => g.id === groupId)
         await updateGroup.mutateAsync({ groupId, updates: { name: newName } })
+
+        if (inspectorId) {
+          createUpdate.mutate({
+            item_type: 'board_item',
+            item_id: groupId,
+            user_id: inspectorId,
+            update_type: 'updated',
+            field_name: 'group_name',
+            old_value: oldGroup?.name || '',
+            new_value: newName,
+            metadata: { entity_type: 'group' },
+          })
+        }
+
         showToast('Group renamed', 'success')
       } catch (error) {
         console.error('Failed to rename group:', error)
         showToast('Failed to rename group', 'error')
       }
     },
-    [updateGroup, showToast]
+    [updateGroup, showToast, groups, inspectorId, createUpdate]
   )
 
   const handleGroupColorChange = useCallback(
     async (groupId: string, color: string) => {
       if (groupId.startsWith('groupby_')) return
       try {
+        const oldGroup = groups.find(g => g.id === groupId)
         await updateGroup.mutateAsync({ groupId, updates: { color } })
+
+        if (inspectorId) {
+          createUpdate.mutate({
+            item_type: 'board_item',
+            item_id: groupId,
+            user_id: inspectorId,
+            update_type: 'updated',
+            field_name: 'group_color',
+            old_value: oldGroup?.color || '',
+            new_value: color,
+            metadata: { entity_type: 'group', group_name: oldGroup?.name },
+          })
+        }
       } catch (error) {
         console.error('Failed to change group color:', error)
         showToast('Failed to change group color', 'error')
       }
     },
-    [updateGroup, showToast]
+    [updateGroup, showToast, groups, inspectorId, createUpdate]
   )
 
   const handleGroupCollapseToggle = useCallback(
@@ -557,14 +624,32 @@ export function useBoardHandlers({
           }
         }
 
+        const deletedGroup = groups.find(g => g.id === groupId)
         await deleteGroup.mutateAsync(groupId)
+
+        if (inspectorId && deletedGroup) {
+          createUpdate.mutate({
+            item_type: 'board_item',
+            item_id: groupId,
+            user_id: inspectorId,
+            update_type: 'deleted',
+            content: `Deleted group: ${deletedGroup.name}`,
+            metadata: {
+              entity_type: 'group',
+              group_name: deletedGroup.name,
+              items_moved: itemsInGroup.length,
+              moved_to_group: targetGroup?.name,
+            },
+          })
+        }
+
         showToast('Group deleted', 'success')
       } catch (error) {
         console.error('Failed to delete group:', error)
         showToast('Failed to delete group', 'error')
       }
     },
-    [groups, items, updateItem, deleteGroup, showToast]
+    [groups, items, updateItem, deleteGroup, showToast, inspectorId, createUpdate]
   )
 
   // ==================== MOVEMENT HANDLERS ====================

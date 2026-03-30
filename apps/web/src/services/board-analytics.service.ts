@@ -163,6 +163,7 @@ export const boardAnalyticsService = {
       .from('board_items')
       .select('id, name, data, group_id')
       .eq('board_id', boardId)
+      .is('deleted_at', null)
     if (error) throw error
     return (data || []) as BoardRow[]
   },
@@ -172,7 +173,11 @@ export const boardAnalyticsService = {
     if (!boardId) return { items: [], groups: [] }
     const db = getDb()
     const [{ data: items }, { data: groups }] = await Promise.all([
-      db.from('board_items').select('id, name, data, group_id').eq('board_id', boardId),
+      db
+        .from('board_items')
+        .select('id, name, data, group_id')
+        .eq('board_id', boardId)
+        .is('deleted_at', null),
       db.from('board_groups').select('id, name').eq('board_id', boardId),
     ])
     return { items: (items || []) as BoardRow[], groups: (groups || []) as GroupRow[] }
@@ -186,6 +191,7 @@ export const boardAnalyticsService = {
       .from('board_items')
       .select('id, name, data')
       .eq('board_id', boardId)
+      .is('deleted_at', null)
     if (error) throw error
     return (data || []) as BoardRow[]
   },

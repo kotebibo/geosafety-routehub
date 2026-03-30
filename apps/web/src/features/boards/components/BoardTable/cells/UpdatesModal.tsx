@@ -22,6 +22,7 @@ import {
   PlusCircle,
 } from 'lucide-react'
 import { activityService } from '@/features/boards/services/activity.service'
+import { formatTimeAgo } from '@/lib/formatTime'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInspectorId } from '@/hooks/useInspectorId'
 import { useInspectors } from '@/features/inspectors/hooks/useInspectors'
@@ -301,20 +302,7 @@ export function UpdatesModal({
     }
   }
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMins / 60)
-    const diffDays = Math.floor(diffHours / 24)
-
-    if (diffMins < 1) return 'just now'
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays < 7) return `${diffDays}d ago`
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-  }
+  // formatTimeAgo imported from @/lib/formatTime
 
   const getInitials = (name: string) => {
     const parts = name.split(' ')
