@@ -5,27 +5,21 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { createClient } from '@/lib/supabase'
-import { LogIn, UserPlus, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
-
-type AuthMode = 'login' | 'signup'
+import { LogIn, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get('from') || '/'
-  const { signIn, signUp, signInWithGoogle } = useAuth()
+  const { signIn, signInWithGoogle } = useAuth()
   const { t, language, setLanguage } = useLanguage()
-  const [mode, setMode] = useState<AuthMode>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [fullName, setFullName] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
 
   const handleForgotPassword = async () => {
@@ -49,20 +43,6 @@ export default function LoginPage() {
     }
   }
 
-  const resetForm = () => {
-    setEmail('')
-    setPassword('')
-    setConfirmPassword('')
-    setFullName('')
-    setError('')
-    setSuccess('')
-  }
-
-  const switchMode = (newMode: AuthMode) => {
-    setMode(newMode)
-    resetForm()
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -70,52 +50,22 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      if (mode === 'signup') {
-        if (password !== confirmPassword) {
-          setError(t('login.passwordsMismatch'))
-          setLoading(false)
-          return
-        }
+      const { error } = await signIn(email, password)
 
-        if (password.length < 6) {
-          setError(t('login.passwordTooShort'))
-          setLoading(false)
-          return
-        }
-
-        const { error } = await signUp(email, password, fullName)
-
-        if (error) {
-          if (error.message.includes('already registered')) {
-            setError(t('login.alreadyRegistered'))
-          } else {
-            setError(error.message)
-          }
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          setError(t('login.invalidCredentials'))
+        } else if (error.message.includes('Email not confirmed')) {
+          setError(t('login.emailNotConfirmed'))
         } else {
-          setSuccess(t('login.registrationSuccess'))
-          setEmail('')
-          setPassword('')
-          setConfirmPassword('')
-          setFullName('')
+          setError(error.message)
         }
       } else {
-        const { error } = await signIn(email, password)
-
-        if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            setError(t('login.invalidCredentials'))
-          } else if (error.message.includes('Email not confirmed')) {
-            setError(t('login.emailNotConfirmed'))
-          } else {
-            setError(error.message)
-          }
-        } else {
-          router.push(returnUrl)
-          router.refresh()
-        }
+        router.push(returnUrl)
+        router.refresh()
       }
     } catch (err) {
-      setError(mode === 'signup' ? t('login.signupError') : t('login.signinError'))
+      setError(t('login.signinError'))
     } finally {
       setLoading(false)
     }
@@ -156,37 +106,7 @@ export default function LoginPage() {
             RH
           </div>
           <h2 className="text-3xl font-bold text-text-primary">{t('login.title')}</h2>
-          <p className="mt-2 text-sm text-text-secondary">
-            {mode === 'login' ? t('login.loginToSystem') : t('login.createAccount')}
-          </p>
-        </div>
-
-        {/* Mode Tabs */}
-        <div className="flex rounded-lg bg-bg-tertiary p-1">
-          <button
-            type="button"
-            onClick={() => switchMode('login')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
-              mode === 'login'
-                ? 'bg-bg-primary text-text-primary shadow-sm'
-                : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <LogIn className="w-4 h-4" />
-            {t('login.signIn')}
-          </button>
-          <button
-            type="button"
-            onClick={() => switchMode('signup')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-medium transition-all ${
-              mode === 'signup'
-                ? 'bg-bg-primary text-text-primary shadow-sm'
-                : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <UserPlus className="w-4 h-4" />
-            {t('login.signUp')}
-          </button>
+          <p className="mt-2 text-sm text-text-secondary">{t('login.loginToSystem')}</p>
         </div>
 
         {/* Form */}
@@ -208,28 +128,6 @@ export default function LoginPage() {
           )}
 
           <div className="space-y-4">
-            {/* Full Name - Only for signup */}
-            {mode === 'signup' && (
-              <div>
-                <label
-                  htmlFor="fullName"
-                  className="block text-sm font-medium text-text-secondary mb-1"
-                >
-                  {t('login.fullName')}
-                </label>
-                <input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  autoComplete="name"
-                  value={fullName}
-                  onChange={e => setFullName(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
-                  placeholder={t('login.fullNamePlaceholder')}
-                />
-              </div>
-            )}
-
             {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-text-secondary mb-1">
@@ -261,7 +159,7 @@ export default function LoginPage() {
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
-                  autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={e => setPassword(e.target.value)}
@@ -276,58 +174,17 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {mode === 'signup' && (
-                <p className="mt-1 text-xs text-text-tertiary">{t('login.minChars')}</p>
-              )}
-              {mode === 'login' && (
-                <div className="mt-1 text-right">
-                  <button
-                    type="button"
-                    onClick={handleForgotPassword}
-                    disabled={resetLoading}
-                    className="text-xs text-monday-primary hover:text-monday-primary-hover font-medium disabled:opacity-50"
-                  >
-                    {resetLoading ? t('common.loading') : t('login.forgotPassword')}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Confirm Password - Only for signup */}
-            {mode === 'signup' && (
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-text-secondary mb-1"
+              <div className="mt-1 text-right">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetLoading}
+                  className="text-xs text-monday-primary hover:text-monday-primary-hover font-medium disabled:opacity-50"
                 >
-                  {t('login.confirmPassword')}
-                </label>
-                <div className="relative">
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    autoComplete="new-password"
-                    required
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    className="appearance-none block w-full px-3 py-2 pr-10 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary transition-colors"
-                  >
-                    {showConfirmPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
+                  {resetLoading ? t('common.loading') : t('login.forgotPassword')}
+                </button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Submit Button */}
@@ -336,17 +193,8 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-monday-primary text-white font-medium rounded-lg hover:bg-monday-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-monday-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {mode === 'login' ? (
-              <>
-                <LogIn className="w-5 h-5" />
-                {loading ? t('login.signingIn') : t('login.signIn')}
-              </>
-            ) : (
-              <>
-                <UserPlus className="w-5 h-5" />
-                {loading ? t('login.signingUp') : t('login.signUp')}
-              </>
-            )}
+            <LogIn className="w-5 h-5" />
+            {loading ? t('login.signingIn') : t('login.signIn')}
           </button>
 
           {/* Divider */}
@@ -389,33 +237,6 @@ export default function LoginPage() {
             {googleLoading ? t('login.signingInWithGoogle') : t('login.signInWithGoogle')}
           </button>
         </form>
-
-        {/* Footer */}
-        <div className="text-center text-sm text-text-secondary">
-          {mode === 'login' ? (
-            <p>
-              {t('login.noAccount')}{' '}
-              <button
-                type="button"
-                onClick={() => switchMode('signup')}
-                className="text-monday-primary hover:text-monday-primary-hover font-medium"
-              >
-                {t('login.registerNow')}
-              </button>
-            </p>
-          ) : (
-            <p>
-              {t('login.alreadyHaveAccount')}{' '}
-              <button
-                type="button"
-                onClick={() => switchMode('login')}
-                className="text-monday-primary hover:text-monday-primary-hover font-medium"
-              >
-                {t('login.signIn')}
-              </button>
-            </p>
-          )}
-        </div>
       </div>
     </div>
   )

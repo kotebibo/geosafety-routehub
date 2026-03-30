@@ -105,6 +105,14 @@ export function GenerateDocumentModal({
     complete: 'Done',
   }
 
+  const stepDescriptions: Record<Step, string> = {
+    template: 'Choose a document template to generate from.',
+    generating: '',
+    preview: 'Review the generated document before downloading or sending.',
+    email: 'Send the document as an email attachment, or skip to just download.',
+    complete: '',
+  }
+
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
@@ -164,6 +172,9 @@ export function GenerateDocumentModal({
                 {i < 2 && <ArrowRight className="w-3 h-3 text-text-tertiary" />}
               </div>
             ))}
+            {stepDescriptions[step] && (
+              <p className="text-xs text-text-tertiary ml-auto">{stepDescriptions[step]}</p>
+            )}
           </div>
         )}
 
