@@ -62,7 +62,12 @@ export const activityService = {
   /**
    * Get all updates for a specific item
    */
-  async getItemUpdates(itemType: string, itemId: string, limit = 50): Promise<ItemUpdate[]> {
+  async getItemUpdates(
+    itemType: string,
+    itemId: string,
+    limit = 50,
+    offset = 0
+  ): Promise<ItemUpdate[]> {
     const { data, error } = await getSupabase()
       .from('item_updates')
       .select(
@@ -83,7 +88,7 @@ export const activityService = {
       .eq('item_type', itemType)
       .eq('item_id', itemId)
       .order('created_at', { ascending: false })
-      .limit(limit)
+      .range(offset, offset + limit - 1)
 
     if (error) throw error
 
@@ -100,7 +105,7 @@ export const activityService = {
   /**
    * Get recent updates across all items (for activity feed)
    */
-  async getRecentUpdates(limit = 100): Promise<ItemUpdate[]> {
+  async getRecentUpdates(limit = 100, offset = 0): Promise<ItemUpdate[]> {
     const { data, error } = await getSupabase()
       .from('item_updates')
       .select(
@@ -119,7 +124,7 @@ export const activityService = {
       `
       )
       .order('created_at', { ascending: false })
-      .limit(limit)
+      .range(offset, offset + limit - 1)
 
     if (error) throw error
 
@@ -182,8 +187,31 @@ export const activityService = {
     content?: string
     metadata?: Record<string, any>
   }): Promise<ItemUpdate> {
+    // Resolve user_name and store as snapshot in metadata for historical accuracy
+    let enrichedUpdate = update
+    if (update.user_id) {
+      try {
+        const { data: user } = await getSupabase()
+          .from('inspectors')
+          .select('full_name, email')
+          .eq('id', update.user_id)
+          .single()
+        if (user) {
+          enrichedUpdate = {
+            ...update,
+            metadata: {
+              ...update.metadata,
+              user_name_snapshot: user.full_name || user.email,
+            },
+          }
+        }
+      } catch {
+        // Non-critical — continue without snapshot
+      }
+    }
+
     const { data, error } = await (getSupabase().from('item_updates') as any)
-      .insert(update)
+      .insert(enrichedUpdate)
       .select(
         `
         *,
@@ -402,6 +430,12 @@ export const activityService = {
    * Update a comment
    */
   async updateComment(commentId: string, content: string): Promise<ItemComment> {
+    // Fetch previous content and item info to log edit history
+    const { data: existing } = await (getSupabase().from('item_comments') as any)
+      .select('content, item_type, item_id, user_id')
+      .eq('id', commentId)
+      .single()
+
     const { data, error } = await (getSupabase().from('item_comments') as any)
       .update({
         content,
@@ -420,6 +454,20 @@ export const activityService = {
       .single()
 
     if (error) throw error
+
+    // Log the edit as an activity update with previous content preserved
+    if (existing) {
+      await this.createUpdate({
+        item_type: existing.item_type,
+        item_id: existing.item_id,
+        user_id: existing.user_id,
+        update_type: 'comment',
+        field_name: 'comment_edit',
+        old_value: existing.content?.substring(0, 200),
+        new_value: content.substring(0, 200),
+        metadata: { comment_id: commentId, action: 'edited' },
+      })
+    }
 
     const record = data as CommentRecord
     return {
@@ -516,7 +564,7 @@ export const activityService = {
    * Get all updates for items in a specific board
    * Includes resolved column names for proper display
    */
-  async getBoardUpdates(boardId: string, limit = 100): Promise<ItemUpdate[]> {
+  async getBoardUpdates(boardId: string, limit = 100, offset = 0): Promise<ItemUpdate[]> {
     // First, get board info and all board item IDs
     const { data: board, error: boardError } = await (getSupabase() as any)
       .from('boards')
@@ -572,7 +620,7 @@ export const activityService = {
       .in('item_id', boardItemIds)
       .eq('item_type', 'board_item')
       .order('created_at', { ascending: false })
-      .limit(limit)
+      .range(offset, offset + limit - 1)
 
     if (error) throw error
 
