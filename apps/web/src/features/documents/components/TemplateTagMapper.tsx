@@ -8,8 +8,14 @@ import type { DocumentTemplate } from '../types/document'
 const COMPUTED_FIELDS = [
   { value: '@computed:current_date', label: 'Current Date (Georgian)' },
   { value: '@computed:current_date_short', label: 'Current Date (Short)' },
+  { value: '@computed:current_date_iso', label: 'ISO Date (2026-03-30)' },
+  { value: '@computed:current_date_full', label: 'Full Date with Weekday' },
   { value: '@computed:current_year', label: 'Current Year' },
   { value: '@computed:current_month', label: 'Current Month' },
+  { value: '@computed:current_day', label: 'Day Number' },
+  { value: '@computed:item_name', label: 'Item Name' },
+  { value: '@computed:item_group', label: 'Item Group Name' },
+  { value: '@computed:generation_timestamp', label: 'Generation Date & Time' },
 ]
 
 interface TemplateTagMapperProps {

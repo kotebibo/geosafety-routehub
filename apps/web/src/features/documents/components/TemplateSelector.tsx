@@ -30,8 +30,9 @@ export function TemplateSelector({
       <div className="flex flex-col items-center justify-center py-12 text-center">
         <FileText className="w-12 h-12 text-text-tertiary mb-3" />
         <p className="text-text-secondary font-medium">No templates available</p>
-        <p className="text-sm text-text-tertiary mt-1">
-          An admin needs to upload document templates first.
+        <p className="text-sm text-text-tertiary mt-1 max-w-sm">
+          An admin needs to upload document templates first. Go to the board menu, open &quot;Manage
+          Templates&quot;, and upload a .docx file with {'{{tag}}'} placeholders.
         </p>
       </div>
     )

@@ -34,6 +34,29 @@ function resolveComputedField(fieldName: string, itemData: Record<string, any>):
     case 'current_month': {
       return new Date().toLocaleDateString('ka-GE', { month: 'long' })
     }
+    case 'current_date_iso': {
+      return new Date().toISOString().split('T')[0]
+    }
+    case 'current_day': {
+      return new Date().getDate().toString()
+    }
+    case 'current_date_full': {
+      return new Date().toLocaleDateString('ka-GE', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    }
+    case 'item_name': {
+      return itemData._item_name || ''
+    }
+    case 'item_group': {
+      return itemData._item_group || ''
+    }
+    case 'generation_timestamp': {
+      return new Date().toLocaleString('ka-GE')
+    }
     default:
       return ''
   }
@@ -81,9 +104,16 @@ export async function POST(request: NextRequest) {
     const mergeData: Record<string, any> = {}
     const tagMapping = template.tag_mapping as Record<string, string>
 
+    // Make item-level fields available to computed field resolver
+    const enrichedItemData = {
+      ...item.data,
+      _item_name: item.name || '',
+      _item_group: '', // could be populated from groups if needed
+    }
+
     for (const [tag, source] of Object.entries(tagMapping)) {
       if (source.startsWith('@computed:')) {
-        mergeData[tag] = resolveComputedField(source, item.data || {})
+        mergeData[tag] = resolveComputedField(source, enrichedItemData)
       } else {
         // source is a column_id — get value from item data
         const column = columns?.find((c: any) => c.column_id === source)

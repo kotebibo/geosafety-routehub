@@ -272,9 +272,25 @@ export function TemplateManagementModal({
                     </>
                   )}
                 </button>
-                <p className="text-xs text-text-tertiary mt-1">
-                  Use {'{{tag_name}}'} placeholders in your document for dynamic content.
-                </p>
+                <div className="mt-3 p-3 rounded-lg bg-bg-secondary border border-border-light">
+                  <p className="text-sm font-medium text-text-primary mb-2">
+                    How to create a template:
+                  </p>
+                  <ol className="text-xs text-text-secondary space-y-1.5 list-decimal list-inside">
+                    <li>Create a .docx file in Word or Google Docs</li>
+                    <li>
+                      Add placeholders using double curly braces:{' '}
+                      <code className="px-1 py-0.5 rounded bg-bg-tertiary text-text-primary font-mono">
+                        {'{{tag_name}}'}
+                      </code>
+                    </li>
+                    <li>Upload the file here, then map each tag to a board column</li>
+                  </ol>
+                  <p className="text-xs text-text-tertiary mt-2">
+                    Example: &quot;Company: {'{{company_name}}'}, Date: {'{{date}}'}, Amount:{' '}
+                    {'{{amount}}'}&quot;
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2">

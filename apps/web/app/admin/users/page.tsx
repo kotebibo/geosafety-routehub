@@ -26,6 +26,8 @@ import {
   Phone,
   Calendar,
   RefreshCw,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -47,6 +49,19 @@ export default function UserManagementPage() {
     phone: string
     role: string
   }>({ full_name: '', phone: '', role: '' })
+
+  // Create user state
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [createForm, setCreateForm] = useState({
+    email: '',
+    full_name: '',
+    phone: '',
+    password: '',
+    role: '',
+  })
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
+  const [showCreatePassword, setShowCreatePassword] = useState(false)
 
   // Action menu state
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
@@ -182,6 +197,35 @@ export default function UserManagementPage() {
     }
   }
 
+  async function handleCreateUser(e: React.FormEvent) {
+    e.preventDefault()
+    setCreateError('')
+    setCreating(true)
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createForm),
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to create user')
+      }
+
+      // Success - reset form, close panel, refresh list
+      setCreateForm({ email: '', full_name: '', phone: '', password: '', role: '' })
+      setShowCreateForm(false)
+      setShowCreatePassword(false)
+      await fetchData()
+    } catch (error: any) {
+      setCreateError(error.message || 'Failed to create user')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   function getRoleColor(roleName?: string): string {
     const role = roles.find(r => r.name === roleName)
     return role?.color || '#6b7280'
@@ -225,6 +269,16 @@ export default function UserManagementPage() {
                 Manage Roles
               </button>
               <button
+                onClick={() => {
+                  setShowCreateForm(!showCreateForm)
+                  setCreateError('')
+                }}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+              >
+                <Plus className="w-4 h-4" />
+                Create User
+              </button>
+              <button
                 onClick={fetchData}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-monday-primary rounded-lg hover:bg-monday-primary-hover"
               >
@@ -237,6 +291,144 @@ export default function UserManagementPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Create User Form */}
+        {showCreateForm && (
+          <div className="bg-bg-primary rounded-lg border border-border-light p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-text-primary">Create New User</h2>
+              <button
+                onClick={() => {
+                  setShowCreateForm(false)
+                  setCreateError('')
+                }}
+                className="p-1.5 text-text-tertiary hover:text-text-primary hover:bg-bg-hover rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {createError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
+                {createError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateUser}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={createForm.email}
+                    onChange={e => setCreateForm({ ...createForm, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                    placeholder="user@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Full Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={createForm.full_name}
+                    onChange={e => setCreateForm({ ...createForm, full_name: e.target.value })}
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Phone
+                  </label>
+                  <input
+                    type="text"
+                    value={createForm.phone}
+                    onChange={e => setCreateForm({ ...createForm, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                    placeholder="+995 ..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    Password <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showCreatePassword ? 'text' : 'password'}
+                      required
+                      minLength={6}
+                      value={createForm.password}
+                      onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
+                      className="w-full px-3 py-2 pr-10 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                      placeholder="Min 6 characters"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCreatePassword(!showCreatePassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-text-tertiary hover:text-text-secondary"
+                    >
+                      {showCreatePassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">Role</label>
+                  <select
+                    value={createForm.role}
+                    onChange={e => setCreateForm({ ...createForm, role: e.target.value })}
+                    className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                  >
+                    <option value="">No Role</option>
+                    {roles.map(role => (
+                      <option key={role.name} value={role.name}>
+                        {role.display_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 mt-4">
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-monday-primary rounded-lg hover:bg-monday-primary-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creating ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4" />
+                  )}
+                  {creating ? 'Creating...' : 'Create User'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCreateForm(false)
+                    setCreateError('')
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-bg-primary rounded-lg border border-border-light p-4">
