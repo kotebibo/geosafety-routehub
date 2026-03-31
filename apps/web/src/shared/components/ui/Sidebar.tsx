@@ -148,6 +148,20 @@ function SortableBoardLink({
     disabled: !canReorder,
   })
 
+  const wasDraggingRef = React.useRef(false)
+
+  React.useEffect(() => {
+    if (isDragging) {
+      wasDraggingRef.current = true
+    } else if (wasDraggingRef.current) {
+      // Keep the flag for a tick so the click event on Link is blocked
+      const timer = setTimeout(() => {
+        wasDraggingRef.current = false
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [isDragging])
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -159,6 +173,10 @@ function SortableBoardLink({
     <div ref={setNodeRef} style={style} className="relative group">
       <Link
         href={`/boards/${board.id}`}
+        onClick={e => {
+          if (wasDraggingRef.current) e.preventDefault()
+        }}
+        draggable={false}
         className={cn(
           'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all',
           'hover:bg-bg-hover',
