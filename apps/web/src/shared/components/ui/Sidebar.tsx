@@ -11,6 +11,7 @@ import { useInspectorId } from '@/hooks/useInspectorId'
 import { useUserBoards } from '@/features/boards/hooks'
 import { userBoardsService } from '@/features/boards/services/user-boards.service'
 import { useQueryClient } from '@tanstack/react-query'
+import { queryKeys } from '@/lib/react-query'
 import { CreateWorkspaceModal } from '@/features/workspaces/components'
 import { useWorkspaces, useDeleteWorkspace, useUpdateWorkspace } from '@/features/workspaces/hooks'
 import { WORKSPACE_ROLE_PERMISSIONS } from '@/types/workspace'
@@ -46,7 +47,23 @@ import {
   MapPinned,
   Globe,
   Search,
+  GripVertical,
 } from 'lucide-react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { NotificationBell } from '@/shared/components/notifications'
 import { useAnnouncements } from '@/hooks/useAnnouncements'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -105,6 +122,84 @@ interface WorkspaceMenuState {
   position: { top: number; left: number }
 }
 
+// Sortable board link for drag-and-drop reordering
+function SortableBoardLink({
+  board,
+  currentBoardId,
+  getBoardColor,
+  openMenu,
+  canReorder,
+}: {
+  board: any
+  currentBoardId: string | null
+  getBoardColor: (color?: string) => string
+  openMenu: (
+    e: React.MouseEvent,
+    id: string,
+    name: string,
+    color?: string,
+    fav?: boolean,
+    archived?: boolean
+  ) => void
+  canReorder: boolean
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: board.id,
+    disabled: !canReorder,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group">
+      <Link
+        href={`/boards/${board.id}`}
+        className={cn(
+          'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all',
+          'hover:bg-bg-hover',
+          currentBoardId === board.id ? 'bg-bg-selected text-monday-primary' : 'text-text-primary'
+        )}
+      >
+        {canReorder && (
+          <button
+            className="opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-0.5 -ml-1 flex-shrink-0 touch-none"
+            {...attributes}
+            {...listeners}
+            onClick={e => e.preventDefault()}
+          >
+            <GripVertical className="w-3.5 h-3.5 text-text-tertiary" />
+          </button>
+        )}
+        <div
+          className={cn(
+            'w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
+            getBoardColor(board.color)
+          )}
+        >
+          {board.name.charAt(0).toUpperCase()}
+        </div>
+        <span className="flex-1 truncate">{board.name}</span>
+        {board.settings?.is_favorite && (
+          <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+        )}
+        <button
+          className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
+          onClick={e =>
+            openMenu(e, board.id, board.name, board.color, board.settings?.is_favorite, false)
+          }
+        >
+          <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
+        </button>
+      </Link>
+    </div>
+  )
+}
+
 export function Sidebar({ className, onMobileClose }: SidebarProps) {
   const [collapsed, setCollapsed] = React.useState(() => {
     if (typeof window !== 'undefined') {
@@ -157,6 +252,11 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
   const renameInputRef = React.useRef<HTMLInputElement>(null)
   const workspaceMenuRef = React.useRef<HTMLDivElement>(null)
   const workspaceRenameInputRef = React.useRef<HTMLInputElement>(null)
+
+  // Drag-and-drop sensors for board reordering
+  const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+
+  const isAdmin = userRole?.role === 'admin'
 
   // Only fetch data after auth is complete to avoid race condition
   // where query fires before JWT token is available
@@ -274,6 +374,41 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     if (selectedWorkspaceId) return boardsByWorkspace.get(selectedWorkspaceId) || []
     return []
   }, [selectedWorkspaceId, boardsByWorkspace, sharedBoards])
+
+  const handleBoardDragEnd = React.useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+
+      const boards = selectedWorkspaceBoards.filter((b: any) => !b.settings?.is_archived)
+      const oldIndex = boards.findIndex((b: any) => b.id === active.id)
+      const newIndex = boards.findIndex((b: any) => b.id === over.id)
+      if (oldIndex === -1 || newIndex === -1) return
+
+      const reordered = arrayMove(boards, oldIndex, newIndex)
+      const updates = reordered.map((b: any, i: number) => ({ id: b.id, position: i }))
+
+      // Optimistic update
+      queryClient.setQueryData(
+        [...queryKeys.routes.all, 'user-boards', userId],
+        (old: any[] | undefined) => {
+          if (!old) return old
+          const posMap = new Map(updates.map(u => [u.id, u.position]))
+          return old.map((b: any) => (posMap.has(b.id) ? { ...b, position: posMap.get(b.id) } : b))
+        }
+      )
+
+      try {
+        await userBoardsService.reorderBoards(updates)
+      } catch (error) {
+        console.error('Failed to reorder boards:', error)
+        queryClient.invalidateQueries({
+          queryKey: [...queryKeys.routes.all, 'user-boards', userId],
+        })
+      }
+    },
+    [selectedWorkspaceBoards, queryClient, userId]
+  )
 
   const selectedWorkspace = selectedWorkspaceId
     ? allWorkspaceContexts.get(selectedWorkspaceId)
@@ -1027,47 +1162,27 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                         return (
                           <div className="space-y-0.5">
                             {activeBoards.length > 0 ? (
-                              activeBoards.map((board: any) => (
-                                <Link
-                                  key={board.id}
-                                  href={`/boards/${board.id}`}
-                                  className={cn(
-                                    'flex items-center gap-2 px-2.5 py-1.5 rounded-md text-sm transition-all group',
-                                    'hover:bg-bg-hover',
-                                    currentBoardId === board.id
-                                      ? 'bg-bg-selected text-monday-primary'
-                                      : 'text-text-primary'
-                                  )}
+                              <DndContext
+                                sensors={dndSensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleBoardDragEnd}
+                              >
+                                <SortableContext
+                                  items={activeBoards.map((b: any) => b.id)}
+                                  strategy={verticalListSortingStrategy}
                                 >
-                                  <div
-                                    className={cn(
-                                      'w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
-                                      getBoardColor(board.color)
-                                    )}
-                                  >
-                                    {board.name.charAt(0).toUpperCase()}
-                                  </div>
-                                  <span className="flex-1 truncate">{board.name}</span>
-                                  {board.settings?.is_favorite && (
-                                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500 flex-shrink-0" />
-                                  )}
-                                  <button
-                                    className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-bg-hover rounded transition-opacity flex-shrink-0"
-                                    onClick={e =>
-                                      openMenu(
-                                        e,
-                                        board.id,
-                                        board.name,
-                                        board.color,
-                                        board.settings?.is_favorite,
-                                        false
-                                      )
-                                    }
-                                  >
-                                    <MoreHorizontal className="w-3.5 h-3.5 text-text-tertiary" />
-                                  </button>
-                                </Link>
-                              ))
+                                  {activeBoards.map((board: any) => (
+                                    <SortableBoardLink
+                                      key={board.id}
+                                      board={board}
+                                      currentBoardId={currentBoardId}
+                                      getBoardColor={getBoardColor}
+                                      openMenu={openMenu}
+                                      canReorder={isAdmin}
+                                    />
+                                  ))}
+                                </SortableContext>
+                              </DndContext>
                             ) : (
                               <div className="px-2.5 py-3 text-xs text-text-tertiary text-center">
                                 No boards in this workspace

@@ -11,6 +11,7 @@ export const boardCrudService = {
     const { data, error } = await (getSupabase() as any)
       .from('boards')
       .select('*, workspace:workspaces(id, name, icon, color)')
+      .order('position', { ascending: true })
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -69,6 +70,15 @@ export const boardCrudService = {
 
     if (error) throw error
     return data
+  },
+
+  async reorderBoards(updates: Array<{ id: string; position: number }>): Promise<void> {
+    const promises = updates.map(({ id, position }) =>
+      (getSupabase() as any).from('boards').update({ position }).eq('id', id)
+    )
+    const results = await Promise.all(promises)
+    const error = results.find((r: any) => r.error)?.error
+    if (error) throw error
   },
 
   async deleteBoard(boardId: string): Promise<void> {

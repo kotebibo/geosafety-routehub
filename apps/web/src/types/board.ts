@@ -43,6 +43,7 @@ export interface Board {
   is_template: boolean
   is_public: boolean
   folder_id?: string
+  position?: number
   settings: BoardSettings
   created_at: string
   updated_at: string
