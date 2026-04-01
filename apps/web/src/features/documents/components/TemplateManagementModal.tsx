@@ -162,7 +162,8 @@ export function TemplateManagementModal({
                   <FileText className="w-12 h-12 text-text-tertiary mb-3" />
                   <p className="text-text-secondary font-medium">No templates yet</p>
                   <p className="text-sm text-text-tertiary mt-1">
-                    Upload a .docx file with {'{{tag}}'} placeholders to get started.
+                    Upload a .docx, .xlsx, or .xls file with {'{{tag}}'} placeholders to get
+                    started.
                   </p>
                 </div>
               ) : (
@@ -250,7 +251,7 @@ export function TemplateManagementModal({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept=".docx"
+                  accept=".docx,.xlsx,.xls"
                   onChange={e => setSelectedFile(e.target.files?.[0] || null)}
                   className="hidden"
                 />
@@ -267,7 +268,7 @@ export function TemplateManagementModal({
                     <>
                       <Upload className="w-5 h-5 text-text-tertiary" />
                       <span className="text-sm text-text-secondary">
-                        Click to select a .docx file
+                        Click to select a .docx, .xlsx, or .xls file
                       </span>
                     </>
                   )}
@@ -277,7 +278,7 @@ export function TemplateManagementModal({
                     How to create a template:
                   </p>
                   <ol className="text-xs text-text-secondary space-y-1.5 list-decimal list-inside">
-                    <li>Create a .docx file in Word or Google Docs</li>
+                    <li>Create a .docx, .xlsx, or .xls file in Word, Excel, or Google Docs</li>
                     <li>
                       Add placeholders using double curly braces:{' '}
                       <code className="px-1 py-0.5 rounded bg-bg-tertiary text-text-primary font-mono">
