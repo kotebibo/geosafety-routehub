@@ -60,5 +60,8 @@
     "**/*.{json,md,css}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
   }
 }

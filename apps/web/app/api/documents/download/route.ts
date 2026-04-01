@@ -36,10 +36,19 @@ export async function GET(request: NextRequest) {
 
     const buffer = Buffer.from(await fileData.arrayBuffer())
 
+    // Determine content type from file extension
+    const isXlsx = doc.file_name.match(/\.xlsx$/i)
+    const isXls = doc.file_name.match(/\.xls$/i) && !isXlsx
+    const contentType = isXlsx
+      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      : isXls
+        ? 'application/vnd.ms-excel'
+        : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
     // Serve as binary download
     return new NextResponse(buffer, {
       headers: {
-        'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="${doc.file_name}"`,
         'Content-Length': buffer.length.toString(),
       },

@@ -7,6 +7,7 @@ import { z } from 'zod'
 import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
 import mammoth from 'mammoth'
+import ExcelJS from 'exceljs'
 
 const generateSchema = z.object({
   templateId: z.string().uuid(),
@@ -62,6 +63,195 @@ function resolveComputedField(fieldName: string, itemData: Record<string, any>):
   }
 }
 
+function buildMergeData(
+  tagMapping: Record<string, string>,
+  item: any,
+  columns: any[],
+  enrichedItemData: Record<string, any>
+): Record<string, any> {
+  const mergeData: Record<string, any> = {}
+
+  for (const [tag, source] of Object.entries(tagMapping)) {
+    if (source.startsWith('@computed:')) {
+      mergeData[tag] = resolveComputedField(source, enrichedItemData)
+    } else {
+      // source is a column_id — get value from item data
+      const column = columns?.find((c: any) => c.column_id === source)
+      let value = item.data?.[source]
+
+      // Format value based on column type
+      if (column && value !== undefined && value !== null) {
+        switch (column.column_type) {
+          case 'date':
+            value = new Date(value).toLocaleDateString('ka-GE')
+            break
+          case 'number':
+            value = typeof value === 'number' ? value.toString() : value
+            break
+          case 'status':
+            if (typeof value === 'object' && value?.label) {
+              value = value.label
+            }
+            break
+          case 'person':
+            if (typeof value === 'object' && value?.name) {
+              value = value.name
+            }
+            break
+        }
+      }
+
+      // Also try item.name for the 'name' field
+      if (source === 'name') {
+        value = item.name
+      }
+
+      mergeData[tag] = value ?? ''
+    }
+  }
+
+  return mergeData
+}
+
+function generateDocx(templateBuffer: ArrayBuffer, mergeData: Record<string, any>): Buffer {
+  const zip = new PizZip(templateBuffer)
+  const doc = new Docxtemplater(zip, {
+    delimiters: { start: '{{', end: '}}' },
+    paragraphLoop: true,
+    linebreaks: true,
+    nullGetter: () => '',
+    parser: (tag: string) => ({
+      get: (scope: Record<string, any>) => {
+        const trimmed = tag.trim()
+        return scope[trimmed] !== undefined ? scope[trimmed] : ''
+      },
+    }),
+  })
+
+  doc.render(mergeData)
+
+  return doc.getZip().generate({
+    type: 'nodebuffer',
+    compression: 'DEFLATE',
+    mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  })
+}
+
+async function generateDocxPreview(buffer: Buffer): Promise<string> {
+  try {
+    const result = await mammoth.convertToHtml({ buffer })
+    return result.value
+  } catch {
+    return '<p>Preview not available</p>'
+  }
+}
+
+async function generateXlsx(
+  templateBuffer: Buffer,
+  mergeData: Record<string, any>
+): Promise<Buffer> {
+  const workbook = new ExcelJS.Workbook()
+  await workbook.xlsx.load(templateBuffer as any)
+
+  const tagRegex = /\{\{([^}]+)\}\}/g
+
+  workbook.eachSheet(sheet => {
+    sheet.eachRow(row => {
+      row.eachCell(cell => {
+        try {
+          // Handle rich text cells
+          if (cell.value && typeof cell.value === 'object' && 'richText' in cell.value) {
+            const richText = (cell.value as ExcelJS.CellRichTextValue).richText
+            let hasTag = false
+            for (const part of richText) {
+              if (typeof part.text === 'string' && tagRegex.test(part.text)) {
+                hasTag = true
+                part.text = part.text.replace(tagRegex, (_match, tagName) => {
+                  const trimmed = tagName.trim()
+                  return mergeData[trimmed] !== undefined ? String(mergeData[trimmed]) : ''
+                })
+              }
+            }
+            if (hasTag) {
+              // If all rich text parts now form a simple string, flatten to plain value
+              const fullText = richText.map(p => p.text).join('')
+              // Check if it's a number after replacement
+              const num = Number(fullText)
+              if (fullText && !isNaN(num) && fullText.trim() !== '') {
+                cell.value = num
+              }
+            }
+            return
+          }
+
+          const text = cell.text || (typeof cell.value === 'string' ? cell.value : '')
+          if (!text || !tagRegex.test(text)) return
+
+          // Reset regex lastIndex
+          tagRegex.lastIndex = 0
+
+          const replaced = text.replace(tagRegex, (_match, tagName) => {
+            const trimmed = tagName.trim()
+            return mergeData[trimmed] !== undefined ? String(mergeData[trimmed]) : ''
+          })
+
+          // If the entire cell was a single tag and the result is numeric, store as number
+          if (typeof cell.value === 'string' && cell.value.match(/^\{\{[^}]+\}\}$/)) {
+            const num = Number(replaced)
+            if (!isNaN(num) && replaced.trim() !== '') {
+              cell.value = num
+              return
+            }
+          }
+
+          cell.value = replaced
+        } catch {
+          // Skip cells that can't be processed (e.g. merged cells with null values)
+        }
+      })
+    })
+  })
+
+  const outputBuffer = await workbook.xlsx.writeBuffer()
+  return Buffer.from(outputBuffer)
+}
+
+async function generateXlsxPreviewAsync(buffer: Buffer): Promise<string> {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    await workbook.xlsx.load(buffer as any)
+
+    let html = '<div style="font-family: sans-serif; font-size: 13px;">'
+
+    workbook.eachSheet(sheet => {
+      html += `<h3 style="margin: 16px 0 8px;">${sheet.name}</h3>`
+      html += '<table style="border-collapse: collapse; width: 100%;">'
+
+      sheet.eachRow(row => {
+        html += '<tr>'
+        row.eachCell({ includeEmpty: true }, cell => {
+          let value = ''
+          try {
+            value = cell.text || ''
+          } catch {
+            value = String(cell.value ?? '')
+          }
+          const style = 'border: 1px solid #ddd; padding: 4px 8px; font-size: 12px;'
+          html += `<td style="${style}">${value.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>`
+        })
+        html += '</tr>'
+      })
+
+      html += '</table>'
+    })
+
+    html += '</div>'
+    return html
+  } catch {
+    return '<p>Excel preview not available — download the file to view.</p>'
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await requireAuth()
@@ -101,55 +291,18 @@ export async function POST(request: NextRequest) {
     if (columnsError) throw columnsError
 
     // Build merge data from tag mapping
-    const mergeData: Record<string, any> = {}
-    const tagMapping = template.tag_mapping as Record<string, string>
-
-    // Make item-level fields available to computed field resolver
     const enrichedItemData = {
       ...item.data,
       _item_name: item.name || '',
-      _item_group: '', // could be populated from groups if needed
+      _item_group: '',
     }
 
-    for (const [tag, source] of Object.entries(tagMapping)) {
-      if (source.startsWith('@computed:')) {
-        mergeData[tag] = resolveComputedField(source, enrichedItemData)
-      } else {
-        // source is a column_id — get value from item data
-        const column = columns?.find((c: any) => c.column_id === source)
-        let value = item.data?.[source]
-
-        // Format value based on column type
-        if (column && value !== undefined && value !== null) {
-          switch (column.column_type) {
-            case 'date':
-              value = new Date(value).toLocaleDateString('ka-GE')
-              break
-            case 'number':
-              value = typeof value === 'number' ? value.toString() : value
-              break
-            case 'status':
-              // Status values might be objects with label
-              if (typeof value === 'object' && value?.label) {
-                value = value.label
-              }
-              break
-            case 'person':
-              if (typeof value === 'object' && value?.name) {
-                value = value.name
-              }
-              break
-          }
-        }
-
-        // Also try item.name for the 'name' field
-        if (source === 'name') {
-          value = item.name
-        }
-
-        mergeData[tag] = value ?? ''
-      }
-    }
+    const mergeData = buildMergeData(
+      template.tag_mapping as Record<string, string>,
+      item,
+      columns || [],
+      enrichedItemData
+    )
 
     // Download template file from storage
     const { data: fileData, error: downloadError } = await supabase.storage
@@ -162,64 +315,60 @@ export async function POST(request: NextRequest) {
 
     const templateBuffer = await fileData.arrayBuffer()
 
-    // Apply merge tags with docxtemplater
-    const zip = new PizZip(templateBuffer)
-    const doc = new Docxtemplater(zip, {
-      delimiters: { start: '{{', end: '}}' },
-      paragraphLoop: true,
-      linebreaks: true,
-      // Return empty string for missing tags instead of crashing
-      nullGetter: () => '',
-      // Keep formatting from original XML runs
-      parser: (tag: string) => ({
-        get: (scope: Record<string, any>) => {
-          const trimmed = tag.trim()
-          return scope[trimmed] !== undefined ? scope[trimmed] : ''
-        },
-      }),
-    })
+    // Determine file type and generate accordingly
+    const isXlsx = template.file_name.match(/\.xlsx$/i)
+    const isXls = template.file_name.match(/\.xls$/i) && !isXlsx
+    const isExcel = isXlsx || isXls
 
-    doc.render(mergeData)
+    let generatedBuffer: Buffer
+    let previewHtml: string
+    let outputExt: string
+    let contentType: string
 
-    const generatedBuffer = doc.getZip().generate({
-      type: 'nodebuffer',
-      compression: 'DEFLATE',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    })
-
-    // Generate preview HTML using mammoth
-    let previewHtml = ''
-    try {
-      const mammothResult = await mammoth.convertToHtml({ buffer: generatedBuffer })
-      previewHtml = mammothResult.value
-    } catch (previewError) {
-      console.error('Preview generation failed:', previewError)
-      previewHtml = '<p>Preview not available</p>'
+    if (isXlsx) {
+      generatedBuffer = await generateXlsx(Buffer.from(templateBuffer), mergeData)
+      previewHtml = await generateXlsxPreviewAsync(generatedBuffer)
+      outputExt = '.xlsx'
+      contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    } else if (isXls) {
+      // .xls binary format — can't modify while preserving watermarks/formatting
+      // Serve the original template as-is for download
+      generatedBuffer = Buffer.from(templateBuffer)
+      previewHtml =
+        '<p style="padding: 20px; text-align: center; color: #666;">' +
+        'This is a .xls template — download it and fill in the fields manually in Excel.<br/>' +
+        '<small>For automatic field replacement, re-save the template as .xlsx format.</small></p>'
+      outputExt = '.xls'
+      contentType = 'application/vnd.ms-excel'
+    } else {
+      generatedBuffer = generateDocx(templateBuffer, mergeData)
+      previewHtml = await generateDocxPreview(generatedBuffer)
+      outputExt = '.docx'
+      contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     }
 
     // Upload generated document to storage
     const timestamp = Date.now()
-    // Sanitize file name to ASCII-safe characters (Supabase Storage rejects non-ASCII keys)
     const safeName =
       (item.name || 'item')
         .replace(/[^a-zA-Z0-9_-]/g, '_')
         .replace(/_+/g, '_')
         .replace(/^_|_$/g, '')
         .substring(0, 50) || 'item'
-    const outputFileName = `doc_${safeName}_${timestamp}.docx`
+    const outputFileName = `doc_${safeName}_${timestamp}${outputExt}`
     const outputPath = `generated-documents/${boardId}/${outputFileName}`
 
     const { error: uploadError } = await supabase.storage
       .from('attachments')
       .upload(outputPath, generatedBuffer, {
-        contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        contentType,
         upsert: false,
       })
 
     if (uploadError) throw uploadError
 
-    const templateBaseName = template.file_name.replace(/\.docx$/i, '')
-    const fileName = `${templateBaseName}_${safeName}.docx`
+    const templateBaseName = template.file_name.replace(/\.(docx|xlsx|xls)$/i, '')
+    const fileName = `${templateBaseName}_${safeName}${outputExt}`
 
     // Save record in generated_documents table
     const { data: generatedDoc, error: insertError } = await supabase
