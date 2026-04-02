@@ -200,10 +200,7 @@ export const boardAnalyticsService = {
 
   getGlobalKPIs: (companies: BoardRow[], locations: BoardRow[]): GlobalKPI => {
     const totalRevenue = companies.reduce((s, c) => s + (c.data?.act_amount || 0), 0)
-    const activeContracts = companies.filter(c => {
-      const end = c.data?.end_date
-      return !end || daysUntil(end)! > 0
-    }).length
+    const activeContracts = companies.length
     return {
       totalRevenue: Math.round(totalRevenue * 100) / 100,
       activeContracts,
