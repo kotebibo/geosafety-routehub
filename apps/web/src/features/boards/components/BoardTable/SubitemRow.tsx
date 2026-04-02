@@ -122,7 +122,7 @@ export const SubitemRow = memo(function SubitemRow({
         const colId = col.column_id
         const value =
           colId === 'status'
-            ? subitem.status
+            ? subitem.data?.status || subitem.status
             : colId === 'assigned_to' || colId === 'person'
               ? subitem.assigned_to
               : colId === 'due_date' || colId === 'date'
