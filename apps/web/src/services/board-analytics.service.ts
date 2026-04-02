@@ -7,15 +7,15 @@
  *   - შემაჯამებელი board: pre-aggregated inspector totals
  *
  * Column mappings from კომპანიები board:
- *   col_6  = service type (სტატუსი)
- *   col_7  = contract start date
- *   col_8  = contract end date
- *   col_13 = monthly amount (ყოველთვიური)
- *   col_16 = payment method (გადახდის წესი)
- *   col_17 = invoice amount
- *   col_20 = act amount (აქტების თანხა)
- *   col_21 = VAT (დღგ)
- *   col_28 = sales manager
+ *   status  = service type (სტატუსი)
+ *   start_date  = contract start date
+ *   end_date  = contract end date
+ *   monthly = monthly amount (ყოველთვიური)
+ *   payment_method = payment method (გადახდის წესი)
+ *   invoice_amount = invoice amount
+ *   act_amount = act amount (აქტების თანხა)
+ *   vat = VAT (დღგ)
+ *   sales_manager = sales manager
  */
 
 import { createClient } from '@/lib/supabase'
@@ -199,9 +199,9 @@ export const boardAnalyticsService = {
   // ── Global KPIs ──
 
   getGlobalKPIs: (companies: BoardRow[], locations: BoardRow[]): GlobalKPI => {
-    const totalRevenue = companies.reduce((s, c) => s + (c.data?.col_20 || 0), 0)
+    const totalRevenue = companies.reduce((s, c) => s + (c.data?.act_amount || 0), 0)
     const activeContracts = companies.filter(c => {
-      const end = c.data?.col_8
+      const end = c.data?.end_date
       return !end || daysUntil(end)! > 0
     }).length
     return {
@@ -218,9 +218,9 @@ export const boardAnalyticsService = {
   getServiceTypeRevenue: (companies: BoardRow[]): ServiceTypeRevenue[] => {
     const map: Record<string, { revenue: number; count: number }> = {}
     for (const c of companies) {
-      const st = formatServiceType(c.data?.col_6)
+      const st = formatServiceType(c.data?.status)
       if (!map[st]) map[st] = { revenue: 0, count: 0 }
-      map[st].revenue += c.data?.col_20 || 0
+      map[st].revenue += c.data?.act_amount || 0
       map[st].count++
     }
     const total = Object.values(map).reduce((s, v) => s + v.revenue, 0)
@@ -237,8 +237,8 @@ export const boardAnalyticsService = {
   getMonthlyTrend: (companies: BoardRow[]): MonthlyTrend[] => {
     const months: Record<string, { revenue: number; new_contracts: number }> = {}
     for (const c of companies) {
-      const start = c.data?.col_7
-      const amount = c.data?.col_20 || 0
+      const start = c.data?.start_date
+      const amount = c.data?.act_amount || 0
       if (!start) continue
       const month = start.slice(0, 7) // YYYY-MM
       if (!months[month]) months[month] = { revenue: 0, new_contracts: 0 }
@@ -257,7 +257,7 @@ export const boardAnalyticsService = {
   getPaymentMethodBreakdown: (companies: BoardRow[]): PaymentMethodBreakdown[] => {
     const map: Record<string, number> = {}
     for (const c of companies) {
-      const method = formatPaymentMethod(c.data?.col_16)
+      const method = formatPaymentMethod(c.data?.payment_method)
       map[method] = (map[method] || 0) + 1
     }
     return Object.entries(map)
@@ -269,9 +269,9 @@ export const boardAnalyticsService = {
     return companies
       .map(c => ({
         name: c.name,
-        amount: c.data?.col_20 || 0,
-        end_date: c.data?.col_8 || null,
-        days_until_expiry: daysUntil(c.data?.col_8),
+        amount: c.data?.act_amount || 0,
+        end_date: c.data?.end_date || null,
+        days_until_expiry: daysUntil(c.data?.end_date),
       }))
       .filter(c => c.amount > 0)
       .sort((a, b) => b.amount - a.amount)
@@ -328,17 +328,17 @@ export const boardAnalyticsService = {
     }
 
     return companies
-      .filter(c => c.data?.col_8)
+      .filter(c => c.data?.end_date)
       .map(c => {
-        const days = daysUntil(c.data.col_8)
+        const days = daysUntil(c.data.end_date)
         return {
           name: c.name,
-          inspector: inspectorByCompany[c.name] || c.data?.col_28 || 'უცნობი',
-          amount: c.data?.col_20 || 0,
-          end_date: c.data.col_8,
+          inspector: inspectorByCompany[c.name] || c.data?.sales_manager || 'უცნობი',
+          amount: c.data?.act_amount || 0,
+          end_date: c.data.end_date,
           days_remaining: days || 0,
-          payment_method: formatPaymentMethod(c.data?.col_16),
-          service_type: formatServiceType(c.data?.col_6),
+          payment_method: formatPaymentMethod(c.data?.payment_method),
+          service_type: formatServiceType(c.data?.status),
         }
       })
       .filter(c => c.days_remaining > -90) // Include recently expired + upcoming
@@ -350,7 +350,7 @@ export const boardAnalyticsService = {
     const months: Record<string, number> = {}
 
     for (const c of companies) {
-      const end = c.data?.col_8
+      const end = c.data?.end_date
       if (!end) continue
       const month = end.slice(0, 7)
       months[month] = (months[month] || 0) + 1
@@ -381,7 +381,7 @@ export const boardAnalyticsService = {
       '1000+': 0,
     }
     for (const c of companies) {
-      const amount = c.data?.col_20 || 0
+      const amount = c.data?.act_amount || 0
       if (amount <= 100) buckets['0-100']++
       else if (amount <= 300) buckets['100-300']++
       else if (amount <= 500) buckets['300-500']++
@@ -395,14 +395,14 @@ export const boardAnalyticsService = {
     return companies.map(c => ({
       name: c.name,
       locations: 0, // Filled in by caller if needed
-      inspector: c.data?.col_28 || '',
-      service_type: formatServiceType(c.data?.col_6),
-      monthly: c.data?.col_13 || 0,
-      invoice: c.data?.col_17 || 0,
-      vat: c.data?.col_21 || 0,
-      payment_method: formatPaymentMethod(c.data?.col_16),
-      start_date: c.data?.col_7 || null,
-      end_date: c.data?.col_8 || null,
+      inspector: c.data?.sales_manager || '',
+      service_type: formatServiceType(c.data?.status),
+      monthly: c.data?.monthly || 0,
+      invoice: c.data?.invoice_amount || 0,
+      vat: c.data?.vat || 0,
+      payment_method: formatPaymentMethod(c.data?.payment_method),
+      start_date: c.data?.start_date || null,
+      end_date: c.data?.end_date || null,
     }))
   },
 }
