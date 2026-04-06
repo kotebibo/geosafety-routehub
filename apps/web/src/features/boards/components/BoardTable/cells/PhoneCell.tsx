@@ -1,14 +1,16 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { cn } from '@/lib/utils'
 import { Phone } from 'lucide-react'
 import { HighlightText } from '@/shared/components/HighlightText'
 import { OverflowTooltip } from './OverflowTooltip'
+import { PhoneEntryPopup } from './PhoneEntryPopup'
+import type { PhoneEntry } from './PhoneEntryPopup'
 
 interface PhoneCellProps {
-  value?: string | null
-  onEdit?: (value: string) => void
+  value?: string | string[] | PhoneEntry[] | null
+  onEdit?: (value: PhoneEntry[]) => void
   readOnly?: boolean
   onEditStart?: () => void
   highlightQuery?: string
@@ -18,26 +20,67 @@ interface PhoneCellProps {
 function formatPhoneNumber(phone: string): string {
   if (!phone) return ''
 
-  // Remove all non-digits
   const digits = phone.replace(/\D/g, '')
 
-  // Georgian mobile format: 5XX XXX XXX
   if (digits.length === 9 && digits.startsWith('5')) {
     return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`
   }
 
-  // Georgian landline format: XXX XXX XXX
   if (digits.length === 9) {
     return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`
   }
 
-  // With country code +995
   if (digits.length === 12 && digits.startsWith('995')) {
     return `+995 ${digits.slice(3, 6)} ${digits.slice(6, 9)} ${digits.slice(9)}`
   }
 
-  // Return as is if format not recognized
   return phone
+}
+
+// Normalize any legacy format to PhoneEntry[]
+function normalizePhones(value: string | string[] | PhoneEntry[] | null | undefined): PhoneEntry[] {
+  if (!value) return []
+
+  // Already PhoneEntry[] — check first element has 'number' key
+  if (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    typeof value[0] === 'object' &&
+    'number' in value[0]
+  ) {
+    return value as PhoneEntry[]
+  }
+
+  // string[] — wrap each as PhoneEntry with empty name
+  if (Array.isArray(value)) {
+    return (value as string[]).filter(Boolean).map(v => ({ name: '', number: v }))
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return []
+    // Try parsing as JSON
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) {
+        if (parsed.length > 0 && typeof parsed[0] === 'object' && 'number' in parsed[0]) {
+          return parsed as PhoneEntry[]
+        }
+        return parsed.filter(Boolean).map((v: string) => ({ name: '', number: v }))
+      }
+    } catch {
+      // Not JSON
+    }
+    return [{ name: '', number: trimmed }]
+  }
+
+  return []
+}
+
+// Display label for a phone entry: "Name (formatted)" or just "formatted"
+function displayLabel(entry: PhoneEntry): string {
+  if (entry.name) return entry.name
+  return formatPhoneNumber(entry.number)
 }
 
 export function PhoneCell({
@@ -47,122 +90,102 @@ export function PhoneCell({
   onEditStart,
   highlightQuery,
 }: PhoneCellProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [editValue, setEditValue] = useState(value || '')
-  const inputRef = useRef<HTMLInputElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [isOpen, setIsOpen] = useState(false)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const phones = normalizePhones(value)
 
-  useEffect(() => {
-    setEditValue(value || '')
-  }, [value])
-
-  useEffect(() => {
-    if (isEditing && inputRef.current) {
-      inputRef.current.focus()
-      inputRef.current.select()
-    }
-  }, [isEditing])
-
-  useEffect(() => {
-    if (isEditing) {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-          handleSave()
-        }
-      }
-
-      document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [isEditing, editValue])
-
-  const handleSave = () => {
-    if (onEdit && editValue !== value) {
-      onEdit(editValue)
-    }
-    setIsEditing(false)
+  const handleOpen = () => {
+    if (readOnly) return
+    onEditStart?.()
+    setIsOpen(true)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSave()
-    } else if (e.key === 'Escape') {
-      setEditValue(value || '')
-      setIsEditing(false)
-    }
+  const handleSave = (entries: PhoneEntry[]) => {
+    onEdit?.(entries)
   }
 
-  if (readOnly && !value) {
+  const firstPhone = phones[0]
+  const firstDisplay = firstPhone ? displayLabel(firstPhone) : ''
+
+  if (readOnly && phones.length === 0) {
     return (
       <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">-</div>
     )
   }
 
-  if (readOnly && value) {
+  if (readOnly && firstPhone) {
     return (
       <div className="h-full min-h-[36px] flex items-center gap-2 px-3">
         <Phone className="w-4 h-4 text-blue-500 flex-shrink-0" />
         <a
-          href={`tel:${value}`}
+          href={`tel:${firstPhone.number}`}
           className="text-sm text-blue-500 hover:underline truncate"
           onClick={e => e.stopPropagation()}
+          title={
+            firstPhone.name
+              ? `${firstPhone.name}: ${formatPhoneNumber(firstPhone.number)}`
+              : undefined
+          }
         >
-          {formatPhoneNumber(value)}
+          {firstDisplay}
         </a>
-      </div>
-    )
-  }
-
-  if (isEditing) {
-    return (
-      <div ref={containerRef} className="h-full min-h-[36px] flex items-center px-2">
-        <input
-          ref={inputRef}
-          type="tel"
-          value={editValue}
-          onChange={e => setEditValue(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={handleSave}
-          placeholder="Enter phone..."
-          className="w-full h-7 px-2 text-sm border border-blue-500 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
+        {phones.length > 1 && (
+          <span className="text-xs text-text-tertiary bg-bg-secondary px-1.5 py-0.5 rounded-full flex-shrink-0">
+            +{phones.length - 1}
+          </span>
+        )}
       </div>
     )
   }
 
   return (
-    <div ref={containerRef} className="relative h-full min-h-[36px]">
+    <div className="relative h-full min-h-[36px]">
       <button
-        onClick={() => {
-          if (!readOnly) {
-            setIsEditing(true)
-            onEditStart?.()
-          }
-        }}
+        ref={buttonRef}
+        onClick={handleOpen}
         className={cn(
           'h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left',
           !readOnly && 'hover:bg-bg-hover cursor-pointer',
           readOnly && 'cursor-default'
         )}
       >
-        {value ? (
+        {firstPhone ? (
           <>
             <Phone className="w-4 h-4 text-blue-500 flex-shrink-0" />
             <OverflowTooltip
-              text={formatPhoneNumber(value)}
+              text={
+                firstPhone.name
+                  ? `${firstPhone.name}: ${formatPhoneNumber(firstPhone.number)}`
+                  : formatPhoneNumber(firstPhone.number)
+              }
               className="text-sm text-text-primary truncate block"
             >
               {highlightQuery ? (
-                <HighlightText text={formatPhoneNumber(value)} query={highlightQuery} />
+                <HighlightText text={firstDisplay} query={highlightQuery} />
               ) : (
-                formatPhoneNumber(value)
+                firstDisplay
               )}
             </OverflowTooltip>
+            {phones.length > 1 && (
+              <span className="text-xs text-text-tertiary bg-bg-secondary px-1.5 py-0.5 rounded-full flex-shrink-0">
+                +{phones.length - 1}
+              </span>
+            )}
           </>
         ) : (
           <span className="text-sm text-text-tertiary">Add phone...</span>
         )}
       </button>
+
+      {isOpen && (
+        <PhoneEntryPopup
+          entries={phones}
+          onSave={handleSave}
+          onClose={() => setIsOpen(false)}
+          triggerRef={buttonRef}
+          formatPhone={formatPhoneNumber}
+        />
+      )}
     </div>
   )
 }
