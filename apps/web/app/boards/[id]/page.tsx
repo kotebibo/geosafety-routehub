@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/react-query'
 import { useRealtimeBoard } from '@/features/boards/hooks'
@@ -12,33 +12,14 @@ import { useBoardHandlers } from '@/features/boards/hooks/useBoardHandlers'
 import { useBoardUndoRedo } from '@/features/boards/hooks/useBoardUndoRedo'
 import { useFilteredItems } from '@/features/boards/hooks/useFilteredItems'
 import { useGroupByColumn } from '@/features/boards/hooks/useGroupByColumn'
-import {
-  VirtualizedBoardTable,
-  ErrorBoundary,
-  BoardToolbar,
-  type SortConfig,
-  type FilterConfig,
-} from '@/features/boards/components'
+import { useBoardModals } from '@/features/boards/hooks/useBoardModals'
+import { useBoardViewTabState } from '@/features/boards/hooks/useBoardViewTabState'
+import { useBoardSubitemsState } from '@/features/boards/hooks/useBoardSubitemsState'
+import { VirtualizedBoardTable, ErrorBoundary, BoardToolbar } from '@/features/boards/components'
 import { BoardPageSkeleton } from '@/features/boards/components/BoardPageSkeleton'
 import { BoardPageHeader } from '@/features/boards/components/BoardPageHeader'
 import { ViewTabBar } from '@/features/boards/components/ViewTabBar'
-import {
-  useBoardViewTabs,
-  useCreateViewTab,
-  useUpdateViewTab,
-  useDeleteViewTab,
-  useDuplicateViewTab,
-} from '@/features/boards/hooks/useBoardViewTabs'
-import {
-  useBoardSubitems,
-  useBoardSubitemCounts,
-  useBoardSubitemColumns,
-  useCreateSubitem,
-  useUpdateSubitem,
-  useDeleteSubitem,
-  useEnsureSubitemColumns,
-} from '@/features/boards/hooks/useBoardSubitems'
-import type { ViewType, BoardViewTab, BoardSubitem } from '@/features/boards/types/board'
+import type { BoardItem } from '@/features/boards/types/board'
 import { Button } from '@/shared/components/ui'
 import { useToast } from '@/components/ui-monday/Toast'
 import {
@@ -51,7 +32,6 @@ import {
   ArrowRightLeft,
   FileText,
 } from 'lucide-react'
-import type { BoardItem } from '@/features/boards/types/board'
 
 // Lazy-load heavy components that aren't needed on initial render
 const ColumnConfigPanel = dynamic(
@@ -123,158 +103,20 @@ const TemplateManagementModal = dynamic(
 
 export default function BoardDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const { showToast } = useToast()
 
-  // View tabs
-  const { data: viewTabs, error: viewTabsError } = useBoardViewTabs(params.id)
-  if (viewTabsError) console.error('View tabs fetch error:', viewTabsError)
-  const createViewTab = useCreateViewTab(params.id)
-  const updateViewTab = useUpdateViewTab(params.id)
-  const deleteViewTab = useDeleteViewTab(params.id)
-  const duplicateViewTab = useDuplicateViewTab(params.id)
+  // ─── Modals ───
+  const { modals, openModal, closeModal, toggleModal } = useBoardModals()
 
-  // Determine active tab from URL or default
-  const viewParam = searchParams.get('view')
-  const activeTab =
-    viewTabs?.find(t => t.id === viewParam) ?? viewTabs?.find(t => t.is_default) ?? viewTabs?.[0]
-  const activeTabId = activeTab?.id ?? null
+  // ─── View tabs & toolbar state ───
+  const viewTabState = useBoardViewTabState(params.id)
 
-  // UI state
+  // ─── UI state (page-local) ───
   const [selection, setSelection] = useState<Set<string>>(new Set())
-  const [showColumnConfig, setShowColumnConfig] = useState(false)
-  const [showAddColumn, setShowAddColumn] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [showExportMenu, setShowExportMenu] = useState(false)
-  const [sortConfig, setSortConfig] = useState<SortConfig | null>(null)
-  const [groupByColumn, setGroupByColumn] = useState<string | null>(null)
-  const [filters, setFilters] = useState<FilterConfig[]>([])
-  const [showImportModal, setShowImportModal] = useState(false)
-  const [showActivityLog, setShowActivityLog] = useState(false)
-  const [showSaveAsTemplate, setShowSaveAsTemplate] = useState(false)
-  const [showAccessModal, setShowAccessModal] = useState(false)
-  const [showMoveModal, setShowMoveModal] = useState(false)
-  const [showGenerateDoc, setShowGenerateDoc] = useState(false)
-  const [showDocTemplates, setShowDocTemplates] = useState(false)
 
-  // Sync local toolbar state from active tab
-  const prevTabIdRef = useRef<string | null>(null)
-  useEffect(() => {
-    if (activeTab && activeTab.id !== prevTabIdRef.current) {
-      setSortConfig(activeTab.sort_config ?? null)
-      setFilters(activeTab.filters ?? [])
-      setGroupByColumn(activeTab.group_by_column ?? null)
-      prevTabIdRef.current = activeTab.id
-    }
-  }, [activeTab])
-
-  // Debounced save-back: persist toolbar state changes to active tab
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const saveTabState = useCallback(
-    (updates: Partial<Pick<BoardViewTab, 'sort_config' | 'filters' | 'group_by_column'>>) => {
-      if (!activeTabId) return
-      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
-      saveTimeoutRef.current = setTimeout(() => {
-        updateViewTab.mutate({ tabId: activeTabId, updates })
-      }, 1000)
-    },
-    [activeTabId, updateViewTab]
-  )
-
-  // Wrap toolbar setters to also persist
-  const handleSortChange = useCallback(
-    (config: SortConfig | null) => {
-      setSortConfig(config)
-      saveTabState({ sort_config: config })
-    },
-    [saveTabState]
-  )
-
-  const handleFiltersChange = useCallback(
-    (newFilters: FilterConfig[]) => {
-      setFilters(newFilters)
-      saveTabState({ filters: newFilters })
-    },
-    [saveTabState]
-  )
-
-  const handleGroupByChange = useCallback(
-    (columnId: string | null) => {
-      setGroupByColumn(columnId)
-      saveTabState({ group_by_column: columnId })
-    },
-    [saveTabState]
-  )
-
-  // Tab actions
-  const handleTabChange = useCallback(
-    (tabId: string) => {
-      router.replace(`/boards/${params.id}?view=${tabId}`, { scroll: false })
-    },
-    [router, params.id]
-  )
-
-  const handleCreateTab = useCallback(
-    (viewType: ViewType, name: string) => {
-      const nextPosition = viewTabs?.length ?? 0
-      createViewTab.mutate(
-        { view_name: name, view_type: viewType, position: nextPosition },
-        {
-          onSuccess: newTab => {
-            router.replace(`/boards/${params.id}?view=${newTab.id}`, { scroll: false })
-          },
-          onError: err => {
-            console.error('Failed to create view tab:', err)
-            showToast('Failed to create view tab', 'error')
-          },
-        }
-      )
-    },
-    [viewTabs, createViewTab, router, params.id, showToast]
-  )
-
-  const handleDeleteTab = useCallback(
-    (tabId: string) => {
-      const tab = viewTabs?.find(t => t.id === tabId)
-      if (tab?.is_default) return
-      deleteViewTab.mutate(tabId, {
-        onSuccess: () => {
-          // Switch to default tab after deletion
-          const defaultTab = viewTabs?.find(t => t.is_default)
-          if (defaultTab && tabId === activeTabId) {
-            router.replace(`/boards/${params.id}?view=${defaultTab.id}`, { scroll: false })
-          }
-        },
-      })
-    },
-    [viewTabs, deleteViewTab, activeTabId, router, params.id]
-  )
-
-  const handleRenameTab = useCallback(
-    (tabId: string, name: string) => {
-      updateViewTab.mutate({ tabId, updates: { view_name: name } })
-    },
-    [updateViewTab]
-  )
-
-  const handleDuplicateTab = useCallback(
-    (tabId: string) => {
-      const tab = viewTabs?.find(t => t.id === tabId)
-      if (!tab) return
-      duplicateViewTab.mutate(
-        { tabId, newName: `${tab.view_name} (copy)` },
-        {
-          onSuccess: newTab => {
-            router.replace(`/boards/${params.id}?view=${newTab.id}`, { scroll: false })
-          },
-        }
-      )
-    },
-    [viewTabs, duplicateViewTab, router, params.id]
-  )
-
-  // Data
+  // ─── Data ───
   const data = useBoardPageData(params.id)
   const {
     user,
@@ -301,14 +143,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     fetchLookups,
   } = data
 
-  // Activity log (deferred fetch)
+  // ─── Activity log (deferred fetch) ───
   const {
     data: activityUpdates,
     isLoading: activityLoading,
     refetch: refetchActivity,
-  } = useBoardUpdates(showActivityLog ? params.id : '')
+  } = useBoardUpdates(modals.activityLog ? params.id : '')
 
-  // Undo/redo
+  // ─── Undo/redo ───
   const {
     canUndo,
     canRedo,
@@ -322,7 +164,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     showToast,
   })
 
-  // Real-time collaboration
+  // ─── Real-time collaboration ───
   const { presence, isConnected, setEditing, publishItemChange } = useRealtimeBoard({
     boardId: params.id,
     boardType: board?.board_type || 'custom',
@@ -331,165 +173,26 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     enabled: !!board && !!inspectorId,
   })
 
-  // Filtered/sorted items
-  const filteredItems = useFilteredItems(items, searchQuery, filters, sortConfig)
+  // ─── Filtered/sorted items ───
+  const filteredItems = useFilteredItems(
+    items,
+    searchQuery,
+    viewTabState.filters,
+    viewTabState.sortConfig
+  )
 
-  // Dynamic grouping by column (when toolbar "Group by" is active)
+  // ─── Dynamic grouping ───
   const { groups: effectiveGroups, items: groupedItems } = useGroupByColumn(
-    groupByColumn,
+    viewTabState.groupByColumn,
     groups,
     filteredItems,
     columns
   )
 
-  // ─── Subitems state ───
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
+  // ─── Subitems ───
+  const subitems = useBoardSubitemsState(params.id, items, inspectorId)
 
-  // Subitem columns for this board
-  const { data: subitemColumns } = useBoardSubitemColumns(params.id)
-  const ensureSubitemColumns = useEnsureSubitemColumns(params.id)
-
-  // Get all item IDs for batch subitem count fetch
-  const allItemIds = (items || []).map(i => i.id)
-  const { data: subitemCounts } = useBoardSubitemCounts(
-    params.id,
-    allItemIds,
-    allItemIds.length > 0
-  )
-
-  // Track loaded subitems per expanded parent
-  const [subitemsByParent, setSubitemsByParent] = useState<Map<string, BoardSubitem[]>>(new Map())
-
-  // Subitem mutations (we create per-parent hooks on demand)
-  const createSubitem = useCreateSubitem(params.id)
-
-  const handleToggleExpandItem = useCallback(
-    (itemId: string) => {
-      setExpandedItems(prev => {
-        const next = new Set(prev)
-        if (next.has(itemId)) {
-          next.delete(itemId)
-        } else {
-          next.add(itemId)
-          // Ensure subitem columns exist when first expanding
-          if (!subitemColumns || subitemColumns.length === 0) {
-            ensureSubitemColumns.mutate()
-          }
-        }
-        return next
-      })
-    },
-    [subitemColumns, ensureSubitemColumns]
-  )
-
-  // Lazy-load subitems for expanded items
-  useEffect(() => {
-    if (expandedItems.size === 0) return
-
-    const loadSubitems = async () => {
-      const { boardSubitemsService } =
-        await import('@/features/boards/services/board-subitems.service')
-      const newMap = new Map(subitemsByParent)
-
-      for (const itemId of expandedItems) {
-        if (!newMap.has(itemId)) {
-          try {
-            const subs = await boardSubitemsService.getSubitems(itemId)
-            newMap.set(itemId, subs)
-          } catch {
-            newMap.set(itemId, [])
-          }
-        }
-      }
-
-      // Remove collapsed items from map
-      for (const key of newMap.keys()) {
-        if (!expandedItems.has(key)) {
-          newMap.delete(key)
-        }
-      }
-
-      setSubitemsByParent(newMap)
-    }
-
-    loadSubitems()
-  }, [expandedItems]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleAddSubitem = useCallback(
-    (parentItemId: string) => {
-      const currentSubs = subitemsByParent.get(parentItemId) || []
-      const nextPosition = currentSubs.length
-
-      createSubitem.mutate(
-        {
-          parent_item_id: parentItemId,
-          name: '',
-          position: nextPosition,
-          created_by: inspectorId || undefined,
-        },
-        {
-          onSuccess: newSubitem => {
-            setSubitemsByParent(prev => {
-              const next = new Map(prev)
-              const existing = next.get(parentItemId) || []
-              next.set(parentItemId, [...existing, newSubitem])
-              return next
-            })
-          },
-        }
-      )
-    },
-    [subitemsByParent, createSubitem, inspectorId]
-  )
-
-  const handleSubitemCellEdit = useCallback(
-    async (subitemId: string, field: string, value: any) => {
-      const { boardSubitemsService } =
-        await import('@/features/boards/services/board-subitems.service')
-      const updates = field === 'data' ? { data: value } : { [field]: value }
-      try {
-        const updated = await boardSubitemsService.updateSubitem(subitemId, updates as any)
-        // Update local state
-        setSubitemsByParent(prev => {
-          const next = new Map(prev)
-          for (const [parentId, subs] of next) {
-            const idx = subs.findIndex(s => s.id === subitemId)
-            if (idx >= 0) {
-              const newSubs = [...subs]
-              newSubs[idx] = updated
-              next.set(parentId, newSubs)
-              break
-            }
-          }
-          return next
-        })
-      } catch (err) {
-        console.error('Failed to update subitem:', err)
-      }
-    },
-    []
-  )
-
-  const handleDeleteSubitem = useCallback(async (subitemId: string, parentItemId: string) => {
-    const { boardSubitemsService } =
-      await import('@/features/boards/services/board-subitems.service')
-    try {
-      await boardSubitemsService.deleteSubitem(subitemId)
-      setSubitemsByParent(prev => {
-        const next = new Map(prev)
-        const subs = next.get(parentItemId) || []
-        next.set(
-          parentItemId,
-          subs.filter(s => s.id !== subitemId)
-        )
-        return next
-      })
-    } catch (err) {
-      console.error('Failed to delete subitem:', err)
-    }
-  }, [])
-
-  // All event handlers
+  // ─── All event handlers ───
   const handlers = useBoardHandlers({
     boardId: params.id,
     board,
@@ -507,20 +210,70 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     deleteGroup,
     refetchColumns,
     setSelection,
-    setShowAddColumn,
-    setShowExportMenu,
+    setShowAddColumn: (show: boolean) => (show ? openModal('addColumn') : closeModal('addColumn')),
+    setShowExportMenu: (show: boolean) =>
+      show ? openModal('exportMenu') : closeModal('exportMenu'),
     pushAction,
     publishItemChange,
     fetchLookups,
     showToast,
   })
 
-  // Loading state
+  // ─── Activity rollback handler ───
+  const handleActivityRollback = useCallback(
+    async (update: any) => {
+      if (!update.field_name) {
+        showToast('Cannot rollback: no field name', 'error')
+        return
+      }
+      if (update.old_value === undefined || update.old_value === null) {
+        showToast('Cannot rollback: no previous value', 'error')
+        return
+      }
+
+      try {
+        const item = items?.find(i => i.id === update.item_id)
+        if (!item) {
+          showToast('Cannot rollback: item not found', 'error')
+          return
+        }
+
+        let oldValue: any = update.old_value
+        try {
+          oldValue = JSON.parse(update.old_value)
+        } catch {
+          /* keep as string */
+        }
+
+        if (update.field_name === 'name') {
+          await updateItem.mutateAsync({ itemId: update.item_id, updates: { name: oldValue } })
+        } else {
+          await updateItem.mutateAsync({
+            itemId: update.item_id,
+            updates: { data: { ...item.data, [update.field_name]: oldValue } },
+          })
+        }
+
+        showToast('Change rolled back successfully', 'success')
+        await queryClient.refetchQueries({
+          queryKey: [...queryKeys.routes.all, 'board-items', params.id],
+          type: 'active',
+        })
+        refetchActivity()
+      } catch (error) {
+        console.error('Failed to rollback:', error)
+        showToast('Failed to rollback change', 'error')
+      }
+    },
+    [items, updateItem, queryClient, params.id, refetchActivity, showToast]
+  )
+
+  // ─── Loading state ───
   if (boardLoading || itemsLoading) {
     return <BoardPageSkeleton />
   }
 
-  // Not found
+  // ─── Not found ───
   if (!board) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -543,23 +296,23 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         board={board}
         presence={presence}
         isConnected={isConnected}
-        onShowActivityLog={() => setShowActivityLog(true)}
-        onShowSaveAsTemplate={() => setShowSaveAsTemplate(true)}
-        onShowAccessModal={() => setShowAccessModal(true)}
-        onShowColumnConfig={() => setShowColumnConfig(true)}
-        onShowDocTemplates={() => setShowDocTemplates(true)}
+        onShowActivityLog={() => openModal('activityLog')}
+        onShowSaveAsTemplate={() => openModal('saveAsTemplate')}
+        onShowAccessModal={() => openModal('accessModal')}
+        onShowColumnConfig={() => openModal('columnConfig')}
+        onShowDocTemplates={() => openModal('docTemplates')}
       />
 
       {/* View Tabs */}
-      {viewTabs && (
+      {viewTabState.viewTabs && (
         <ViewTabBar
-          tabs={viewTabs}
-          activeTabId={activeTabId}
-          onTabChange={handleTabChange}
-          onCreateTab={handleCreateTab}
-          onDeleteTab={handleDeleteTab}
-          onRenameTab={handleRenameTab}
-          onDuplicateTab={handleDuplicateTab}
+          tabs={viewTabState.viewTabs}
+          activeTabId={viewTabState.activeTabId}
+          onTabChange={viewTabState.onTabChange}
+          onCreateTab={viewTabState.onCreateTab}
+          onDeleteTab={viewTabState.onDeleteTab}
+          onRenameTab={viewTabState.onRenameTab}
+          onDuplicateTab={viewTabState.onDuplicateTab}
         />
       )}
 
@@ -572,11 +325,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 <span className="text-sm text-text-secondary font-medium">
                   {selection.size} selected
                 </span>
-                <Button variant="secondary" size="sm" onClick={() => setShowGenerateDoc(true)}>
+                <Button variant="secondary" size="sm" onClick={() => openModal('generateDoc')}>
                   <FileText className="w-4 h-4 mr-1" />
                   Generate Doc
                 </Button>
-                <Button variant="secondary" size="sm" onClick={() => setShowMoveModal(true)}>
+                <Button variant="secondary" size="sm" onClick={() => openModal('moveModal')}>
                   <ArrowRightLeft className="w-4 h-4 mr-1" />
                   Move
                 </Button>
@@ -611,36 +364,32 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               columns.length > 0 && (
                 <BoardToolbar
                   columns={columns}
-                  sortConfig={sortConfig}
-                  onSortChange={handleSortChange}
-                  groupByColumn={groupByColumn}
-                  onGroupByChange={handleGroupByChange}
-                  filters={filters}
-                  onFiltersChange={handleFiltersChange}
+                  sortConfig={viewTabState.sortConfig}
+                  onSortChange={viewTabState.onSortChange}
+                  groupByColumn={viewTabState.groupByColumn}
+                  onGroupByChange={viewTabState.onGroupByChange}
+                  filters={viewTabState.filters}
+                  onFiltersChange={viewTabState.onFiltersChange}
                 />
               )
             )}
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="secondary" size="sm" onClick={() => setShowImportModal(true)}>
+            <Button variant="secondary" size="sm" onClick={() => openModal('importModal')}>
               <Upload className="w-4 h-4 mr-2" />
               Import
             </Button>
 
             {/* Export Button */}
             <div className="relative">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setShowExportMenu(!showExportMenu)}
-              >
+              <Button variant="secondary" size="sm" onClick={() => toggleModal('exportMenu')}>
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
-              {showExportMenu && (
+              {modals.exportMenu && (
                 <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
+                  <div className="fixed inset-0 z-40" onClick={() => closeModal('exportMenu')} />
                   <div className="absolute right-0 top-full mt-1 w-44 bg-bg-primary rounded-lg shadow-lg border border-border-light z-50 py-1">
                     <button
                       onClick={() => handlers.handleExport('csv', filteredItems)}
@@ -677,7 +426,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         </div>
       </div>
 
-      {/* Table Area - no page scroll, table handles its own scrolling */}
+      {/* Table Area */}
       <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-6 py-4">
         {itemsError ? (
           <div className="flex flex-col items-center justify-center py-24 bg-bg-primary rounded-lg border border-border-light">
@@ -725,7 +474,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               onColumnResize={handlers.handleColumnResize}
               onColumnReorder={cols => handlers.handleTableColumnReorder(cols.map(c => c.id))}
               onQuickAddColumn={handlers.handleQuickAddColumn}
-              onOpenAddColumnModal={() => setShowAddColumn(true)}
+              onOpenAddColumnModal={() => openModal('addColumn')}
               onColumnRename={handlers.handleColumnRename}
               onColumnConfigUpdate={handlers.handleColumnConfigUpdate}
               onDeleteColumn={handlers.handleDeleteColumn}
@@ -734,22 +483,22 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               presence={presence}
               onCellEditStart={(itemId, columnId) => setEditing(itemId, columnId)}
               onCellEditEnd={() => setEditing(null)}
-              sortConfig={sortConfig}
-              onSortChange={handleSortChange}
-              expandedItems={expandedItems}
-              subitemCounts={subitemCounts}
-              subitemsByParent={subitemsByParent}
-              subitemColumns={subitemColumns}
-              onToggleExpandItem={handleToggleExpandItem}
-              onSubitemCellEdit={handleSubitemCellEdit}
-              onAddSubitem={handleAddSubitem}
-              onDeleteSubitem={handleDeleteSubitem}
+              sortConfig={viewTabState.sortConfig}
+              onSortChange={viewTabState.onSortChange}
+              expandedItems={subitems.expandedItems}
+              subitemCounts={subitems.subitemCounts}
+              subitemsByParent={subitems.subitemsByParent}
+              subitemColumns={subitems.subitemColumns}
+              onToggleExpandItem={subitems.onToggleExpandItem}
+              onSubitemCellEdit={subitems.onSubitemCellEdit}
+              onAddSubitem={subitems.onAddSubitem}
+              onDeleteSubitem={subitems.onDeleteSubitem}
             />
           </ErrorBoundary>
         ) : (
           <div className="flex flex-col items-center justify-center py-24 bg-bg-primary rounded-lg border border-border-light">
             <p className="text-text-secondary mb-4">No columns configured for this board yet</p>
-            <Button variant="secondary" onClick={() => setShowAddColumn(true)}>
+            <Button variant="secondary" onClick={() => openModal('addColumn')}>
               Configure Columns
             </Button>
           </div>
@@ -757,23 +506,23 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       </div>
 
       {/* Modals & Panels */}
-      {showColumnConfig && columns && (
+      {modals.columnConfig && columns && (
         <ColumnConfigPanel
           columns={columns}
-          onClose={() => setShowColumnConfig(false)}
+          onClose={() => closeModal('columnConfig')}
           onUpdateColumn={handlers.handleUpdateColumn}
           onReorderColumns={handlers.handleReorderColumns}
           onAddColumn={() => {
-            setShowColumnConfig(false)
-            setShowAddColumn(true)
+            closeModal('columnConfig')
+            openModal('addColumn')
           }}
           onDeleteColumn={handlers.handleDeleteColumn}
         />
       )}
 
-      {showAddColumn && (
+      {modals.addColumn && (
         <AddColumnModal
-          onClose={() => setShowAddColumn(false)}
+          onClose={() => closeModal('addColumn')}
           onAdd={handlers.handleAddColumn}
           existingColumns={columns || []}
         />
@@ -790,29 +539,29 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         />
       )}
 
-      {showImportModal && columns && (
+      {modals.importModal && columns && (
         <ImportBoardModal
           columns={columns}
           onImport={handlers.handleImportItems}
-          onClose={() => setShowImportModal(false)}
+          onClose={() => closeModal('importModal')}
           defaultGroupId={groups[0]?.id || 'default'}
         />
       )}
 
-      {showSaveAsTemplate && board && (
+      {modals.saveAsTemplate && board && (
         <SaveAsTemplateModal
-          isOpen={showSaveAsTemplate}
-          onClose={() => setShowSaveAsTemplate(false)}
+          isOpen={modals.saveAsTemplate}
+          onClose={() => closeModal('saveAsTemplate')}
           boardId={params.id}
           boardName={board.name}
           onSuccess={() => showToast('Board saved as template', 'success')}
         />
       )}
 
-      {showAccessModal && board && (
+      {modals.accessModal && board && (
         <BoardAccessModal
-          isOpen={showAccessModal}
-          onClose={() => setShowAccessModal(false)}
+          isOpen={modals.accessModal}
+          onClose={() => closeModal('accessModal')}
           boardId={params.id}
           boardName={board.name}
           ownerId={board.owner_id}
@@ -821,72 +570,29 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       )}
 
       <ActivityLogPanel
-        isOpen={showActivityLog}
-        onClose={() => setShowActivityLog(false)}
+        isOpen={modals.activityLog}
+        onClose={() => closeModal('activityLog')}
         updates={activityUpdates || []}
         isLoading={activityLoading}
         onRefresh={() => refetchActivity()}
         showRollback={true}
-        onRollback={async update => {
-          if (!update.field_name) {
-            showToast('Cannot rollback: no field name', 'error')
-            return
-          }
-          if (update.old_value === undefined || update.old_value === null) {
-            showToast('Cannot rollback: no previous value', 'error')
-            return
-          }
-
-          try {
-            const item = items?.find(i => i.id === update.item_id)
-            if (!item) {
-              showToast('Cannot rollback: item not found', 'error')
-              return
-            }
-
-            let oldValue: any = update.old_value
-            try {
-              oldValue = JSON.parse(update.old_value)
-            } catch {
-              /* keep as string */
-            }
-
-            if (update.field_name === 'name') {
-              await updateItem.mutateAsync({ itemId: update.item_id, updates: { name: oldValue } })
-            } else {
-              await updateItem.mutateAsync({
-                itemId: update.item_id,
-                updates: { data: { ...item.data, [update.field_name]: oldValue } },
-              })
-            }
-
-            showToast('Change rolled back successfully', 'success')
-            await queryClient.refetchQueries({
-              queryKey: [...queryKeys.routes.all, 'board-items', params.id],
-              type: 'active',
-            })
-            refetchActivity()
-          } catch (error) {
-            console.error('Failed to rollback:', error)
-            showToast('Failed to rollback change', 'error')
-          }
-        }}
+        onRollback={handleActivityRollback}
       />
 
-      {showGenerateDoc && selection.size > 0 && items && (
+      {modals.generateDoc && selection.size > 0 && items && (
         <GenerateDocumentModal
-          isOpen={showGenerateDoc}
-          onClose={() => setShowGenerateDoc(false)}
+          isOpen={modals.generateDoc}
+          onClose={() => closeModal('generateDoc')}
           boardId={params.id}
           items={items.filter(item => selection.has(item.id))}
           onSuccess={() => showToast('Document generated successfully', 'success')}
         />
       )}
 
-      {showDocTemplates && board && columns && (
+      {modals.docTemplates && board && columns && (
         <TemplateManagementModal
-          isOpen={showDocTemplates}
-          onClose={() => setShowDocTemplates(false)}
+          isOpen={modals.docTemplates}
+          onClose={() => closeModal('docTemplates')}
           boardId={params.id}
           workspaceId={board.workspace_id}
           columns={columns.map(c => ({
@@ -897,10 +603,10 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         />
       )}
 
-      {showMoveModal && selection.size > 0 && (
+      {modals.moveModal && selection.size > 0 && (
         <MoveItemModal
-          isOpen={showMoveModal}
-          onClose={() => setShowMoveModal(false)}
+          isOpen={modals.moveModal}
+          onClose={() => closeModal('moveModal')}
           itemIds={Array.from(selection)}
           sourceBoardId={params.id}
           onMoveComplete={(movedCount, failedCount) => {
