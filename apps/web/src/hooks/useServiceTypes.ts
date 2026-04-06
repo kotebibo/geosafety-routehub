@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase'
 
 export interface ServiceType {
@@ -13,42 +13,34 @@ export interface ServiceType {
   is_active: boolean
 }
 
+const SERVICE_TYPES_KEY = ['service-types'] as const
+
+async function fetchServiceTypes(): Promise<ServiceType[]> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('service_types')
+    .select('*')
+    .eq('is_active', true)
+    .order('name', { ascending: true })
+
+  if (error) throw error
+  return data || []
+}
+
 export function useServiceTypes() {
-  const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<Error | null>(null)
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    fetchServiceTypes()
-  }, [])
-
-  const fetchServiceTypes = async () => {
-    try {
-      setLoading(true)
-      const supabase = createClient()
-
-      const { data, error } = await supabase
-        .from('service_types')
-        .select('*')
-        .eq('is_active', true)
-        .order('name', { ascending: true })
-
-      if (error) throw error
-
-      setServiceTypes(data || [])
-      setError(null)
-    } catch (err) {
-      setError(err as Error)
-      console.error('Error fetching service types:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { data, isLoading, error } = useQuery({
+    queryKey: SERVICE_TYPES_KEY,
+    queryFn: fetchServiceTypes,
+    staleTime: 5 * 60 * 1000, // 5 min — this data barely changes
+    gcTime: 30 * 60 * 1000, // 30 min cache
+  })
 
   return {
-    serviceTypes,
-    loading,
-    error,
-    refresh: fetchServiceTypes,
+    serviceTypes: data ?? [],
+    loading: isLoading,
+    error: error as Error | null,
+    refresh: () => queryClient.invalidateQueries({ queryKey: SERVICE_TYPES_KEY }),
   }
 }
