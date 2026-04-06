@@ -1,15 +1,15 @@
 'use client'
 
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react'
+import React, { useState, useRef, useLayoutEffect, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useServiceTypes } from '@/hooks/useServiceTypes'
 import { ServiceTypePicker } from '../../ServiceTypePicker'
 import { cn } from '@/lib/utils'
-import { Shield, Flame, Leaf, Utensils, HardHat, Zap, Gauge } from 'lucide-react'
+import { Shield, HardHat, Utensils, Scale, Briefcase, Leaf } from 'lucide-react'
 
 interface ServiceTypeCellProps {
-  value?: string | null
-  onEdit?: (value: string | null) => void
+  value?: string | string[] | null
+  onEdit?: (value: string[]) => void
   readOnly?: boolean
   onEditStart?: () => void
 }
@@ -17,29 +17,43 @@ interface ServiceTypeCellProps {
 // Icon mapping for service types
 const SERVICE_ICONS: Record<string, React.ElementType> = {
   labor_safety: HardHat,
-  fire_safety: Flame,
-  environmental: Leaf,
+  labor_rights: Scale,
   food_safety: Utensils,
+  personal_data: Shield,
+  legal_outsource: Briefcase,
+  fire_safety: Shield,
+  environmental: Leaf,
   construction: HardHat,
-  electrical: Zap,
-  gas_safety: Gauge,
-  elevator: Gauge,
-  pressure_vessels: Gauge,
-  radiation: Shield,
 }
 
 // Color mapping for service types
 const SERVICE_COLORS: Record<string, string> = {
-  labor_safety: '#fdab3d',
+  labor_safety: '#00c875',
+  labor_rights: '#fdab3d',
+  food_safety: '#ff158a',
+  personal_data: '#a25ddc',
+  legal_outsource: '#5559df',
   fire_safety: '#e2445c',
   environmental: '#00c875',
-  food_safety: '#579bfc',
   construction: '#784bd1',
-  electrical: '#ffcb00',
-  gas_safety: '#ff642e',
-  elevator: '#a25ddc',
-  pressure_vessels: '#00d2d2',
-  radiation: '#bb3354',
+}
+
+// Normalize value to string array (backward compat)
+function normalizeServiceIds(value: string | string[] | null | undefined): string[] {
+  if (!value) return []
+  if (Array.isArray(value)) return value.filter(Boolean)
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return []
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) return parsed.filter(Boolean)
+    } catch {
+      // Not JSON
+    }
+    return [trimmed]
+  }
+  return []
 }
 
 export function ServiceTypeCell({
@@ -53,7 +67,8 @@ export function ServiceTypeCell({
   const containerRef = useRef<HTMLDivElement>(null)
   const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 })
 
-  const selectedType = serviceTypes?.find(t => t.id === value)
+  const selectedIds = normalizeServiceIds(value)
+  const selectedTypes = selectedIds.map(id => serviceTypes?.find(t => t.id === id)).filter(Boolean)
 
   const getIcon = (inspectorType?: string) => {
     return SERVICE_ICONS[inspectorType || ''] || Shield
@@ -67,7 +82,7 @@ export function ServiceTypeCell({
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect()
       const spaceBelow = window.innerHeight - rect.bottom
-      const pickerHeight = 350
+      const pickerHeight = 400
       setPickerPos({
         top: spaceBelow > pickerHeight ? rect.bottom + 2 : Math.max(8, rect.top - pickerHeight - 2),
         left: Math.min(rect.left, window.innerWidth - 308),
@@ -81,7 +96,7 @@ export function ServiceTypeCell({
     }
   }, [isEditing, updatePickerPosition])
 
-  // Close picker on scroll so it doesn't float away from the cell
+  // Close picker on scroll
   useEffect(() => {
     if (!isEditing) return
     const handleScroll = () => setIsEditing(false)
@@ -92,37 +107,23 @@ export function ServiceTypeCell({
     return () => scrollParent?.removeEventListener('scroll', handleScroll)
   }, [isEditing])
 
-  const handleChange = (newValue: string | null) => {
-    if (onEdit) {
-      onEdit(newValue)
-    }
+  const handleChange = (newIds: string[]) => {
+    onEdit?.(newIds)
+  }
+
+  const handleClose = () => {
     setIsEditing(false)
   }
 
-  if (readOnly && !value) {
+  if (readOnly && selectedTypes.length === 0) {
     return (
       <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">-</div>
     )
   }
 
-  if (readOnly && value && selectedType) {
-    const IconComponent = getIcon(selectedType.required_inspector_type)
-    const color = getColor(selectedType.required_inspector_type)
-    return (
-      <div className="h-full min-h-[36px] flex items-center gap-2 px-3">
-        <div
-          className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
-          style={{ backgroundColor: color }}
-        >
-          <IconComponent className="w-3 h-3 text-white" />
-        </div>
-        <span className="text-sm text-text-primary truncate">{selectedType.name}</span>
-      </div>
-    )
-  }
-
-  const IconComponent = selectedType ? getIcon(selectedType.required_inspector_type) : Shield
-  const color = selectedType ? getColor(selectedType.required_inspector_type) : '#579bfc'
+  const firstType = selectedTypes[0]
+  const firstIcon = firstType ? getIcon(firstType.required_inspector_type) : Shield
+  const firstColor = firstType ? getColor(firstType.required_inspector_type) : '#579bfc'
 
   return (
     <div ref={containerRef} className="relative h-full min-h-[36px]">
@@ -139,15 +140,22 @@ export function ServiceTypeCell({
           readOnly && 'cursor-default'
         )}
       >
-        {value && selectedType ? (
+        {selectedTypes.length > 0 ? (
           <>
             <div
               className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center"
-              style={{ backgroundColor: color }}
+              style={{ backgroundColor: firstColor }}
             >
-              <IconComponent className="w-3 h-3 text-white" />
+              {React.createElement(firstIcon, { className: 'w-3 h-3 text-white' })}
             </div>
-            <span className="text-sm text-text-primary truncate">{selectedType.name}</span>
+            <span className="text-sm text-text-primary truncate">
+              {firstType?.name_ka || firstType?.name}
+            </span>
+            {selectedTypes.length > 1 && (
+              <span className="text-xs text-text-tertiary bg-bg-secondary px-1.5 py-0.5 rounded-full flex-shrink-0">
+                +{selectedTypes.length - 1}
+              </span>
+            )}
           </>
         ) : (
           <span className="text-sm text-text-tertiary">Select service...</span>
@@ -158,11 +166,11 @@ export function ServiceTypeCell({
         !readOnly &&
         createPortal(
           <>
-            <div className="fixed inset-0 z-[9998]" onClick={() => setIsEditing(false)} />
+            <div className="fixed inset-0 z-[9998]" onClick={handleClose} />
             <ServiceTypePicker
-              value={value}
+              value={selectedIds}
               onChange={handleChange}
-              onClose={() => setIsEditing(false)}
+              onClose={handleClose}
               positionStyle={{ top: pickerPos.top, left: pickerPos.left }}
             />
           </>,
