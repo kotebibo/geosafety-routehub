@@ -3,55 +3,72 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { useServiceTypes } from '@/hooks/useServiceTypes'
 import { cn } from '@/lib/utils'
-import { Search, X, Shield, Flame, Leaf, Utensils, HardHat, Zap, Gauge } from 'lucide-react'
+import { Search, X, Check, Shield, HardHat, Utensils, Scale, Briefcase, Leaf } from 'lucide-react'
 
 interface ServiceTypePickerProps {
-  value?: string | null
-  onChange: (serviceTypeId: string | null) => void
+  value?: string[] | string | null
+  onChange: (serviceTypeIds: string[]) => void
   onClose: () => void
   placeholder?: string
-  /** Fixed position style when rendered via portal */
   positionStyle?: React.CSSProperties
 }
 
 // Icon mapping for service types
 const SERVICE_ICONS: Record<string, React.ElementType> = {
   labor_safety: HardHat,
-  fire_safety: Flame,
-  environmental: Leaf,
+  labor_rights: Scale,
   food_safety: Utensils,
+  personal_data: Shield,
+  legal_outsource: Briefcase,
+  // Legacy mappings
+  fire_safety: Shield,
+  environmental: Leaf,
   construction: HardHat,
-  electrical: Zap,
-  gas_safety: Gauge,
-  elevator: Gauge,
-  pressure_vessels: Gauge,
-  radiation: Shield,
 }
 
 // Color mapping for service types
 const SERVICE_COLORS: Record<string, string> = {
-  labor_safety: '#fdab3d',
+  labor_safety: '#00c875',
+  labor_rights: '#fdab3d',
+  food_safety: '#ff158a',
+  personal_data: '#a25ddc',
+  legal_outsource: '#5559df',
+  // Legacy mappings
   fire_safety: '#e2445c',
   environmental: '#00c875',
-  food_safety: '#579bfc',
+  food_safety_legacy: '#579bfc',
   construction: '#784bd1',
-  electrical: '#ffcb00',
-  gas_safety: '#ff642e',
-  elevator: '#a25ddc',
-  pressure_vessels: '#00d2d2',
-  radiation: '#bb3354',
+}
+
+// Normalize value to string array
+function normalizeValue(value: string[] | string | null | undefined): string[] {
+  if (!value) return []
+  if (Array.isArray(value)) return value.filter(Boolean)
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return []
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed)) return parsed.filter(Boolean)
+    } catch {
+      // Not JSON
+    }
+    return [trimmed]
+  }
+  return []
 }
 
 export function ServiceTypePicker({
   value,
   onChange,
   onClose,
-  placeholder = 'Search service types...',
+  placeholder = 'Search services...',
   positionStyle,
 }: ServiceTypePickerProps) {
   const [search, setSearch] = useState('')
   const { serviceTypes, loading } = useServiceTypes()
   const inputRef = useRef<HTMLInputElement>(null)
+  const selected = normalizeValue(value)
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -71,6 +88,14 @@ export function ServiceTypePicker({
 
   const getColor = (inspectorType?: string) => {
     return SERVICE_COLORS[inspectorType || ''] || '#579bfc'
+  }
+
+  const handleToggle = (typeId: string) => {
+    if (selected.includes(typeId)) {
+      onChange(selected.filter(id => id !== typeId))
+    } else {
+      onChange([...selected, typeId])
+    }
   }
 
   return (
@@ -96,18 +121,16 @@ export function ServiceTypePicker({
         </div>
       </div>
 
-      {/* Clear Selection */}
-      {value && (
-        <div className="px-2 py-1 border-b border-border-light">
+      {/* Selected count + clear */}
+      {selected.length > 0 && (
+        <div className="px-3 py-1.5 border-b border-border-light flex items-center justify-between">
+          <span className="text-xs text-text-secondary">{selected.length} selected</span>
           <button
-            onClick={() => {
-              onChange(null)
-              onClose()
-            }}
-            className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-text-secondary hover:bg-bg-hover rounded transition-colors"
+            onClick={() => onChange([])}
+            className="flex items-center gap-1 px-1.5 py-0.5 text-xs text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded transition-colors"
           >
-            <X className="w-4 h-4" />
-            <span>Clear selection</span>
+            <X className="w-3 h-3" />
+            Clear
           </button>
         </div>
       )}
@@ -127,51 +150,56 @@ export function ServiceTypePicker({
             {filteredTypes.map(type => {
               const IconComponent = getIcon(type.required_inspector_type)
               const color = getColor(type.required_inspector_type)
+              const isSelected = selected.includes(type.id)
               return (
                 <button
                   key={type.id}
-                  onClick={() => {
-                    onChange(type.id)
-                    onClose()
-                  }}
+                  onClick={() => handleToggle(type.id)}
                   className={cn(
                     'w-full flex items-center gap-3 px-3 py-2 text-sm hover:bg-bg-hover transition-colors',
-                    value === type.id && 'bg-bg-selected'
+                    isSelected && 'bg-bg-selected'
                   )}
                 >
+                  {/* Checkbox */}
+                  <div
+                    className={cn(
+                      'flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
+                      isSelected
+                        ? 'border-monday-primary bg-monday-primary'
+                        : 'border-border-light bg-bg-primary'
+                    )}
+                  >
+                    {isSelected && <Check className="w-3 h-3 text-white" />}
+                  </div>
+
                   {/* Service Icon */}
                   <div
-                    className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center"
+                    className="flex-shrink-0 w-7 h-7 rounded flex items-center justify-center"
                     style={{ backgroundColor: color }}
                   >
-                    <IconComponent className="w-4 h-4 text-white" />
+                    <IconComponent className="w-3.5 h-3.5 text-white" />
                   </div>
 
                   {/* Service Info */}
                   <div className="flex-1 text-left overflow-hidden">
-                    <div className="font-medium text-text-primary truncate">{type.name}</div>
-                    <div className="text-xs text-text-tertiary truncate">{type.name_ka}</div>
+                    <div className="font-medium text-text-primary truncate">{type.name_ka}</div>
+                    <div className="text-xs text-text-tertiary truncate">{type.name}</div>
                   </div>
-
-                  {/* Selected Indicator */}
-                  {value === type.id && (
-                    <svg
-                      className="w-5 h-5 text-monday-primary flex-shrink-0"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  )}
                 </button>
               )
             })}
           </div>
         )}
+      </div>
+
+      {/* Done button */}
+      <div className="p-2 border-t border-border-light">
+        <button
+          onClick={onClose}
+          className="w-full py-1.5 text-sm font-medium text-white bg-monday-primary rounded hover:bg-monday-primary-hover transition-colors"
+        >
+          Done
+        </button>
       </div>
     </div>
   )
