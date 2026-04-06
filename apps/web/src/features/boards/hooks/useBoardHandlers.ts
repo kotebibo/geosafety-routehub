@@ -379,6 +379,7 @@ export function useBoardHandlers({
           service_type: 'Service Type',
           checkbox: 'Checkbox',
           phone: 'Phone',
+          email: 'Email',
           files: 'Files',
           updates: 'Updates',
         }

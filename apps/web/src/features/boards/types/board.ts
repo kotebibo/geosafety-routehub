@@ -24,6 +24,7 @@ export type ColumnType =
   | 'service_type'
   | 'checkbox'
   | 'phone'
+  | 'email'
   | 'files'
   | 'updates'
 
