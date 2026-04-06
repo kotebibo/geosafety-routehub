@@ -247,7 +247,14 @@ export function useBoardHandlers({
       if (!board) return
 
       try {
-        const column_id = columnData.column_name.toLowerCase().replace(/\s+/g, '_')
+        let column_id = columnData.column_name.toLowerCase().replace(/\s+/g, '_')
+        // Ensure unique column_id by appending counter if collision exists
+        const baseId = column_id
+        let counter = 1
+        while (columns?.some(col => col.column_id === column_id)) {
+          counter++
+          column_id = `${baseId}_${counter}`
+        }
 
         await boardsService.createColumn({
           board_type: board.board_type,
@@ -392,7 +399,14 @@ export function useBoardHandlers({
           columnName = `${baseName} ${counter}`
         }
 
-        const column_id = columnName.toLowerCase().replace(/\s+/g, '_')
+        let column_id = columnName.toLowerCase().replace(/\s+/g, '_')
+        // Ensure unique column_id
+        const baseColumnId = column_id
+        let idCounter = 1
+        while (columns?.some(col => col.column_id === column_id)) {
+          idCounter++
+          column_id = `${baseColumnId}_${idCounter}`
+        }
 
         await boardsService.createColumn({
           board_type: board.board_type,
