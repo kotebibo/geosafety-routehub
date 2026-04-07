@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -8,6 +8,20 @@ import { createClient } from '@/lib/supabase'
 import { LogIn, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-bg-secondary">
+          <div className="animate-spin text-4xl">⚙️</div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
+  )
+}
+
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get('from') || '/'
