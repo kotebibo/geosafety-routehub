@@ -4,11 +4,11 @@
 import { createClient } from '@/lib/supabase'
 import type { BoardTemplate } from '@/types/board'
 
-const getSupabase = (): any => createClient()
+const getSupabase = () => createClient()
 
 export const boardTemplatesService = {
   async getTemplates(): Promise<BoardTemplate[]> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .select('*')
       .order('is_featured', { ascending: false })
@@ -19,7 +19,7 @@ export const boardTemplatesService = {
   },
 
   async getTemplatesByCategory(category: string): Promise<BoardTemplate[]> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .select('*')
       .eq('category', category)
@@ -30,7 +30,7 @@ export const boardTemplatesService = {
   },
 
   async getFeaturedTemplates(): Promise<BoardTemplate[]> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .select('*')
       .eq('is_featured', true)
@@ -41,7 +41,7 @@ export const boardTemplatesService = {
   },
 
   async getTemplate(templateId: string): Promise<BoardTemplate> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .select('*')
       .eq('id', templateId)

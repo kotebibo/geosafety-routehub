@@ -21,7 +21,7 @@ export default function BoardsPage() {
   // Only fetch boards after auth is complete to avoid race condition
   // where query fires before JWT token is available
   const { data: boards, isLoading: boardsLoading } = useUserBoards(
-    authLoading ? '' : (user?.id || '')
+    authLoading ? '' : user?.id || ''
   )
   const isLoading = authLoading || boardsLoading
 
@@ -66,7 +66,6 @@ export default function BoardsPage() {
     }
   }, [isCreateModalOpen])
 
-
   const handleBoardCreated = (boardId: string) => {
     // Navigate to the new board
     router.push(`/boards/${boardId}`)
@@ -105,18 +104,11 @@ export default function BoardsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-h1 font-bold text-text-primary mb-2">
-              My Boards
-            </h1>
-            <p className="text-text-secondary">
-              Create and manage your custom boards
-            </p>
+            <h1 className="text-h1 font-bold text-text-primary mb-2">My Boards</h1>
+            <p className="text-text-secondary">Create and manage your custom boards</p>
           </div>
 
-          <Button
-            variant="primary"
-            onClick={() => setIsCreateModalOpen(true)}
-          >
+          <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="w-5 h-5 mr-2" />
             Create Board
           </Button>
@@ -129,28 +121,24 @@ export default function BoardsPage() {
             <div className="w-24 h-24 rounded-full bg-bg-primary border-2 border-border-light flex items-center justify-center mb-6">
               <Plus className="w-12 h-12 text-text-tertiary" />
             </div>
-            <h2 className="text-h3 font-semibold text-text-primary mb-2">
-              No boards yet
-            </h2>
+            <h2 className="text-h3 font-semibold text-text-primary mb-2">No boards yet</h2>
             <p className="text-text-secondary text-center max-w-md mb-6">
-              Create your first board to start organizing your work. Choose from templates or build from scratch.
+              Create your first board to start organizing your work. Choose from templates or build
+              from scratch.
             </p>
-            <Button
-              variant="primary"
-              onClick={() => setIsCreateModalOpen(true)}
-            >
+            <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="w-5 h-5 mr-2" />
               Create Your First Board
             </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {boards?.map((board) => (
+            {boards?.map(board => (
               <BoardCard
                 key={board.id}
                 board={board}
                 onClick={() => handleBoardClick(board)}
-                colorClass={getBoardColorClass(board.color)}
+                colorClass={getBoardColorClass(board.color ?? undefined)}
                 isOwner={board.owner_id === user?.id}
                 onAccessClick={() => setAccessModalBoard(board)}
               />
@@ -180,30 +168,22 @@ export default function BoardsPage() {
         {boards && boards.length > 0 && (
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
-              <div className="text-3xl font-bold text-text-primary mb-1">
-                {boards.length}
-              </div>
-              <div className="text-text-secondary text-sm">
-                Total Boards
-              </div>
+              <div className="text-3xl font-bold text-text-primary mb-1">{boards.length}</div>
+              <div className="text-text-secondary text-sm">Total Boards</div>
             </div>
 
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">
                 {boards.filter(b => b.is_public).length}
               </div>
-              <div className="text-text-secondary text-sm">
-                Shared Boards
-              </div>
+              <div className="text-text-secondary text-sm">Shared Boards</div>
             </div>
 
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">
                 {boards.filter(b => b.owner_id === user?.id).length}
               </div>
-              <div className="text-text-secondary text-sm">
-                Boards You Own
-              </div>
+              <div className="text-text-secondary text-sm">Boards You Own</div>
             </div>
           </div>
         )}
@@ -225,7 +205,7 @@ export default function BoardsPage() {
           boardId={accessModalBoard.id}
           boardName={accessModalBoard.name}
           ownerId={accessModalBoard.owner_id}
-          workspaceId={accessModalBoard.workspace_id}
+          workspaceId={accessModalBoard.workspace_id ?? undefined}
         />
       )}
     </div>
@@ -269,7 +249,7 @@ function BoardCard({
           </h3>
 
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation()
               setShowMenu(!showMenu)
             }}
@@ -280,9 +260,7 @@ function BoardCard({
         </div>
 
         {board.description && (
-          <p className="text-sm text-text-tertiary line-clamp-2 mb-2">
-            {board.description}
-          </p>
+          <p className="text-sm text-text-tertiary line-clamp-2 mb-2">{board.description}</p>
         )}
 
         {/* Workspace & Owner Info */}
@@ -307,12 +285,12 @@ function BoardCard({
                 <span>Public</span>
               </div>
             )}
-            <span className="capitalize bg-bg-secondary px-1.5 py-0.5 rounded">{board.board_type}</span>
+            <span className="capitalize bg-bg-secondary px-1.5 py-0.5 rounded">
+              {board.board_type}
+            </span>
           </div>
 
-          <span>
-            {new Date(board.created_at).toLocaleDateString()}
-          </span>
+          <span>{new Date(board.created_at ?? '').toLocaleDateString()}</span>
         </div>
       </div>
 
@@ -320,7 +298,7 @@ function BoardCard({
       {showMenu && (
         <div
           className="absolute top-16 right-4 z-10 w-48 bg-bg-primary border border-border-light rounded-md shadow-monday-lg py-1"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           <button className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2">
             <ExternalLink className="w-4 h-4" />

@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase'
 
 // Helper to get supabase client with current auth state
 // IMPORTANT: Must be called inside functions, not at module level
-const getDb = (): any => createClient()
+const getDb = () => createClient()
 
 export const routesService = {
   getAll: async () => {
@@ -29,7 +29,8 @@ export const routesService = {
   getById: async (id: string) => {
     const { data, error } = await getDb()
       .from('routes')
-      .select(`
+      .select(
+        `
         *,
         route_stops (
           *,
@@ -41,7 +42,8 @@ export const routesService = {
             lng
           )
         )
-      `)
+      `
+      )
       .eq('id', id)
       .single()
 
@@ -52,7 +54,7 @@ export const routesService = {
   create: async (routeData: {
     name: string
     inspector_id: string
-    date: string  // Changed from scheduled_date
+    date: string // Changed from scheduled_date
     start_time: string
     stops: any[]
     total_distance: number
@@ -81,14 +83,12 @@ export const routesService = {
       const stops = routeData.stops.map((stop: any, index: number) => ({
         route_id: route.id,
         company_id: stop.company.id,
-        position: index + 1,  // Changed from stop_order
+        position: index + 1, // Changed from stop_order
         scheduled_arrival_time: routeData.start_time,
         status: 'pending',
       }))
 
-      const { error: stopsError } = await getDb()
-        .from('route_stops')
-        .insert(stops)
+      const { error: stopsError } = await getDb().from('route_stops').insert(stops)
 
       if (stopsError) throw stopsError
     }
@@ -109,10 +109,7 @@ export const routesService = {
   },
 
   delete: async (id: string) => {
-    const { error } = await getDb()
-      .from('routes')
-      .delete()
-      .eq('id', id)
+    const { error } = await getDb().from('routes').delete().eq('id', id)
 
     if (error) throw error
   },

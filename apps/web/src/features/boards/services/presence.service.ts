@@ -20,19 +20,21 @@ export const presenceService = {
     isEditing = false,
     editingItemId?: string
   ): Promise<void> {
-    const { error } = await (getSupabase().from('board_presence') as any).upsert(
-      {
-        user_id: userId,
-        board_type: boardType,
-        board_id: boardId || null,
-        last_seen: new Date().toISOString(),
-        is_editing: isEditing,
-        editing_item_id: editingItemId || null,
-      },
-      {
-        onConflict: 'user_id,board_type,board_id',
-      }
-    )
+    const { error } = await getSupabase()
+      .from('board_presence')
+      .upsert(
+        {
+          user_id: userId,
+          board_type: boardType,
+          board_id: boardId || '',
+          last_seen: new Date().toISOString(),
+          is_editing: isEditing,
+          editing_item_id: editingItemId || null,
+        },
+        {
+          onConflict: 'user_id,board_type,board_id',
+        }
+      )
 
     if (error) throw error
   },
@@ -41,7 +43,8 @@ export const presenceService = {
    * Get all users currently on a board
    */
   async getBoardPresence(boardType: BoardType, boardId?: string): Promise<BoardPresence[]> {
-    let query = (getSupabase().from('board_presence') as any)
+    let query = getSupabase()
+      .from('board_presence')
       .select(
         `
         *,
@@ -72,7 +75,8 @@ export const presenceService = {
    * Remove user presence (on logout/leave)
    */
   async removePresence(userId: string, boardType: BoardType, boardId?: string): Promise<void> {
-    let query = (getSupabase().from('board_presence') as any)
+    let query = getSupabase()
+      .from('board_presence')
       .delete()
       .eq('user_id', userId)
       .eq('board_type', boardType)
@@ -90,7 +94,8 @@ export const presenceService = {
    * Clean up stale presence records (older than 5 minutes)
    */
   async cleanupStalePresence(): Promise<void> {
-    const { error } = await (getSupabase().from('board_presence') as any)
+    const { error } = await getSupabase()
+      .from('board_presence')
       .delete()
       .lt('last_seen', new Date(Date.now() - 5 * 60 * 1000).toISOString())
 
@@ -110,7 +115,8 @@ export const presenceService = {
       filter += `,board_id=eq.${boardId}`
     }
 
-    return (getSupabase().channel(`presence:${boardType}:${boardId || 'all'}`) as any)
+    return getSupabase()
+      .channel(`presence:${boardType}:${boardId || 'all'}`)
       .on(
         'postgres_changes',
         {

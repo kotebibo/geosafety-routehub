@@ -171,7 +171,7 @@ export default function WorkspaceDetailPage() {
                   key={board.id}
                   board={board}
                   onClick={() => handleBoardClick(board)}
-                  colorClass={getBoardColorClass(board.color)}
+                  colorClass={getBoardColorClass(board.color ?? undefined)}
                   onArchive={() => handleArchiveBoard(board.id)}
                 />
               ))}
@@ -232,7 +232,7 @@ export default function WorkspaceDetailPage() {
                     key={board.id}
                     board={board}
                     onClick={() => handleBoardClick(board)}
-                    colorClass={getBoardColorClass(board.color)}
+                    colorClass={getBoardColorClass(board.color ?? undefined)}
                     isArchived
                     onRestore={() => handleRestoreBoard(board.id)}
                   />
@@ -319,7 +319,7 @@ function BoardCard({
             )}
           </div>
 
-          <span>{new Date(board.updated_at).toLocaleDateString()}</span>
+          <span>{new Date(board.updated_at ?? '').toLocaleDateString()}</span>
         </div>
       </div>
 

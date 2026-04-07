@@ -134,7 +134,7 @@ async function syncCheckoutToBoards(
         .from('board_items')
         .update({
           data: {
-            ...item.data,
+            ...(item.data as Record<string, any>),
             checkout_date: checkoutData.checked_out_at,
             checkout_coordinates: `${checkoutData.lat.toFixed(6)}, ${checkoutData.lng.toFixed(6)}`,
             duration_minutes: checkoutData.duration_minutes,
@@ -281,7 +281,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Already checked out
-    if (checkin.checked_out_at) {
+    if ((checkin as any).checked_out_at) {
       return NextResponse.json({ error: 'Already checked out' }, { status: 400 })
     }
 
@@ -302,12 +302,12 @@ export async function PATCH(request: NextRequest) {
     }
 
     // Calculate duration in minutes
-    const checkinTime = new Date(checkin.created_at).getTime()
+    const checkinTime = new Date(checkin.created_at!).getTime()
     const now = Date.now()
     const durationMinutes = Math.round((now - checkinTime) / 60000)
     const checkedOutAt = new Date(now).toISOString()
 
-    // Update the checkin
+    // Update the checkin (checked_out_at and checkout fields may not be in generated types yet)
     const { data: updated, error: updateError } = await supabase
       .from('location_checkins')
       .update({
@@ -316,7 +316,7 @@ export async function PATCH(request: NextRequest) {
         checkout_lng: validated.lng,
         checkout_accuracy: validated.accuracy || null,
         duration_minutes: durationMinutes,
-      })
+      } as any)
       .eq('id', validated.checkin_id)
       .select()
       .single()

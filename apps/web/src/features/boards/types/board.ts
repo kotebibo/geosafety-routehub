@@ -34,19 +34,20 @@ export type SortDirection = 'asc' | 'desc'
 export interface Board {
   id: string
   owner_id: string
-  workspace_id?: string
+  workspace_id: string | null
   board_type: BoardType
   name: string
-  name_ka?: string
-  description?: string
-  icon?: string
-  color?: string
+  name_ka: string | null
+  description: string | null
+  icon: string | null
+  color: string | null
   is_template: boolean
   is_public: boolean
-  folder_id?: string
+  folder_id: string | null
+  position: number | null
   settings: BoardSettings
-  created_at: string
-  updated_at: string
+  created_at: string | null
+  updated_at: string | null
 }
 
 export interface BoardSettings {
@@ -65,17 +66,20 @@ export interface BoardSettings {
 export interface BoardItem {
   id: string
   board_id: string
-  group_id?: string
+  group_id: string | null
   position: number
   data: Record<string, any> // Dynamic fields stored as JSONB
   name: string
   status: StatusType
-  assigned_to?: string
-  due_date?: string
+  assigned_to: string | null
+  due_date: string | null
   priority: number
-  created_by?: string
-  created_at: string
-  updated_at: string
+  created_by: string | null
+  deleted_at: string | null
+  original_board_id: string | null
+  move_metadata: Record<string, any> | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 // Board Group (for organizing items like Monday.com)
@@ -94,8 +98,8 @@ export interface BoardMember {
   board_id: string
   user_id: string
   role: 'owner' | 'editor' | 'viewer'
-  added_by?: string
-  added_at: string
+  added_by: string | null
+  added_at: string | null
   user?: {
     full_name: string
     email: string
@@ -107,17 +111,17 @@ export interface BoardMember {
 export interface BoardTemplate {
   id: string
   name: string
-  name_ka?: string
-  description?: string
+  name_ka: string | null
+  description: string | null
   board_type: BoardType
-  icon: string
-  color: string
-  category?: string
+  icon: string | null
+  color: string | null
+  category: string | null
   default_columns: BoardColumnConfig[]
   default_items: any[]
   is_featured: boolean
-  created_at: string
-  updated_at: string
+  created_at: string | null
+  updated_at: string | null
 }
 
 export interface BoardColumnConfig {
@@ -135,17 +139,18 @@ export type StatusType = 'working_on_it' | 'stuck' | 'done' | 'pending' | 'defau
 export interface BoardColumn {
   id: string
   board_type: BoardType
+  board_id: string | null
   column_id: string
   column_name: string
-  column_name_ka?: string
+  column_name_ka: string | null
   column_type: ColumnType
   is_visible: boolean
   is_pinned: boolean
   position: number
   width: number
   config: Record<string, any>
-  created_at?: string
-  updated_at?: string
+  created_at: string | null
+  updated_at: string | null
 }
 
 // View Tab Types
@@ -156,17 +161,17 @@ export interface BoardViewTab {
   id: string
   board_id: string
   view_name: string
-  view_name_ka?: string
+  view_name_ka: string | null
   view_type: ViewType
-  icon?: string
+  icon: string | null
   position: number
   is_default: boolean
-  filters: any[] // FilterConfig[] from BoardToolbar
-  sort_config: any | null // SortConfig from BoardToolbar
+  filters: BoardFilter[] | null
+  sort_config: SortConfig | null
   group_by_column: string | null
-  created_by?: string
-  created_at?: string
-  updated_at?: string
+  created_by: string | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 // Board Subitem (child row under a parent item)
@@ -178,11 +183,11 @@ export interface BoardSubitem {
   name: string
   data: Record<string, any>
   status: StatusType
-  assigned_to?: string
-  due_date?: string
-  created_by?: string
-  created_at?: string
-  updated_at?: string
+  assigned_to: string | null
+  due_date: string | null
+  created_by: string | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 // Board Subitem Column (column schema for subitems, shared per board)
@@ -191,14 +196,14 @@ export interface BoardSubitemColumn {
   board_id: string
   column_id: string
   column_name: string
-  column_name_ka?: string
+  column_name_ka: string | null
   column_type: ColumnType
   is_visible: boolean
   position: number
   width: number
   config: Record<string, any>
-  created_at?: string
-  updated_at?: string
+  created_at: string | null
+  updated_at: string | null
 }
 
 // Board View (Saved filters/sorts) - legacy per-user views
@@ -207,14 +212,14 @@ export interface BoardView {
   user_id: string
   board_type: BoardType
   view_name: string
-  view_name_ka?: string
-  filters: BoardFilter[]
-  sort_config: SortConfig
-  column_config: ColumnConfig[]
-  is_default: boolean
-  is_shared: boolean
-  created_at?: string
-  updated_at?: string
+  view_name_ka: string | null
+  filters: BoardFilter[] | null
+  sort_config: SortConfig | null
+  column_config: ColumnConfig[] | null
+  is_default: boolean | null
+  is_shared: boolean | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 // Filter Configuration

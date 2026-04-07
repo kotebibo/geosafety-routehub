@@ -6,7 +6,7 @@
 import { createClient } from '@/lib/supabase'
 
 // Get fresh client for each call to ensure auth state is current
-const getSupabase = (): any => createClient()
+const getSupabase = () => createClient()
 
 export interface User {
   id: string
@@ -80,9 +80,9 @@ export const usersService = {
     if (rolesError) throw rolesError
 
     // Merge users with their roles
-    const usersWithRoles = (users || []).map((user: User) => ({
+    const usersWithRoles = (users || []).map(user => ({
       ...user,
-      role: roles?.find((r: UserRole) => r.user_id === user.id) || null,
+      role: roles?.find(r => r.user_id === user.id) || null,
     }))
 
     return usersWithRoles as unknown as User[]
@@ -230,14 +230,14 @@ export const usersService = {
       .select('role_name, permission')
 
     // Merge roles with permissions
-    const rolesWithPermissions = (roles || []).map((role: CustomRole) => ({
+    const rolesWithPermissions = (roles || []).map(role => ({
       ...role,
       permissions: (rolePermissions || [])
-        .filter((rp: RolePermission) => rp.role_name === role.name)
-        .map((rp: RolePermission) => rp.permission),
+        .filter(rp => rp.role_name === role.name)
+        .map(rp => rp.permission),
     }))
 
-    return rolesWithPermissions as CustomRole[]
+    return rolesWithPermissions as unknown as CustomRole[]
   },
 
   /**
@@ -515,8 +515,8 @@ export const usersService = {
 
     return {
       total: users?.length || 0,
-      active: users?.filter((u: { is_active: boolean }) => u.is_active).length || 0,
-      inactive: users?.filter((u: { is_active: boolean }) => !u.is_active).length || 0,
+      active: users?.filter(u => u.is_active).length || 0,
+      inactive: users?.filter(u => !u.is_active).length || 0,
       byRole,
     }
   },

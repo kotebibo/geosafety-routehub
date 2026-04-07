@@ -2,13 +2,11 @@ import { createClient } from '@/lib/supabase'
 
 // Helper to get supabase client with current auth state
 // IMPORTANT: Must be called inside functions, not at module level
-const getDb = (): any => createClient()
+const getDb = () => createClient()
 
 export const inspectorsService = {
   getAll: async (includeInactive = true) => {
-    let query = getDb()
-      .from('inspectors')
-      .select('*')
+    let query = getDb().from('inspectors').select('*')
 
     if (!includeInactive) {
       query = query.eq('status', 'active')
@@ -32,11 +30,7 @@ export const inspectorsService = {
   },
 
   getById: async (id: string) => {
-    const { data, error } = await getDb()
-      .from('inspectors')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const { data, error } = await getDb().from('inspectors').select('*').eq('id', id).single()
 
     if (error) throw error
     return data
@@ -45,11 +39,13 @@ export const inspectorsService = {
   getWithAssignments: async (inspectorId: string) => {
     const { data, error } = await getDb()
       .from('company_services')
-      .select(`
+      .select(
+        `
         *,
         company:companies(id, name, address, lat, lng),
         service_type:service_types(id, name, name_ka)
-      `)
+      `
+      )
       .eq('assigned_inspector_id', inspectorId)
 
     if (error) throw error
@@ -63,11 +59,7 @@ export const inspectorsService = {
     specialty: string
     status: 'active'
   }) => {
-    const { data, error } = await getDb()
-      .from('inspectors')
-      .insert(inspectorData)
-      .select()
-      .single()
+    const { data, error } = await getDb().from('inspectors').insert(inspectorData).select().single()
 
     if (error) throw error
     return data
@@ -86,10 +78,7 @@ export const inspectorsService = {
   },
 
   delete: async (id: string) => {
-    const { error } = await getDb()
-      .from('inspectors')
-      .delete()
-      .eq('id', id)
+    const { error } = await getDb().from('inspectors').delete().eq('id', id)
 
     if (error) throw error
   },

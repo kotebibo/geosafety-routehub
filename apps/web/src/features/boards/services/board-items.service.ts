@@ -4,11 +4,11 @@
 import { createClient } from '@/lib/supabase'
 import type { BoardItem } from '@/types/board'
 
-const getSupabase = (): any => createClient()
+const getSupabase = () => createClient()
 
 export const boardItemsService = {
   async getBoardItems(boardId: string): Promise<BoardItem[]> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_items')
       .select('*')
       .eq('board_id', boardId)
@@ -16,43 +16,46 @@ export const boardItemsService = {
       .order('position', { ascending: true })
 
     if (error) throw error
-    return data || []
+    return (data || []) as BoardItem[]
   },
 
   async getBoardItem(itemId: string): Promise<BoardItem> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_items')
       .select('*')
       .eq('id', itemId)
       .single()
 
     if (error) throw error
-    return data
+    return data as BoardItem
   },
 
   async createBoardItem(
-    item: Omit<BoardItem, 'id' | 'created_at' | 'updated_at'>
+    item: Omit<
+      BoardItem,
+      'id' | 'created_at' | 'updated_at' | 'deleted_at' | 'original_board_id' | 'move_metadata'
+    >
   ): Promise<BoardItem> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_items')
-      .insert(item)
+      .insert(item as any)
       .select()
       .single()
 
     if (error) throw error
-    return data
+    return data as BoardItem
   },
 
   async updateBoardItem(itemId: string, updates: Partial<BoardItem>): Promise<BoardItem> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_items')
-      .update(updates)
+      .update(updates as any)
       .eq('id', itemId)
       .select()
       .single()
 
     if (error) throw error
-    return data
+    return data as BoardItem
   },
 
   async updateBoardItemField(itemId: string, fieldName: string, value: any): Promise<BoardItem> {
@@ -63,7 +66,7 @@ export const boardItemsService = {
 
   async deleteBoardItem(itemId: string): Promise<void> {
     // Soft delete: set deleted_at instead of actually removing the row
-    const { error } = await (getSupabase() as any)
+    const { error } = await getSupabase()
       .from('board_items')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', itemId)
@@ -88,7 +91,7 @@ export const boardItemsService = {
     const originalItem = await this.getBoardItem(itemId)
 
     const targetBoardId = options?.targetBoardId || originalItem.board_id
-    const { data: existingItems } = await (getSupabase() as any)
+    const { data: existingItems } = await getSupabase()
       .from('board_items')
       .select('position')
       .eq('board_id', targetBoardId)
@@ -126,7 +129,7 @@ export const boardItemsService = {
   },
 
   async searchBoardItems(boardId: string, query: string): Promise<BoardItem[]> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_items')
       .select('*')
       .eq('board_id', boardId)
@@ -136,11 +139,11 @@ export const boardItemsService = {
       .limit(50)
 
     if (error) throw error
-    return data || []
+    return (data || []) as BoardItem[]
   },
 
   async searchGlobal(query: string, maxPerBoard = 10, maxTotal = 100): Promise<any[]> {
-    const { data, error } = await (getSupabase() as any).rpc('search_board_items_global', {
+    const { data, error } = await getSupabase().rpc('search_board_items_global', {
       search_query: query,
       max_per_board: maxPerBoard,
       max_total: maxTotal,

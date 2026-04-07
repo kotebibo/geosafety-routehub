@@ -7,10 +7,10 @@ export interface ServiceType {
   id: string
   name: string
   name_ka: string
-  description?: string
-  required_inspector_type?: string
-  default_frequency_days?: number
-  is_active: boolean
+  description?: string | null
+  required_inspector_type?: string | null
+  default_frequency_days?: number | null
+  is_active: boolean | null
 }
 
 const SERVICE_TYPES_KEY = ['service-types'] as const

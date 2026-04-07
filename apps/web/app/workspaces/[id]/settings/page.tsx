@@ -562,7 +562,7 @@ export default function WorkspaceSettingsPage() {
                         <div className="font-medium text-text-primary">{board.name}</div>
                         <div className="text-xs text-text-tertiary">
                           {board.board_type} &middot; Updated{' '}
-                          {new Date(board.updated_at).toLocaleDateString()}
+                          {new Date(board.updated_at ?? '').toLocaleDateString()}
                         </div>
                       </div>
                     </div>

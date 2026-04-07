@@ -3,11 +3,11 @@
  * Manages the 5-phase onboarding process for new companies
  */
 
-import { createClient } from '@/lib/supabase';
-import { PDPCompliancePhase, PDPComplianceOverview } from '@/types/compliance';
+import { createClient } from '@/lib/supabase'
+import { PDPCompliancePhase, PDPComplianceOverview } from '@/types/compliance'
 
 // Helper to get supabase client with current auth state
-const getDb = (): any => createClient();
+const getDb = () => createClient()
 
 export const complianceService = {
   /**
@@ -18,14 +18,14 @@ export const complianceService = {
       .from('pdp_compliance_phases')
       .select('*')
       .eq('company_id', companyId)
-      .single();
-    
+      .single()
+
     if (error && error.code !== 'PGRST116') {
-      console.error('Error fetching compliance:', error);
-      return { data: null, error };
+      console.error('Error fetching compliance:', error)
+      return { data: null, error }
     }
-    
-    return { data: data as PDPCompliancePhase | null, error: null };
+
+    return { data: data as PDPCompliancePhase | null, error: null }
   },
 
   /**
@@ -34,50 +34,46 @@ export const complianceService = {
    * @param isNew - Whether company is new (needs 5 phases) or existing (already certified)
    * @param phaseDates - Optional planned dates for each phase
    */
-  async createCompliance(
-    companyId: string,
-    isNew: boolean,
-    phaseDates?: Record<number, string>
-  ) {
+  async createCompliance(companyId: string, isNew: boolean, phaseDates?: Record<number, string>) {
     const complianceData: any = {
       company_id: companyId,
       compliance_status: isNew ? 'new' : 'active',
-    };
+    }
 
     if (isNew && phaseDates) {
       // Set planned dates for new companies
       for (let i = 1; i <= 5; i++) {
         if (phaseDates[i]) {
-          complianceData[`phase_${i}_date`] = phaseDates[i];
+          complianceData[`phase_${i}_date`] = phaseDates[i]
         }
       }
     } else if (!isNew) {
       // Mark all phases as completed for existing companies
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split('T')[0]
       for (let i = 1; i <= 5; i++) {
-        complianceData[`phase_${i}_completed`] = true;
-        complianceData[`phase_${i}_date`] = today;
+        complianceData[`phase_${i}_completed`] = true
+        complianceData[`phase_${i}_date`] = today
       }
-      complianceData.certification_date = today;
-      complianceData.compliance_status = 'active';
-      
+      complianceData.certification_date = today
+      complianceData.compliance_status = 'active'
+
       // Set next checkup date (90 days from now)
-      const nextCheckup = new Date();
-      nextCheckup.setDate(nextCheckup.getDate() + 90);
-      complianceData.next_checkup_date = nextCheckup.toISOString().split('T')[0];
+      const nextCheckup = new Date()
+      nextCheckup.setDate(nextCheckup.getDate() + 90)
+      complianceData.next_checkup_date = nextCheckup.toISOString().split('T')[0]
     }
 
     const { data, error } = await getDb()
       .from('pdp_compliance_phases')
       .insert(complianceData)
       .select()
-      .single();
-    
+      .single()
+
     if (error) {
-      console.error('Error creating compliance:', error);
+      console.error('Error creating compliance:', error)
     }
-    
-    return { data: data as PDPCompliancePhase | null, error };
+
+    return { data: data as PDPCompliancePhase | null, error }
   },
 
   /**
@@ -88,34 +84,34 @@ export const complianceService = {
     phase: number,
     updates: { date?: string; completed?: boolean; notes?: string }
   ) {
-    const updateData: any = { updated_at: new Date().toISOString() };
-    
+    const updateData: any = { updated_at: new Date().toISOString() }
+
     if (updates.date !== undefined) {
-      updateData[`phase_${phase}_date`] = updates.date;
+      updateData[`phase_${phase}_date`] = updates.date
     }
     if (updates.completed !== undefined) {
-      updateData[`phase_${phase}_completed`] = updates.completed;
+      updateData[`phase_${phase}_completed`] = updates.completed
     }
     if (updates.notes !== undefined) {
-      updateData[`phase_${phase}_notes`] = updates.notes;
+      updateData[`phase_${phase}_notes`] = updates.notes
     }
 
     // Check if all phases are completed
-    const { data: current } = await this.getCompanyCompliance(companyId);
+    const { data: current } = await this.getCompanyCompliance(companyId)
     if (current && updates.completed) {
-      const allCompleted = [1, 2, 3, 4, 5].every(i => 
+      const allCompleted = [1, 2, 3, 4, 5].every(i =>
         i === phase ? true : current[`phase_${i}_completed` as keyof typeof current]
-      );
-      
+      )
+
       if (allCompleted) {
-        updateData.compliance_status = 'certified';
-        updateData.certification_date = new Date().toISOString().split('T')[0];
+        updateData.compliance_status = 'certified'
+        updateData.certification_date = new Date().toISOString().split('T')[0]
         // Set next checkup
-        const nextCheckup = new Date();
-        nextCheckup.setDate(nextCheckup.getDate() + 90);
-        updateData.next_checkup_date = nextCheckup.toISOString().split('T')[0];
+        const nextCheckup = new Date()
+        nextCheckup.setDate(nextCheckup.getDate() + 90)
+        updateData.next_checkup_date = nextCheckup.toISOString().split('T')[0]
       } else {
-        updateData.compliance_status = 'in_progress';
+        updateData.compliance_status = 'in_progress'
       }
     }
 
@@ -124,13 +120,13 @@ export const complianceService = {
       .update(updateData)
       .eq('company_id', companyId)
       .select()
-      .single();
-    
+      .single()
+
     if (error) {
-      console.error('Error updating phase:', error);
+      console.error('Error updating phase:', error)
     }
-    
-    return { data: data as PDPCompliancePhase | null, error };
+
+    return { data: data as PDPCompliancePhase | null, error }
   },
 
   /**
@@ -143,10 +139,10 @@ export const complianceService = {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('Error fetching all compliance:', error);
+      console.error('Error fetching all compliance:', error)
     }
-    
-    return { data: data as PDPComplianceOverview[] | null, error };
+
+    return { data: data as PDPComplianceOverview[] | null, error }
   },
 
   /**
@@ -160,19 +156,19 @@ export const complianceService = {
       .order('created_at', { ascending: true })
 
     if (error) {
-      console.error('Error fetching pending phases:', error);
+      console.error('Error fetching pending phases:', error)
     }
-    
-    return { data: data as PDPComplianceOverview[] | null, error };
+
+    return { data: data as PDPComplianceOverview[] | null, error }
   },
 
   /**
    * Get companies with upcoming checkups
    */
   async getUpcomingCheckups(daysAhead: number = 30) {
-    const futureDate = new Date();
-    futureDate.setDate(futureDate.getDate() + daysAhead);
-    
+    const futureDate = new Date()
+    futureDate.setDate(futureDate.getDate() + daysAhead)
+
     const { data, error } = await getDb()
       .from('pdp_compliance_overview')
       .select('*')
@@ -181,10 +177,10 @@ export const complianceService = {
       .order('next_checkup_date', { ascending: true })
 
     if (error) {
-      console.error('Error fetching upcoming checkups:', error);
+      console.error('Error fetching upcoming checkups:', error)
     }
-    
-    return { data: data as PDPComplianceOverview[] | null, error };
+
+    return { data: data as PDPComplianceOverview[] | null, error }
   },
 
   /**
@@ -195,16 +191,16 @@ export const complianceService = {
       .from('pdp_compliance_phases')
       .update({
         next_checkup_date: nextDate,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('company_id', companyId)
       .select()
-      .single();
-    
+      .single()
+
     if (error) {
-      console.error('Error updating checkup date:', error);
+      console.error('Error updating checkup date:', error)
     }
-    
-    return { data: data as PDPCompliancePhase | null, error };
-  }
-};
+
+    return { data: data as PDPCompliancePhase | null, error }
+  },
+}

@@ -66,10 +66,10 @@ export async function POST(request: NextRequest) {
     // Prepare inspector data
     const inspectorData = {
       full_name: validatedData.name,
-      email: validatedData.email || null,
+      email: validatedData.email ?? undefined,
       phone: validatedData.phone || null,
       specialty: 'general', // Default
-      role: 'officer',
+      role: 'officer' as const,
       status: validatedData.is_active ? 'active' : 'inactive',
       vehicle_type: validatedData.vehicle_type || null,
       license_plate: validatedData.license_plate || null,
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('inspectors')
-      .insert([inspectorData])
+      .insert([inspectorData as any])
       .select()
       .single()
 
@@ -135,7 +135,7 @@ export async function PUT(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('inspectors')
-      .update(validatedData)
+      .update(validatedData as any)
       .eq('id', id)
       .select()
       .single()

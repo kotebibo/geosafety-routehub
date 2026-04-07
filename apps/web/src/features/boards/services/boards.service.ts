@@ -31,8 +31,8 @@ export const boardsService = {
     }
 
     // Get columns for this specific board only
-    const { data, error } = await (getSupabase()
-      .from('board_columns') as any)
+    const { data, error } = await getSupabase()
+      .from('board_columns')
       .select('*')
       .eq('board_id', boardId)
       .order('position', { ascending: true })
@@ -45,14 +45,18 @@ export const boardsService = {
       const nameColumn: BoardColumn = {
         id: `${boardId}_name`,
         board_type: _boardType,
+        board_id: boardId || null,
         column_id: 'name',
         column_name: 'Name',
+        column_name_ka: null,
         column_type: 'text',
         position: -1, // ensures it sorts first
         width: 200,
         is_visible: true,
         is_pinned: false,
         config: {},
+        created_at: null,
+        updated_at: null,
       }
       columns.unshift(nameColumn)
     }
@@ -64,8 +68,8 @@ export const boardsService = {
    * Get visible columns only
    */
   async getVisibleColumns(boardType: BoardType): Promise<BoardColumn[]> {
-    const { data, error } = await (getSupabase()
-      .from('board_columns') as any)
+    const { data, error } = await getSupabase()
+      .from('board_columns')
       .select('*')
       .eq('board_type', boardType)
       .eq('is_visible', true)
@@ -78,12 +82,9 @@ export const boardsService = {
   /**
    * Update column configuration
    */
-  async updateColumn(
-    columnId: string,
-    updates: Partial<BoardColumn>
-  ): Promise<BoardColumn> {
-    const { data, error } = await (getSupabase()
-      .from('board_columns') as any)
+  async updateColumn(columnId: string, updates: Partial<BoardColumn>): Promise<BoardColumn> {
+    const { data, error } = await getSupabase()
+      .from('board_columns')
       .update(updates)
       .eq('id', columnId)
       .select()
@@ -99,8 +100,9 @@ export const boardsService = {
   async updateColumns(
     columns: Array<{ id: string; position: number; width?: number }>
   ): Promise<void> {
-    const updates = columns.map((col) =>
-      (getSupabase().from('board_columns') as any)
+    const updates = columns.map(col =>
+      getSupabase()
+        .from('board_columns')
         .update({ position: col.position, width: col.width })
         .eq('id', col.id)
     )
@@ -111,10 +113,7 @@ export const boardsService = {
   /**
    * Toggle column visibility
    */
-  async toggleColumnVisibility(
-    columnId: string,
-    isVisible: boolean
-  ): Promise<BoardColumn> {
+  async toggleColumnVisibility(columnId: string, isVisible: boolean): Promise<BoardColumn> {
     return this.updateColumn(columnId, { is_visible: isVisible })
   },
 
@@ -138,8 +137,8 @@ export const boardsService = {
     position: number
     is_visible: boolean
   }): Promise<BoardColumn> {
-    const { data, error } = await (getSupabase()
-      .from('board_columns') as any)
+    const { data, error } = await getSupabase()
+      .from('board_columns')
       .insert(column)
       .select()
       .single()
@@ -152,10 +151,7 @@ export const boardsService = {
    * Delete a column
    */
   async deleteColumn(columnId: string): Promise<void> {
-    const { error } = await (getSupabase()
-      .from('board_columns') as any)
-      .delete()
-      .eq('id', columnId)
+    const { error } = await getSupabase().from('board_columns').delete().eq('id', columnId)
 
     if (error) throw error
   },
@@ -166,8 +162,8 @@ export const boardsService = {
    * Get all groups for a board
    */
   async getBoardGroups(boardId: string): Promise<BoardGroup[]> {
-    const { data, error } = await (getSupabase()
-      .from('board_groups') as any)
+    const { data, error } = await getSupabase()
+      .from('board_groups')
       .select('*')
       .eq('board_id', boardId)
       .order('position', { ascending: true })
@@ -185,11 +181,7 @@ export const boardsService = {
     color: string
     position: number
   }): Promise<BoardGroup> {
-    const { data, error } = await (getSupabase()
-      .from('board_groups') as any)
-      .insert(group)
-      .select()
-      .single()
+    const { data, error } = await getSupabase().from('board_groups').insert(group).select().single()
 
     if (error) throw error
     return data as BoardGroup
@@ -202,8 +194,8 @@ export const boardsService = {
     groupId: string,
     updates: Partial<Pick<BoardGroup, 'name' | 'color' | 'position' | 'is_collapsed'>>
   ): Promise<BoardGroup> {
-    const { data, error } = await (getSupabase()
-      .from('board_groups') as any)
+    const { data, error } = await getSupabase()
+      .from('board_groups')
       .update(updates)
       .eq('id', groupId)
       .select()
@@ -217,10 +209,7 @@ export const boardsService = {
    * Delete a group
    */
   async deleteBoardGroup(groupId: string): Promise<void> {
-    const { error } = await (getSupabase()
-      .from('board_groups') as any)
-      .delete()
-      .eq('id', groupId)
+    const { error } = await getSupabase().from('board_groups').delete().eq('id', groupId)
 
     if (error) throw error
   },
@@ -228,13 +217,9 @@ export const boardsService = {
   /**
    * Reorder multiple groups (batch update positions)
    */
-  async reorderBoardGroups(
-    updates: Array<{ id: string; position: number }>
-  ): Promise<void> {
-    const promises = updates.map((update) =>
-      (getSupabase().from('board_groups') as any)
-        .update({ position: update.position })
-        .eq('id', update.id)
+  async reorderBoardGroups(updates: Array<{ id: string; position: number }>): Promise<void> {
+    const promises = updates.map(update =>
+      getSupabase().from('board_groups').update({ position: update.position }).eq('id', update.id)
     )
 
     await Promise.all(promises)
@@ -246,26 +231,23 @@ export const boardsService = {
    * Get all views for a board type
    */
   async getViews(boardType: BoardType, userId: string): Promise<BoardView[]> {
-    const { data, error } = await (getSupabase()
-      .from('board_views') as any)
+    const { data, error } = await getSupabase()
+      .from('board_views')
       .select('*')
       .eq('board_type', boardType)
       .or(`user_id.eq.${userId},is_shared.eq.true`)
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return (data || []) as BoardView[]
+    return (data || []) as unknown as BoardView[]
   },
 
   /**
    * Get default view for a board type
    */
-  async getDefaultView(
-    boardType: BoardType,
-    userId: string
-  ): Promise<BoardView | null> {
-    const { data, error } = await (getSupabase()
-      .from('board_views') as any)
+  async getDefaultView(boardType: BoardType, userId: string): Promise<BoardView | null> {
+    const { data, error } = await getSupabase()
+      .from('board_views')
       .select('*')
       .eq('board_type', boardType)
       .eq('user_id', userId)
@@ -273,21 +255,21 @@ export const boardsService = {
       .single()
 
     if (error && error.code !== 'PGRST116') throw error // PGRST116 = no rows
-    return data as BoardView | null
+    return data as unknown as BoardView | null
   },
 
   /**
    * Get a specific view by ID
    */
   async getView(viewId: string): Promise<BoardView> {
-    const { data, error } = await (getSupabase()
-      .from('board_views') as any)
+    const { data, error } = await getSupabase()
+      .from('board_views')
       .select('*')
       .eq('id', viewId)
       .single()
 
     if (error) throw error
-    return data as BoardView
+    return data as unknown as BoardView
   },
 
   /**
@@ -296,48 +278,43 @@ export const boardsService = {
   async createView(view: Omit<BoardView, 'id' | 'created_at' | 'updated_at'>): Promise<BoardView> {
     // If setting as default, unset other defaults first
     if (view.is_default) {
-      await (getSupabase().from('board_views') as any)
+      await getSupabase()
+        .from('board_views')
         .update({ is_default: false })
         .eq('user_id', view.user_id)
         .eq('board_type', view.board_type)
     }
 
-    const { data, error } = await (getSupabase()
-      .from('board_views') as any)
-      .insert(view)
+    const { data, error } = await getSupabase()
+      .from('board_views')
+      .insert(view as any)
       .select()
       .single()
 
     if (error) throw error
-    return data as BoardView
+    return data as unknown as BoardView
   },
 
   /**
    * Update an existing view
    */
-  async updateView(
-    viewId: string,
-    updates: Partial<BoardView>
-  ): Promise<BoardView> {
-    const { data, error } = await (getSupabase()
-      .from('board_views') as any)
-      .update(updates)
+  async updateView(viewId: string, updates: Partial<BoardView>): Promise<BoardView> {
+    const { data, error } = await getSupabase()
+      .from('board_views')
+      .update(updates as any)
       .eq('id', viewId)
       .select()
       .single()
 
     if (error) throw error
-    return data as BoardView
+    return data as unknown as BoardView
   },
 
   /**
    * Delete a view
    */
   async deleteView(viewId: string): Promise<void> {
-    const { error } = await (getSupabase()
-      .from('board_views') as any)
-      .delete()
-      .eq('id', viewId)
+    const { error } = await getSupabase().from('board_views').delete().eq('id', viewId)
 
     if (error) throw error
   },
@@ -347,7 +324,8 @@ export const boardsService = {
    */
   async setDefaultView(viewId: string, userId: string, boardType: BoardType): Promise<void> {
     // Unset other defaults
-    await (getSupabase().from('board_views') as any)
+    await getSupabase()
+      .from('board_views')
       .update({ is_default: false })
       .eq('user_id', userId)
       .eq('board_type', boardType)
@@ -364,7 +342,7 @@ export const boardsService = {
   applyFilters(query: any, filters: BoardFilter[]): any {
     let modifiedQuery = query
 
-    filters.forEach((filter) => {
+    filters.forEach(filter => {
       const { column_id, operator, value } = filter
 
       switch (operator) {
@@ -445,20 +423,17 @@ export const boardsService = {
    * Get column configuration from a view
    */
   getColumnConfigMap(columnConfig: ColumnConfig[]): Map<string, ColumnConfig> {
-    return new Map(columnConfig.map((config) => [config.column_id, config]))
+    return new Map(columnConfig.map(config => [config.column_id, config]))
   },
 
   /**
    * Merge view column config with default columns
    */
-  mergeColumnConfigs(
-    defaultColumns: BoardColumn[],
-    viewConfig: ColumnConfig[]
-  ): BoardColumn[] {
+  mergeColumnConfigs(defaultColumns: BoardColumn[], viewConfig: ColumnConfig[]): BoardColumn[] {
     const configMap = this.getColumnConfigMap(viewConfig)
 
     return defaultColumns
-      .map((col) => {
+      .map(col => {
         const config = configMap.get(col.column_id)
         if (!config) return col
 

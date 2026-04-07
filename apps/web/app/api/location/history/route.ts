@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
 
     const sinceDate = since || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-    const { data, error } = await supabase
+    // PostGIS table not in generated types
+    const { data, error } = await (supabase as any)
       .from('inspector_location_history')
       .select('lat, lng, recorded_at, accuracy, speed')
       .eq('inspector_id', inspectorId)

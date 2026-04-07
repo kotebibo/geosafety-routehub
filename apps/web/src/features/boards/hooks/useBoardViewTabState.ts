@@ -39,8 +39,8 @@ export function useBoardViewTabState(boardId: string) {
   const prevTabIdRef = useRef<string | null>(null)
   useEffect(() => {
     if (activeTab && activeTab.id !== prevTabIdRef.current) {
-      setSortConfig(activeTab.sort_config ?? null)
-      setFilters(activeTab.filters ?? [])
+      setSortConfig((activeTab.sort_config as SortConfig | null) ?? null)
+      setFilters((activeTab.filters as FilterConfig[] | null) ?? [])
       setGroupByColumn(activeTab.group_by_column ?? null)
       prevTabIdRef.current = activeTab.id
     }
@@ -70,7 +70,7 @@ export function useBoardViewTabState(boardId: string) {
   const handleSortChange = useCallback(
     (config: SortConfig | null) => {
       setSortConfig(config)
-      saveTabState({ sort_config: config })
+      saveTabState({ sort_config: config as any })
     },
     [saveTabState]
   )
@@ -78,7 +78,7 @@ export function useBoardViewTabState(boardId: string) {
   const handleFiltersChange = useCallback(
     (newFilters: FilterConfig[]) => {
       setFilters(newFilters)
-      saveTabState({ filters: newFilters })
+      saveTabState({ filters: newFilters as any })
     },
     [saveTabState]
   )

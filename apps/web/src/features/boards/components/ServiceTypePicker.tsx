@@ -148,8 +148,8 @@ export function ServiceTypePicker({
         ) : (
           <div className="py-1">
             {filteredTypes.map(type => {
-              const IconComponent = getIcon(type.required_inspector_type)
-              const color = getColor(type.required_inspector_type)
+              const IconComponent = getIcon(type.required_inspector_type ?? undefined)
+              const color = getColor(type.required_inspector_type ?? undefined)
               const isSelected = selected.includes(type.id)
               return (
                 <button

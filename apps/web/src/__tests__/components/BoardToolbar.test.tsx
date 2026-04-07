@@ -15,50 +15,66 @@ const mockColumns: BoardColumn[] = [
   {
     id: 'col-1',
     board_type: 'routes' as BoardType,
+    board_id: 'board-1',
     column_id: 'name',
     column_name: 'Name',
+    column_name_ka: null,
     column_type: 'text',
     is_visible: true,
     is_pinned: true,
     position: 0,
     width: 200,
     config: {},
+    created_at: null,
+    updated_at: null,
   },
   {
     id: 'col-2',
     board_type: 'routes' as BoardType,
+    board_id: 'board-1',
     column_id: 'status',
     column_name: 'Status',
+    column_name_ka: null,
     column_type: 'status',
     is_visible: true,
     is_pinned: false,
     position: 1,
     width: 150,
     config: {},
+    created_at: null,
+    updated_at: null,
   },
   {
     id: 'col-3',
     board_type: 'routes' as BoardType,
+    board_id: 'board-1',
     column_id: 'date',
     column_name: 'Due Date',
+    column_name_ka: null,
     column_type: 'date',
     is_visible: true,
     is_pinned: false,
     position: 2,
     width: 150,
     config: {},
+    created_at: null,
+    updated_at: null,
   },
   {
     id: 'col-4',
     board_type: 'routes' as BoardType,
+    board_id: 'board-1',
     column_id: 'person',
     column_name: 'Assigned To',
+    column_name_ka: null,
     column_type: 'person',
     is_visible: true,
     is_pinned: false,
     position: 3,
     width: 150,
     config: {},
+    created_at: null,
+    updated_at: null,
   },
 ]
 
@@ -95,9 +111,8 @@ describe('BoardToolbar', () => {
       expect(buttons.length).toBeGreaterThan(0)
 
       // Look for sort-related content
-      const sortButton = buttons.find(btn =>
-        btn.textContent?.toLowerCase().includes('sort') ||
-        btn.querySelector('svg')
+      const sortButton = buttons.find(
+        btn => btn.textContent?.toLowerCase().includes('sort') || btn.querySelector('svg')
       )
       expect(sortButton).toBeTruthy()
     })
@@ -124,9 +139,7 @@ describe('BoardToolbar', () => {
         direction: 'asc',
       }
 
-      const { container } = render(
-        <BoardToolbar {...defaultProps} sortConfig={sortConfig} />
-      )
+      const { container } = render(<BoardToolbar {...defaultProps} sortConfig={sortConfig} />)
 
       expect(container).toBeTruthy()
     })
@@ -137,9 +150,7 @@ describe('BoardToolbar', () => {
         direction: 'desc',
       }
 
-      const { container } = render(
-        <BoardToolbar {...defaultProps} sortConfig={sortConfig} />
-      )
+      const { container } = render(<BoardToolbar {...defaultProps} sortConfig={sortConfig} />)
 
       expect(container).toBeTruthy()
     })
@@ -147,17 +158,13 @@ describe('BoardToolbar', () => {
 
   describe('Group By Configuration', () => {
     it('renders with active grouping', () => {
-      const { container } = render(
-        <BoardToolbar {...defaultProps} groupByColumn="status" />
-      )
+      const { container } = render(<BoardToolbar {...defaultProps} groupByColumn="status" />)
 
       expect(container).toBeTruthy()
     })
 
     it('handles null groupByColumn', () => {
-      const { container } = render(
-        <BoardToolbar {...defaultProps} groupByColumn={null} />
-      )
+      const { container } = render(<BoardToolbar {...defaultProps} groupByColumn={null} />)
 
       expect(container).toBeTruthy()
     })
@@ -174,9 +181,7 @@ describe('BoardToolbar', () => {
         },
       ]
 
-      const { container } = render(
-        <BoardToolbar {...defaultProps} filters={filters} />
-      )
+      const { container } = render(<BoardToolbar {...defaultProps} filters={filters} />)
 
       expect(container).toBeTruthy()
     })
@@ -197,17 +202,13 @@ describe('BoardToolbar', () => {
         },
       ]
 
-      const { container } = render(
-        <BoardToolbar {...defaultProps} filters={filters} />
-      )
+      const { container } = render(<BoardToolbar {...defaultProps} filters={filters} />)
 
       expect(container).toBeTruthy()
     })
 
     it('renders with empty filters array', () => {
-      const { container } = render(
-        <BoardToolbar {...defaultProps} filters={[]} />
-      )
+      const { container } = render(<BoardToolbar {...defaultProps} filters={[]} />)
 
       expect(container).toBeTruthy()
     })
@@ -222,17 +223,13 @@ describe('BoardToolbar', () => {
         { ...mockColumns[3], column_type: 'person' },
       ]
 
-      const { container } = render(
-        <BoardToolbar {...defaultProps} columns={mixedColumns} />
-      )
+      const { container } = render(<BoardToolbar {...defaultProps} columns={mixedColumns} />)
 
       expect(container).toBeTruthy()
     })
 
     it('handles empty columns array', () => {
-      const { container } = render(
-        <BoardToolbar {...defaultProps} columns={[]} />
-      )
+      const { container } = render(<BoardToolbar {...defaultProps} columns={[]} />)
 
       expect(container).toBeTruthy()
     })

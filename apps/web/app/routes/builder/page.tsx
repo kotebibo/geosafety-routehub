@@ -30,10 +30,10 @@ interface Company {
   id: string
   name: string
   address: string
-  lat: number
-  lng: number
-  type?: string
-  priority?: string
+  lat: number | null
+  lng: number | null
+  type?: string | null
+  priority?: string | null
 }
 
 interface RouteStop {
@@ -305,11 +305,11 @@ export default function RouteBuilderPage() {
         <div className="flex-1 relative h-full">
           <RouteMap
             key={`map-${mapKey}`}
-            companies={selectedCompanies}
-            route={displayedRoute}
+            companies={selectedCompanies as any}
+            route={displayedRoute as any}
             routeGeometry={routeGeometry ?? undefined}
             hoveredStop={hoveredStop}
-            onMarkerClick={toggleCompany}
+            onMarkerClick={toggleCompany as any}
           />
         </div>
 

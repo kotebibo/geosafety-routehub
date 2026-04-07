@@ -3,14 +3,14 @@
 // Cross-domain orchestration methods live here
 
 import { createClient } from '@/lib/supabase'
-import type { Board, BoardItem, BoardTemplate } from '@/types/board'
+import type { Board, BoardItem, BoardTemplate, BoardType } from '@/types/board'
 import { boardCrudService } from './board-crud.service'
 import { boardItemsService } from './board-items.service'
 import { boardMembersService } from './board-members.service'
 import { boardTemplatesService } from './board-templates.service'
 import { boardTransferService } from './board-transfer.service'
 
-const getSupabase = (): any => createClient()
+const getSupabase = () => createClient()
 
 export const userBoardsService = {
   // Spread all domain services
@@ -32,14 +32,17 @@ export const userBoardsService = {
 
     const board: Omit<Board, 'id' | 'created_at' | 'updated_at'> = {
       owner_id: ownerId,
-      board_type: template.board_type,
+      board_type: template.board_type as BoardType,
       name,
+      name_ka: null,
       description: template.description,
       icon: template.icon,
       color: template.color,
       is_template: false,
       is_public: false,
-      workspace_id: workspaceId,
+      folder_id: null,
+      position: null,
+      workspace_id: workspaceId || null,
       settings: {
         allowComments: true,
         allowActivityFeed: true,
@@ -55,7 +58,15 @@ export const userBoardsService = {
 
     // Create columns from template - deduplicate by column_id
     const seenColumnIds = new Set<string>()
-    const uniqueTemplateColumns = template.default_columns.filter((col) => {
+    const templateColumns = (template.default_columns || []) as Array<{
+      id: string
+      name: string
+      name_ka?: string
+      type: string
+      width: number
+      config?: Record<string, any>
+    }>
+    const uniqueTemplateColumns = templateColumns.filter(col => {
       if (seenColumnIds.has(col.id)) return false
       seenColumnIds.add(col.id)
       return true
@@ -75,14 +86,9 @@ export const userBoardsService = {
       config: col.config || {},
     }))
 
-    await (getSupabase() as any)
-      .from('board_columns')
-      .delete()
-      .eq('board_id', createdBoard.id)
+    await getSupabase().from('board_columns').delete().eq('board_id', createdBoard.id)
 
-    const { error: colError } = await (getSupabase() as any)
-      .from('board_columns')
-      .insert(columns)
+    const { error: colError } = await getSupabase().from('board_columns').insert(columns)
 
     if (colError) console.error('Error creating columns:', colError)
 
@@ -102,19 +108,20 @@ export const userBoardsService = {
       color: originalBoard.color,
       is_template: false,
       is_public: false,
+      folder_id: null,
+      position: null,
+      workspace_id: originalBoard.workspace_id,
       settings: originalBoard.settings,
     })
 
     // Duplicate columns
-    const { data: originalColumns } = await (getSupabase() as any)
+    const { data: originalColumns } = await getSupabase()
       .from('board_columns')
       .select('*')
       .eq('board_type', originalBoard.board_type)
 
     if (originalColumns && originalColumns.length > 0) {
-      const boardSpecificColumns = originalColumns.filter(
-        (col: any) => col.board_id === boardId
-      )
+      const boardSpecificColumns = originalColumns.filter((col: any) => col.board_id === boardId)
 
       if (boardSpecificColumns.length > 0) {
         const newColumns = boardSpecificColumns.map((col: any) => ({
@@ -131,7 +138,7 @@ export const userBoardsService = {
           config: col.config,
         }))
 
-        await (getSupabase() as any).from('board_columns').insert(newColumns)
+        await getSupabase().from('board_columns').insert(newColumns)
       }
     }
 
@@ -152,7 +159,7 @@ export const userBoardsService = {
         created_by: ownerId,
       }))
 
-      await (getSupabase() as any).from('board_items').insert(newItems)
+      await getSupabase().from('board_items').insert(newItems)
     }
 
     return newBoard
@@ -169,7 +176,7 @@ export const userBoardsService = {
   ): Promise<BoardTemplate> {
     const board = await boardCrudService.getBoard(boardId)
 
-    const { data: boardColumns, error: boardColError } = await (getSupabase() as any)
+    const { data: boardColumns, error: boardColError } = await getSupabase()
       .from('board_columns')
       .select('*')
       .eq('board_id', boardId)
@@ -177,7 +184,7 @@ export const userBoardsService = {
 
     let columns = boardColumns
     if (boardColError || !columns || columns.length === 0) {
-      const { data: typeColumns, error: typeColError } = await (getSupabase() as any)
+      const { data: typeColumns, error: typeColError } = await getSupabase()
         .from('board_columns')
         .select('*')
         .eq('board_type', board.board_type)
@@ -204,7 +211,7 @@ export const userBoardsService = {
         config: col.config || {},
       }))
 
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_templates')
       .insert({
         name: templateData.name,
@@ -221,6 +228,6 @@ export const userBoardsService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as BoardTemplate
   },
 }

@@ -9,12 +9,12 @@ import { Calendar, Clock, MapPin, Route as RouteIcon } from 'lucide-react'
 
 interface Route {
   id: string
-  name: string
+  name: string | null
   date: string
-  start_time: string
-  status: string
+  start_time: string | null
+  status: string | null
   stops: any[]
-  total_distance_km: number // Changed from total_distance
+  total_distance_km: number | null
 }
 
 export default function InspectorRoutesPage() {
@@ -40,7 +40,7 @@ export default function InspectorRoutesPage() {
         .order('scheduled_date', { ascending: true })
 
       if (error) throw error
-      setRoutes(data || [])
+      setRoutes((data || []) as unknown as Route[])
     } catch (error) {
       console.error('Error fetching routes:', error)
     } finally {

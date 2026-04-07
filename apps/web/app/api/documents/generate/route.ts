@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
 
     // Build merge data from tag mapping
     const enrichedItemData = {
-      ...item.data,
+      ...(item.data as Record<string, any>),
       _item_name: item.name || '',
       _item_group: '',
     }
