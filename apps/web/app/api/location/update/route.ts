@@ -56,7 +56,8 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', validated.inspector_id),
 
-      supabase.from('inspector_location_history').insert({
+      // PostGIS table not in generated types
+      (supabase as any).from('inspector_location_history').insert({
         inspector_id: validated.inspector_id,
         lat: validated.latitude,
         lng: validated.longitude,

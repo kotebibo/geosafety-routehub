@@ -27,7 +27,8 @@ export async function GET(request: NextRequest) {
 
     for (const inspector of inspectors || []) {
       // Get latest location from history
-      const { data: latestLoc } = await supabase
+      // PostGIS table not in generated types
+      const { data: latestLoc } = await (supabase as any)
         .from('inspector_location_history')
         .select('lat, lng')
         .eq('inspector_id', inspector.id)

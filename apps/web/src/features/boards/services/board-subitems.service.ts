@@ -3,9 +3,8 @@ import type { BoardSubitem, BoardSubitemColumn } from '../types/board'
 
 const getSupabase = () => createClient()
 
-// Helper: tables not in generated types yet, cast to any
-const subitemsTable = () => getSupabase().from('board_subitems') as any
-const subitemColumnsTable = () => getSupabase().from('board_subitem_columns') as any
+const subitemsTable = () => getSupabase().from('board_subitems')
+const subitemColumnsTable = () => getSupabase().from('board_subitem_columns')
 
 /**
  * Board Subitems Service
@@ -21,7 +20,7 @@ export const boardSubitemsService = {
       .order('position')
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as BoardSubitem[]
   },
 
   async getSubitemsByBoard(boardId: string): Promise<BoardSubitem[]> {
@@ -31,7 +30,7 @@ export const boardSubitemsService = {
       .order('position')
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as BoardSubitem[]
   },
 
   async createSubitem(subitem: {
@@ -48,7 +47,7 @@ export const boardSubitemsService = {
     const { data, error } = await subitemsTable().insert(subitem).select().single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardSubitem
   },
 
   async updateSubitem(
@@ -64,7 +63,7 @@ export const boardSubitemsService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardSubitem
   },
 
   async deleteSubitem(subitemId: string): Promise<void> {
@@ -122,7 +121,7 @@ export const boardSubitemsService = {
       .order('position')
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as BoardSubitemColumn[]
   },
 
   async createSubitemColumn(column: {
@@ -139,7 +138,7 @@ export const boardSubitemsService = {
     const { data, error } = await subitemColumnsTable().insert(column).select().single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardSubitemColumn
   },
 
   async updateSubitemColumn(
@@ -158,7 +157,7 @@ export const boardSubitemsService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardSubitemColumn
   },
 
   async deleteSubitemColumn(id: string): Promise<void> {
@@ -213,6 +212,6 @@ export const boardSubitemsService = {
     const { data, error } = await subitemColumnsTable().insert(defaults).select()
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as BoardSubitemColumn[]
   },
 }

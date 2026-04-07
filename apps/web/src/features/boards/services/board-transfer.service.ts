@@ -6,7 +6,7 @@ import type { BoardColumn, BoardItem } from '@/types/board'
 import { boardCrudService } from './board-crud.service'
 import { boardItemsService } from './board-items.service'
 
-const getSupabase = (): any => createClient()
+const getSupabase = () => createClient()
 
 export const boardTransferService = {
   async getColumnMapping(
@@ -27,12 +27,12 @@ export const boardTransferService = {
     const sameBoardType = sourceBoard.board_type === targetBoard.board_type
 
     const [sourceColumnsResult, targetColumnsResult] = await Promise.all([
-      (getSupabase() as any)
+      getSupabase()
         .from('board_columns')
         .select('*')
         .eq('board_id', sourceBoardId)
         .order('position', { ascending: true }),
-      (getSupabase() as any)
+      getSupabase()
         .from('board_columns')
         .select('*')
         .eq('board_id', targetBoardId)
@@ -90,7 +90,7 @@ export const boardTransferService = {
       boardCrudService.getBoard(targetBoardId),
     ])
 
-    const { data: existingItems } = await (getSupabase() as any)
+    const { data: existingItems } = await getSupabase()
       .from('board_items')
       .select('position')
       .eq('board_id', targetBoardId)
@@ -121,7 +121,7 @@ export const boardTransferService = {
     }
 
     // Get the default group in the target board so the item doesn't become orphaned
-    const { data: targetGroups } = await (getSupabase() as any)
+    const { data: targetGroups } = await getSupabase()
       .from('board_groups')
       .select('id')
       .eq('board_id', targetBoardId)
@@ -138,7 +138,7 @@ export const boardTransferService = {
       unmapped_data: Object.keys(unmappedData).length > 0 ? unmappedData : null,
     }
 
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_items')
       .update({
         board_id: targetBoardId,
@@ -146,7 +146,7 @@ export const boardTransferService = {
         position: maxPosition + 1,
         data: newData,
         original_board_id: originalItem.original_board_id || sourceBoardId,
-        move_metadata: moveMetadata,
+        move_metadata: moveMetadata as any,
         updated_at: new Date().toISOString(),
       })
       .eq('id', itemId)
@@ -154,7 +154,7 @@ export const boardTransferService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as BoardItem
   },
 
   async moveItemsToBoard(

@@ -3,8 +3,7 @@ import type { BoardViewTab, ViewType } from '../types/board'
 
 const getSupabase = () => createClient()
 
-// Helper: table not in generated types yet, cast to any
-const viewTabsTable = () => getSupabase().from('board_view_tabs') as any
+const viewTabsTable = () => getSupabase().from('board_view_tabs')
 
 /**
  * Board View Tabs Service
@@ -18,14 +17,14 @@ export const boardViewTabsService = {
       .order('position')
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as BoardViewTab[]
   },
 
   async getViewTab(tabId: string): Promise<BoardViewTab> {
     const { data, error } = await viewTabsTable().select('*').eq('id', tabId).single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardViewTab
   },
 
   async createViewTab(tab: {
@@ -41,7 +40,7 @@ export const boardViewTabsService = {
     const { data, error } = await viewTabsTable().insert(tab).select().single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardViewTab
   },
 
   async updateViewTab(
@@ -59,10 +58,14 @@ export const boardViewTabsService = {
       >
     >
   ): Promise<BoardViewTab> {
-    const { data, error } = await viewTabsTable().update(updates).eq('id', tabId).select().single()
+    const { data, error } = await viewTabsTable()
+      .update(updates as any)
+      .eq('id', tabId)
+      .select()
+      .single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardViewTab
   },
 
   async deleteViewTab(tabId: string): Promise<void> {
@@ -116,6 +119,6 @@ export const boardViewTabsService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardViewTab
   },
 }

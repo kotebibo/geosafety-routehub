@@ -34,20 +34,20 @@ export type SortDirection = 'asc' | 'desc'
 export interface Board {
   id: string
   owner_id: string
-  workspace_id?: string
+  workspace_id: string | null
   board_type: BoardType
   name: string
-  name_ka?: string
-  description?: string
-  icon?: string
-  color?: string
+  name_ka: string | null
+  description: string | null
+  icon: string | null
+  color: string | null
   is_template: boolean
   is_public: boolean
-  folder_id?: string
-  position?: number
+  folder_id: string | null
+  position: number | null
   settings: BoardSettings
-  created_at: string
-  updated_at: string
+  created_at: string | null
+  updated_at: string | null
 }
 
 export interface BoardSettings {
@@ -66,26 +66,20 @@ export interface BoardSettings {
 export interface BoardItem {
   id: string
   board_id: string
-  group_id?: string
+  group_id: string | null
   position: number
   data: Record<string, any> // Dynamic fields stored as JSONB
   name: string
   status: StatusType
-  assigned_to?: string
-  due_date?: string
+  assigned_to: string | null
+  due_date: string | null
   priority: number
-  created_by?: string
-  created_at: string
-  updated_at: string
-  // Fields for item transfer/history tracking
-  original_board_id?: string // Original board if item was moved
-  move_metadata?: {
-    moved_from_board_id?: string
-    moved_from_board_name?: string
-    moved_at?: string
-    column_mapping_used?: Record<string, string> | null
-    unmapped_data?: Record<string, unknown> | null
-  }
+  created_by: string | null
+  deleted_at: string | null
+  original_board_id: string | null
+  move_metadata: Record<string, any> | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 // Board Member
@@ -93,8 +87,8 @@ export interface BoardMember {
   board_id: string
   user_id: string
   role: 'owner' | 'editor' | 'viewer'
-  added_by?: string
-  added_at: string
+  added_by: string | null
+  added_at: string | null
   user?: {
     full_name: string
     email: string
@@ -106,17 +100,17 @@ export interface BoardMember {
 export interface BoardTemplate {
   id: string
   name: string
-  name_ka?: string
-  description?: string
-  board_type: BoardType
-  icon: string
-  color: string
-  category?: string
-  default_columns: BoardColumnConfig[]
-  default_items: any[]
-  is_featured: boolean
-  created_at: string
-  updated_at: string
+  name_ka: string | null
+  description: string | null
+  board_type: string
+  icon: string | null
+  color: string | null
+  category: string | null
+  default_columns: any // Json from DB
+  default_items: any | null
+  is_featured: boolean | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 export interface BoardColumnConfig {
@@ -134,17 +128,18 @@ export type StatusType = 'working_on_it' | 'stuck' | 'done' | 'pending' | 'defau
 export interface BoardColumn {
   id: string
   board_type: BoardType
+  board_id: string | null
   column_id: string
   column_name: string
-  column_name_ka?: string
+  column_name_ka: string | null
   column_type: ColumnType
   is_visible: boolean
   is_pinned: boolean
   position: number
   width: number
   config: Record<string, any>
-  created_at?: string
-  updated_at?: string
+  created_at: string | null
+  updated_at: string | null
 }
 
 // Board View (Saved filters/sorts)
@@ -153,14 +148,14 @@ export interface BoardView {
   user_id: string
   board_type: BoardType
   view_name: string
-  view_name_ka?: string
+  view_name_ka: string | null
   filters: BoardFilter[]
   sort_config: SortConfig
   column_config: ColumnConfig[]
-  is_default: boolean
-  is_shared: boolean
-  created_at?: string
-  updated_at?: string
+  is_default: boolean | null
+  is_shared: boolean | null
+  created_at: string | null
+  updated_at: string | null
 }
 
 // Filter Configuration
@@ -209,22 +204,22 @@ export interface ItemUpdate {
   id: string
   item_type: 'route' | 'company' | 'officer' | 'inspection' | 'board_item'
   item_id: string
-  user_id?: string
+  user_id: string | null
   user_name?: string
   update_type: UpdateType
-  field_name?: string
-  column_id?: string
+  field_name: string | null
+  column_id: string | null
   column_name?: string // Resolved column name for display
   column_name_ka?: string // Georgian column name for display
-  old_value?: string
-  new_value?: string
-  content?: string
-  metadata?: Record<string, any>
-  source_board_id?: string
-  target_board_id?: string
+  old_value: string | null
+  new_value: string | null
+  content: string | null
+  metadata: Record<string, any> | null
+  source_board_id: string | null
+  target_board_id: string | null
   source_board_name?: string // Resolved board name for display
   target_board_name?: string // Resolved board name for display
-  created_at: string
+  created_at: string | null
 }
 
 export type UpdateType =
@@ -242,18 +237,18 @@ export type UpdateType =
 // Comment Types
 export interface ItemComment {
   id: string
-  item_type: 'route' | 'company' | 'officer' | 'inspection'
+  item_type: 'route' | 'company' | 'officer' | 'inspection' | 'board_item'
   item_id: string
   user_id: string
   user_name?: string
   user_avatar?: string
-  parent_comment_id?: string
+  parent_comment_id: string | null
   content: string
   mentions: string[]
   attachments: string[]
   is_edited: boolean
-  created_at: string
-  updated_at: string
+  created_at: string | null
+  updated_at: string | null
   replies?: ItemComment[]
 }
 

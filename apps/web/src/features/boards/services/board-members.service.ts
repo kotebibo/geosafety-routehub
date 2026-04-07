@@ -4,11 +4,11 @@
 import { createClient } from '@/lib/supabase'
 import type { BoardMember } from '@/types/board'
 
-const getSupabase = (): any => createClient()
+const getSupabase = () => createClient()
 
 export const boardMembersService = {
   async getBoardMembers(boardId: string): Promise<BoardMember[]> {
-    const { data: members, error } = await (getSupabase() as any)
+    const { data: members, error } = await getSupabase()
       .from('board_members')
       .select('*')
       .eq('board_id', boardId)
@@ -19,7 +19,7 @@ export const boardMembersService = {
 
     // Fetch user details separately
     const userIds = members.map((m: any) => m.user_id)
-    const { data: users } = await (getSupabase() as any)
+    const { data: users } = await getSupabase()
       .from('users')
       .select('id, full_name, email, avatar_url')
       .in('id', userIds)
@@ -38,7 +38,7 @@ export const boardMembersService = {
     role: 'owner' | 'editor' | 'viewer',
     addedBy: string
   ): Promise<BoardMember> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_members')
       .upsert(
         {
@@ -56,7 +56,7 @@ export const boardMembersService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardMember
   },
 
   async updateBoardMemberRole(
@@ -64,7 +64,7 @@ export const boardMembersService = {
     userId: string,
     role: 'owner' | 'editor' | 'viewer'
   ): Promise<BoardMember> {
-    const { data, error } = await (getSupabase() as any)
+    const { data, error } = await getSupabase()
       .from('board_members')
       .update({ role })
       .eq('board_id', boardId)
@@ -73,11 +73,11 @@ export const boardMembersService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardMember
   },
 
   async removeBoardMember(boardId: string, userId: string): Promise<void> {
-    const { error } = await (getSupabase() as any)
+    const { error } = await getSupabase()
       .from('board_members')
       .delete()
       .eq('board_id', boardId)

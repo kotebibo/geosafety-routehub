@@ -225,13 +225,13 @@ interface Company {
   id: string
   name: string
   address: string
-  lat: number
-  lng: number
-  type: string
-  priority: string
-  status: string
-  contact_name?: string
-  contact_phone?: string
+  lat: number | null
+  lng: number | null
+  type: string | null
+  priority: string | null
+  status: string | null
+  contact_name?: string | null
+  contact_phone?: string | null
 }
 
 interface CompanyService {
@@ -249,15 +249,15 @@ interface Inspector {
   id: string
   full_name: string
   email: string
-  role: string
-  status: string
+  role: string | null
+  status: string | null
 }
 
 interface ServiceType {
   id: string
   name: string
   name_ka: string
-  is_active: boolean
+  is_active: boolean | null
 }
 
 export default function LocationsMapPage() {
@@ -782,7 +782,7 @@ export default function LocationsMapPage() {
 
       {/* Map */}
       <div className="flex-1 relative">
-        <LocationsMap companies={companiesWithServices} />
+        <LocationsMap companies={companiesWithServices as any} />
       </div>
     </div>
   )

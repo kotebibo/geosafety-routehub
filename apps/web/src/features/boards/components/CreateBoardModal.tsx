@@ -74,21 +74,25 @@ export function CreateBoardModal({
 
     try {
       const boardData = {
-        owner_id: userId, // Use auth.uid() directly
+        owner_id: userId,
         board_type: 'custom' as const,
         name: boardName,
+        name_ka: null,
+        description: null,
         icon: 'board',
         color: selectedColor,
         is_template: false,
         is_public: false,
-        workspace_id: effectiveWorkspaceId || undefined,
+        folder_id: null,
+        position: null,
+        workspace_id: effectiveWorkspaceId || null,
         settings: {
           allowComments: true,
           allowActivityFeed: true,
           defaultView: 'table' as const,
           permissions: {
-            canEdit: [],
-            canView: [],
+            canEdit: [] as string[],
+            canView: [] as string[],
           },
         },
       }

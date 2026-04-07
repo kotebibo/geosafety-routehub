@@ -176,7 +176,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
               )}
             />
             <p className="text-sm text-text-tertiary mt-1">
-              Created {new Date(item.created_at).toLocaleDateString()}
+              Created {new Date(item.created_at ?? '').toLocaleDateString()}
             </p>
           </div>
           <button onClick={onClose} className="p-2 rounded-md hover:bg-bg-hover transition-colors">
@@ -300,7 +300,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
             <ActivityTab
               updates={updates}
               isLoading={updatesLoading}
-              itemCreatedAt={item.created_at}
+              itemCreatedAt={item.created_at ?? ''}
             />
           )}
 
@@ -381,7 +381,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                                 {comment.user_name || 'Unknown User'}
                               </span>
                               <span className="text-xs text-text-tertiary">
-                                {formatRelativeTime(comment.created_at)}
+                                {formatRelativeTime(comment.created_at ?? '')}
                               </span>
                               {comment.is_edited && (
                                 <span className="text-xs text-text-tertiary italic">(edited)</span>
@@ -470,7 +470,7 @@ export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetai
                                     {reply.user_name || 'Unknown User'}
                                   </span>
                                   <span className="text-xs text-text-tertiary">
-                                    {formatRelativeTime(reply.created_at)}
+                                    {formatRelativeTime(reply.created_at ?? '')}
                                   </span>
                                 </div>
                                 <p className="text-sm text-text-primary mt-1 whitespace-pre-wrap">

@@ -4,7 +4,7 @@
 import { createClient } from '@/lib/supabase'
 import type { Notification, NotificationType, NotificationData } from '@/types/notification'
 
-const getDb = (): any => createClient()
+const getDb = () => createClient()
 
 export const notificationsService = {
   /**
@@ -18,7 +18,7 @@ export const notificationsService = {
       .limit(limit)
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as Notification[]
   },
 
   /**
@@ -32,15 +32,14 @@ export const notificationsService = {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as Notification[]
   },
 
   /**
    * Get unread notification count
    */
   async getUnreadCount(): Promise<number> {
-    const { data, error } = await getDb()
-      .rpc('get_unread_notification_count')
+    const { data, error } = await getDb().rpc('get_unread_notification_count')
 
     if (error) throw error
     return data || 0
@@ -50,8 +49,9 @@ export const notificationsService = {
    * Mark a notification as read
    */
   async markAsRead(notificationId: string): Promise<boolean> {
-    const { data, error } = await getDb()
-      .rpc('mark_notification_read', { p_notification_id: notificationId })
+    const { data, error } = await getDb().rpc('mark_notification_read', {
+      p_notification_id: notificationId,
+    })
 
     if (error) throw error
     return data || false
@@ -61,8 +61,7 @@ export const notificationsService = {
    * Mark all notifications as read
    */
   async markAllAsRead(): Promise<number> {
-    const { data, error } = await getDb()
-      .rpc('mark_all_notifications_read')
+    const { data, error } = await getDb().rpc('mark_all_notifications_read')
 
     if (error) throw error
     return data || 0
@@ -72,10 +71,7 @@ export const notificationsService = {
    * Delete a notification
    */
   async deleteNotification(notificationId: string): Promise<void> {
-    const { error } = await getDb()
-      .from('notifications')
-      .delete()
-      .eq('id', notificationId)
+    const { error } = await getDb().from('notifications').delete().eq('id', notificationId)
 
     if (error) throw error
   },
@@ -84,10 +80,7 @@ export const notificationsService = {
    * Delete all read notifications
    */
   async deleteReadNotifications(): Promise<void> {
-    const { error } = await getDb()
-      .from('notifications')
-      .delete()
-      .eq('is_read', true)
+    const { error } = await getDb().from('notifications').delete().eq('is_read', true)
 
     if (error) throw error
   },
@@ -103,14 +96,13 @@ export const notificationsService = {
     message: string,
     data: NotificationData = {}
   ): Promise<string> {
-    const { data: result, error } = await getDb()
-      .rpc('create_notification', {
-        p_user_id: userId,
-        p_type: type,
-        p_title: title,
-        p_message: message,
-        p_data: data,
-      })
+    const { data: result, error } = await getDb().rpc('create_notification', {
+      p_user_id: userId,
+      p_type: type,
+      p_title: title,
+      p_message: message,
+      p_data: data as any,
+    })
 
     if (error) throw error
     return result
@@ -119,10 +111,7 @@ export const notificationsService = {
   /**
    * Subscribe to real-time notification updates
    */
-  subscribeToNotifications(
-    userId: string,
-    onNotification: (notification: Notification) => void
-  ) {
+  subscribeToNotifications(userId: string, onNotification: (notification: Notification) => void) {
     const subscription = getDb()
       .channel(`notifications:${userId}`)
       .on(

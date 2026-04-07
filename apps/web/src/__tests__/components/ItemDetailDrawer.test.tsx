@@ -108,26 +108,34 @@ const mockColumns: BoardColumn[] = [
   {
     id: 'col-1',
     board_type: 'routes' as BoardType,
+    board_id: 'board-1',
     column_id: 'name',
     column_name: 'Name',
+    column_name_ka: null,
     column_type: 'text',
     is_visible: true,
     is_pinned: true,
     position: 0,
     width: 200,
     config: {},
+    created_at: null,
+    updated_at: null,
   },
   {
     id: 'col-2',
     board_type: 'routes' as BoardType,
+    board_id: 'board-1',
     column_id: 'status',
     column_name: 'Status',
+    column_name_ka: null,
     column_type: 'status',
     is_visible: true,
     is_pinned: false,
     position: 1,
     width: 150,
     config: {},
+    created_at: null,
+    updated_at: null,
   },
 ]
 
@@ -139,7 +147,13 @@ const mockItem: BoardItem = {
   data: { name: 'Test Task', status: 'working_on_it' },
   name: 'Test Task',
   status: 'working_on_it',
+  assigned_to: null,
+  due_date: null,
   priority: 1,
+  created_by: null,
+  deleted_at: null,
+  original_board_id: null,
+  move_metadata: null,
   created_at: '2025-01-01T00:00:00Z',
   updated_at: '2025-01-01T00:00:00Z',
 }
@@ -189,7 +203,8 @@ describe('ItemDetailDrawer', () => {
       )
 
       // Find close button (X icon)
-      const closeButton = screen.getByRole('button', { name: /close/i }) ||
+      const closeButton =
+        screen.getByRole('button', { name: /close/i }) ||
         document.querySelector('button[aria-label*="close"]') ||
         document.querySelector('svg.lucide-x')?.closest('button')
 
@@ -257,10 +272,11 @@ describe('ItemDetailDrawer', () => {
 
       // Find and click close button
       const buttons = screen.getAllByRole('button')
-      const closeButton = buttons.find(btn =>
-        btn.querySelector('svg.lucide-x') ||
-        btn.getAttribute('aria-label')?.includes('close')
-      ) || buttons[0]
+      const closeButton =
+        buttons.find(
+          btn =>
+            btn.querySelector('svg.lucide-x') || btn.getAttribute('aria-label')?.includes('close')
+        ) || buttons[0]
 
       if (closeButton) {
         fireEvent.click(closeButton)
@@ -302,11 +318,18 @@ describe('ItemDetailDrawer', () => {
       const minimalItem: BoardItem = {
         id: 'item-minimal',
         board_id: 'board-1',
+        group_id: null,
         position: 0,
         data: {},
         name: 'Minimal Item',
         status: 'default',
+        assigned_to: null,
+        due_date: null,
         priority: 0,
+        created_by: null,
+        deleted_at: null,
+        original_board_id: null,
+        move_metadata: null,
         created_at: '2025-01-01T00:00:00Z',
         updated_at: '2025-01-01T00:00:00Z',
       }

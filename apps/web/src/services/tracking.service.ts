@@ -45,7 +45,9 @@ export const trackingService = {
       .not('last_location_update', 'is', null)
       .gte('last_location_update', thirtyMinAgo)
       .eq('status', 'active')
-      .returns<{ id: string; full_name: string; phone: string | null; last_location_update: string }[]>()
+      .returns<
+        { id: string; full_name: string; phone: string | null; last_location_update: string }[]
+      >()
 
     if (inspError) throw inspError
     if (!inspectors?.length) return []
@@ -54,14 +56,14 @@ export const trackingService = {
 
     for (const inspector of inspectors) {
       // Get latest location from history
-      const { data: latestLocData } = await supabase
+      // PostGIS table not in generated types
+      const { data: latestLocData } = await (supabase as any)
         .from('inspector_location_history')
         .select('lat, lng')
         .eq('inspector_id', inspector.id)
         .order('recorded_at', { ascending: false })
         .limit(1)
         .single()
-        .returns<{ lat: number; lng: number }>()
       const latestLoc = latestLocData as { lat: number; lng: number } | null
 
       if (!latestLoc) continue
@@ -120,13 +122,13 @@ export const trackingService = {
     const supabase = getDb()
     const sinceDate = since || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
-    const { data, error } = await supabase
+    // PostGIS table not in generated types
+    const { data, error } = await (supabase as any)
       .from('inspector_location_history')
       .select('lat, lng, recorded_at, accuracy, speed')
       .eq('inspector_id', inspectorId)
       .gte('recorded_at', sinceDate)
       .order('recorded_at', { ascending: true })
-      .returns<LocationPoint[]>()
 
     if (error) throw error
     return data || []

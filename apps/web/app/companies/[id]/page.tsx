@@ -37,30 +37,30 @@ import type { LocationCheckin } from '@/types/checkin'
 interface Company {
   id: string
   name: string
-  address?: string
-  type: string
-  contact_name: string
-  contact_phone: string
-  contact_email: string
-  priority: string
-  status: string
-  notes: string
-  created_at?: string
+  address?: string | null
+  type: string | null
+  contact_name: string | null
+  contact_phone: string | null
+  contact_email: string | null
+  priority: string | null
+  status: string | null
+  notes: string | null
+  created_at?: string | null
 }
 
 interface CompanyService {
   id: string
-  service_type_id: string
-  inspection_frequency_days: number
+  service_type_id: string | null
+  inspection_frequency_days: number | null
   assigned_inspector_id: string | null
-  priority: 'low' | 'medium' | 'high'
-  next_inspection_date: string
+  priority: string | null
+  next_inspection_date: string | null
   last_inspection_date: string | null
-  status: string
+  status: string | null
   service_types: {
     name: string
     name_ka: string
-  }
+  } | null
   inspectors: {
     full_name: string
   } | null
@@ -289,8 +289,8 @@ export default function CompanyDetailsPage() {
   }
 
   const primaryLocation = locations.find(loc => loc.is_primary)
-  const status = statusConfig[company.status] || statusConfig.inactive
-  const priority = priorityConfig[company.priority] || priorityConfig.low
+  const status = statusConfig[company.status ?? 'inactive'] || statusConfig.inactive
+  const priority = priorityConfig[company.priority ?? 'low'] || priorityConfig.low
   const overdueServices = services.filter(s => isOverdue(s.next_inspection_date))
 
   return (
@@ -662,7 +662,8 @@ export default function CompanyDetailsPage() {
                     const days = service.next_inspection_date
                       ? daysUntil(service.next_inspection_date)
                       : null
-                    const sPriority = priorityConfig[service.priority] || priorityConfig.low
+                    const sPriority =
+                      priorityConfig[service.priority ?? 'low'] || priorityConfig.low
 
                     return (
                       <div

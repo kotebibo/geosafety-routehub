@@ -3,34 +3,34 @@ import type { ItemUpdate, ItemComment, UpdateType } from '@/types/board'
 
 // Helper to get supabase client with current auth state
 // IMPORTANT: Must be called inside functions, not at module level
-const getSupabase = (): any => createClient()
+const getSupabase = () => createClient()
 
 // Type for update records with joined inspector data from Supabase
 interface UpdateRecord {
   id: string
   item_type: string
   item_id: string
-  user_id: string
-  update_type: UpdateType
-  field_name?: string
-  column_id?: string
-  old_value?: string
-  new_value?: string
-  content?: string
-  metadata?: Record<string, unknown>
-  source_board_id?: string
-  target_board_id?: string
-  created_at: string
+  user_id: string | null
+  update_type: string
+  field_name: string | null
+  column_id: string | null
+  old_value: string | null
+  new_value: string | null
+  content: string | null
+  metadata: Record<string, unknown> | null
+  source_board_id: string | null
+  target_board_id: string | null
+  created_at: string | null
   inspectors?: {
     full_name?: string
     email?: string
-  }
+  } | null
   source_board?: {
     name?: string
-  }
+  } | null
   target_board?: {
     name?: string
-  }
+  } | null
 }
 
 // Type for comment records with joined inspector data from Supabase
@@ -39,17 +39,17 @@ interface CommentRecord {
   item_type: string
   item_id: string
   user_id: string
-  parent_comment_id?: string
+  parent_comment_id: string | null
   content: string
-  mentions: string[]
-  attachments: string[]
-  is_edited: boolean
-  created_at: string
-  updated_at: string
+  mentions: any | null
+  attachments: any | null
+  is_edited: boolean | null
+  created_at: string | null
+  updated_at: string | null
   inspectors?: {
     full_name?: string
     email?: string
-  }
+  } | null
 }
 
 /**
@@ -93,7 +93,7 @@ export const activityService = {
     if (error) throw error
 
     // Map inspector data and board names
-    return (data || []).map((update: UpdateRecord) => ({
+    return ((data || []) as UpdateRecord[]).map(update => ({
       ...update,
       item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
@@ -128,7 +128,7 @@ export const activityService = {
 
     if (error) throw error
 
-    return (data || []).map((update: UpdateRecord) => ({
+    return ((data || []) as UpdateRecord[]).map(update => ({
       ...update,
       item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
@@ -164,7 +164,7 @@ export const activityService = {
 
     if (error) throw error
 
-    return (data || []).map((update: UpdateRecord) => ({
+    return ((data || []) as UpdateRecord[]).map(update => ({
       ...update,
       item_type: update.item_type as ItemUpdate['item_type'],
       user_name: update.inspectors?.full_name || update.inspectors?.email,
@@ -210,7 +210,8 @@ export const activityService = {
       }
     }
 
-    const { data, error } = await (getSupabase().from('item_updates') as any)
+    const { data, error } = await getSupabase()
+      .from('item_updates')
       .insert(enrichedUpdate)
       .select(
         `
@@ -304,7 +305,8 @@ export const activityService = {
    */
   async getComments(itemType: string, itemId: string): Promise<ItemComment[]> {
     // Fetch all comments for this item in a single query
-    const { data, error } = await (getSupabase().from('item_comments') as any)
+    const { data, error } = await getSupabase()
+      .from('item_comments')
       .select(
         `
         *,
@@ -360,7 +362,8 @@ export const activityService = {
    * Get replies to a comment
    */
   async getCommentReplies(parentCommentId: string): Promise<ItemComment[]> {
-    const { data, error } = await (getSupabase().from('item_comments') as any)
+    const { data, error } = await getSupabase()
+      .from('item_comments')
       .select(
         `
         *,
@@ -394,7 +397,8 @@ export const activityService = {
     mentions?: string[]
     attachments?: string[]
   }): Promise<ItemComment> {
-    const { data, error } = await (getSupabase().from('item_comments') as any)
+    const { data, error } = await getSupabase()
+      .from('item_comments')
       .insert(comment)
       .select(
         `
@@ -431,12 +435,14 @@ export const activityService = {
    */
   async updateComment(commentId: string, content: string): Promise<ItemComment> {
     // Fetch previous content and item info to log edit history
-    const { data: existing } = await (getSupabase().from('item_comments') as any)
+    const { data: existing } = await getSupabase()
+      .from('item_comments')
       .select('content, item_type, item_id, user_id')
       .eq('id', commentId)
       .single()
 
-    const { data, error } = await (getSupabase().from('item_comments') as any)
+    const { data, error } = await getSupabase()
+      .from('item_comments')
       .update({
         content,
         is_edited: true,
@@ -482,12 +488,10 @@ export const activityService = {
    */
   async deleteComment(commentId: string): Promise<void> {
     // Delete all replies first
-    await (getSupabase().from('item_comments') as any).delete().eq('parent_comment_id', commentId)
+    await getSupabase().from('item_comments').delete().eq('parent_comment_id', commentId)
 
     // Delete the comment
-    const { error } = await (getSupabase().from('item_comments') as any)
-      .delete()
-      .eq('id', commentId)
+    const { error } = await getSupabase().from('item_comments').delete().eq('id', commentId)
 
     if (error) throw error
   },
@@ -496,7 +500,8 @@ export const activityService = {
    * Get comment count for an item
    */
   async getCommentCount(itemType: string, itemId: string): Promise<number> {
-    const { count, error } = await (getSupabase().from('item_comments') as any)
+    const { count, error } = await getSupabase()
+      .from('item_comments')
       .select('*', { count: 'exact', head: true })
       .eq('item_type', itemType)
       .eq('item_id', itemId)
@@ -510,12 +515,9 @@ export const activityService = {
   /**
    * Subscribe to updates for an item
    */
-  subscribeToItemUpdates(
-    itemType: string,
-    itemId: string,
-    callback: (payload: { new: UpdateRecord; old: UpdateRecord | null }) => void
-  ) {
-    return (getSupabase().channel(`item-updates:${itemType}:${itemId}`) as any)
+  subscribeToItemUpdates(itemType: string, itemId: string, callback: (payload: any) => void) {
+    return getSupabase()
+      .channel(`item-updates:${itemType}:${itemId}`)
       .on(
         'postgres_changes',
         {
@@ -532,12 +534,9 @@ export const activityService = {
   /**
    * Subscribe to comments for an item
    */
-  subscribeToItemComments(
-    itemType: string,
-    itemId: string,
-    callback: (payload: { new: CommentRecord; old: CommentRecord | null }) => void
-  ) {
-    return (getSupabase().channel(`item-comments:${itemType}:${itemId}`) as any)
+  subscribeToItemComments(itemType: string, itemId: string, callback: (payload: any) => void) {
+    return getSupabase()
+      .channel(`item-comments:${itemType}:${itemId}`)
       .on(
         'postgres_changes',
         {
@@ -566,7 +565,7 @@ export const activityService = {
    */
   async getBoardUpdates(boardId: string, limit = 100, offset = 0): Promise<ItemUpdate[]> {
     // First, get board info and all board item IDs
-    const { data: board, error: boardError } = await (getSupabase() as any)
+    const { data: board, error: boardError } = await getSupabase()
       .from('boards')
       .select('id, board_type')
       .eq('id', boardId)
@@ -592,9 +591,9 @@ export const activityService = {
 
     const columnMap = new Map<string, { name: string; name_ka?: string }>(
       (columns || []).map(
-        (c: { column_id: string; column_name: string; column_name_ka?: string }) => [
+        (c: { column_id: string; column_name: string; column_name_ka: string | null }) => [
           c.column_id,
-          { name: c.column_name, name_ka: c.column_name_ka },
+          { name: c.column_name, name_ka: c.column_name_ka ?? undefined },
         ]
       )
     )
@@ -625,7 +624,7 @@ export const activityService = {
     if (error) throw error
 
     // Map with resolved column names
-    return (data || []).map((update: UpdateRecord) => {
+    return ((data || []) as UpdateRecord[]).map(update => {
       const columnInfo = update.column_id ? columnMap.get(update.column_id) : null
       return {
         ...update,
@@ -652,9 +651,9 @@ export const activityService = {
 
     const columnMap = new Map<string, { name: string; name_ka?: string }>(
       (columns || []).map(
-        (c: { column_id: string; column_name: string; column_name_ka?: string }) => [
+        (c: { column_id: string; column_name: string; column_name_ka: string | null }) => [
           c.column_id,
-          { name: c.column_name, name_ka: c.column_name_ka },
+          { name: c.column_name, name_ka: c.column_name_ka ?? undefined },
         ]
       )
     )
@@ -663,7 +662,7 @@ export const activityService = {
       const columnInfo = update.column_id ? columnMap.get(update.column_id) : null
       return {
         ...update,
-        column_name: columnInfo?.name || update.column_id,
+        column_name: columnInfo?.name || update.column_id || undefined,
         column_name_ka: columnInfo?.name_ka,
       }
     })
@@ -680,7 +679,8 @@ export const activityService = {
     applyRollback: (itemId: string, fieldName: string, oldValue: unknown) => Promise<void>
   ): Promise<ItemUpdate | null> {
     // Get the update to rollback
-    const { data, error } = await (getSupabase().from('item_updates') as any)
+    const { data, error } = await getSupabase()
+      .from('item_updates')
       .select('*')
       .eq('id', updateId)
       .single()
@@ -708,9 +708,9 @@ export const activityService = {
       item_id: update.item_id,
       user_id: userId,
       update_type: 'updated',
-      field_name: update.field_name,
-      old_value: update.new_value,
-      new_value: update.old_value,
+      field_name: update.field_name ?? undefined,
+      old_value: update.new_value ?? undefined,
+      new_value: update.old_value ?? undefined,
       content: `Rolled back change to ${update.field_name}`,
       metadata: { rollback_of: updateId },
     })

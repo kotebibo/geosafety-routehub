@@ -178,7 +178,7 @@ export function ActivityTab({ updates, isLoading, itemCreatedAt }: ActivityTabPr
                     </span>
                   </div>
                   <span className="text-xs text-text-tertiary whitespace-nowrap">
-                    {formatTimeAgo(update.created_at)}
+                    {formatTimeAgo(update.created_at ?? '')}
                   </span>
                 </div>
 

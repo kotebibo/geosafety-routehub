@@ -293,7 +293,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     <div className="flex flex-col h-full overflow-hidden bg-bg-secondary">
       {/* Fixed Header */}
       <BoardPageHeader
-        board={board}
+        board={{
+          name: board.name,
+          description: board.description ?? undefined,
+          color: board.color ?? undefined,
+        }}
         presence={presence}
         isConnected={isConnected}
         onShowActivityLog={() => openModal('activityLog')}
@@ -565,14 +569,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           boardId={params.id}
           boardName={board.name}
           ownerId={board.owner_id}
-          workspaceId={board.workspace_id}
+          workspaceId={board.workspace_id ?? undefined}
         />
       )}
 
       <ActivityLogPanel
         isOpen={modals.activityLog}
         onClose={() => closeModal('activityLog')}
-        updates={activityUpdates || []}
+        updates={(activityUpdates || []) as any}
         isLoading={activityLoading}
         onRefresh={() => refetchActivity()}
         showRollback={true}
@@ -594,7 +598,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           isOpen={modals.docTemplates}
           onClose={() => closeModal('docTemplates')}
           boardId={params.id}
-          workspaceId={board.workspace_id}
+          workspaceId={board.workspace_id ?? undefined}
           columns={columns.map(c => ({
             column_id: c.column_id,
             column_name: c.column_name,

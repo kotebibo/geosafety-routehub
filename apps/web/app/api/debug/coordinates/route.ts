@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     const coordMap = new Map<string, typeof data>()
 
     data?.forEach(company => {
+      if (company.lat == null || company.lng == null) return
       const key = `${company.lat.toFixed(6)},${company.lng.toFixed(6)}`
       if (!coordMap.has(key)) {
         coordMap.set(key, [])

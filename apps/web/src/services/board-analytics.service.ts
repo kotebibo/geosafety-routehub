@@ -20,7 +20,7 @@
 
 import { createClient } from '@/lib/supabase'
 
-const getDb = () => createClient() as any
+const getDb = () => createClient()
 
 // ── Types ──
 
@@ -123,14 +123,9 @@ interface GroupRow {
 
 // ── Helpers ──
 
-function findBoard(name: string): Promise<string | null> {
-  return getDb()
-    .from('boards')
-    .select('id')
-    .eq('name', name)
-    .limit(1)
-    .maybeSingle()
-    .then(({ data }: any) => (data as any)?.id || null)
+async function findBoard(name: string): Promise<string | null> {
+  const { data } = await getDb().from('boards').select('id').eq('name', name).limit(1).maybeSingle()
+  return (data as any)?.id || null
 }
 
 function daysUntil(dateStr: string | null): number | null {

@@ -28,11 +28,11 @@ interface Inspector {
 
 interface CompanyService {
   id?: string
-  service_type_id: string
-  inspection_frequency_days: number
+  service_type_id: string | null
+  inspection_frequency_days: number | null
   assigned_inspector_id: string | null
-  priority: 'low' | 'medium' | 'high'
-  next_inspection_date: string
+  priority: string | null
+  next_inspection_date: string | null
 }
 
 interface CompanyServicesManagerProps {
@@ -220,7 +220,7 @@ export function CompanyServicesManager({
       <div className="space-y-4">
         {services.map((service, index) => {
           const serviceType = serviceTypes.find(st => st.id === service.service_type_id)
-          const filteredInspectors = getFilteredInspectors(service.service_type_id)
+          const filteredInspectors = getFilteredInspectors(service.service_type_id ?? '')
 
           return (
             <div key={index} className="border border-border-light rounded-lg p-4 bg-bg-secondary">
@@ -245,7 +245,7 @@ export function CompanyServicesManager({
                       სერვისის ტიპი *
                     </label>
                     <select
-                      value={service.service_type_id}
+                      value={service.service_type_id ?? ''}
                       onChange={e => updateService(index, { service_type_id: e.target.value })}
                       className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                       required
@@ -265,7 +265,7 @@ export function CompanyServicesManager({
                   <input
                     type="hidden"
                     name={`service_type_${index}`}
-                    value={service.service_type_id}
+                    value={service.service_type_id ?? ''}
                   />
                 )}
 
@@ -305,7 +305,7 @@ export function CompanyServicesManager({
                   </label>
                   <input
                     type="number"
-                    value={service.inspection_frequency_days}
+                    value={service.inspection_frequency_days ?? ''}
                     onChange={e =>
                       updateService(index, {
                         inspection_frequency_days: parseInt(e.target.value),
@@ -323,7 +323,7 @@ export function CompanyServicesManager({
                     პრიორიტეტი
                   </label>
                   <select
-                    value={service.priority}
+                    value={service.priority ?? 'medium'}
                     onChange={e =>
                       updateService(index, {
                         priority: e.target.value as 'low' | 'medium' | 'high',
@@ -344,7 +344,7 @@ export function CompanyServicesManager({
                   </label>
                   <input
                     type="date"
-                    value={service.next_inspection_date}
+                    value={service.next_inspection_date ?? ''}
                     onChange={e => updateService(index, { next_inspection_date: e.target.value })}
                     className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
                   />

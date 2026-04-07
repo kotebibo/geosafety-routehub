@@ -1,27 +1,23 @@
 import { createClient } from '@/lib/supabase'
 import type { Announcement } from '@/types/announcement'
 
-const getDb = (): any => createClient()
+const getDb = () => createClient()
 
 export const announcementsService = {
   getAll: async (): Promise<Announcement[]> => {
     const { data, error } = await getDb().rpc('get_announcements_with_read_status')
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as Announcement[]
   },
 
   getById: async (id: string): Promise<Announcement | null> => {
-    const { data, error } = await getDb()
-      .from('announcements')
-      .select('*')
-      .eq('id', id)
-      .single()
+    const { data, error } = await getDb().from('announcements').select('*').eq('id', id).single()
 
     if (error) {
       if (error.code === 'PGRST116') return null
       throw error
     }
-    return data
+    return data as unknown as Announcement
   },
 
   getUnreadCount: async (): Promise<number> => {

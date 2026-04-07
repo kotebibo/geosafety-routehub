@@ -767,7 +767,7 @@ export function UpdatesPanel({
                       </span>
                       <span className="text-xs text-text-tertiary flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {formatTimeAgo(comment.created_at)}
+                        {formatTimeAgo(comment.created_at ?? '')}
                       </span>
                       {comment.is_edited && (
                         <span className="text-xs text-text-tertiary">(edited)</span>
@@ -912,7 +912,7 @@ export function UpdatesPanel({
                               {reply.user_name || 'Unknown'}
                             </span>
                             <span className="text-xs text-text-tertiary">
-                              {formatTimeAgo(reply.created_at)}
+                              {formatTimeAgo(reply.created_at ?? '')}
                             </span>
                             {reply.is_edited && (
                               <span className="text-xs text-text-tertiary">(edited)</span>
@@ -1223,7 +1223,7 @@ export function UpdatesPanel({
                       </div>
                       <div className="flex items-center gap-1.5 mt-1 text-xs text-text-tertiary">
                         <Clock className="w-3 h-3" />
-                        {formatTimeAgo(activity.created_at)}
+                        {formatTimeAgo(activity.created_at ?? '')}
                       </div>
                     </div>
                   </div>

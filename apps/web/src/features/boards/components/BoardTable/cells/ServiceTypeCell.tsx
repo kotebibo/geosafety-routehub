@@ -122,8 +122,10 @@ export function ServiceTypeCell({
   }
 
   const firstType = selectedTypes[0]
-  const firstIcon = firstType ? getIcon(firstType.required_inspector_type) : Shield
-  const firstColor = firstType ? getColor(firstType.required_inspector_type) : '#579bfc'
+  const firstIcon = firstType ? getIcon(firstType.required_inspector_type ?? undefined) : Shield
+  const firstColor = firstType
+    ? getColor(firstType.required_inspector_type ?? undefined)
+    : '#579bfc'
 
   return (
     <div ref={containerRef} className="relative h-full min-h-[36px]">
