@@ -113,7 +113,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               p_user_full_name: currentUser.user_metadata?.full_name || '',
               p_user_avatar_url: currentUser.user_metadata?.avatar_url || '',
             })
-            .catch((err: any) => console.warn('Failed to upsert user profile:', err))
+            .then(({ error }: { error: any }) => {
+              if (error) console.warn('Failed to upsert user profile:', error.message)
+            })
         }
       }
     } catch (error) {
