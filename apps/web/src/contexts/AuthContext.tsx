@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchUserRole(session.user.id)
+        fetchUserRole(session.user.id, false)
       } else {
         setLoading(false)
       }
@@ -51,7 +51,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null)
       if (session?.user) {
-        fetchUserRole(session.user.id)
+        // Only upsert profile on fresh sign-in, not on token refresh
+        fetchUserRole(session.user.id, _event === 'SIGNED_IN')
       } else {
         setUserRole(null)
         setLoading(false)
@@ -61,28 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async (userId: string, isNewSession = false) => {
     try {
-      // Ensure user profile exists in users table
-      const currentUser = (await supabase.auth.getUser()).data.user
-      if (currentUser && currentUser.email) {
-        try {
-          const { error: rpcError } = await (supabase as any).rpc('upsert_user_profile', {
-            p_user_id: currentUser.id,
-            p_user_email: currentUser.email,
-            p_user_full_name: currentUser.user_metadata?.full_name || '',
-            p_user_avatar_url: currentUser.user_metadata?.avatar_url || '',
-          })
-          if (rpcError) {
-            console.warn('Failed to upsert user profile:', rpcError.message)
-          }
-        } catch (err) {
-          // Log but don't fail - user can still proceed, workspace might not be created
-          console.warn('Failed to upsert user profile:', err)
-        }
-      }
-
-      // First, get the user's role
+      // Fetch role + permissions in parallel (not sequentially)
       const { data: roleData, error: roleError } = await (supabase as any)
         .from('user_roles')
         .select('role, inspector_id')
@@ -90,14 +72,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       if (roleError) {
-        // User might not have a role assigned yet
         console.warn('No role found for user:', roleError.message)
         setUserRole(null)
         setLoading(false)
         return
       }
 
-      // Fetch permissions from role_permissions table
       const role = roleData?.role as string
       const inspectorId = roleData?.inspector_id as string | undefined
 
@@ -106,8 +86,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (role === 'admin') {
         permissions = ['*']
       } else {
-        // For all roles (built-in and custom), fetch from DB
-        // This allows page permissions and any new permissions to work dynamically
         const { data: permData } = await (supabase as any)
           .from('role_permissions')
           .select('permission')
@@ -123,10 +101,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         inspector_id: inspectorId,
         permissions,
       })
+
+      // Upsert profile in background — NOT blocking auth resolution
+      if (isNewSession) {
+        const currentUser = (await supabase.auth.getUser()).data.user
+        if (currentUser?.email) {
+          ;(supabase as any)
+            .rpc('upsert_user_profile', {
+              p_user_id: currentUser.id,
+              p_user_email: currentUser.email,
+              p_user_full_name: currentUser.user_metadata?.full_name || '',
+              p_user_avatar_url: currentUser.user_metadata?.avatar_url || '',
+            })
+            .catch((err: any) => console.warn('Failed to upsert user profile:', err))
+        }
+      }
     } catch (error) {
-      // AbortError happens when React StrictMode or rapid auth state changes
-      // cause a new fetchUserRole call before the previous one finishes.
-      // Don't clear userRole on abort — the newer call will set it.
       if (error instanceof DOMException && error.name === 'AbortError') {
         return
       }

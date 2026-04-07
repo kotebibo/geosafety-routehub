@@ -11,6 +11,9 @@ const nextConfig = {
       '@tanstack/react-query',
       'date-fns',
       'lodash',
+      '@dnd-kit/core',
+      '@dnd-kit/sortable',
+      '@dnd-kit/utilities',
     ],
   },
 

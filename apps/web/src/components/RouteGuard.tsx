@@ -38,10 +38,17 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
 
-  // Show loading state
+  // On public routes (login, signup), render immediately — no auth needed
+  if (isPublicRoute) {
+    return <>{children}</>
+  }
+
+  // While auth is resolving, show a minimal spinner (NOT the full layout)
+  // This is intentionally lightweight — the real LCP gains come from
+  // the auth waterfall optimization and Sidebar lazy-load
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-bg-secondary">
         <div className="text-center">
           <div className="animate-spin text-4xl mb-4">⚙️</div>
           <p className="text-text-secondary">იტვირთება...</p>
@@ -50,8 +57,8 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Show nothing while redirecting
-  if (!user && !isPublicRoute) {
+  // Redirect unauthenticated users (handled by useEffect above)
+  if (!user) {
     return null
   }
 

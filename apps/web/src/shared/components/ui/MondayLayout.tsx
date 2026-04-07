@@ -1,11 +1,20 @@
 'use client'
 
 import * as React from 'react'
-import { Sidebar } from './Sidebar'
+import dynamic from 'next/dynamic'
 import { Header } from './Header'
 import { cn } from '@/lib/utils'
 import { Walkthrough, useWalkthrough } from '@/components/Walkthrough'
 import { useAuth } from '@/contexts/AuthContext'
+
+// Lazy-load the heavy Sidebar (1900 lines, imports @dnd-kit, fetches boards)
+// This removes it from the critical render path, improving LCP
+const Sidebar = dynamic(() => import('./Sidebar').then(m => ({ default: m.Sidebar })), {
+  ssr: false,
+  loading: () => (
+    <div className="w-[260px] h-full bg-bg-primary border-r border-border-light animate-pulse" />
+  ),
+})
 
 interface MondayLayoutProps {
   children: React.ReactNode
