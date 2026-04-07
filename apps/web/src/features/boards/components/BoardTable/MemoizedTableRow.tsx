@@ -45,6 +45,7 @@ interface MemoizedTableRowProps {
   onDragLeave: (e: React.DragEvent) => void
   onDrop: (e: React.DragEvent, itemId: string, groupId: string) => void
   onFocusCell: (rowIndex: number, columnIndex: number) => void
+  allColumns?: BoardColumn[]
 }
 
 // Helper to check if cell is focused
@@ -101,6 +102,7 @@ export const MemoizedTableRow = memo(
     onDragLeave,
     onDrop,
     onFocusCell,
+    allColumns,
   }: MemoizedTableRowProps) {
     const showDropIndicatorBefore = isDragOver && dragOverPosition === 'before'
     const showDropIndicatorAfter = isDragOver && dragOverPosition === 'after'
@@ -206,6 +208,7 @@ export const MemoizedTableRow = memo(
               }
               isEditing={isCellEditing(globalRowIndex, 0, editingRowIndex, editingColumnIndex)}
               onEdit={newValue => onCellEdit?.(item.id, visibleColumns[0].column_id, newValue)}
+              allColumns={allColumns}
             />
           )}
         </td>
@@ -265,6 +268,7 @@ export const MemoizedTableRow = memo(
                   onCellEdit?.(item.id, column.column_id, newValue)
                 }}
                 onEditStart={() => onCellEditStart?.(item.id, column.column_id)}
+                allColumns={allColumns}
               />
             </td>
           )
