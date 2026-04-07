@@ -22,6 +22,8 @@ export interface CellRendererProps<TData = any> {
   onEditStart?: () => void
   /** Search query for match highlighting in global search results */
   highlightQuery?: string
+  /** All columns on the board — passed to cells that need cross-column data (e.g. UpdatesCell) */
+  allColumns?: BoardColumn[]
 }
 
 export interface HeaderCellProps {

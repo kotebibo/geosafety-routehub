@@ -1313,6 +1313,7 @@ export function VirtualizedBoardTable({
                             onEdit={newValue => handleCellEdit(item.id, col.column_id, newValue)}
                             onEditStart={() => handleCellEditStart(item.id, col.column_id)}
                             highlightQuery={highlightQuery}
+                            allColumns={columns}
                           />
                         </div>
                         {/* Subitem count badge */}

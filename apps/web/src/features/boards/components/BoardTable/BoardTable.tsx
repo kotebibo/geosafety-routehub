@@ -246,6 +246,7 @@ export function BoardTable<TData extends Record<string, any>>({
                         column={column}
                         value={value}
                         onEdit={newValue => handleCellEdit(row.id, column.column_id, newValue)}
+                        allColumns={columns}
                       />
                     </div>
                   )

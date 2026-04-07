@@ -110,6 +110,8 @@ export const CellRenderer = memo(
             itemId={row?.id}
             itemName={row?.name || row?.data?.name}
             itemType="board_item"
+            row={row}
+            allColumns={props.allColumns}
             onEditStart={props.onEditStart}
           />
         )
