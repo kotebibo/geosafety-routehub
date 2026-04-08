@@ -90,6 +90,8 @@ interface VirtualizedBoardTableProps {
   scrollContainerClassName?: string
   /** Search query for match highlighting in global search results */
   highlightQuery?: string
+  /** Hide footer, summary, and gap rows (used in search results) */
+  hideFooters?: boolean
   // ─── Subitem props ───
   /** Set of item IDs whose subitems are expanded */
   expandedItems?: Set<string>
@@ -142,6 +144,7 @@ export function VirtualizedBoardTable({
   onSortChange,
   scrollContainerClassName,
   highlightQuery,
+  hideFooters,
   expandedItems,
   subitemCounts,
   subitemsByParent,
@@ -231,8 +234,17 @@ export function VirtualizedBoardTable({
       skipColumnHeaders: true,
       expandedItems,
       subitemsByParent,
+      hideFooters,
     })
-  }, [effectiveGroups, data, collapsedGroups, sortConfig, expandedItems, subitemsByParent])
+  }, [
+    effectiveGroups,
+    data,
+    collapsedGroups,
+    sortConfig,
+    expandedItems,
+    subitemsByParent,
+    hideFooters,
+  ])
 
   // Pre-compute items by group for summary rows
   const itemsByGroup = useMemo(() => {

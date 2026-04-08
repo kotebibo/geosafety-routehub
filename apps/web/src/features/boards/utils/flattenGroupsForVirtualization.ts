@@ -40,6 +40,8 @@ interface FlattenOptions {
   expandedItems?: Set<string>
   /** Map of parent item ID -> subitems */
   subitemsByParent?: Map<string, BoardSubitem[]>
+  /** Hide footer, summary, and gap rows (compact mode for search results) */
+  hideFooters?: boolean
 }
 
 /**
@@ -59,6 +61,7 @@ export function flattenGroupsForVirtualization({
   skipColumnHeaders = false,
   expandedItems,
   subitemsByParent,
+  hideFooters,
 }: FlattenOptions): VirtualRow[] {
   const rows: VirtualRow[] = []
 
@@ -153,29 +156,31 @@ export function flattenGroupsForVirtualization({
         }
       }
 
-      // Group summary row (aggregates) - only if group has items
-      if (orderedItems.length > 0) {
+      if (!hideFooters) {
+        // Group summary row (aggregates) - only if group has items
+        if (orderedItems.length > 0) {
+          rows.push({
+            id: `summary-${group.id}`,
+            type: 'group-summary',
+            data: group,
+            groupId: group.id,
+            height: summaryHeight,
+          })
+        }
+
+        // Group footer row (add item button)
         rows.push({
-          id: `summary-${group.id}`,
-          type: 'group-summary',
+          id: `footer-${group.id}`,
+          type: 'group-footer',
           data: group,
           groupId: group.id,
-          height: summaryHeight,
+          height: footerHeight,
         })
       }
-
-      // Group footer row (add item button)
-      rows.push({
-        id: `footer-${group.id}`,
-        type: 'group-footer',
-        data: group,
-        groupId: group.id,
-        height: footerHeight,
-      })
     }
 
     // Add gap between groups (not after the last group)
-    if (group !== sortedGroups[sortedGroups.length - 1]) {
+    if (!hideFooters && group !== sortedGroups[sortedGroups.length - 1]) {
       rows.push({
         id: `gap-${group.id}`,
         type: 'group-gap',
