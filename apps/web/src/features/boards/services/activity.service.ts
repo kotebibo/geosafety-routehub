@@ -423,11 +423,79 @@ export const activityService = {
     })
 
     const record = data as CommentRecord
-    return {
+    const result = {
       ...record,
       item_type: record.item_type as ItemComment['item_type'],
       user_name: record.inspectors?.full_name || record.inspectors?.email,
     } as ItemComment
+
+    // Send notifications for mentioned users (fire-and-forget)
+    if (comment.mentions && comment.mentions.length > 0) {
+      this._notifyMentionedUsers(comment).catch(() => {})
+    }
+
+    return result
+  },
+
+  /**
+   * Send notifications to mentioned users in a comment
+   * @internal
+   */
+  async _notifyMentionedUsers(comment: {
+    item_type: string
+    item_id: string
+    user_id: string
+    content: string
+    mentions?: string[]
+  }): Promise<void> {
+    if (!comment.mentions || comment.mentions.length === 0) return
+
+    const db = getSupabase()
+
+    // Get commenter name
+    const { data: commenter } = await db
+      .from('inspectors')
+      .select('full_name')
+      .eq('id', comment.user_id)
+      .single()
+    const commenterName = (commenter as any)?.full_name || 'Someone'
+
+    // Get item's board_id for navigation link
+    let boardId: string | null = null
+    if (comment.item_type === 'board_item') {
+      const { data: item } = await db
+        .from('board_items')
+        .select('board_id, name')
+        .eq('id', comment.item_id)
+        .single()
+      boardId = (item as any)?.board_id || null
+    }
+
+    // Look up auth user_ids for mentioned inspector_ids
+    const { data: roles } = await db
+      .from('user_roles')
+      .select('user_id, inspector_id')
+      .in('inspector_id', comment.mentions)
+
+    if (!roles || roles.length === 0) return
+
+    // Create a notification for each mentioned user
+    for (const role of roles) {
+      // Don't notify the commenter themselves
+      if ((role as any).inspector_id === comment.user_id) continue
+
+      await db.rpc('create_notification', {
+        p_user_id: (role as any).user_id,
+        p_type: 'item_mention',
+        p_title: `${commenterName} მოგნიშნათ კომენტარში`,
+        p_message: comment.content.substring(0, 200),
+        p_data: {
+          board_id: boardId,
+          item_id: comment.item_id,
+          mentioned_by: commenterName,
+        },
+      })
+    }
   },
 
   /**
@@ -508,6 +576,31 @@ export const activityService = {
 
     if (error) throw error
     return count || 0
+  },
+
+  /**
+   * Get comment counts for multiple items in a single query.
+   * Returns a map of item_id -> comment count.
+   */
+  async getCommentCountsForBoard(
+    itemType: string,
+    itemIds: string[]
+  ): Promise<Record<string, number>> {
+    if (itemIds.length === 0) return {}
+
+    const { data, error } = await getSupabase()
+      .from('item_comments')
+      .select('item_id')
+      .eq('item_type', itemType)
+      .in('item_id', itemIds)
+
+    if (error) throw error
+
+    const counts: Record<string, number> = {}
+    for (const row of data || []) {
+      counts[(row as any).item_id] = (counts[(row as any).item_id] || 0) + 1
+    }
+    return counts
   },
 
   // ==================== REAL-TIME SUBSCRIPTIONS ====================

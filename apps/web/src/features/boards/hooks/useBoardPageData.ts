@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInspectorId } from '@/hooks/useInspectorId'
 import {
@@ -16,6 +17,7 @@ import {
 } from './useUserBoards'
 import { useBoardColumns } from './useBoardColumns'
 import { useCreateUpdate } from './useActivity'
+import { activityService } from '../services/activity.service'
 import type { BoardItem } from '../types/board'
 import type { ExportLookups } from '../utils/exportBoard'
 
@@ -36,6 +38,21 @@ export function useBoardPageData(boardId: string) {
   const { data: dbGroups, isLoading: groupsLoading } = useBoardGroups(boardId)
 
   const groups = useMemo(() => dbGroups || [], [dbGroups])
+
+  // Check if board has an updates column — only fetch comment counts if so
+  const hasUpdatesColumn = useMemo(
+    () => columns?.some(c => c.column_type === 'updates') ?? false,
+    [columns]
+  )
+  const itemIds = useMemo(() => (items || []).map(i => i.id), [items])
+
+  const { data: commentCounts } = useQuery({
+    queryKey: ['comment-counts', boardId],
+    queryFn: () => activityService.getCommentCountsForBoard('board_item', itemIds),
+    enabled: hasUpdatesColumn && itemIds.length > 0,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
+  })
 
   // Mutations
   const createItem = useCreateBoardItem(boardId)
@@ -151,5 +168,7 @@ export function useBoardPageData(boardId: string) {
     setSelectedItem,
     // Lookups
     fetchLookups,
+    // Comment counts
+    commentCounts,
   }
 }

@@ -109,6 +109,8 @@ interface VirtualizedBoardTableProps {
   onAddSubitem?: (parentItemId: string) => void
   /** Delete a subitem */
   onDeleteSubitem?: (subitemId: string, parentItemId: string) => void
+  /** Comment counts per item (for updates column badge) */
+  commentCounts?: Record<string, number>
 }
 
 export function VirtualizedBoardTable({
@@ -153,6 +155,7 @@ export function VirtualizedBoardTable({
   onSubitemCellEdit,
   onAddSubitem,
   onDeleteSubitem,
+  commentCounts,
 }: VirtualizedBoardTableProps) {
   // Scroll container ref - THIS is the key difference from the non-virtualized version
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -1340,7 +1343,11 @@ export function VirtualizedBoardTable({
                   const isEditing = editingCellId === cellId || isCellEditing(rowIndex, colIndex)
                   const isFocused = isCellFocused(rowIndex, colIndex)
                   const value =
-                    col.column_id === 'name' ? item.name : (item.data?.[col.column_id] ?? '')
+                    col.column_id === 'name'
+                      ? item.name
+                      : col.column_type === 'updates'
+                        ? (commentCounts?.[item.id] ?? 0)
+                        : (item.data?.[col.column_id] ?? '')
 
                   // Show expand toggle on the first column (name cell)
                   const isFirstCol = colIndex === 0

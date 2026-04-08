@@ -141,6 +141,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     selectedItem,
     setSelectedItem,
     fetchLookups,
+    commentCounts,
   } = data
 
   // ─── Activity log (deferred fetch) ───
@@ -497,6 +498,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               onSubitemCellEdit={subitems.onSubitemCellEdit}
               onAddSubitem={subitems.onAddSubitem}
               onDeleteSubitem={subitems.onDeleteSubitem}
+              commentCounts={commentCounts}
             />
           </ErrorBoundary>
         ) : (
