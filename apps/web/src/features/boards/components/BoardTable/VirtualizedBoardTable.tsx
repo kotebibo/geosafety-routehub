@@ -533,11 +533,11 @@ export function VirtualizedBoardTable({
       const isCollapsed = collapsedGroups.has(currentGroup.id)
 
       if (realHeaderVisible || isCollapsed) {
-        overlay.style.display = 'none'
+        overlay.style.visibility = 'hidden'
         return
       }
 
-      overlay.style.display = ''
+      overlay.style.visibility = 'visible'
 
       // Push-up effect: when next group header approaches the sticky position
       const stickyTop = st + HEADER_HEIGHT
@@ -1598,15 +1598,16 @@ export function VirtualizedBoardTable({
             </div>
 
             {/* Sticky group header overlay - shows current group while scrolling */}
+            {/* height:0 keeps this out of document flow so it never shifts content below */}
             <div
               ref={stickyGroupRef}
               style={{
                 position: 'sticky',
                 top: HEADER_HEIGHT,
                 zIndex: 25,
-                display: 'none',
+                height: 0,
+                visibility: 'hidden',
                 pointerEvents: 'none',
-                overflow: 'hidden',
               }}
             >
               <table
