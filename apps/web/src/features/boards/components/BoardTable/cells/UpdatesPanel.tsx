@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import {
@@ -85,6 +86,7 @@ export function UpdatesPanel({
   onCommentCountChange,
 }: UpdatesPanelProps) {
   const { user } = useAuth()
+  const queryClient = useQueryClient()
   const { data: inspectorId } = useInspectorId(user?.email ?? undefined)
   const { inspectors } = useInspectors()
 
@@ -416,6 +418,7 @@ export function UpdatesPanel({
       setReplyingTo(null)
       setSelectedMentions([])
       await loadComments()
+      queryClient.invalidateQueries({ queryKey: ['comment-counts'] })
     } catch (error) {
       console.error('Error creating comment:', error)
     } finally {
@@ -445,6 +448,7 @@ export function UpdatesPanel({
     try {
       await activityService.deleteComment(commentId)
       await loadComments()
+      queryClient.invalidateQueries({ queryKey: ['comment-counts'] })
     } catch (error) {
       console.error('Error deleting comment:', error)
     }
