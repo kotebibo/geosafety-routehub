@@ -19,6 +19,7 @@ import {
   InspectorLocationsBarChart,
   TopLocationsChart,
   RevenueShareChart,
+  ActivityBreakdownChart,
 } from '@/features/analytics/components/charts'
 import { RefreshCw } from 'lucide-react'
 
@@ -137,6 +138,9 @@ function FinanceTab({ analytics }: { analytics: ReturnType<typeof useBoardAnalyt
 
       {/* Row 3: Top Companies */}
       <TopCompaniesRevenueChart data={analytics.topCompanies} />
+
+      {/* Row 4: Activity Breakdown */}
+      <ActivityBreakdownChart data={analytics.activityBreakdown} />
     </div>
   )
 }

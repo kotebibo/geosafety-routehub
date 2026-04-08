@@ -103,6 +103,12 @@ export interface ValueBucket {
   count: number
 }
 
+export interface ActivityBreakdown {
+  activity: string
+  count: number
+  revenue: number
+}
+
 export interface ExpiryMonth {
   month: string
   count: number
@@ -381,6 +387,24 @@ export const boardAnalyticsService = {
       else buckets['1000+']++
     }
     return Object.entries(buckets).map(([bucket, count]) => ({ bucket, count }))
+  },
+
+  getActivityBreakdown: (companies: BoardRow[]): ActivityBreakdown[] => {
+    const map: Record<string, { count: number; revenue: number }> = {}
+    for (const c of companies) {
+      const activity = (c.data?.saqmianoba || '').trim()
+      if (!activity) continue
+      if (!map[activity]) map[activity] = { count: 0, revenue: 0 }
+      map[activity].count++
+      map[activity].revenue += c.data?.act_amount || 0
+    }
+    return Object.entries(map)
+      .map(([activity, v]) => ({
+        activity,
+        count: v.count,
+        revenue: Math.round(v.revenue * 100) / 100,
+      }))
+      .sort((a, b) => b.count - a.count)
   },
 
   getCompanyTable: (companies: BoardRow[]): CompanyRow[] => {
