@@ -239,6 +239,7 @@ function SearchBoardSection({
       onRowDoubleClick={onRowDoubleClick}
       scrollContainerClassName="overflow-visible bg-bg-primary"
       highlightQuery={highlightQuery}
+      hideFooters
     />
   )
 }
