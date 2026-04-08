@@ -75,6 +75,10 @@ export function useBoardAnalytics() {
   )
   const valueBuckets = useMemo(() => boardAnalyticsService.getValueBuckets(companies), [companies])
   const companyTable = useMemo(() => boardAnalyticsService.getCompanyTable(companies), [companies])
+  const activityBreakdown = useMemo(
+    () => boardAnalyticsService.getActivityBreakdown(companies),
+    [companies]
+  )
 
   return {
     isLoading,
@@ -93,5 +97,6 @@ export function useBoardAnalytics() {
     expiryTimeline,
     valueBuckets,
     companyTable,
+    activityBreakdown,
   }
 }
