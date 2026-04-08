@@ -157,6 +157,9 @@ export function VirtualizedBoardTable({
   // Ref for sticky header group color bar (updated via scroll handler, no re-render)
   const stickyColorBarRef = useRef<HTMLTableCellElement>(null)
 
+  // Ref for sticky group header overlay (DOM-mutated on scroll to avoid re-renders)
+  const stickyGroupRef = useRef<HTMLDivElement>(null)
+
   // Collapsed groups state
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
 
@@ -477,33 +480,103 @@ export function VirtualizedBoardTable({
     }
   }, [isResizing, resizingColumnId, columnWidths, onColumnResize])
 
-  // Update sticky header color bar to match the current group on scroll
+  // Update sticky header color bar + sticky group overlay on scroll
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container) return
 
-    const updateStickyColor = () => {
+    const updateStickyHeader = () => {
       const st = container.scrollTop
       let currentColor = 'var(--border-medium)'
+      let currentGroup: BoardGroup | null = null
+      let currentGroupTop = 0
+      let nextGroupTop = Infinity
       let accHeight = 0
+      let foundCurrent = false
 
       for (const vr of virtualRows) {
         if (vr.type === 'group-header') {
-          currentColor = (vr.data as BoardGroup).color || '#579bfc'
+          if (foundCurrent) {
+            // This is the next group header after our current one
+            nextGroupTop = accHeight
+            break
+          }
+          if (accHeight + vr.height > st + HEADER_HEIGHT) {
+            // This group header is still visible — it hasn't scrolled past yet
+            currentGroup = vr.data as BoardGroup
+            currentGroupTop = accHeight
+            currentColor = currentGroup.color || '#579bfc'
+            foundCurrent = true
+          } else {
+            currentGroup = vr.data as BoardGroup
+            currentGroupTop = accHeight
+            currentColor = currentGroup.color || '#579bfc'
+          }
         }
         accHeight += vr.height
-        if (accHeight > st + HEADER_HEIGHT) break
+        if (!foundCurrent && accHeight > st + HEADER_HEIGHT) {
+          foundCurrent = true
+        }
       }
-
+      // Update sticky color bar
       if (stickyColorBarRef.current) {
         stickyColorBarRef.current.style.backgroundColor = currentColor
       }
+
+      // Update sticky group header overlay
+      const overlay = stickyGroupRef.current
+      if (!overlay || !currentGroup) return
+
+      // Check if the real group header is still visible in the viewport
+      const realHeaderVisible = currentGroupTop >= st
+      // Check if this is a collapsed group (no items to scroll through)
+      const isCollapsed = collapsedGroups.has(currentGroup.id)
+
+      if (realHeaderVisible || isCollapsed) {
+        overlay.style.display = 'none'
+        return
+      }
+
+      overlay.style.display = ''
+
+      // Push-up effect: when next group header approaches the sticky position
+      const stickyTop = st + HEADER_HEIGHT
+      const distanceToNext = nextGroupTop - stickyTop
+      if (distanceToNext < HEADER_HEIGHT && distanceToNext > 0) {
+        overlay.style.transform = `translateY(${distanceToNext - HEADER_HEIGHT}px)`
+      } else {
+        overlay.style.transform = ''
+      }
+
+      // Update overlay content
+      const colorBar = overlay.querySelector<HTMLElement>('[data-sticky-colorbar]')
+      const chevron = overlay.querySelector<SVGElement>('[data-sticky-chevron]')
+      const nameEl = overlay.querySelector<HTMLElement>('[data-sticky-name]')
+      const countEl = overlay.querySelector<HTMLElement>('[data-sticky-count]')
+
+      if (colorBar) {
+        colorBar.style.backgroundColor = currentGroup.color || '#579bfc'
+      }
+      if (chevron) {
+        chevron.style.color = currentGroup.color || '#579bfc'
+      }
+      if (nameEl) {
+        nameEl.style.color = currentGroup.color || '#579bfc'
+        nameEl.textContent = currentGroup.name
+      }
+      if (countEl) {
+        const itemCount = data.filter(item => {
+          const gid = item.group_id || (item.data as any)?.group_id || effectiveGroups[0]?.id
+          return gid === currentGroup!.id
+        }).length
+        countEl.textContent = `${itemCount} ${itemCount === 1 ? 'item' : 'items'}`
+      }
     }
 
-    container.addEventListener('scroll', updateStickyColor, { passive: true })
-    updateStickyColor()
-    return () => container.removeEventListener('scroll', updateStickyColor)
-  }, [virtualRows])
+    container.addEventListener('scroll', updateStickyHeader, { passive: true })
+    updateStickyHeader()
+    return () => container.removeEventListener('scroll', updateStickyHeader)
+  }, [virtualRows, collapsedGroups, data, effectiveGroups])
 
   // Sort handler: cycles asc → desc → clear
   const handleSort = useCallback(
@@ -1521,6 +1594,80 @@ export function VirtualizedBoardTable({
                     </th>
                   </tr>
                 </thead>
+              </table>
+            </div>
+
+            {/* Sticky group header overlay - shows current group while scrolling */}
+            <div
+              ref={stickyGroupRef}
+              style={{
+                position: 'sticky',
+                top: HEADER_HEIGHT,
+                zIndex: 25,
+                display: 'none',
+                pointerEvents: 'none',
+                overflow: 'hidden',
+              }}
+            >
+              <table
+                className="w-full border-collapse"
+                style={{ tableLayout: 'fixed', width: totalTableWidth }}
+              >
+                <tbody>
+                  <tr className="h-9 bg-bg-primary shadow-sm">
+                    {onSelectionChange && (
+                      <td
+                        className="w-10 h-9 bg-bg-primary"
+                        style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                      />
+                    )}
+                    <td
+                      data-sticky-colorbar
+                      className="p-0 h-9 rounded-tl"
+                      style={{
+                        width: 6,
+                        backgroundColor: '#579bfc',
+                        position: 'sticky',
+                        left: stickyOffsets.colorBar,
+                        zIndex: 2,
+                      }}
+                    />
+                    <td
+                      className="h-9 px-3 align-middle bg-bg-primary"
+                      style={{
+                        width: getColumnWidth(visibleColumns[0]),
+                        position: 'sticky',
+                        left: stickyOffsets.firstCol,
+                        zIndex: 2,
+                      }}
+                    >
+                      <div className="flex items-center gap-2 whitespace-nowrap">
+                        <ChevronDown
+                          data-sticky-chevron
+                          className="w-4 h-4 flex-shrink-0"
+                          style={{ color: '#579bfc' }}
+                        />
+                        <span
+                          data-sticky-name
+                          className="font-semibold text-sm"
+                          style={{ color: '#579bfc' }}
+                        />
+                        <span
+                          data-sticky-count
+                          className="text-xs text-text-secondary flex-shrink-0"
+                        />
+                      </div>
+                    </td>
+                    {visibleColumns.slice(1).map(col => (
+                      <td
+                        key={`sticky-group-${col.id}`}
+                        className="h-9 bg-bg-primary"
+                        style={{ width: getColumnWidth(col) }}
+                      />
+                    ))}
+                    <td className="h-9 bg-bg-primary w-10" />
+                  </tr>
+                </tbody>
               </table>
             </div>
 
