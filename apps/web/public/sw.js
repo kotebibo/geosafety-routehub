@@ -1,4 +1,4 @@
-const CACHE_NAME = 'routehub-v1'
+const CACHE_NAME = 'routehub-v2'
 
 // Static assets to pre-cache on install
 const PRECACHE_URLS = [
@@ -39,11 +39,13 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return
 
-  // Skip API routes, Supabase calls, and auth — always go to network
+  // Skip API routes, Supabase, Ably, and external tile servers — always go to network
   if (
     url.pathname.startsWith('/api/') ||
     url.hostname.includes('supabase') ||
     url.hostname.includes('ably') ||
+    url.hostname.includes('tile.openstreetmap') ||
+    url.hostname.includes('mapbox') ||
     url.pathname.startsWith('/auth/')
   ) {
     return
