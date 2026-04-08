@@ -1595,81 +1595,81 @@ export function VirtualizedBoardTable({
                   </tr>
                 </thead>
               </table>
-            </div>
 
-            {/* Sticky group header overlay - shows current group while scrolling */}
-            {/* height:0 keeps this out of document flow so it never shifts content below */}
-            <div
-              ref={stickyGroupRef}
-              style={{
-                position: 'sticky',
-                top: HEADER_HEIGHT,
-                zIndex: 25,
-                height: 0,
-                visibility: 'hidden',
-                pointerEvents: 'none',
-              }}
-            >
-              <table
-                className="w-full border-collapse"
-                style={{ tableLayout: 'fixed', width: totalTableWidth }}
+              {/* Sticky group header overlay — absolutely positioned below column headers, no flow impact */}
+              <div
+                ref={stickyGroupRef}
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: 0,
+                  right: 0,
+                  zIndex: -1,
+                  visibility: 'hidden',
+                  pointerEvents: 'none',
+                }}
               >
-                <tbody>
-                  <tr className="h-9 bg-bg-primary shadow-sm">
-                    {onSelectionChange && (
+                <table
+                  className="w-full border-collapse"
+                  style={{ tableLayout: 'fixed', width: totalTableWidth }}
+                >
+                  <tbody>
+                    <tr className="h-9 bg-bg-primary shadow-sm">
+                      {onSelectionChange && (
+                        <td
+                          className="w-10 h-9 bg-bg-primary"
+                          style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                        />
+                      )}
                       <td
-                        className="w-10 h-9 bg-bg-primary"
-                        style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                        data-sticky-colorbar
+                        className="p-0 h-9 rounded-tl"
+                        style={{
+                          width: 6,
+                          backgroundColor: '#579bfc',
+                          position: 'sticky',
+                          left: stickyOffsets.colorBar,
+                          zIndex: 2,
+                        }}
                       />
-                    )}
-                    <td
-                      data-sticky-colorbar
-                      className="p-0 h-9 rounded-tl"
-                      style={{
-                        width: 6,
-                        backgroundColor: '#579bfc',
-                        position: 'sticky',
-                        left: stickyOffsets.colorBar,
-                        zIndex: 2,
-                      }}
-                    />
-                    <td
-                      className="h-9 px-3 align-middle bg-bg-primary"
-                      style={{
-                        width: getColumnWidth(visibleColumns[0]),
-                        position: 'sticky',
-                        left: stickyOffsets.firstCol,
-                        zIndex: 2,
-                      }}
-                    >
-                      <div className="flex items-center gap-2 whitespace-nowrap">
-                        <ChevronDown
-                          data-sticky-chevron
-                          className="w-4 h-4 flex-shrink-0"
-                          style={{ color: '#579bfc' }}
-                        />
-                        <span
-                          data-sticky-name
-                          className="font-semibold text-sm"
-                          style={{ color: '#579bfc' }}
-                        />
-                        <span
-                          data-sticky-count
-                          className="text-xs text-text-secondary flex-shrink-0"
-                        />
-                      </div>
-                    </td>
-                    {visibleColumns.slice(1).map(col => (
                       <td
-                        key={`sticky-group-${col.id}`}
-                        className="h-9 bg-bg-primary"
-                        style={{ width: getColumnWidth(col) }}
-                      />
-                    ))}
-                    <td className="h-9 bg-bg-primary w-10" />
-                  </tr>
-                </tbody>
-              </table>
+                        className="h-9 px-3 align-middle bg-bg-primary"
+                        style={{
+                          width: getColumnWidth(visibleColumns[0]),
+                          position: 'sticky',
+                          left: stickyOffsets.firstCol,
+                          zIndex: 2,
+                        }}
+                      >
+                        <div className="flex items-center gap-2 whitespace-nowrap">
+                          <ChevronDown
+                            data-sticky-chevron
+                            className="w-4 h-4 flex-shrink-0"
+                            style={{ color: '#579bfc' }}
+                          />
+                          <span
+                            data-sticky-name
+                            className="font-semibold text-sm"
+                            style={{ color: '#579bfc' }}
+                          />
+                          <span
+                            data-sticky-count
+                            className="text-xs text-text-secondary flex-shrink-0"
+                          />
+                        </div>
+                      </td>
+                      {visibleColumns.slice(1).map(col => (
+                        <td
+                          key={`sticky-group-${col.id}`}
+                          className="h-9 bg-bg-primary"
+                          style={{ width: getColumnWidth(col) }}
+                        />
+                      ))}
+                      <td className="h-9 bg-bg-primary w-10" />
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Virtualized rows - includes group headers, column headers, items, summaries, and footers */}
