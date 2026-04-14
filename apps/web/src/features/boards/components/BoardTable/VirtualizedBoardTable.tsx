@@ -165,6 +165,7 @@ export function VirtualizedBoardTable({
 
   // Ref for sticky group header overlay (DOM-mutated on scroll to avoid re-renders)
   const stickyGroupRef = useRef<HTMLDivElement>(null)
+  const stickyGroupIdRef = useRef<string | null>(null)
 
   // Collapsed groups state
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
@@ -549,10 +550,12 @@ export function VirtualizedBoardTable({
 
       if (realHeaderVisible || isCollapsed) {
         overlay.style.visibility = 'hidden'
+        stickyGroupIdRef.current = null
         return
       }
 
       overlay.style.visibility = 'visible'
+      stickyGroupIdRef.current = currentGroup.id
 
       // Push-up effect: when next group header approaches the sticky position
       const stickyTop = st + HEADER_HEIGHT
@@ -1625,7 +1628,12 @@ export function VirtualizedBoardTable({
                   right: 0,
                   zIndex: -1,
                   visibility: 'hidden',
-                  pointerEvents: 'none',
+                  cursor: 'pointer',
+                }}
+                onClick={() => {
+                  if (stickyGroupIdRef.current) {
+                    handleGroupCollapseToggle(stickyGroupIdRef.current)
+                  }
                 }}
               >
                 <table
