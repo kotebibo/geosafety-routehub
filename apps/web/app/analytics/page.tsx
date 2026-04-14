@@ -20,15 +20,18 @@ import {
   TopLocationsChart,
   RevenueShareChart,
   ActivityBreakdownChart,
+  RevenueForecastChart,
+  CumulativeLossChart,
 } from '@/features/analytics/components/charts'
 import { RefreshCw } from 'lucide-react'
 
-type Tab = 'finance' | 'inspectors' | 'companies'
+type Tab = 'finance' | 'inspectors' | 'companies' | 'forecast'
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'finance', label: 'ფინანსები' },
   { key: 'inspectors', label: 'ინსპექტორები' },
   { key: 'companies', label: 'კომპანიები' },
+  { key: 'forecast', label: 'პროგნოზი' },
 ]
 
 export default function AnalyticsPage() {
@@ -113,6 +116,7 @@ export default function AnalyticsPage() {
             {activeTab === 'finance' && <FinanceTab analytics={analytics} />}
             {activeTab === 'inspectors' && <InspectorsTab analytics={analytics} />}
             {activeTab === 'companies' && <CompaniesTab analytics={analytics} />}
+            {activeTab === 'forecast' && <ForecastTab analytics={analytics} />}
           </>
         )}
       </div>
@@ -187,6 +191,88 @@ function CompaniesTab({ analytics }: { analytics: ReturnType<typeof useBoardAnal
 
       {/* Row 3: Full Company Table */}
       <CompanyAnalyticsTable data={analytics.companyTable} />
+    </div>
+  )
+}
+
+function ForecastTab({ analytics }: { analytics: ReturnType<typeof useBoardAnalytics> }) {
+  const forecast = analytics.revenueForecast
+  if (!forecast) return null
+
+  return (
+    <div className="space-y-6">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-bg-primary rounded-lg border p-4">
+          <p className="text-xs text-text-tertiary mb-1">მიმდინარე თვიური</p>
+          <p className="text-xl font-bold text-text-primary">
+            ₾{forecast.current_monthly.toLocaleString()}
+          </p>
+        </div>
+        <div className="bg-bg-primary rounded-lg border p-4">
+          <p className="text-xs text-text-tertiary mb-1">პროგნოზი 12 თვეში</p>
+          <p className="text-xl font-bold text-text-primary">
+            ₾{forecast.months[forecast.months.length - 1]?.projected_revenue.toLocaleString() || 0}
+          </p>
+        </div>
+        <div className="bg-bg-primary rounded-lg border p-4">
+          <p className="text-xs text-text-tertiary mb-1">ჯამური დანაკარგი (12 თვე)</p>
+          <p className="text-xl font-bold text-[#E2445C]">
+            ₾{forecast.total_expiring_12m.toLocaleString()}
+          </p>
+        </div>
+        <div className="bg-bg-primary rounded-lg border p-4">
+          <p className="text-xs text-text-tertiary mb-1">შენარჩუნების მაჩვენებელი</p>
+          <p className="text-xl font-bold text-text-primary">{forecast.retention_rate_12m}%</p>
+        </div>
+      </div>
+
+      {/* Main forecast chart */}
+      <RevenueForecastChart data={forecast} />
+
+      {/* Cumulative loss */}
+      <CumulativeLossChart data={forecast.months} />
+
+      {/* Monthly breakdown table */}
+      <div className="bg-bg-primary rounded-lg border p-6">
+        <h3 className="text-sm font-semibold text-text-primary mb-4">თვიური დეტალები</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b text-left text-text-tertiary">
+                <th className="pb-2 font-medium">თვე</th>
+                <th className="pb-2 font-medium text-right">პროგნოზი</th>
+                <th className="pb-2 font-medium text-right">ვადაგასული</th>
+                <th className="pb-2 font-medium text-right">კუმ. დანაკარგი</th>
+                <th className="pb-2 font-medium text-right">კონტრაქტები</th>
+              </tr>
+            </thead>
+            <tbody>
+              {forecast.months.map(m => (
+                <tr key={m.month} className="border-b border-border-primary/50">
+                  <td className="py-2 text-text-primary">{m.month}</td>
+                  <td className="py-2 text-right text-text-primary">
+                    ₾{m.projected_revenue.toLocaleString()}
+                  </td>
+                  <td className="py-2 text-right">
+                    {m.expiring_revenue > 0 ? (
+                      <span className="text-[#E2445C]">
+                        -₾{m.expiring_revenue.toLocaleString()}
+                      </span>
+                    ) : (
+                      <span className="text-text-tertiary">-</span>
+                    )}
+                  </td>
+                  <td className="py-2 text-right text-[#E2445C]">
+                    -₾{m.cumulative_loss.toLocaleString()}
+                  </td>
+                  <td className="py-2 text-right text-text-secondary">{m.active_contracts}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   )
 }
