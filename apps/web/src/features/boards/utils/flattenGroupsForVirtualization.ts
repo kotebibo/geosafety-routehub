@@ -179,14 +179,14 @@ export function flattenGroupsForVirtualization({
       }
     }
 
-    // Add gap between groups (not after the last group)
+    // Add gap between groups (not after the last group, and smaller when collapsed)
     if (!hideFooters && group !== sortedGroups[sortedGroups.length - 1]) {
       rows.push({
         id: `gap-${group.id}`,
         type: 'group-gap',
         data: group,
         groupId: group.id,
-        height: 60,
+        height: collapsedGroups.has(group.id) ? 8 : 60,
       })
     }
   }
