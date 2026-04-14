@@ -775,6 +775,13 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       permission: 'pages:tracking',
     },
     {
+      href: '/coordinates-map',
+      label: 'კოორდინატების რუკა',
+      labelEn: 'Coordinates Map',
+      icon: Globe,
+      permission: 'pages:coordinates_map',
+    },
+    {
       href: '/inspector/checkin',
       label: 'ჩეკ-ინი',
       labelEn: 'Check-in',
