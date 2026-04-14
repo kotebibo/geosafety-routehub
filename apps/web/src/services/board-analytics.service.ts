@@ -115,6 +115,21 @@ export interface ExpiryMonth {
   urgency: 'red' | 'amber' | 'green'
 }
 
+export interface ForecastMonth {
+  month: string
+  projected_revenue: number
+  expiring_revenue: number
+  active_contracts: number
+  cumulative_loss: number
+}
+
+export interface ForecastSummary {
+  current_monthly: number
+  months: ForecastMonth[]
+  total_expiring_12m: number
+  retention_rate_12m: number
+}
+
 interface BoardRow {
   id: string
   name: string
@@ -423,6 +438,71 @@ export const boardAnalyticsService = {
         revenue: Math.round(v.revenue * 100) / 100,
       }))
       .sort((a, b) => b.count - a.count)
+  },
+
+  getRevenueForecast: (companies: BoardRow[], horizonMonths = 12): ForecastSummary => {
+    const now = new Date()
+    const currentMonth = now.getFullYear() * 12 + now.getMonth()
+
+    // Build list of active contracts with monthly revenue and end month
+    const contracts = companies
+      .filter(c => c.data?.monthly && c.data.monthly > 0)
+      .map(c => {
+        const endDate = c.data?.end_date ? new Date(c.data.end_date) : null
+        const endMonth = endDate ? endDate.getFullYear() * 12 + endDate.getMonth() : null
+        return {
+          monthly: c.data.monthly as number,
+          endMonth,
+        }
+      })
+
+    const currentMonthly = contracts.reduce((s, c) => s + c.monthly, 0)
+
+    const months: ForecastMonth[] = []
+    let cumulativeLoss = 0
+
+    for (let i = 0; i < horizonMonths; i++) {
+      const targetMonth = currentMonth + i + 1
+      const year = Math.floor(targetMonth / 12)
+      const month = targetMonth % 12
+      const monthStr = `${year}-${String(month + 1).padStart(2, '0')}`
+
+      // Revenue expiring this month = sum of monthly amounts for contracts ending this month
+      const expiringThisMonth = contracts
+        .filter(c => c.endMonth === targetMonth)
+        .reduce((s, c) => s + c.monthly, 0)
+
+      cumulativeLoss += expiringThisMonth
+
+      // Active contracts = those with no end date or ending after this month
+      const activeContracts = contracts.filter(
+        c => c.endMonth === null || c.endMonth >= targetMonth
+      ).length
+
+      // Projected = current baseline minus cumulative loss
+      const projected = currentMonthly - cumulativeLoss
+
+      months.push({
+        month: monthStr,
+        projected_revenue: Math.round(projected * 100) / 100,
+        expiring_revenue: Math.round(expiringThisMonth * 100) / 100,
+        active_contracts: activeContracts,
+        cumulative_loss: Math.round(cumulativeLoss * 100) / 100,
+      })
+    }
+
+    const totalExpiring12m = Math.round(cumulativeLoss * 100) / 100
+    const retentionRate =
+      currentMonthly > 0
+        ? Math.round(((currentMonthly - cumulativeLoss) / currentMonthly) * 10000) / 100
+        : 100
+
+    return {
+      current_monthly: Math.round(currentMonthly * 100) / 100,
+      months,
+      total_expiring_12m: totalExpiring12m,
+      retention_rate_12m: Math.max(0, retentionRate),
+    }
   },
 
   getCompanyTable: (companies: BoardRow[]): CompanyRow[] => {

@@ -80,6 +80,12 @@ export function useBoardAnalytics() {
     [companies]
   )
 
+  // Forecast tab
+  const revenueForecast = useMemo(
+    () => (companies.length > 0 ? boardAnalyticsService.getRevenueForecast(companies) : null),
+    [companies]
+  )
+
   return {
     isLoading,
     globalKPIs,
@@ -98,5 +104,7 @@ export function useBoardAnalytics() {
     valueBuckets,
     companyTable,
     activityBreakdown,
+    // Forecast
+    revenueForecast,
   }
 }
