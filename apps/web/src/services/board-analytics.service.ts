@@ -165,6 +165,7 @@ export const boardAnalyticsService = {
       .select('id, name, data, group_id')
       .eq('board_id', boardId)
       .is('deleted_at', null)
+      .limit(10000)
     if (error) throw error
     return (data || []) as BoardRow[]
   },
@@ -178,7 +179,8 @@ export const boardAnalyticsService = {
         .from('board_items')
         .select('id, name, data, group_id')
         .eq('board_id', boardId)
-        .is('deleted_at', null),
+        .is('deleted_at', null)
+        .limit(10000),
       db.from('board_groups').select('id, name').eq('board_id', boardId),
     ])
     return { items: (items || []) as BoardRow[], groups: (groups || []) as GroupRow[] }
