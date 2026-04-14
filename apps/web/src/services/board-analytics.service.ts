@@ -150,6 +150,35 @@ function formatPaymentMethod(raw: string | null): string {
   return raw.replace(/_/g, ' ').trim()
 }
 
+// ── Helpers ──
+
+/** Paginate through all rows to bypass PostgREST max_rows (1000) limit */
+async function fetchAllItems(
+  boardId: string,
+  select: string = 'id, name, data, group_id'
+): Promise<BoardRow[]> {
+  const PAGE = 1000
+  const db = getDb()
+  let all: BoardRow[] = []
+  let from = 0
+
+  while (true) {
+    const { data, error } = await db
+      .from('board_items')
+      .select(select)
+      .eq('board_id', boardId)
+      .is('deleted_at', null)
+      .range(from, from + PAGE - 1)
+    if (error) throw error
+    if (!data || data.length === 0) break
+    all = all.concat(data as unknown as BoardRow[])
+    if (data.length < PAGE) break
+    from += PAGE
+  }
+
+  return all
+}
+
 // ── Service ──
 
 export const boardAnalyticsService = {
@@ -159,31 +188,18 @@ export const boardAnalyticsService = {
   loadCompaniesBoard: async (): Promise<BoardRow[]> => {
     const boardId = await findBoard('კომპანიები')
     if (!boardId) return []
-    const db = getDb()
-    const { data, error } = await db
-      .from('board_items')
-      .select('id, name, data, group_id')
-      .eq('board_id', boardId)
-      .is('deleted_at', null)
-      .limit(10000)
-    if (error) throw error
-    return (data || []) as BoardRow[]
+    return fetchAllItems(boardId)
   },
 
   loadLocationsBoard: async (): Promise<{ items: BoardRow[]; groups: GroupRow[] }> => {
     const boardId = await findBoard('ინსპექტორები / ლოკაციები')
     if (!boardId) return { items: [], groups: [] }
     const db = getDb()
-    const [{ data: items }, { data: groups }] = await Promise.all([
-      db
-        .from('board_items')
-        .select('id, name, data, group_id')
-        .eq('board_id', boardId)
-        .is('deleted_at', null)
-        .limit(10000),
+    const [items, { data: groups }] = await Promise.all([
+      fetchAllItems(boardId),
       db.from('board_groups').select('id, name').eq('board_id', boardId),
     ])
-    return { items: (items || []) as BoardRow[], groups: (groups || []) as GroupRow[] }
+    return { items, groups: (groups || []) as GroupRow[] }
   },
 
   loadSummaryBoard: async (): Promise<BoardRow[]> => {
