@@ -7,6 +7,7 @@ export type NotificationType =
   | 'item_mention'
   | 'item_comment'
   | 'announcement_new'
+  | 'contract_expiring'
 
 export interface Notification {
   id: string
@@ -37,4 +38,7 @@ export interface NotificationData {
   role?: string
   announcement_id?: string
   announcement_title?: string
+  contract_name?: string
+  end_date?: string
+  days_remaining?: number
 }

@@ -18,6 +18,7 @@ const TYPE_ICONS: Record<NotificationType, string> = {
   item_mention: '@',
   item_comment: '💬',
   announcement_new: '📢',
+  contract_expiring: '⚠️',
 }
 
 const TYPE_COLORS: Record<NotificationType, string> = {
@@ -27,6 +28,7 @@ const TYPE_COLORS: Record<NotificationType, string> = {
   item_mention: 'bg-amber-100 text-amber-700',
   item_comment: 'bg-bg-tertiary text-text-secondary',
   announcement_new: 'bg-indigo-100 text-indigo-700',
+  contract_expiring: 'bg-red-100 text-red-700',
 }
 
 interface NotificationBellProps {
