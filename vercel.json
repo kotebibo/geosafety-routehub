@@ -43,6 +43,12 @@
       ]
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/contract-expiry-alerts",
+      "schedule": "0 5 * * *"
+    }
+  ],
   "redirects": [
     {
       "source": "/admin",
