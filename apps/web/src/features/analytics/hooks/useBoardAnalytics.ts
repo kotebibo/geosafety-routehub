@@ -51,7 +51,7 @@ export function useBoardAnalytics() {
   // Finance tab
   const serviceTypeRevenue = useMemo(
     () => boardAnalyticsService.getServiceTypeRevenue(companies),
-    [companies]
+    [companies, serviceTypes]
   )
   const monthlyTrend = useMemo(() => boardAnalyticsService.getMonthlyTrend(companies), [companies])
   const paymentMethods = useMemo(
@@ -80,14 +80,17 @@ export function useBoardAnalytics() {
   // Companies tab
   const expiringContracts = useMemo(
     () => boardAnalyticsService.getExpiringContracts(companies, locations.items, locations.groups),
-    [companies, locations]
+    [companies, locations, serviceTypes]
   )
   const expiryTimeline = useMemo(
     () => boardAnalyticsService.getExpiryTimeline(companies),
     [companies]
   )
   const valueBuckets = useMemo(() => boardAnalyticsService.getValueBuckets(companies), [companies])
-  const companyTable = useMemo(() => boardAnalyticsService.getCompanyTable(companies), [companies])
+  const companyTable = useMemo(
+    () => boardAnalyticsService.getCompanyTable(companies),
+    [companies, serviceTypes]
+  )
   const activityBreakdown = useMemo(
     () => boardAnalyticsService.getActivityBreakdown(companies),
     [companies]
