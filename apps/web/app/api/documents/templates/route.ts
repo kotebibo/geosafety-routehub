@@ -6,7 +6,7 @@ import { requireAuth, requireAdmin } from '@/middleware/auth'
 import PizZip from 'pizzip'
 import Docxtemplater from 'docxtemplater'
 import ExcelJS from 'exceljs'
-import XLSX from 'xlsx'
+import * as XLSX from 'xlsx'
 
 const SUPPORTED_EXTENSIONS = ['.docx', '.xlsx', '.xls']
 
