@@ -34,6 +34,7 @@ export function ValueDistributionChart({ data }: ValueDistributionChartProps) {
               border: '1px solid var(--border-primary)',
               borderRadius: 8,
               fontSize: 12,
+              color: 'var(--text-primary)',
             }}
             formatter={(value: any) => [value, 'კომპანიები']}
             labelFormatter={(label: any) => `₾${label}`}

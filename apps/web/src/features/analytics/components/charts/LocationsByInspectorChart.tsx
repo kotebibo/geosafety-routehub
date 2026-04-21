@@ -27,10 +27,34 @@ export function LocationsByInspectorChart({ data }: LocationsByInspectorChartPro
       ) : (
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={formatted} layout="vertical" margin={{ left: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
-            <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={140} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--border-primary)"
+              horizontal={false}
+            />
+            <XAxis
+              type="number"
+              tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
+              allowDecimals={false}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              type="category"
+              dataKey="name"
+              tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+              width={140}
+              axisLine={false}
+              tickLine={false}
+            />
             <Tooltip
+              contentStyle={{
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-primary)',
+                borderRadius: 8,
+                fontSize: 12,
+                color: 'var(--text-primary)',
+              }}
               formatter={(value: any) => [value, 'ლოკაციები']}
               labelFormatter={(_: any, payload: any) => payload?.[0]?.payload?.fullName || ''}
             />

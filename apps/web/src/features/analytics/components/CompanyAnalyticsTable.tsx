@@ -95,10 +95,16 @@ export function CompanyAnalyticsTable({ data }: CompanyAnalyticsTableProps) {
                 key={i}
                 className="border-b last:border-0 hover:bg-bg-secondary/30 transition-colors"
               >
-                <td className="px-3 py-2.5 text-text-primary font-medium truncate max-w-[200px]">
+                <td
+                  className="px-3 py-2.5 text-text-primary font-medium truncate max-w-[200px]"
+                  title={row.name}
+                >
                   {row.name}
                 </td>
-                <td className="px-3 py-2.5 text-text-secondary truncate max-w-[120px]">
+                <td
+                  className="px-3 py-2.5 text-text-secondary truncate max-w-[120px]"
+                  title={row.service_type}
+                >
                   {row.service_type}
                 </td>
                 <td className="px-3 py-2.5 text-text-primary text-right">

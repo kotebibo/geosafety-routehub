@@ -54,6 +54,7 @@ export function ServiceTypeRevenueChart({ data }: ServiceTypeRevenueChartProps) 
                   border: '1px solid var(--border-primary)',
                   borderRadius: 8,
                   fontSize: 12,
+                  color: 'var(--text-primary)',
                 }}
               />
             </PieChart>
@@ -67,7 +68,10 @@ export function ServiceTypeRevenueChart({ data }: ServiceTypeRevenueChartProps) 
                   className="w-3 h-3 rounded-sm flex-shrink-0"
                   style={{ backgroundColor: COLORS[i % COLORS.length] }}
                 />
-                <span className="text-text-secondary truncate max-w-[140px]">
+                <span
+                  className="text-text-secondary truncate max-w-[140px]"
+                  title={item.service_type}
+                >
                   {item.service_type}
                 </span>
               </div>

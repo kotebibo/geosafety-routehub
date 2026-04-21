@@ -57,6 +57,7 @@ export function RevenueForecastChart({ data }: RevenueForecastChartProps) {
               border: '1px solid var(--border-primary)',
               borderRadius: 8,
               fontSize: 12,
+              color: 'var(--text-primary)',
             }}
             formatter={(value: any, name: any) => {
               const labels: Record<string, string> = {

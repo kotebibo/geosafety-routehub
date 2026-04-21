@@ -46,6 +46,7 @@ export function CumulativeLossChart({ data }: CumulativeLossChartProps) {
               border: '1px solid var(--border-primary)',
               borderRadius: 8,
               fontSize: 12,
+              color: 'var(--text-primary)',
             }}
             formatter={(value: any) => [`₾${Number(value).toLocaleString()}`, 'დანაკარგი']}
           />

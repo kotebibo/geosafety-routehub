@@ -97,6 +97,7 @@ export function ActivityBreakdownChart({ data }: ActivityBreakdownChartProps) {
               border: '1px solid var(--border-primary)',
               borderRadius: 8,
               fontSize: 12,
+              color: 'var(--text-primary)',
             }}
           />
           <Bar dataKey={metric} radius={[0, 4, 4, 0]} maxBarSize={20}>

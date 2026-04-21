@@ -40,6 +40,7 @@ export function TopCompaniesRevenueChart({ data }: TopCompaniesRevenueChartProps
               border: '1px solid var(--border-primary)',
               borderRadius: 8,
               fontSize: 12,
+              color: 'var(--text-primary)',
             }}
             formatter={(value: any) => [`₾${value.toLocaleString()}`, 'შემოსავალი']}
             labelFormatter={(label: any) => {
