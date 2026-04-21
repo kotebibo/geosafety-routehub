@@ -57,6 +57,7 @@ export function WorkloadScatterChart({ data }: WorkloadScatterChartProps) {
               border: '1px solid var(--border-primary)',
               borderRadius: 8,
               fontSize: 12,
+              color: 'var(--text-primary)',
             }}
             formatter={(value: any, name: any) => [
               name === 'შემოსავალი' ? `₾${value.toLocaleString()}` : value,

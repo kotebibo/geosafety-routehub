@@ -44,10 +44,16 @@ export function ExpiringContractsTable({ data }: ExpiringContractsTableProps) {
                 key={i}
                 className="border-b last:border-0 hover:bg-bg-secondary/30 transition-colors"
               >
-                <td className="px-4 py-2.5 text-text-primary font-medium truncate max-w-[200px]">
+                <td
+                  className="px-4 py-2.5 text-text-primary font-medium truncate max-w-[200px]"
+                  title={contract.name}
+                >
                   {contract.name}
                 </td>
-                <td className="px-4 py-2.5 text-text-secondary truncate max-w-[120px]">
+                <td
+                  className="px-4 py-2.5 text-text-secondary truncate max-w-[120px]"
+                  title={contract.inspector}
+                >
                   {contract.inspector}
                 </td>
                 <td className="px-4 py-2.5 text-text-primary text-right font-medium">
@@ -61,7 +67,10 @@ export function ExpiringContractsTable({ data }: ExpiringContractsTableProps) {
                     {urgencyLabel(contract.days_remaining)}
                   </span>
                 </td>
-                <td className="px-4 py-2.5 text-text-secondary truncate max-w-[120px]">
+                <td
+                  className="px-4 py-2.5 text-text-secondary truncate max-w-[120px]"
+                  title={contract.service_type}
+                >
                   {contract.service_type}
                 </td>
               </tr>

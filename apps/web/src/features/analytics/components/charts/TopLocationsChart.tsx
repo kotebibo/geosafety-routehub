@@ -23,10 +23,34 @@ export function TopLocationsChart({ data }: TopLocationsChartProps) {
       ) : (
         <ResponsiveContainer width="100%" height={350}>
           <BarChart data={formatted} layout="vertical" margin={{ left: 20 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 11 }} tickFormatter={v => `₾${v}`} />
-            <YAxis type="category" dataKey="label" tick={{ fontSize: 10 }} width={160} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="var(--border-primary)"
+              horizontal={false}
+            />
+            <XAxis
+              type="number"
+              tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
+              tickFormatter={v => `₾${v}`}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              type="category"
+              dataKey="label"
+              tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+              width={160}
+              axisLine={false}
+              tickLine={false}
+            />
             <Tooltip
+              contentStyle={{
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-primary)',
+                borderRadius: 8,
+                fontSize: 12,
+                color: 'var(--text-primary)',
+              }}
               formatter={(value: any) => [`₾${value}`, 'თანხა']}
               labelFormatter={(_: any, payload: any) => {
                 const item = payload?.[0]?.payload

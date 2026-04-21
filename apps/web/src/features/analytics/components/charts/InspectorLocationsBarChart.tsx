@@ -43,6 +43,7 @@ export function InspectorLocationsBarChart({ data }: InspectorLocationsBarChartP
               border: '1px solid var(--border-primary)',
               borderRadius: 8,
               fontSize: 12,
+              color: 'var(--text-primary)',
             }}
             formatter={(value: any) => [value, 'ლოკაციები']}
             labelFormatter={(label: any) => {

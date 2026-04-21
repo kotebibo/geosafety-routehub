@@ -73,6 +73,13 @@ export function RevenueShareChart({ data }: RevenueShareChartProps) {
               ))}
             </Pie>
             <Tooltip
+              contentStyle={{
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-primary)',
+                borderRadius: 8,
+                fontSize: 12,
+                color: 'var(--text-primary)',
+              }}
               formatter={(value: any) => [
                 `₾${value} (${total > 0 ? Math.round((value / total) * 100) : 0}%)`,
                 'თანხა',

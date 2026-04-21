@@ -47,6 +47,7 @@ export function ExpiryTimelineChart({ data }: ExpiryTimelineChartProps) {
               border: '1px solid var(--border-primary)',
               borderRadius: 8,
               fontSize: 12,
+              color: 'var(--text-primary)',
             }}
             formatter={(value: any) => [value, 'კონტრაქტები']}
           />
