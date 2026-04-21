@@ -1,8 +1,21 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { boardAnalyticsService } from '@/services/board-analytics.service'
+import { boardAnalyticsService, setServiceTypeLookup } from '@/services/board-analytics.service'
+import { useServiceTypes } from '@/hooks/useServiceTypes'
 
 export function useBoardAnalytics() {
+  // Load service types for UUID → name resolution
+  const { serviceTypes } = useServiceTypes()
+  useMemo(() => {
+    if (serviceTypes.length > 0) {
+      const lookup: Record<string, string> = {}
+      for (const st of serviceTypes) {
+        lookup[st.id] = st.name_ka || st.name
+      }
+      setServiceTypeLookup(lookup)
+    }
+  }, [serviceTypes])
+
   // Stage 1: Load all three source boards
   const companiesQuery = useQuery({
     queryKey: ['board-analytics', 'companies-board'],

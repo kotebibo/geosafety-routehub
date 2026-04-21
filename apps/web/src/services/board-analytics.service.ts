@@ -160,6 +160,23 @@ function formatServiceType(raw: string | null): string {
   return raw.replace(/_/g, ' ').replace(/და/g, '& ').trim()
 }
 
+/** Map of service_type UUID → Georgian display name (populated at runtime) */
+let serviceTypeLookup: Record<string, string> = {}
+
+export function setServiceTypeLookup(lookup: Record<string, string>) {
+  serviceTypeLookup = lookup
+}
+
+/** Resolve service type from data — uses service_type UUID array */
+function getServiceType(data: Record<string, any> | null): string {
+  if (!data) return 'უცნობი'
+  const st = data.service_type
+  if (Array.isArray(st) && st.length > 0) {
+    return st.map((id: string) => serviceTypeLookup[id] || id).join(', ')
+  }
+  return 'უცნობი'
+}
+
 function formatPaymentMethod(raw: string | null): string {
   if (!raw) return 'უცნობი'
   return raw.replace(/_/g, ' ').trim()
@@ -249,10 +266,20 @@ export const boardAnalyticsService = {
   getServiceTypeRevenue: (companies: BoardRow[]): ServiceTypeRevenue[] => {
     const map: Record<string, { revenue: number; count: number }> = {}
     for (const c of companies) {
-      const st = formatServiceType(c.data?.status)
-      if (!map[st]) map[st] = { revenue: 0, count: 0 }
-      map[st].revenue += c.data?.act_amount || 0
-      map[st].count++
+      const serviceIds = Array.isArray(c.data?.service_type) ? c.data.service_type : []
+      const amount = c.data?.act_amount || 0
+
+      if (serviceIds.length > 0) {
+        // Split revenue equally across each service type
+        const share = amount / serviceIds.length
+        for (const id of serviceIds) {
+          const name = serviceTypeLookup[id] || id
+          if (!map[name]) map[name] = { revenue: 0, count: 0 }
+          map[name].revenue += share
+          map[name].count++
+        }
+      }
+      // Contracts without service_type (e.g. გასარკვევია, წყდება) are excluded from this chart
     }
     const total = Object.values(map).reduce((s, v) => s + v.revenue, 0)
     return Object.entries(map)
@@ -369,7 +396,7 @@ export const boardAnalyticsService = {
           end_date: c.data.end_date,
           days_remaining: days || 0,
           payment_method: formatPaymentMethod(c.data?.payment_method),
-          service_type: formatServiceType(c.data?.status),
+          service_type: getServiceType(c.data),
         }
       })
       .filter(c => c.days_remaining > -90) // Include recently expired + upcoming
@@ -510,7 +537,7 @@ export const boardAnalyticsService = {
       name: c.name,
       locations: 0, // Filled in by caller if needed
       inspector: c.data?.sales_manager || '',
-      service_type: formatServiceType(c.data?.status),
+      service_type: getServiceType(c.data),
       monthly: c.data?.monthly || 0,
       invoice: c.data?.invoice_amount || 0,
       vat: c.data?.vat || 0,
