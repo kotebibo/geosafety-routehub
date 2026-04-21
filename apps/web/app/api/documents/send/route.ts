@@ -42,6 +42,17 @@ export async function POST(request: NextRequest) {
 
     const fileBuffer = Buffer.from(await fileData.arrayBuffer())
 
+    // Detect content type from file extension
+    const ext = doc.file_name?.substring(doc.file_name.lastIndexOf('.')).toLowerCase() || '.docx'
+    const CONTENT_TYPES: Record<string, string> = {
+      '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      '.xls': 'application/vnd.ms-excel',
+    }
+    const attachmentContentType =
+      CONTENT_TYPES[ext] ||
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
     // Build email HTML
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://routehub.vercel.app'
     const messageHtml = message
@@ -99,7 +110,7 @@ export async function POST(request: NextRequest) {
         {
           filename: doc.file_name,
           content: fileBuffer,
-          contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          contentType: attachmentContentType,
         },
       ],
     })

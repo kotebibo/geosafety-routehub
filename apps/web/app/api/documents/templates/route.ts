@@ -156,6 +156,7 @@ export async function POST(request: NextRequest) {
 
     // Parse tags based on file type
     let tags: string[] = []
+    let tagParseWarning: string | null = null
     try {
       if (ext === '.docx') {
         tags = parseTagsFromDocx(arrayBuffer)
@@ -165,9 +166,14 @@ export async function POST(request: NextRequest) {
         // .xls — use SheetJS to read tags (can read .xls binary format)
         tags = parseTagsFromExcelSheetJS(arrayBuffer)
       }
+      if (tags.length === 0) {
+        tagParseWarning =
+          'ტეგები ვერ მოიძებნა. დარწმუნდით რომ შაბლონი შეიცავს {{tag}} ფორმატის ველებს.'
+      }
     } catch (parseError) {
       console.error('Error parsing template tags:', parseError)
-      // Continue without tags — user can still upload
+      tagParseWarning =
+        'ტეგების ამოცნობა ვერ მოხერხდა. შაბლონი აიტვირთა მაგრამ ტეგების მეპინგი ხელით უნდა შეავსოთ.'
     }
 
     // Upload to Supabase Storage
@@ -201,7 +207,7 @@ export async function POST(request: NextRequest) {
 
     if (insertError) throw insertError
 
-    return NextResponse.json(template, { status: 201 })
+    return NextResponse.json({ ...template, warning: tagParseWarning }, { status: 201 })
   } catch (error: any) {
     if (error.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })

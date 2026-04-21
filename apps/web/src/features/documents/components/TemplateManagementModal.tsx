@@ -34,6 +34,7 @@ export function TemplateManagementModal({
   const [uploadDescription, setUploadDescription] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [error, setError] = useState('')
+  const [warning, setWarning] = useState('')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { templates, loading, refresh } = useDocumentTemplates(boardId)
@@ -53,8 +54,10 @@ export function TemplateManagementModal({
         boardId,
         workspaceId,
       })
-      console.log('Template uploaded:', result)
       await refresh()
+      if ((result as any).warning) {
+        setWarning((result as any).warning)
+      }
       setView('list')
       resetUploadForm()
     } catch (err: any) {
@@ -138,6 +141,17 @@ export function TemplateManagementModal({
           {error && (
             <div className="mb-4 px-3 py-2 rounded-md bg-red-50 border border-red-200 text-sm text-red-700">
               {error}
+            </div>
+          )}
+          {warning && (
+            <div className="mb-4 px-3 py-2 rounded-md bg-amber-50 border border-amber-200 text-sm text-amber-700 flex items-start justify-between gap-2">
+              <span>{warning}</span>
+              <button
+                onClick={() => setWarning('')}
+                className="text-amber-400 hover:text-amber-600 flex-shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
 
