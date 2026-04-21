@@ -160,21 +160,9 @@ function formatServiceType(raw: string | null): string {
   return raw.replace(/_/g, ' ').replace(/და/g, '& ').trim()
 }
 
-/** Map of service_type UUID → Georgian display name (populated at runtime) */
-let serviceTypeLookup: Record<string, string> = {}
-
-export function setServiceTypeLookup(lookup: Record<string, string>) {
-  serviceTypeLookup = lookup
-}
-
-/** Resolve service type from data — uses service_type UUID array */
 function getServiceType(data: Record<string, any> | null): string {
   if (!data) return 'უცნობი'
-  const st = data.service_type
-  if (Array.isArray(st) && st.length > 0) {
-    return st.map((id: string) => serviceTypeLookup[id] || id).join(', ')
-  }
-  return 'უცნობი'
+  return formatServiceType(data.status)
 }
 
 function formatPaymentMethod(raw: string | null): string {
@@ -266,20 +254,10 @@ export const boardAnalyticsService = {
   getServiceTypeRevenue: (companies: BoardRow[]): ServiceTypeRevenue[] => {
     const map: Record<string, { revenue: number; count: number }> = {}
     for (const c of companies) {
-      const serviceIds = Array.isArray(c.data?.service_type) ? c.data.service_type : []
-      const amount = c.data?.act_amount || 0
-
-      if (serviceIds.length > 0) {
-        // Split revenue equally across each service type
-        const share = amount / serviceIds.length
-        for (const id of serviceIds) {
-          const name = serviceTypeLookup[id] || id
-          if (!map[name]) map[name] = { revenue: 0, count: 0 }
-          map[name].revenue += share
-          map[name].count++
-        }
-      }
-      // Contracts without service_type (e.g. გასარკვევია, წყდება) are excluded from this chart
+      const st = getServiceType(c.data)
+      if (!map[st]) map[st] = { revenue: 0, count: 0 }
+      map[st].revenue += c.data?.act_amount || 0
+      map[st].count++
     }
     const total = Object.values(map).reduce((s, v) => s + v.revenue, 0)
     return Object.entries(map)

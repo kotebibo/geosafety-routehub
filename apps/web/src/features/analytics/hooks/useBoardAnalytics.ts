@@ -1,21 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
-import { boardAnalyticsService, setServiceTypeLookup } from '@/services/board-analytics.service'
-import { useServiceTypes } from '@/hooks/useServiceTypes'
+import { boardAnalyticsService } from '@/services/board-analytics.service'
 
 export function useBoardAnalytics() {
-  // Load service types for UUID → name resolution
-  const { serviceTypes } = useServiceTypes()
-  useMemo(() => {
-    if (serviceTypes.length > 0) {
-      const lookup: Record<string, string> = {}
-      for (const st of serviceTypes) {
-        lookup[st.id] = st.name_ka || st.name
-      }
-      setServiceTypeLookup(lookup)
-    }
-  }, [serviceTypes])
-
   // Stage 1: Load all three source boards
   const companiesQuery = useQuery({
     queryKey: ['board-analytics', 'companies-board'],
@@ -51,7 +38,7 @@ export function useBoardAnalytics() {
   // Finance tab
   const serviceTypeRevenue = useMemo(
     () => boardAnalyticsService.getServiceTypeRevenue(companies),
-    [companies, serviceTypes]
+    [companies]
   )
   const monthlyTrend = useMemo(() => boardAnalyticsService.getMonthlyTrend(companies), [companies])
   const paymentMethods = useMemo(
@@ -80,17 +67,14 @@ export function useBoardAnalytics() {
   // Companies tab
   const expiringContracts = useMemo(
     () => boardAnalyticsService.getExpiringContracts(companies, locations.items, locations.groups),
-    [companies, locations, serviceTypes]
+    [companies, locations]
   )
   const expiryTimeline = useMemo(
     () => boardAnalyticsService.getExpiryTimeline(companies),
     [companies]
   )
   const valueBuckets = useMemo(() => boardAnalyticsService.getValueBuckets(companies), [companies])
-  const companyTable = useMemo(
-    () => boardAnalyticsService.getCompanyTable(companies),
-    [companies, serviceTypes]
-  )
+  const companyTable = useMemo(() => boardAnalyticsService.getCompanyTable(companies), [companies])
   const activityBreakdown = useMemo(
     () => boardAnalyticsService.getActivityBreakdown(companies),
     [companies]
