@@ -640,14 +640,14 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
   }
 
   const handleDuplicate = async () => {
-    if (!menuState || !inspectorId || actionLoading) return
+    if (!menuState || !userId || actionLoading) return
 
     setActionLoading(true)
     try {
       const newBoard = await userBoardsService.duplicateBoard(
         menuState.boardId,
         `${menuState.boardName} (copy)`,
-        inspectorId
+        userId
       )
       refreshBoards()
       closeMenu()
@@ -1717,11 +1717,11 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
         )}
 
       {/* Create Workspace Modal */}
-      {inspectorId && (
+      {userId && (
         <CreateWorkspaceModal
           isOpen={showCreateWorkspace}
           onClose={() => setShowCreateWorkspace(false)}
-          userId={inspectorId}
+          userId={userId}
           onSuccess={workspaceId => {
             handleWorkspaceChange(workspaceId)
             refreshBoards()
