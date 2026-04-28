@@ -41,6 +41,10 @@ export const coordinatesMapService = {
 
         if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) return null
 
+        const addrLat = parseFloat(d?.address_lat || '')
+        const addrLng = parseFloat(d?.address_lng || '')
+        const distKm = parseFloat(d?.distance_km || '')
+
         return {
           id: item.id,
           name: item.name || '',
@@ -49,6 +53,10 @@ export const coordinatesMapService = {
           lng,
           coordinates: d?.coordinates || '',
           sk: d?.sk || '',
+          address: d?.address || '',
+          addressLat: isNaN(addrLat) ? null : addrLat,
+          addressLng: isNaN(addrLng) ? null : addrLng,
+          distanceKm: isNaN(distKm) ? null : distKm,
         }
       })
       .filter((item): item is CoordinateItem => item !== null)
