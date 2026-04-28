@@ -48,6 +48,7 @@ import {
   Globe,
   Search,
   GripVertical,
+  Banknote,
 } from 'lucide-react'
 import {
   DndContext,
@@ -829,6 +830,13 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       labelEn: 'Assignments',
       icon: UserCog,
       permission: 'pages:assignments',
+    },
+    {
+      href: '/payments',
+      label: 'გადახდები',
+      labelEn: 'Payments',
+      icon: Banknote,
+      permission: 'pages:payments',
     },
     {
       href: '/admin/users',
