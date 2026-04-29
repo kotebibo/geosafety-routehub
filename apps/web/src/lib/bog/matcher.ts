@@ -8,18 +8,41 @@ import { bogClient } from './client'
 import type { BogTodayActivity, BogStatementRecord, BankTransactionInsert } from './types'
 
 /**
+ * Parse sender details from a JSON string like:
+ * {"Name":"შპს არტეო","Inn":"405523125","AccountNumber":"GE12...","BankCode":"..."}
+ */
+function parseSenderDetails(raw: string | null): {
+  name: string | null
+  inn: string | null
+  account: string | null
+} {
+  if (!raw) return { name: null, inn: null, account: null }
+  try {
+    const obj = typeof raw === 'string' ? JSON.parse(raw) : raw
+    return {
+      name: obj.Name || null,
+      inn: obj.Inn || null,
+      account: obj.AccountNumber || null,
+    }
+  } catch {
+    return { name: raw, inn: null, account: null }
+  }
+}
+
+/**
  * Transform todayactivities response (Original API) to our DB format
  */
 function transformTodayActivity(txn: BogTodayActivity): BankTransactionInsert {
+  const sender = parseSenderDetails(txn.Sender)
   return {
     doc_key: txn.DocKey,
     entry_date: txn.EntryDate,
     doc_date: txn.DocDate || null,
     amount: txn.Credit || txn.Debit,
     currency: txn.Currency,
-    sender_name: txn.Sender || null,
-    sender_inn: txn.SenderInn || null,
-    sender_account: txn.SenderAccountNumber || null,
+    sender_name: sender.name,
+    sender_inn: sender.inn || txn.SenderInn || null,
+    sender_account: sender.account || txn.SenderAccountNumber || null,
     receiver_account: txn.ReceiverAccountNumber || null,
     purpose: txn.Nomination || null,
     raw_data: txn as unknown as Record<string, unknown>,
@@ -30,15 +53,16 @@ function transformTodayActivity(txn: BogTodayActivity): BankTransactionInsert {
  * Transform statement/v2 response (Statement New API) to our DB format
  */
 function transformStatementRecord(rec: BogStatementRecord): BankTransactionInsert {
+  const sender = parseSenderDetails(rec.SenderDetails)
   return {
     doc_key: rec.DocumentKey,
     entry_date: rec.EntryDate,
     doc_date: rec.DocumentDate || null,
     amount: rec.EntryAmountCredit || rec.EntryAmountDebit,
     currency: rec.Currency,
-    sender_name: rec.SenderDetails || null,
-    sender_inn: rec.SenderInn || null,
-    sender_account: rec.SenderAccountNumber || null,
+    sender_name: sender.name,
+    sender_inn: sender.inn || rec.SenderInn || null,
+    sender_account: sender.account || rec.SenderAccountNumber || null,
     receiver_account: rec.ReceiverAccountNumber || null,
     purpose: rec.DocumentNomination || null,
     raw_data: rec as unknown as Record<string, unknown>,

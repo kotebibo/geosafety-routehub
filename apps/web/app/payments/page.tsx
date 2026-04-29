@@ -19,6 +19,8 @@ import {
   Building2,
   Calendar,
   Eye,
+  Copy,
+  Check,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -137,6 +139,14 @@ export default function PaymentsPage() {
       default:
         return '—'
     }
+  }
+
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedId(id)
+    setTimeout(() => setCopiedId(null), 1500)
   }
 
   const filteredTransactions = searchQuery
@@ -315,17 +325,67 @@ export default function PaymentsPage() {
                         {formatDate(txn.entry_date)}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-text-primary max-w-[200px] truncate">
-                      {txn.sender_name || '—'}
+                    <td className="px-4 py-3 max-w-[200px]">
+                      {txn.sender_name ? (
+                        <div className="group relative flex items-center gap-1">
+                          <span className="text-text-primary truncate" title={txn.sender_name}>
+                            {txn.sender_name}
+                          </span>
+                          <button
+                            onClick={() => handleCopy(txn.sender_name!, `name-${txn.id}`)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                            title="კოპირება"
+                          >
+                            {copiedId === `name-${txn.id}` ? (
+                              <Check className="w-3 h-3 text-color-success" />
+                            ) : (
+                              <Copy className="w-3 h-3 text-text-secondary hover:text-text-primary" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-text-secondary">—</span>
+                      )}
                     </td>
-                    <td className="px-4 py-3 text-text-secondary font-mono text-xs">
-                      {txn.sender_inn || '—'}
+                    <td className="px-4 py-3">
+                      {txn.sender_inn ? (
+                        <div className="group relative flex items-center gap-1">
+                          <span
+                            className="text-text-secondary font-mono text-xs"
+                            title={txn.sender_inn}
+                          >
+                            {txn.sender_inn}
+                          </span>
+                          <button
+                            onClick={() => handleCopy(txn.sender_inn!, `inn-${txn.id}`)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                            title="კოპირება"
+                          >
+                            {copiedId === `inn-${txn.id}` ? (
+                              <Check className="w-3 h-3 text-color-success" />
+                            ) : (
+                              <Copy className="w-3 h-3 text-text-secondary hover:text-text-primary" />
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-text-secondary">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right font-medium text-text-primary whitespace-nowrap">
                       {formatAmount(txn.amount, txn.currency)}
                     </td>
-                    <td className="px-4 py-3 text-text-secondary max-w-[250px] truncate text-xs">
-                      {txn.purpose || '—'}
+                    <td className="px-4 py-3 max-w-[250px]">
+                      {txn.purpose ? (
+                        <span
+                          className="text-text-secondary text-xs truncate block"
+                          title={txn.purpose}
+                        >
+                          {txn.purpose}
+                        </span>
+                      ) : (
+                        <span className="text-text-secondary">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {txn.companies ? (
