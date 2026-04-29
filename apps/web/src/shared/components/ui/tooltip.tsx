@@ -31,6 +31,8 @@ export function Tooltip({
           side={side}
           align={align}
           sideOffset={6}
+          collisionPadding={8}
+          avoidCollisions
           className={cn(
             'z-[10000] px-2.5 py-1.5 text-xs font-medium text-text-inverse bg-text-primary rounded-md shadow-lg',
             'max-w-[240px] break-words leading-relaxed',
