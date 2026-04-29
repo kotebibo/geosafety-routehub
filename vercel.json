@@ -47,6 +47,14 @@
     {
       "path": "/api/cron/contract-expiry-alerts",
       "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/bank-poll",
+      "schedule": "*/30 9-18 * * 1-5"
+    },
+    {
+      "path": "/api/cron/bank-reconcile",
+      "schedule": "0 2 * * *"
     }
   ],
   "redirects": [
