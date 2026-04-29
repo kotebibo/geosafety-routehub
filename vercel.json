@@ -43,7 +43,12 @@
       ]
     }
   ],
-  "crons": [],
+  "crons": [
+    {
+      "path": "/api/cron/bank-poll",
+      "schedule": "*/30 * * * *"
+    }
+  ],
   "redirects": [
     {
       "source": "/admin",
