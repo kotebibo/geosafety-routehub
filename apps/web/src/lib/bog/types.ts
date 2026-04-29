@@ -24,19 +24,31 @@ export type BogTokenResponse = z.infer<typeof bogTokenResponseSchema>
 // ============================================================
 
 export const bogTodayActivitySchema = z.object({
-  DocKey: z.string(),
+  DocKey: z.union([z.string(), z.number()]).transform(v => String(v)),
   EntryDate: z.string(),
   DocDate: z.string().optional().nullable(),
   Credit: z.number().default(0),
   Debit: z.number().default(0),
   Currency: z.string().default('GEL'),
-  Sender: z.string().optional().nullable(),
+  Sender: z
+    .union([z.string(), z.object({}).passthrough()])
+    .optional()
+    .nullable()
+    .transform(v => (typeof v === 'object' && v !== null ? JSON.stringify(v) : (v ?? null))),
   SenderInn: z.string().optional().nullable(),
   SenderAccountNumber: z.string().optional().nullable(),
-  Receiver: z.string().optional().nullable(),
+  Receiver: z
+    .union([z.string(), z.object({}).passthrough()])
+    .optional()
+    .nullable()
+    .transform(v => (typeof v === 'object' && v !== null ? JSON.stringify(v) : (v ?? null))),
   ReceiverAccountNumber: z.string().optional().nullable(),
   Nomination: z.string().optional().nullable(),
-  DocumentNumber: z.string().optional().nullable(),
+  DocumentNumber: z
+    .union([z.string(), z.number()])
+    .optional()
+    .nullable()
+    .transform(v => (v != null ? String(v) : null)),
   OperationCode: z.string().optional().nullable(),
 })
 
@@ -52,19 +64,31 @@ export const bogTodayActivitiesResponseSchema = z.array(bogTodayActivitySchema)
 // ============================================================
 
 export const bogStatementRecordSchema = z.object({
-  DocumentKey: z.string(),
+  DocumentKey: z.union([z.string(), z.number()]).transform(v => String(v)),
   EntryDate: z.string(),
   DocumentDate: z.string().optional().nullable(),
   EntryAmountCredit: z.number().default(0),
   EntryAmountDebit: z.number().default(0),
   Currency: z.string().default('GEL'),
-  SenderDetails: z.string().optional().nullable(),
+  SenderDetails: z
+    .union([z.string(), z.object({}).passthrough()])
+    .optional()
+    .nullable()
+    .transform(v => (typeof v === 'object' && v !== null ? JSON.stringify(v) : (v ?? null))),
   SenderInn: z.string().optional().nullable(),
   SenderAccountNumber: z.string().optional().nullable(),
-  ReceiverDetails: z.string().optional().nullable(),
+  ReceiverDetails: z
+    .union([z.string(), z.object({}).passthrough()])
+    .optional()
+    .nullable()
+    .transform(v => (typeof v === 'object' && v !== null ? JSON.stringify(v) : (v ?? null))),
   ReceiverAccountNumber: z.string().optional().nullable(),
   DocumentNomination: z.string().optional().nullable(),
-  DocumentNumber: z.string().optional().nullable(),
+  DocumentNumber: z
+    .union([z.string(), z.number()])
+    .optional()
+    .nullable()
+    .transform(v => (v != null ? String(v) : null)),
   OperationCode: z.string().optional().nullable(),
 })
 
