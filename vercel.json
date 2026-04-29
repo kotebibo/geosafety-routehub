@@ -50,7 +50,7 @@
     },
     {
       "path": "/api/cron/bank-poll",
-      "schedule": "*/30 9-18 * * 1-5"
+      "schedule": "*/30 * * * *"
     },
     {
       "path": "/api/cron/bank-reconcile",
