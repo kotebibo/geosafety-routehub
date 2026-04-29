@@ -13,11 +13,12 @@ import { isBogConfigured } from '@/lib/bog/client'
 
 export async function GET(request: NextRequest) {
   try {
-    // Verify cron secret
+    // Verify cron secret (header or query param for manual testing)
     const authHeader = request.headers.get('authorization')
+    const secretParam = new URL(request.url).searchParams.get('secret')
     const cronSecret = process.env.CRON_SECRET
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (cronSecret && authHeader !== `Bearer ${cronSecret}` && secretParam !== cronSecret) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
