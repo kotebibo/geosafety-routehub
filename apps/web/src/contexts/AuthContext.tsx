@@ -49,6 +49,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      const previousUser = user
       setUser(session?.user ?? null)
       if (session?.user) {
         // Only upsert profile on fresh sign-in, not on token refresh
@@ -56,6 +57,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         setUserRole(null)
         setLoading(false)
+        // Session expired — user was logged in before but now isn't
+        if (previousUser && _event === 'SIGNED_OUT') {
+          // Show a brief message before redirect (RouteGuard handles the redirect)
+          sessionStorage.setItem('routehub-session-expired', '1')
+        }
       }
     })
 

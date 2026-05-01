@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useToast } from '@/components/ui-monday/Toast'
 
 interface SaveRouteModalProps {
   isOpen: boolean
@@ -21,6 +22,7 @@ interface SaveRouteModalProps {
 }
 
 export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: SaveRouteModalProps) {
+  const { showToast } = useToast()
   const [name, setName] = useState(defaultName)
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [startTime, setStartTime] = useState('09:00')
@@ -43,7 +45,7 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
 
   const handleSave = async () => {
     if (!name || !date) {
-      alert('გთხოვთ შეავსოთ სახელი და თარიღი')
+      showToast('გთხოვთ შეავსოთ სახელი და თარიღი', 'warning')
       return
     }
 
@@ -53,7 +55,7 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
       onClose()
     } catch (error) {
       console.error('Save failed:', error)
-      alert('შენახვა ვერ მოხერხდა')
+      showToast('შენახვა ვერ მოხერხდა', 'error')
     } finally {
       setSaving(false)
     }

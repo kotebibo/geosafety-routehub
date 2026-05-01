@@ -30,10 +30,12 @@ import {
   EyeOff,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui-monday/Toast'
 
 export default function UserManagementPage() {
   const router = useRouter()
   const { user: currentUser, isAdmin, loading: authLoading, refreshUserRole } = useAuth()
+  const { showToast } = useToast()
 
   const [users, setUsers] = useState<User[]>([])
   const [roles, setRoles] = useState<CustomRole[]>([])
@@ -176,7 +178,7 @@ export default function UserManagementPage() {
       setEditingUserId(null)
     } catch (error) {
       console.error('Error saving user:', error)
-      alert('Failed to save user')
+      showToast('Failed to save user', 'error')
     }
   }
 
@@ -193,7 +195,7 @@ export default function UserManagementPage() {
       await fetchData()
     } catch (error) {
       console.error('Error toggling user status:', error)
-      alert('Failed to update user status')
+      showToast('Failed to update user status', 'error')
     }
   }
 

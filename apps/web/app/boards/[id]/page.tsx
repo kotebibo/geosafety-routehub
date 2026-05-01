@@ -31,6 +31,8 @@ import {
   Trash2,
   ArrowRightLeft,
   FileText,
+  Undo2,
+  Redo2,
 } from 'lucide-react'
 
 // Lazy-load heavy components that aren't needed on initial render
@@ -381,6 +383,28 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Undo/Redo */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={performUndo}
+                disabled={!canUndo}
+                className="p-1.5 rounded hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
+                title="Undo (Ctrl+Z)"
+              >
+                <Undo2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={performRedo}
+                disabled={!canRedo}
+                className="p-1.5 rounded hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
+                title="Redo (Ctrl+Y)"
+              >
+                <Redo2 className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="w-px h-5 bg-border-light" />
+
             <Button variant="secondary" size="sm" onClick={() => openModal('importModal')}>
               <Upload className="w-4 h-4 mr-2" />
               Import
