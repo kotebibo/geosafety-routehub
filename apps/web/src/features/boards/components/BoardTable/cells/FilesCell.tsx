@@ -320,7 +320,7 @@ export const FilesCell = memo(function FilesCell({
                     <span className="text-sm text-text-secondary">
                       {uploading ? 'Uploading...' : 'Click to upload files'}
                     </span>
-                    <span className="text-xs text-text-tertiary">Max 10MB per file</span>
+                    <span className="text-xs text-text-tertiary">Max 20MB per file</span>
                     <input
                       ref={fileInputRef}
                       type="file"
