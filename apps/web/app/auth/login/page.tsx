@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -35,6 +35,18 @@ function LoginForm() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
+
+  // Show session expired message if redirected from expired session
+  useEffect(() => {
+    if (sessionStorage.getItem('routehub-session-expired')) {
+      setError(
+        language === 'ka'
+          ? 'სესია ამოიწურა, გთხოვთ თავიდან შეხვიდეთ'
+          : 'Session expired, please sign in again'
+      )
+      sessionStorage.removeItem('routehub-session-expired')
+    }
+  }, [language])
 
   const handleForgotPassword = async () => {
     if (!email) {

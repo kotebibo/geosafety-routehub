@@ -37,6 +37,7 @@ import { formatTimeAgo } from '@/lib/formatTime'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInspectorId } from '@/hooks/useInspectorId'
 import { useUsers } from '@/hooks/useUsers'
+import { useToast } from '@/components/ui-monday/Toast'
 import { FilePreviewModal } from './FilePreviewModal'
 import type { ItemComment, ItemUpdate, BoardColumn } from '@/types/board'
 
@@ -89,6 +90,7 @@ export function UpdatesPanel({
   const queryClient = useQueryClient()
   const { data: inspectorId } = useInspectorId(user?.email ?? undefined)
   const { users } = useUsers()
+  const { showToast } = useToast()
 
   const [activeTab, setActiveTab] = useState<TabType>('updates')
   const [comments, setComments] = useState<ItemComment[]>([])
@@ -421,6 +423,7 @@ export function UpdatesPanel({
       queryClient.invalidateQueries({ queryKey: ['comment-counts'] })
     } catch (error) {
       console.error('Error creating comment:', error)
+      showToast('Failed to post comment', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -437,6 +440,7 @@ export function UpdatesPanel({
       await loadComments()
     } catch (error) {
       console.error('Error updating comment:', error)
+      showToast('Failed to update comment', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -451,6 +455,7 @@ export function UpdatesPanel({
       queryClient.invalidateQueries({ queryKey: ['comment-counts'] })
     } catch (error) {
       console.error('Error deleting comment:', error)
+      showToast('Failed to delete comment', 'error')
     }
   }
 

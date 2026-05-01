@@ -8,6 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useWalkthrough } from '@/components/Walkthrough'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/shared/components/ui'
+import { useToast } from '@/components/ui-monday/Toast'
 import {
   ArrowLeft,
   User,
@@ -57,6 +58,7 @@ export default function SettingsPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { t } = useLanguage()
+  const { showToast } = useToast()
   const { theme: currentTheme, setTheme } = useTheme()
   const { restartWalkthrough } = useWalkthrough()
   const [activeTab, setActiveTab] = useState<TabType>('profile')
@@ -965,7 +967,7 @@ export default function SettingsPage() {
                       redirectTo: `${window.location.origin}/auth/reset-password`,
                     })
                     if (!error) {
-                      alert(t('settings.security.passwordSent'))
+                      showToast(t('settings.security.passwordSent'), 'success')
                     }
                   }}
                 >
