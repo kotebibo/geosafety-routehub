@@ -49,6 +49,7 @@ import {
   Search,
   GripVertical,
   Banknote,
+  Bot,
 } from 'lucide-react'
 import {
   DndContext,
@@ -836,6 +837,13 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       label: 'გადახდები',
       labelEn: 'Payments',
       icon: Banknote,
+      permission: 'pages:payments',
+    },
+    {
+      href: '/chat',
+      label: 'ასისტენტი',
+      labelEn: 'Assistant',
+      icon: Bot,
       permission: 'pages:payments',
     },
     {

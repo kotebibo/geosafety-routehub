@@ -62,6 +62,7 @@
     ]
   },
   "dependencies": {
+    "@ai-sdk/react": "^3.0.172",
     "exceljs": "^4.4.0"
   }
 }
