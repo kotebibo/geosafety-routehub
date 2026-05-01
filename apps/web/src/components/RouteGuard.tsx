@@ -26,8 +26,8 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
         router.push(`/auth/login?from=${encodeURIComponent(pathname)}`)
       }
 
-      // If logged in and trying to access login page
-      if (user && isPublicRoute) {
+      // If logged in and trying to access login/signup page (but not reset-password)
+      if (user && isPublicRoute && pathname !== '/auth/reset-password') {
         router.push('/')
       }
     }
