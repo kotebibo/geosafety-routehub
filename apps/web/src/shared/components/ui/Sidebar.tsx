@@ -256,6 +256,11 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
   }, [collapsed])
 
   const pathname = usePathname()
+
+  // Auto-close mobile sidebar on navigation
+  React.useEffect(() => {
+    onMobileClose?.()
+  }, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
   const router = useRouter()
   const queryClient = useQueryClient()
   const { user, userRole, loading: authLoading, hasPermission } = useAuth()
@@ -1069,7 +1074,17 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
 
                 {/* Workspace Dropdown Selector */}
                 {workspacesLoading || boardsLoading ? (
-                  <div className="px-3 py-2 text-sm text-text-tertiary">Loading...</div>
+                  <div className="px-3 py-2 space-y-2">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="flex items-center gap-2 px-2 py-1.5">
+                        <div className="w-5 h-5 rounded bg-bg-hover animate-pulse flex-shrink-0" />
+                        <div
+                          className="h-3.5 rounded bg-bg-hover animate-pulse flex-1"
+                          style={{ maxWidth: `${60 + i * 20}px` }}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 ) : allWorkspaceContexts.size > 0 || (workspaces && workspaces.length > 0) ? (
                   <>
                     <div className="mb-1 relative" ref={workspaceDropdownRef}>
