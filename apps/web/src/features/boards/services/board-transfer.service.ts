@@ -105,15 +105,26 @@ export const boardTransferService = {
     let newData = { ...originalItem.data }
     const unmappedData: Record<string, unknown> = {}
 
-    if (!sameBoardType && columnMapping) {
+    // Always remap data using column mapping when provided.
+    // Even same board_type boards can have different column IDs.
+    // When no explicit mapping is provided, auto-map by column name+type.
+    let effectiveMapping = columnMapping
+    if (!effectiveMapping && sameBoardType) {
+      const { autoMapped } = await this.getColumnMapping(sourceBoardId, targetBoardId)
+      effectiveMapping = autoMapped
+    }
+
+    if (effectiveMapping && Object.keys(effectiveMapping).length > 0) {
       const mappedData: Record<string, unknown> = {}
 
       for (const [sourceColId, value] of Object.entries(originalItem.data || {})) {
-        const targetColId = columnMapping[sourceColId]
+        const targetColId = effectiveMapping[sourceColId]
         if (targetColId) {
           mappedData[targetColId] = value
-        } else if (preserveUnmapped) {
-          unmappedData[sourceColId] = value
+        } else if (sourceColId === targetColId || !effectiveMapping[sourceColId]) {
+          if (preserveUnmapped) {
+            unmappedData[sourceColId] = value
+          }
         }
       }
 
