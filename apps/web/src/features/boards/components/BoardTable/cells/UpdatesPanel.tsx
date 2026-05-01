@@ -36,7 +36,7 @@ import { activityService } from '@/features/boards/services/activity.service'
 import { formatTimeAgo } from '@/lib/formatTime'
 import { useAuth } from '@/contexts/AuthContext'
 import { useInspectorId } from '@/hooks/useInspectorId'
-import { useInspectors } from '@/features/inspectors/hooks/useInspectors'
+import { useUsers } from '@/hooks/useUsers'
 import { FilePreviewModal } from './FilePreviewModal'
 import type { ItemComment, ItemUpdate, BoardColumn } from '@/types/board'
 
@@ -88,7 +88,7 @@ export function UpdatesPanel({
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const { data: inspectorId } = useInspectorId(user?.email ?? undefined)
-  const { inspectors } = useInspectors()
+  const { users } = useUsers()
 
   const [activeTab, setActiveTab] = useState<TabType>('updates')
   const [comments, setComments] = useState<ItemComment[]>([])
@@ -125,19 +125,19 @@ export function UpdatesPanel({
   const mentionListRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
-  // Filter inspectors for mention suggestions
+  // Filter users for mention suggestions
   const mentionSuggestions: MentionSuggestion[] =
-    inspectors
-      ?.filter(inspector => {
-        const name = (inspector.full_name || '').toLowerCase()
-        const email = (inspector.email || '').toLowerCase()
+    users
+      ?.filter(u => {
+        const name = (u.full_name || '').toLowerCase()
+        const email = (u.email || '').toLowerCase()
         const search = mentionSearch.toLowerCase()
         return name.includes(search) || email.includes(search)
       })
-      .map(inspector => ({
-        id: inspector.id,
-        name: inspector.full_name || 'Unknown',
-        email: inspector.email,
+      .map(u => ({
+        id: u.id,
+        name: u.full_name || 'Unknown',
+        email: u.email,
       }))
       .slice(0, 5) || []
 
@@ -461,7 +461,7 @@ export function UpdatesPanel({
     setCursorPosition(position)
 
     const textBeforeCursor = value.slice(0, position)
-    const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
+    const mentionMatch = textBeforeCursor.match(/@([\p{L}\p{N}_]*)$/u)
 
     if (mentionMatch) {
       setShowMentions(true)
@@ -478,7 +478,7 @@ export function UpdatesPanel({
       const textBeforeCursor = newComment.slice(0, cursorPosition)
       const textAfterCursor = newComment.slice(cursorPosition)
 
-      const mentionMatch = textBeforeCursor.match(/@(\w*)$/)
+      const mentionMatch = textBeforeCursor.match(/@([\p{L}\p{N}_]*)$/u)
       if (mentionMatch) {
         const beforeMention = textBeforeCursor.slice(0, mentionMatch.index)
         const newText = `${beforeMention}@${suggestion.name} ${textAfterCursor}`
@@ -589,7 +589,7 @@ export function UpdatesPanel({
   }
 
   const renderContentWithMentions = (content: string) => {
-    const mentionRegex = /@([a-zA-Z\s]+?)(?=\s|$|@)/g
+    const mentionRegex = /@([\p{L}\p{N}\s]+?)(?=\s{2}|$|@)/gu
     const parts = content.split(mentionRegex)
 
     return parts.map((part, index) => {
