@@ -126,6 +126,14 @@ export function rateLimitMiddleware(request: NextRequest): NextResponse | null {
     return null
   }
 
+  // Skip rate limiting for authenticated users — they are already
+  // authorized per-route via requireAuth/requireAdmin/requireRole.
+  // Rate limiting only protects against unauthenticated abuse.
+  const hasAuthCookie = request.cookies.getAll().some(c => c.name.includes('auth-token'))
+  if (hasAuthCookie) {
+    return null
+  }
+
   const { allowed, remaining, resetTime } = checkRateLimit(request)
 
   if (!allowed) {
