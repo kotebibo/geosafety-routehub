@@ -25,6 +25,28 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+// Prorate for first month: (days_served / days_in_month) * monthly_price
+function getExpectedAmount(contract: ContractInfo, entryDate: string): number | null {
+  const monthly = contract.monthly_amount || contract.invoice_amount
+  if (!monthly) return null
+  if (!contract.start_date) return monthly
+
+  const txnDate = new Date(entryDate)
+  const startDate = new Date(contract.start_date)
+
+  // First month of contract — prorate by days served
+  if (
+    txnDate.getFullYear() === startDate.getFullYear() &&
+    txnDate.getMonth() === startDate.getMonth()
+  ) {
+    const daysInMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate()
+    const daysServed = daysInMonth - startDate.getDate() + 1
+    return Math.round((daysServed / daysInMonth) * monthly * 100) / 100
+  }
+
+  return monthly
+}
+
 export default function PaymentsPage() {
   const router = useRouter()
   const { isAdmin, isDispatcher, loading: authLoading } = useAuth()
@@ -109,7 +131,7 @@ export default function PaymentsPage() {
         if (txn.status === 'matched') noContract++
         continue
       }
-      const expected = contract.monthly_amount || contract.invoice_amount
+      const expected = getExpectedAmount(contract, txn.entry_date)
       if (!expected) continue
       if (txn.amount < expected * 0.95) underpaid++
       else if (txn.amount > expected * 1.05) overpaid++
@@ -202,7 +224,7 @@ export default function PaymentsPage() {
     if (!txn.sender_inn) return null
     const contract = contracts[txn.sender_inn]
     if (!contract) return null
-    const expected = contract.monthly_amount || contract.invoice_amount
+    const expected = getExpectedAmount(contract, txn.entry_date)
     if (!expected) return null
 
     const diff = txn.amount - expected
@@ -524,8 +546,9 @@ export default function PaymentsPage() {
               ) : (
                 filteredTransactions.map(txn => {
                   const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
-                  const expectedAmount =
-                    contract?.monthly_amount || contract?.invoice_amount || null
+                  const expectedAmount = contract
+                    ? getExpectedAmount(contract, txn.entry_date)
+                    : null
 
                   return (
                     <tr
