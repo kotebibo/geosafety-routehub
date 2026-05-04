@@ -47,6 +47,24 @@ export interface UnmatchedTransaction extends BankTransaction {
   }>
 }
 
+export interface ContractInfo {
+  item_id: string
+  company_name: string
+  tax_id: string
+  monthly_amount: number | null
+  frequency: string | null
+  invoice_amount: number | null
+  status: string | null
+  start_date: string | null
+  end_date: string | null
+  payment_method: string | null
+}
+
+export interface ContractsResponse {
+  contracts: Record<string, ContractInfo>
+  boards_found: Array<{ id: string; name: string; count: number }>
+}
+
 export const paymentsService = {
   getTransactions: async (params?: {
     status?: string
@@ -109,6 +127,15 @@ export const paymentsService = {
       const err = await response.json()
       throw new Error(err.error || 'Failed to match transaction')
     }
+  },
+
+  getContracts: async (): Promise<ContractsResponse> => {
+    const response = await fetch('/api/payments/contracts')
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error || 'Failed to fetch contracts')
+    }
+    return response.json()
   },
 
   ignoreTransaction: async (transactionId: string): Promise<void> => {
