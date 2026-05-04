@@ -124,19 +124,24 @@ export default function PaymentsPage() {
     let underpaid = 0
     let overpaid = 0
     let noContract = 0
+    let totalExpected = 0
+    let totalActual = 0
 
     for (const txn of transactions) {
       const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
       if (!contract) {
         if (txn.status === 'matched') noContract++
+        totalActual += txn.amount
         continue
       }
       const expected = getExpectedAmount(contract, txn.entry_date)
+      totalActual += txn.amount
       if (!expected) continue
+      totalExpected += expected
       if (txn.amount < expected * 0.95) underpaid++
       else if (txn.amount > expected * 1.05) overpaid++
     }
-    return { underpaid, overpaid, noContract }
+    return { underpaid, overpaid, noContract, totalExpected, totalActual }
   }, [transactions, contracts, contractsLoading, loading])
 
   // Find overdue contracts (have contract but no recent payment)
@@ -309,7 +314,7 @@ export default function PaymentsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div className="bg-bg-primary rounded-lg border p-4 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
@@ -320,20 +325,6 @@ export default function PaymentsPage() {
             </div>
             <div className="w-12 h-12 rounded-lg bg-color-info/10 flex items-center justify-center">
               <Banknote className="w-6 h-6 text-color-info" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-bg-primary rounded-lg border p-4 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-text-secondary mb-1">სულ თანხა</p>
-              <p className="text-2xl font-bold text-color-success">
-                {statsLoading ? '...' : formatAmount(stats?.total_amount || 0, 'GEL')}
-              </p>
-            </div>
-            <div className="w-12 h-12 rounded-lg bg-color-success/10 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-color-success" />
             </div>
           </div>
         </div>
@@ -362,6 +353,66 @@ export default function PaymentsPage() {
             </div>
             <div className="w-12 h-12 rounded-lg bg-monday-primary/10 flex items-center justify-center">
               <TrendingUp className="w-6 h-6 text-monday-primary" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-bg-primary rounded-lg border p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-text-secondary mb-1">მოსალოდნელი თანხა</p>
+              <p className="text-2xl font-bold text-monday-primary">
+                {contractsLoading || loading
+                  ? '...'
+                  : formatAmount(discrepancyStats?.totalExpected || 0, 'GEL')}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-monday-primary/10 flex items-center justify-center">
+              <Banknote className="w-6 h-6 text-monday-primary" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-bg-primary rounded-lg border p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-text-secondary mb-1">რეალური თანხა</p>
+              <p className="text-2xl font-bold text-color-success">
+                {contractsLoading || loading
+                  ? '...'
+                  : formatAmount(discrepancyStats?.totalActual || 0, 'GEL')}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-color-success/10 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-color-success" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-bg-primary rounded-lg border p-4 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-text-secondary mb-1">სხვაობა</p>
+              <p
+                className={cn(
+                  'text-2xl font-bold',
+                  !discrepancyStats
+                    ? 'text-text-secondary'
+                    : discrepancyStats.totalActual >= discrepancyStats.totalExpected
+                      ? 'text-color-success'
+                      : 'text-red-500'
+                )}
+              >
+                {contractsLoading || loading
+                  ? '...'
+                  : formatAmount(
+                      (discrepancyStats?.totalActual || 0) - (discrepancyStats?.totalExpected || 0),
+                      'GEL'
+                    )}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-lg bg-bg-secondary flex items-center justify-center">
+              <ArrowDownUp className="w-6 h-6 text-text-secondary" />
             </div>
           </div>
         </div>
