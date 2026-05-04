@@ -107,7 +107,7 @@ export default function SettingsPage() {
         .from('user_settings')
         .select('*')
         .eq('user_id', user.id)
-        .single()) as {
+        .maybeSingle()) as {
         data: {
           theme?: string
           language?: string
@@ -966,7 +966,9 @@ export default function SettingsPage() {
                     const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
                       redirectTo: `${window.location.origin}/auth/reset-password`,
                     })
-                    if (!error) {
+                    if (error) {
+                      showToast(error.message || 'Failed to send reset email', 'error')
+                    } else {
                       showToast(t('settings.security.passwordSent'), 'success')
                     }
                   }}
