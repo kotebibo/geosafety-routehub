@@ -14,14 +14,17 @@ import { requireAdminOrDispatcher } from '@/middleware/auth'
 // Column name patterns (Georgian) to discover column IDs dynamically
 const COLUMN_PATTERNS = {
   tax_id: ['ს/კ', 'საიდენტიფიკაციო', 'tax', 'inn'],
-  monthly_amount: ['თვიური', 'თანხა', 'monthly'],
+  monthly_amount: ['ყოველთვიური', 'თვიური', 'monthly'],
   frequency: ['სიხშირე', 'პერიოდულობა', 'frequency'],
   invoice_amount: ['ინვოისი', 'invoice'],
   status: ['სტატუსი', 'status'],
-  start_date: ['დაწყ', 'start'],
-  end_date: ['დასრ', 'ვადა', 'end'],
+  start_date: ['გაფორმ', 'დაწყ', 'start'],
+  end_date: ['დასრულ', 'ვადა', 'end'],
   payment_method: ['გადახდ', 'payment'],
 }
+
+// Column types vary across instances (e.g. 'number' vs 'numeric')
+const NUMERIC_TYPES = ['numeric', 'number']
 
 interface ContractInfo {
   item_id: string
@@ -44,17 +47,21 @@ function findColumnId(
     column_type: string
   }>,
   patterns: string[],
-  preferredType?: string
+  preferredType?: string | string[]
 ): string | null {
-  // Try Georgian name first, then English
+  const types = Array.isArray(preferredType)
+    ? preferredType
+    : preferredType
+      ? [preferredType]
+      : null
   for (const pattern of patterns) {
     const match = columns.find(c => {
       const nameKa = (c.column_name_ka || '').toLowerCase()
       const name = (c.column_name || '').toLowerCase()
       const p = pattern.toLowerCase()
       const nameMatch = nameKa.includes(p) || name.includes(p)
-      if (preferredType) {
-        return nameMatch && c.column_type === preferredType
+      if (types) {
+        return nameMatch && types.includes(c.column_type)
       }
       return nameMatch
     })
@@ -106,11 +113,11 @@ export async function GET() {
 
       // Discover column IDs by name
       const taxIdCol = findColumnId(columns, COLUMN_PATTERNS.tax_id, 'text')
-      const monthlyCol = findColumnId(columns, COLUMN_PATTERNS.monthly_amount, 'numeric')
+      const monthlyCol = findColumnId(columns, COLUMN_PATTERNS.monthly_amount, NUMERIC_TYPES)
       const frequencyCol =
         findColumnId(columns, COLUMN_PATTERNS.frequency, 'status') ||
         findColumnId(columns, COLUMN_PATTERNS.frequency)
-      const invoiceCol = findColumnId(columns, COLUMN_PATTERNS.invoice_amount, 'numeric')
+      const invoiceCol = findColumnId(columns, COLUMN_PATTERNS.invoice_amount, NUMERIC_TYPES)
       const statusCol = findColumnId(columns, COLUMN_PATTERNS.status, 'status')
       const startDateCol = findColumnId(columns, COLUMN_PATTERNS.start_date, 'date')
       const endDateCol = findColumnId(columns, COLUMN_PATTERNS.end_date, 'date')
