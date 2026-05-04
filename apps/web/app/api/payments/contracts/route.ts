@@ -37,6 +37,7 @@ interface ContractInfo {
   start_date: string | null
   end_date: string | null
   payment_method: string | null
+  first_payment_date: string | null
 }
 
 function findColumnId(
@@ -166,11 +167,36 @@ export async function GET() {
           start_date: startDateCol ? d[startDateCol] : null,
           end_date: endDateCol ? d[endDateCol] : null,
           payment_method: resolveStatusLabel(d[payMethodCol!], columns, payMethodCol),
+          first_payment_date: null, // populated below from bank_transactions
         }
 
         // Use tax ID as key — first match wins (active contract boards processed first)
         if (!contractsByTaxId[taxId]) {
           contractsByTaxId[taxId] = contract
+        }
+      }
+    }
+
+    // Find earliest transaction per tax ID to identify first payments
+    const taxIds = Object.keys(contractsByTaxId)
+    if (taxIds.length > 0) {
+      const { data: txns } = await supabase
+        .from('bank_transactions')
+        .select('sender_inn, entry_date')
+        .in('sender_inn', taxIds)
+        .order('entry_date', { ascending: true })
+
+      // Group by sender_inn, take earliest
+      const earliest: Record<string, string> = {}
+      for (const txn of txns || []) {
+        if (txn.sender_inn && !earliest[txn.sender_inn]) {
+          earliest[txn.sender_inn] = txn.entry_date
+        }
+      }
+
+      for (const [inn, date] of Object.entries(earliest)) {
+        if (contractsByTaxId[inn]) {
+          contractsByTaxId[inn].first_payment_date = date
         }
       }
     }

@@ -58,6 +58,7 @@ export interface ContractInfo {
   start_date: string | null
   end_date: string | null
   payment_method: string | null
+  first_payment_date: string | null
 }
 
 export interface ContractsResponse {
