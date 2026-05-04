@@ -25,22 +25,20 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-// Prorate for first month: (days_served / days_in_month) * monthly_price
+// Prorate first payment: (days_served / days_in_month) * monthly_price
+// Only applies to the first transaction for this contract, when contract didn't start on the 1st
 function getExpectedAmount(contract: ContractInfo, entryDate: string): number | null {
   const monthly = contract.monthly_amount || contract.invoice_amount
   if (!monthly) return null
   if (!contract.start_date) return monthly
 
-  const txnDate = new Date(entryDate)
   const startDate = new Date(contract.start_date)
+  const startDay = startDate.getDate()
 
-  // First month of contract — prorate by days served
-  if (
-    txnDate.getFullYear() === startDate.getFullYear() &&
-    txnDate.getMonth() === startDate.getMonth()
-  ) {
+  // Only prorate if: this is the first payment AND contract didn't start on the 1st
+  if (startDay > 1 && contract.first_payment_date === entryDate) {
     const daysInMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate()
-    const daysServed = daysInMonth - startDate.getDate() + 1
+    const daysServed = daysInMonth - startDay + 1
     return Math.round((daysServed / daysInMonth) * monthly * 100) / 100
   }
 
