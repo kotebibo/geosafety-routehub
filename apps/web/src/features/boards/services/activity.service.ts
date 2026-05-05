@@ -507,7 +507,7 @@ export const activityService = {
       .from('item_comments')
       .select('content, item_type, item_id, user_id')
       .eq('id', commentId)
-      .single()
+      .maybeSingle()
 
     const { data, error } = await getSupabase()
       .from('item_comments')
@@ -525,9 +525,10 @@ export const activityService = {
         )
       `
       )
-      .single()
+      .maybeSingle()
 
     if (error) throw error
+    if (!data) throw new Error('Comment not found or update not permitted')
 
     // Log the edit as an activity update with previous content preserved
     if (existing) {
