@@ -1359,7 +1359,7 @@ export function UpdatesPanel({
                     ref={fileInputRef}
                     type="file"
                     multiple
-                    accept="image/*,application/pdf,.doc,.docx"
+                    accept="image/*,application/pdf,.doc,.docx,.zip,.rar,.7z"
                     onChange={handleFileSelect}
                     className="hidden"
                   />
