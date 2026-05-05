@@ -45,7 +45,8 @@ const ACCEPTED_TYPES = {
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ],
-  all: ['image/*', 'application/pdf', '.doc', '.docx'],
+  archives: ['application/zip', 'application/x-zip-compressed', 'application/x-rar-compressed'],
+  all: ['image/*', 'application/pdf', '.doc', '.docx', '.zip', '.rar', '.7z'],
 }
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
@@ -134,6 +135,9 @@ export const FilesCell = memo(function FilesCell({
     }
     if (type === 'application/pdf') {
       return <FileText className="w-4 h-4 text-red-500" />
+    }
+    if (type.includes('zip') || type.includes('rar') || type.includes('7z')) {
+      return <File className="w-4 h-4 text-yellow-600" />
     }
     return <File className="w-4 h-4 text-text-secondary" />
   }
