@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, lazy, Suspense } from 'react'
+import React, { useState, useEffect, lazy, Suspense } from 'react'
 import { cn } from '@/lib/utils'
 import { MessageSquare } from 'lucide-react'
 import type { BoardColumn } from '@/types/board'
@@ -29,6 +29,10 @@ export function UpdatesCell({
 }: UpdatesCellProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [commentCount, setCommentCount] = useState(value || 0)
+
+  useEffect(() => {
+    setCommentCount(value || 0)
+  }, [value])
 
   const handleOpen = () => {
     onEditStart?.()
