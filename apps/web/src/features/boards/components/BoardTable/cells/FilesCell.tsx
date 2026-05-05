@@ -44,9 +44,11 @@ const ACCEPTED_TYPES = {
     'application/pdf',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   ],
   archives: ['application/zip', 'application/x-zip-compressed', 'application/x-rar-compressed'],
-  all: ['image/*', 'application/pdf', '.doc', '.docx', '.zip', '.rar', '.7z'],
+  all: ['image/*', 'application/pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar', '.7z'],
 }
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
@@ -135,6 +137,9 @@ export const FilesCell = memo(function FilesCell({
     }
     if (type === 'application/pdf') {
       return <FileText className="w-4 h-4 text-red-500" />
+    }
+    if (type.includes('excel') || type.includes('spreadsheet')) {
+      return <FileText className="w-4 h-4 text-green-600" />
     }
     if (type.includes('zip') || type.includes('rar') || type.includes('7z')) {
       return <File className="w-4 h-4 text-yellow-600" />

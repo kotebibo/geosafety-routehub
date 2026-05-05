@@ -5,7 +5,7 @@ import type { ItemUpdate, ItemComment, UpdateType } from '@/types/board'
 // IMPORTANT: Must be called inside functions, not at module level
 const getSupabase = () => createClient()
 
-// Type for update records with joined inspector data from Supabase
+// Type for update records with joined user data from Supabase
 interface UpdateRecord {
   id: string
   item_type: string
@@ -21,7 +21,7 @@ interface UpdateRecord {
   source_board_id: string | null
   target_board_id: string | null
   created_at: string | null
-  inspectors?: {
+  users?: {
     full_name?: string
     email?: string
   } | null
@@ -33,7 +33,7 @@ interface UpdateRecord {
   } | null
 }
 
-// Type for comment records with joined inspector data from Supabase
+// Type for comment records with joined user data from Supabase
 interface CommentRecord {
   id: string
   item_type: string
@@ -46,7 +46,7 @@ interface CommentRecord {
   is_edited: boolean | null
   created_at: string | null
   updated_at: string | null
-  inspectors?: {
+  users?: {
     full_name?: string
     email?: string
   } | null
@@ -73,14 +73,14 @@ export const activityService = {
       .select(
         `
         *,
-        inspectors:user_id (
+        users:user_id!left (
           full_name,
           email
         ),
-        source_board:source_board_id (
+        source_board:source_board_id!left (
           name
         ),
-        target_board:target_board_id (
+        target_board:target_board_id!left (
           name
         )
       `
@@ -96,7 +96,7 @@ export const activityService = {
     return ((data || []) as UpdateRecord[]).map(update => ({
       ...update,
       item_type: update.item_type as ItemUpdate['item_type'],
-      user_name: update.inspectors?.full_name || update.inspectors?.email,
+      user_name: update.users?.full_name || update.users?.email,
       source_board_name: update.source_board?.name,
       target_board_name: update.target_board?.name,
     })) as ItemUpdate[]
@@ -111,14 +111,14 @@ export const activityService = {
       .select(
         `
         *,
-        inspectors:user_id (
+        users:user_id!left (
           full_name,
           email
         ),
-        source_board:source_board_id (
+        source_board:source_board_id!left (
           name
         ),
-        target_board:target_board_id (
+        target_board:target_board_id!left (
           name
         )
       `
@@ -131,7 +131,7 @@ export const activityService = {
     return ((data || []) as UpdateRecord[]).map(update => ({
       ...update,
       item_type: update.item_type as ItemUpdate['item_type'],
-      user_name: update.inspectors?.full_name || update.inspectors?.email,
+      user_name: update.users?.full_name || update.users?.email,
       source_board_name: update.source_board?.name,
       target_board_name: update.target_board?.name,
     })) as ItemUpdate[]
@@ -146,14 +146,14 @@ export const activityService = {
       .select(
         `
         *,
-        inspectors:user_id (
+        users:user_id!left (
           full_name,
           email
         ),
-        source_board:source_board_id (
+        source_board:source_board_id!left (
           name
         ),
-        target_board:target_board_id (
+        target_board:target_board_id!left (
           name
         )
       `
@@ -167,7 +167,7 @@ export const activityService = {
     return ((data || []) as UpdateRecord[]).map(update => ({
       ...update,
       item_type: update.item_type as ItemUpdate['item_type'],
-      user_name: update.inspectors?.full_name || update.inspectors?.email,
+      user_name: update.users?.full_name || update.users?.email,
       source_board_name: update.source_board?.name,
       target_board_name: update.target_board?.name,
     })) as ItemUpdate[]
@@ -192,10 +192,10 @@ export const activityService = {
     if (update.user_id) {
       try {
         const { data: user } = await getSupabase()
-          .from('inspectors')
+          .from('users')
           .select('full_name, email')
           .eq('id', update.user_id)
-          .single()
+          .maybeSingle()
         if (user) {
           enrichedUpdate = {
             ...update,
@@ -216,7 +216,7 @@ export const activityService = {
       .select(
         `
         *,
-        inspectors:user_id (
+        users:user_id!left (
           full_name,
           email
         )
@@ -230,7 +230,7 @@ export const activityService = {
     return {
       ...record,
       item_type: record.item_type as ItemUpdate['item_type'],
-      user_name: record.inspectors?.full_name || record.inspectors?.email,
+      user_name: record.users?.full_name || record.users?.email,
     } as ItemUpdate
   },
 
@@ -310,7 +310,7 @@ export const activityService = {
       .select(
         `
         *,
-        inspectors:user_id (
+        users:user_id!left (
           full_name,
           email
         )
@@ -334,7 +334,7 @@ export const activityService = {
       commentMap.set(comment.id, {
         ...comment,
         item_type: comment.item_type as ItemComment['item_type'],
-        user_name: comment.inspectors?.full_name || comment.inspectors?.email,
+        user_name: comment.users?.full_name || comment.users?.email,
         replies: [],
       })
     }
@@ -367,7 +367,7 @@ export const activityService = {
       .select(
         `
         *,
-        inspectors:user_id (
+        users:user_id!left (
           full_name,
           email
         )
@@ -381,7 +381,7 @@ export const activityService = {
     return ((data || []) as CommentRecord[]).map((reply: CommentRecord) => ({
       ...reply,
       item_type: reply.item_type as ItemComment['item_type'],
-      user_name: reply.inspectors?.full_name || reply.inspectors?.email,
+      user_name: reply.users?.full_name || reply.users?.email,
     })) as ItemComment[]
   },
 
@@ -403,7 +403,7 @@ export const activityService = {
       .select(
         `
         *,
-        inspectors:user_id (
+        users:user_id!left (
           full_name,
           email
         )
@@ -426,7 +426,7 @@ export const activityService = {
     const result = {
       ...record,
       item_type: record.item_type as ItemComment['item_type'],
-      user_name: record.inspectors?.full_name || record.inspectors?.email,
+      user_name: record.users?.full_name || record.users?.email,
     } as ItemComment
 
     // Send notifications for mentioned users (fire-and-forget)
@@ -454,10 +454,10 @@ export const activityService = {
 
     // Get commenter name
     const { data: commenter } = await db
-      .from('inspectors')
+      .from('users')
       .select('full_name')
       .eq('id', comment.user_id)
-      .single()
+      .maybeSingle()
     const commenterName = (commenter as any)?.full_name || 'Someone'
 
     // Get item's board_id for navigation link
@@ -519,7 +519,7 @@ export const activityService = {
       .select(
         `
         *,
-        inspectors:user_id (
+        users:user_id!left (
           full_name,
           email
         )
@@ -547,7 +547,7 @@ export const activityService = {
     return {
       ...record,
       item_type: record.item_type as ItemComment['item_type'],
-      user_name: record.inspectors?.full_name || record.inspectors?.email,
+      user_name: record.users?.full_name || record.users?.email,
     } as ItemComment
   },
 
@@ -697,14 +697,14 @@ export const activityService = {
       .select(
         `
         *,
-        inspectors:user_id (
+        users:user_id!left (
           full_name,
           email
         ),
-        source_board:source_board_id (
+        source_board:source_board_id!left (
           name
         ),
-        target_board:target_board_id (
+        target_board:target_board_id!left (
           name
         )
       `
@@ -722,7 +722,7 @@ export const activityService = {
       return {
         ...update,
         item_type: update.item_type as ItemUpdate['item_type'],
-        user_name: update.inspectors?.full_name || update.inspectors?.email,
+        user_name: update.users?.full_name || update.users?.email,
         column_name: columnInfo?.name || update.column_id,
         column_name_ka: columnInfo?.name_ka,
         source_board_name: update.source_board?.name,
