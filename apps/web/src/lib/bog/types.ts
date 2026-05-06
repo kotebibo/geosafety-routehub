@@ -130,7 +130,9 @@ export interface PaymentStats {
   total_transactions: number
   total_amount: number
   matched_count: number
+  matched_amount: number
   unmatched_count: number
+  unmatched_amount: number
   ignored_count: number
   match_rate: number // percentage
 }
