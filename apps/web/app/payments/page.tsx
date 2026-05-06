@@ -104,7 +104,7 @@ export default function PaymentsPage() {
   // Month navigation
   const now = new Date()
   const [selectedYear, setSelectedYear] = useState(now.getFullYear())
-  const [selectedMonth, setSelectedMonth] = useState(now.getMonth())
+  const [selectedMonth, setSelectedMonth] = useState<number | null>(now.getMonth())
 
   // Data
   const [stats, setStats] = useState<PaymentStats | null>(null)
@@ -149,6 +149,10 @@ export default function PaymentsPage() {
   const effectiveDateRange = useMemo(() => {
     if (dateFrom || dateTo) {
       return { from: dateFrom || undefined, to: dateTo || undefined }
+    }
+    if (selectedMonth === null) {
+      // Full year
+      return { from: `${selectedYear}-01-01`, to: `${selectedYear}-12-31` }
     }
     return getMonthRange(selectedYear, selectedMonth)
   }, [selectedYear, selectedMonth, dateFrom, dateTo])
@@ -364,6 +368,12 @@ export default function PaymentsPage() {
   const navigateMonth = (delta: number) => {
     setDateFrom('')
     setDateTo('')
+    if (selectedMonth === null) {
+      // From "all" view, go to Dec (prev) or Jan (next)
+      setSelectedMonth(delta < 0 ? 11 : 0)
+      if (delta < 0) setSelectedYear(y => y - 1)
+      return
+    }
     let m = selectedMonth + delta
     let y = selectedYear
     if (m < 0) {
@@ -421,7 +431,7 @@ export default function PaymentsPage() {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `payments-${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}.csv`
+    a.download = `payments-${selectedYear}${selectedMonth !== null ? '-' + String(selectedMonth + 1).padStart(2, '0') : ''}.csv`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -681,6 +691,21 @@ export default function PaymentsPage() {
         </button>
 
         <div className="flex-1 flex items-center gap-0.5 overflow-x-auto scrollbar-none">
+          <button
+            onClick={() => {
+              clearDateFilter()
+              setSelectedMonth(null)
+            }}
+            className={cn(
+              'flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+              selectedMonth === null && !dateFrom && !dateTo
+                ? 'bg-monday-primary text-white shadow-sm'
+                : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+            )}
+          >
+            ყველა
+          </button>
+          <div className="w-px h-4 bg-border-light mx-0.5" />
           {MONTHS_KA.map((name, i) => {
             const isSelected = selectedMonth === i && !dateFrom && !dateTo
             const isCurrent = now.getMonth() === i && now.getFullYear() === selectedYear
