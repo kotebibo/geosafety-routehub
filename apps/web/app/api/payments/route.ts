@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
     const companyId = searchParams.get('companyId')
     const fromDate = searchParams.get('from')
     const toDate = searchParams.get('to')
+    const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = (page - 1) * limit
@@ -51,6 +52,11 @@ export async function GET(request: NextRequest) {
     }
     if (toDate) {
       query = query.lte('entry_date', toDate)
+    }
+    if (search) {
+      query = query.or(
+        `sender_name.ilike.%${search}%,sender_inn.ilike.%${search}%,purpose.ilike.%${search}%,doc_key.ilike.%${search}%`
+      )
     }
 
     const { data, error, count } = await query

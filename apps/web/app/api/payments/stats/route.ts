@@ -1,32 +1,31 @@
 /**
  * Payment Stats API
  * Returns summary statistics for the payments dashboard
+ * Supports date range filtering (from/to query params)
  * Protected: Admin or Dispatcher
  */
 
 export const dynamic = 'force-dynamic'
 
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await requireAdminOrDispatcher()
     const supabase = createServerClient() as any
+    const { searchParams } = new URL(request.url)
 
-    // Get counts by status
-    const { data: statusCounts, error: countError } = await supabase
-      .from('bank_transactions')
-      .select('status', { count: 'exact', head: false })
+    const fromDate = searchParams.get('from')
+    const toDate = searchParams.get('to')
 
-    if (countError) throw countError
+    let query = supabase.from('bank_transactions').select('status, amount')
 
-    // Get totals with a single query
-    const { data: allTxns, error: txnError } = await supabase
-      .from('bank_transactions')
-      .select('status, amount')
+    if (fromDate) query = query.gte('entry_date', fromDate)
+    if (toDate) query = query.lte('entry_date', toDate)
 
+    const { data: allTxns, error: txnError } = await query
     if (txnError) throw txnError
 
     const txns: Array<{ status: string; amount: number }> = allTxns || []
