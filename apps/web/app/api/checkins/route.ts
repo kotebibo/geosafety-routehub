@@ -173,10 +173,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot check in as another inspector' }, { status: 403 })
     }
 
+    // Prevent double check-in: inspector must not have an active (unclosed) checkin
+    const { data: activeCheckin } = await supabase
+      .from('location_checkins')
+      .select('id')
+      .eq('inspector_id', validated.inspector_id)
+      .is('checked_out_at', null)
+      .limit(1)
+      .maybeSingle()
+
+    if (activeCheckin) {
+      return NextResponse.json(
+        { error: 'თქვენ უკვე გაქვთ აქტიური ჩეკ-ინი. ჯერ გააკეთეთ ჩეკ-აუთი.' },
+        { status: 409 }
+      )
+    }
+
     let locationUpdated = false
     let distanceFromLocation: number | null = null
 
     // Check if company location has GPS coords
+    const CHECKIN_RADIUS_METERS = 100
+
     if (validated.company_location_id) {
       const { data: loc } = await supabase
         .from('company_locations')
@@ -190,6 +208,18 @@ export async function POST(request: NextRequest) {
           distanceFromLocation = Math.round(
             haversineMeters(validated.lat, validated.lng, loc.lat, loc.lng)
           )
+
+          // Enforce radius: inspector must be within 100m to check in
+          if (distanceFromLocation > CHECKIN_RADIUS_METERS) {
+            return NextResponse.json(
+              {
+                error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე კომპანიის ლოკაციიდან. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
+                distance: distanceFromLocation,
+                max_radius: CHECKIN_RADIUS_METERS,
+              },
+              { status: 422 }
+            )
+          }
         } else {
           // No GPS coords — auto-populate from check-in
           await supabase
@@ -307,7 +337,26 @@ export async function PATCH(request: NextRequest) {
     const durationMinutes = Math.round((now - checkinTime) / 60000)
     const checkedOutAt = new Date(now).toISOString()
 
-    // Update the checkin (checked_out_at and checkout fields may not be in generated types yet)
+    // Calculate effective minutes (time within radius) from pings
+    let effectiveMinutes = durationMinutes
+    let totalPings = 0
+    let radiusViolations = 0
+
+    const { data: pings } = await (supabase as any)
+      .from('checkin_gps_pings')
+      .select('within_radius, created_at')
+      .eq('checkin_id', validated.checkin_id)
+      .order('created_at', { ascending: true })
+
+    if (pings && pings.length > 0) {
+      totalPings = pings.length
+      radiusViolations = pings.filter((p: any) => !p.within_radius).length
+      const withinPings = pings.filter((p: any) => p.within_radius).length
+      // Effective time = proportional to in-radius pings
+      effectiveMinutes = Math.round(durationMinutes * (withinPings / totalPings))
+    }
+
+    // Update the checkin
     const { data: updated, error: updateError } = await supabase
       .from('location_checkins')
       .update({
@@ -316,6 +365,9 @@ export async function PATCH(request: NextRequest) {
         checkout_lng: validated.lng,
         checkout_accuracy: validated.accuracy || null,
         duration_minutes: durationMinutes,
+        effective_minutes: effectiveMinutes,
+        total_pings: totalPings,
+        radius_violations: radiusViolations,
       } as any)
       .eq('id', validated.checkin_id)
       .select()
