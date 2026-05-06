@@ -72,6 +72,7 @@ export const paymentsService = {
     companyId?: string
     from?: string
     to?: string
+    search?: string
     page?: number
     limit?: number
   }): Promise<TransactionsResponse> => {
@@ -80,6 +81,7 @@ export const paymentsService = {
     if (params?.companyId) searchParams.set('companyId', params.companyId)
     if (params?.from) searchParams.set('from', params.from)
     if (params?.to) searchParams.set('to', params.to)
+    if (params?.search) searchParams.set('search', params.search)
     if (params?.page) searchParams.set('page', params.page.toString())
     if (params?.limit) searchParams.set('limit', params.limit.toString())
 
@@ -91,8 +93,12 @@ export const paymentsService = {
     return response.json()
   },
 
-  getStats: async (): Promise<PaymentStats> => {
-    const response = await fetch('/api/payments/stats')
+  getStats: async (params?: { from?: string; to?: string }): Promise<PaymentStats> => {
+    const searchParams = new URLSearchParams()
+    if (params?.from) searchParams.set('from', params.from)
+    if (params?.to) searchParams.set('to', params.to)
+    const qs = searchParams.toString()
+    const response = await fetch(`/api/payments/stats${qs ? '?' + qs : ''}`)
     if (!response.ok) {
       const err = await response.json()
       throw new Error(err.error || 'Failed to fetch payment stats')
