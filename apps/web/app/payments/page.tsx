@@ -51,21 +51,40 @@ function getMonthRange(year: number, month: number) {
   return { from, to }
 }
 
-function getExpectedAmount(contract: ContractInfo, entryDate: string): number | null {
-  const monthly = contract.monthly_amount || contract.invoice_amount
-  if (!monthly) return null
-  if (!contract.start_date) return monthly
+/** How many payments per year based on Georgian frequency label */
+function getPaymentsPerYear(frequency: string | null): number {
+  if (!frequency) return 12
+  if (frequency === 'ყოველთვე') return 12
+  const match = frequency.match(/წელიწადში\s*(\d+)/)
+  if (match) return parseInt(match[1])
+  return 12
+}
 
-  const startDate = new Date(contract.start_date)
-  const startDay = startDate.getDate()
+/** Expected total revenue from a contract over N months */
+function getExpectedForPeriod(contract: ContractInfo, months: number): number | null {
+  const amount = contract.monthly_amount || contract.invoice_amount
+  if (!amount) return null
+  const ppy = getPaymentsPerYear(contract.frequency)
+  return Math.round(((amount * ppy * months) / 12) * 100) / 100
+}
 
-  if (startDay > 1 && contract.first_payment_date === entryDate) {
-    const daysInMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate()
-    const daysServed = daysInMonth - startDay + 1
-    return Math.round((daysServed / daysInMonth) * monthly * 100) / 100
-  }
+/** Whether a contract is active (not ended or paused) */
+function isActiveContract(contract: ContractInfo): boolean {
+  if (!contract.monthly_amount && !contract.invoice_amount) return false
+  if (
+    contract.status === 'შეჩერებული' ||
+    contract.status === 'დასრულებული' ||
+    contract.status === 'შეწყვეტილი'
+  )
+    return false
+  return true
+}
 
-  return monthly
+/** Months between two date strings */
+function monthsBetween(from: string, to: string): number {
+  const d1 = new Date(from)
+  const d2 = new Date(to)
+  return (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth()) + 1
 }
 
 function formatAmount(amount: number, currency?: string) {
@@ -157,6 +176,13 @@ export default function PaymentsPage() {
     return getMonthRange(selectedYear, selectedMonth)
   }, [selectedYear, selectedMonth, dateFrom, dateTo])
 
+  // How many months the current view covers (for expected amount calculation)
+  const monthsInRange = useMemo(() => {
+    const { from, to } = effectiveDateRange
+    if (from && to) return monthsBetween(from, to)
+    return 1
+  }, [effectiveDateRange])
+
   // Fetch transactions — server-side search, no client-side filtering
   const fetchTransactions = useCallback(async () => {
     try {
@@ -229,31 +255,45 @@ export default function PaymentsPage() {
     setPage(1)
   }, [statusFilter, selectedMonth, selectedYear, dateFrom, dateTo, searchDebounced])
 
-  // Computed stats from transactions (for expected/difference calculations)
+  // Computed stats — expected is per-company (not per-transaction)
   const monthStats = useMemo(() => {
     if (loading || contractsLoading) return null
+
+    // Sum actual payments from transactions
     let totalPaid = 0
-    let totalExpected = 0
     let matched = 0
     let unmatched = 0
-    let underpaid = 0
-    let overpaid = 0
-
     for (const txn of transactions) {
       totalPaid += txn.amount
       if (txn.status === 'matched') matched++
       if (txn.status === 'unmatched') unmatched++
+    }
 
-      const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
-      if (contract) {
-        const expected = getExpectedAmount(contract, txn.entry_date)
-        if (expected) {
-          totalExpected += expected
-          const diff = txn.amount - expected
-          if (diff < -expected * 0.05) underpaid++
-          else if (diff > expected * 0.05) overpaid++
-        }
+    // Sum expected: once per active contract, frequency-aware
+    let totalExpected = 0
+    for (const contract of Object.values(contracts)) {
+      if (!isActiveContract(contract)) continue
+      const expected = getExpectedForPeriod(contract, monthsInRange)
+      if (expected) totalExpected += expected
+    }
+
+    // Count companies that underpaid/overpaid vs their expected
+    let underpaid = 0
+    let overpaid = 0
+    const paidByTaxId: Record<string, number> = {}
+    for (const txn of transactions) {
+      if (txn.sender_inn) {
+        paidByTaxId[txn.sender_inn] = (paidByTaxId[txn.sender_inn] || 0) + txn.amount
       }
+    }
+    for (const [taxId, contract] of Object.entries(contracts)) {
+      if (!isActiveContract(contract)) continue
+      const expected = getExpectedForPeriod(contract, monthsInRange)
+      if (!expected) continue
+      const paid = paidByTaxId[taxId] || 0
+      const diff = paid - expected
+      if (diff < -expected * 0.05) underpaid++
+      else if (diff > expected * 0.05) overpaid++
     }
 
     return {
@@ -266,9 +306,9 @@ export default function PaymentsPage() {
       overpaid,
       count: transactions.length,
     }
-  }, [transactions, contracts, loading, contractsLoading])
+  }, [transactions, contracts, loading, contractsLoading, monthsInRange])
 
-  // Overdue contracts — companies with contracts that haven't paid this month
+  // Overdue contracts — active companies that haven't paid in this period
   const overdueContracts = useMemo(() => {
     if (contractsLoading || loading) return []
     const paidTaxIds = new Set(
@@ -276,12 +316,13 @@ export default function PaymentsPage() {
     )
     return Object.entries(contracts)
       .filter(([taxId, contract]) => {
-        if (!contract.monthly_amount && !contract.invoice_amount) return false
-        if (contract.status === 'შეჩერებული' || contract.status === 'დასრულებული') return false
+        if (!isActiveContract(contract)) return false
+        // For monthly view, only show overdue for monthly-frequency contracts
+        if (selectedMonth !== null && getPaymentsPerYear(contract.frequency) < 12) return false
         return !paidTaxIds.has(taxId)
       })
       .map(([taxId, contract]) => ({ taxId, ...contract }))
-  }, [contracts, transactions, contractsLoading, loading])
+  }, [contracts, transactions, contractsLoading, loading, selectedMonth])
 
   // Grouped transactions
   const grouped = useMemo((): GroupedTransactions[] => {
@@ -308,25 +349,31 @@ export default function PaymentsPage() {
     for (const group of Object.values(groups)) {
       if (group.senderInn && contracts[group.senderInn]) {
         const contract = contracts[group.senderInn]
-        const expected = contract.monthly_amount || contract.invoice_amount
+        const expected = getExpectedForPeriod(contract, monthsInRange)
         if (expected) group.totalExpected = expected
       }
     }
 
     return Object.values(groups).sort((a, b) => b.totalPaid - a.totalPaid)
-  }, [transactions, contracts, groupByCompany])
+  }, [transactions, contracts, groupByCompany, monthsInRange])
 
-  // Totals for the table footer
+  // Totals for the table footer — per-company expected, not per-transaction
   const tableTotals = useMemo(() => {
     let totalPaid = 0
-    let totalExpected = 0
-    let hasExpected = false
-
     for (const txn of transactions) {
       totalPaid += txn.amount
-      const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
+    }
+
+    // Expected: sum once per company that appears in transactions
+    let totalExpected = 0
+    let hasExpected = false
+    const seenTaxIds = new Set<string>()
+    for (const txn of transactions) {
+      if (!txn.sender_inn || seenTaxIds.has(txn.sender_inn)) continue
+      seenTaxIds.add(txn.sender_inn)
+      const contract = contracts[txn.sender_inn]
       if (contract) {
-        const expected = getExpectedAmount(contract, txn.entry_date)
+        const expected = getExpectedForPeriod(contract, monthsInRange)
         if (expected) {
           totalExpected += expected
           hasExpected = true
@@ -335,7 +382,7 @@ export default function PaymentsPage() {
     }
 
     return { totalPaid, totalExpected: hasExpected ? totalExpected : null }
-  }, [transactions, contracts])
+  }, [transactions, contracts, monthsInRange])
 
   const toggleGroup = (key: string) => {
     setCollapsedGroups(prev => {
@@ -408,7 +455,7 @@ export default function PaymentsPage() {
     ]
     const rows = transactions.map(txn => {
       const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
-      const expected = contract ? getExpectedAmount(contract, txn.entry_date) : null
+      const expected = contract ? getExpectedForPeriod(contract, monthsInRange) : null
       const diff = expected != null ? txn.amount - expected : null
       return [
         txn.sender_name || '',
@@ -497,7 +544,8 @@ export default function PaymentsPage() {
 
   const renderTransactionRow = (txn: BankTransaction, isGroupChild = false) => {
     const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
-    const expectedAmount = contract ? getExpectedAmount(contract, txn.entry_date) : null
+    const expectedAmount =
+      !isGroupChild && contract ? getExpectedForPeriod(contract, monthsInRange) : null
     const diff = expectedAmount != null ? txn.amount - expectedAmount : null
 
     return (
@@ -511,7 +559,7 @@ export default function PaymentsPage() {
         {/* შპს - Company */}
         <td className="px-4 py-2.5 max-w-[200px]">
           {isGroupChild ? (
-            <span className="text-text-tertiary text-xs pl-5">↳</span>
+            <span className="text-text-tertiary text-xs pl-6">↳</span>
           ) : txn.sender_name ? (
             <div className="group flex items-center gap-1">
               <span className="text-sm text-text-primary truncate" title={txn.sender_name}>
@@ -535,7 +583,7 @@ export default function PaymentsPage() {
 
         {/* ს/კ - Tax ID */}
         <td className="px-4 py-2.5">
-          {txn.sender_inn ? (
+          {!isGroupChild && txn.sender_inn ? (
             <div className="group flex items-center gap-1">
               <span className="text-xs font-mono text-text-secondary">{txn.sender_inn}</span>
               <button
@@ -549,9 +597,9 @@ export default function PaymentsPage() {
                 )}
               </button>
             </div>
-          ) : (
+          ) : !isGroupChild ? (
             <span className="text-text-tertiary text-xs">—</span>
-          )}
+          ) : null}
         </td>
 
         {/* Payment ID */}
@@ -568,7 +616,7 @@ export default function PaymentsPage() {
 
         {/* Expected */}
         <td className="px-4 py-2.5 text-right">
-          {contractsLoading ? (
+          {isGroupChild ? null : contractsLoading ? (
             <span className="text-text-tertiary text-xs">...</span>
           ) : expectedAmount ? (
             <span className="text-xs text-text-secondary whitespace-nowrap">
@@ -579,9 +627,9 @@ export default function PaymentsPage() {
           )}
         </td>
 
-        {/* Difference (GEL) */}
+        {/* Difference */}
         <td className="px-4 py-2.5 text-right">
-          {contractsLoading ? (
+          {isGroupChild ? null : contractsLoading ? (
             <span className="text-text-tertiary text-xs">...</span>
           ) : diff != null ? (
             <span
@@ -622,9 +670,11 @@ export default function PaymentsPage() {
 
         {/* Method */}
         <td className="px-4 py-2.5 text-center">
-          <span className="text-[11px] text-text-tertiary">
-            {getMatchMethodLabel(txn.match_method)}
-          </span>
+          {!isGroupChild ? (
+            <span className="text-[11px] text-text-tertiary">
+              {getMatchMethodLabel(txn.match_method)}
+            </span>
+          ) : null}
         </td>
 
         {/* Actions */}
