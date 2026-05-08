@@ -259,11 +259,16 @@ export default function PaymentsPage() {
   const monthStats = useMemo(() => {
     if (loading || contractsLoading) return null
 
-    // Sum actual payments from transactions
+    // Sum actual payments from transactions (exclude ignored)
     let totalPaid = 0
     let matched = 0
     let unmatched = 0
+    let ignored = 0
     for (const txn of transactions) {
+      if (txn.status === 'ignored') {
+        ignored++
+        continue
+      }
       totalPaid += txn.amount
       if (txn.status === 'matched') matched++
       if (txn.status === 'unmatched') unmatched++
@@ -282,6 +287,7 @@ export default function PaymentsPage() {
     let overpaid = 0
     const paidByTaxId: Record<string, number> = {}
     for (const txn of transactions) {
+      if (txn.status === 'ignored') continue
       if (txn.sender_inn) {
         paidByTaxId[txn.sender_inn] = (paidByTaxId[txn.sender_inn] || 0) + txn.amount
       }
@@ -343,7 +349,7 @@ export default function PaymentsPage() {
         }
       }
       groups[key].transactions.push(txn)
-      groups[key].totalPaid += txn.amount
+      if (txn.status !== 'ignored') groups[key].totalPaid += txn.amount
     }
 
     for (const group of Object.values(groups)) {
@@ -361,14 +367,15 @@ export default function PaymentsPage() {
   const tableTotals = useMemo(() => {
     let totalPaid = 0
     for (const txn of transactions) {
-      totalPaid += txn.amount
+      if (txn.status !== 'ignored') totalPaid += txn.amount
     }
 
-    // Expected: sum once per company that appears in transactions
+    // Expected: sum once per company that appears in non-ignored transactions
     let totalExpected = 0
     let hasExpected = false
     const seenTaxIds = new Set<string>()
     for (const txn of transactions) {
+      if (txn.status === 'ignored') continue
       if (!txn.sender_inn || seenTaxIds.has(txn.sender_inn)) continue
       seenTaxIds.add(txn.sender_inn)
       const contract = contracts[txn.sender_inn]
