@@ -156,23 +156,43 @@ export async function GET() {
         const monthlyAmount = monthlyCol ? Number(d[monthlyCol]) || null : null
         const invoiceAmount = invoiceCol ? Number(d[invoiceCol]) || null : null
 
+        const contractStatus = resolveStatusLabel(d[statusCol!], columns, statusCol)
+        const frequency = resolveStatusLabel(d[frequencyCol!], columns, frequencyCol)
+
+        // Skip inactive contracts (terminated, paused, completed)
+        const isInactive =
+          contractStatus &&
+          (contractStatus.includes('შეწყვეტილ') ||
+            contractStatus.includes('შეჩერებულ') ||
+            contractStatus.includes('დასრულებულ'))
+        if (isInactive) continue
+
         const contract: ContractInfo = {
           item_id: item.id,
           company_name: item.name,
           tax_id: taxId,
           monthly_amount: monthlyAmount,
-          frequency: resolveStatusLabel(d[frequencyCol!], columns, frequencyCol),
+          frequency,
           invoice_amount: invoiceAmount,
-          status: resolveStatusLabel(d[statusCol!], columns, statusCol),
+          status: contractStatus,
           start_date: startDateCol ? d[startDateCol] : null,
           end_date: endDateCol ? d[endDateCol] : null,
           payment_method: resolveStatusLabel(d[payMethodCol!], columns, payMethodCol),
           first_payment_date: null, // populated below from bank_transactions
         }
 
-        // Use tax ID as key — first match wins (active contract boards processed first)
+        // Sum amounts across multiple contracts for the same tax ID
+        // (a company may have separate contracts for different services)
         if (!contractsByTaxId[taxId]) {
           contractsByTaxId[taxId] = contract
+        } else {
+          const existing = contractsByTaxId[taxId]
+          if (monthlyAmount) {
+            existing.monthly_amount = (existing.monthly_amount || 0) + monthlyAmount
+          }
+          if (invoiceAmount) {
+            existing.invoice_amount = (existing.invoice_amount || 0) + invoiceAmount
+          }
         }
       }
     }

@@ -142,10 +142,12 @@ export const StatusCell = memo(function StatusCell({
 
   const handleOpen = () => {
     if (buttonRef.current) {
+      // Estimate actual popup height: 36px per option + 55px for padding/divider/footer
+      const estimatedHeight = Math.min(statusOptions.length * 36 + 55, 350)
       const position = calculatePopupPosition({
         triggerRect: buttonRef.current.getBoundingClientRect(),
         popupWidth: 160,
-        popupHeight: 250,
+        popupHeight: estimatedHeight,
       })
       setDropdownPosition(position)
     }
@@ -211,7 +213,7 @@ export const StatusCell = memo(function StatusCell({
             }}
           >
             {/* Status Options - Full Width Colored Rows */}
-            <div className="flex flex-col gap-1">
+            <div className="flex flex-col gap-1 max-h-[280px] overflow-y-auto">
               {statusOptions.map(option => {
                 const colorInfo = getColorInfo(option.color)
                 const isSelected = option.key === currentStatusKey
