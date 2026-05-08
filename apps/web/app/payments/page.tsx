@@ -60,12 +60,38 @@ function getPaymentsPerYear(frequency: string | null): number {
   return 12
 }
 
-/** Expected total revenue from a contract over N months */
-function getExpectedForPeriod(contract: ContractInfo, months: number): number | null {
+/** Expected total revenue from a contract within a date range */
+function getExpectedForPeriod(
+  contract: ContractInfo,
+  months: number,
+  periodFrom?: string,
+  periodTo?: string
+): number | null {
   const amount = contract.monthly_amount || contract.invoice_amount
   if (!amount) return null
   const ppy = getPaymentsPerYear(contract.frequency)
-  return Math.round(((amount * ppy * months) / 12) * 100) / 100
+
+  // Clamp to contract's actual active range if dates are known
+  let activeMonths = months
+  if (periodFrom && periodTo) {
+    const pFrom = new Date(periodFrom)
+    const pTo = new Date(periodTo)
+    const cStart = contract.start_date ? new Date(contract.start_date) : null
+    const cEnd = contract.end_date ? new Date(contract.end_date) : null
+
+    const effectiveFrom = cStart && cStart > pFrom ? cStart : pFrom
+    const effectiveTo = cEnd && cEnd < pTo ? cEnd : pTo
+
+    if (effectiveFrom > effectiveTo) return null // contract not active in this period
+
+    activeMonths =
+      (effectiveTo.getFullYear() - effectiveFrom.getFullYear()) * 12 +
+      (effectiveTo.getMonth() - effectiveFrom.getMonth()) +
+      1
+    activeMonths = Math.max(1, Math.min(activeMonths, months))
+  }
+
+  return Math.round(((amount * ppy * activeMonths) / 12) * 100) / 100
 }
 
 /** Whether a contract is active (not ended or paused) */
@@ -278,7 +304,12 @@ export default function PaymentsPage() {
     let totalExpected = 0
     for (const contract of Object.values(contracts)) {
       if (!isActiveContract(contract)) continue
-      const expected = getExpectedForPeriod(contract, monthsInRange)
+      const expected = getExpectedForPeriod(
+        contract,
+        monthsInRange,
+        effectiveDateRange.from,
+        effectiveDateRange.to
+      )
       if (expected) totalExpected += expected
     }
 
@@ -294,7 +325,12 @@ export default function PaymentsPage() {
     }
     for (const [taxId, contract] of Object.entries(contracts)) {
       if (!isActiveContract(contract)) continue
-      const expected = getExpectedForPeriod(contract, monthsInRange)
+      const expected = getExpectedForPeriod(
+        contract,
+        monthsInRange,
+        effectiveDateRange.from,
+        effectiveDateRange.to
+      )
       if (!expected) continue
       const paid = paidByTaxId[taxId] || 0
       const diff = paid - expected
@@ -312,7 +348,7 @@ export default function PaymentsPage() {
       overpaid,
       count: transactions.length,
     }
-  }, [transactions, contracts, loading, contractsLoading, monthsInRange])
+  }, [transactions, contracts, loading, contractsLoading, monthsInRange, effectiveDateRange])
 
   // Overdue contracts — active companies that haven't paid in this period
   const overdueContracts = useMemo(() => {
@@ -355,13 +391,18 @@ export default function PaymentsPage() {
     for (const group of Object.values(groups)) {
       if (group.senderInn && contracts[group.senderInn]) {
         const contract = contracts[group.senderInn]
-        const expected = getExpectedForPeriod(contract, monthsInRange)
+        const expected = getExpectedForPeriod(
+          contract,
+          monthsInRange,
+          effectiveDateRange.from,
+          effectiveDateRange.to
+        )
         if (expected) group.totalExpected = expected
       }
     }
 
     return Object.values(groups).sort((a, b) => b.totalPaid - a.totalPaid)
-  }, [transactions, contracts, groupByCompany, monthsInRange])
+  }, [transactions, contracts, groupByCompany, monthsInRange, effectiveDateRange])
 
   // Totals for the table footer — per-company expected, not per-transaction
   const tableTotals = useMemo(() => {
@@ -380,7 +421,12 @@ export default function PaymentsPage() {
       seenTaxIds.add(txn.sender_inn)
       const contract = contracts[txn.sender_inn]
       if (contract) {
-        const expected = getExpectedForPeriod(contract, monthsInRange)
+        const expected = getExpectedForPeriod(
+          contract,
+          monthsInRange,
+          effectiveDateRange.from,
+          effectiveDateRange.to
+        )
         if (expected) {
           totalExpected += expected
           hasExpected = true
@@ -389,7 +435,7 @@ export default function PaymentsPage() {
     }
 
     return { totalPaid, totalExpected: hasExpected ? totalExpected : null }
-  }, [transactions, contracts, monthsInRange])
+  }, [transactions, contracts, monthsInRange, effectiveDateRange])
 
   const toggleGroup = (key: string) => {
     setCollapsedGroups(prev => {
@@ -462,7 +508,14 @@ export default function PaymentsPage() {
     ]
     const rows = transactions.map(txn => {
       const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
-      const expected = contract ? getExpectedForPeriod(contract, monthsInRange) : null
+      const expected = contract
+        ? getExpectedForPeriod(
+            contract,
+            monthsInRange,
+            effectiveDateRange.from,
+            effectiveDateRange.to
+          )
+        : null
       const diff = expected != null ? txn.amount - expected : null
       return [
         txn.sender_name || '',
@@ -555,7 +608,12 @@ export default function PaymentsPage() {
     const expectedAmount = contract
       ? isGroupChild
         ? contract.monthly_amount || contract.invoice_amount || null
-        : getExpectedForPeriod(contract, monthsInRange)
+        : getExpectedForPeriod(
+            contract,
+            monthsInRange,
+            effectiveDateRange.from,
+            effectiveDateRange.to
+          )
       : null
     const diff = expectedAmount != null ? txn.amount - expectedAmount : null
 
