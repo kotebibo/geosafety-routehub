@@ -72,3 +72,4 @@ apps/web/scripts/
 apps/web/*.json
 !apps/web/package.json
 !apps/web/tsconfig.json
+.vercel

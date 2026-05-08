@@ -98,9 +98,10 @@ function getExpectedForPeriod(
 function isActiveContract(contract: ContractInfo): boolean {
   if (!contract.monthly_amount && !contract.invoice_amount) return false
   if (
-    contract.status === 'შეჩერებული' ||
-    contract.status === 'დასრულებული' ||
-    contract.status === 'შეწყვეტილი'
+    contract.status &&
+    (contract.status.includes('შეჩერებულ') ||
+      contract.status.includes('დასრულებულ') ||
+      contract.status.includes('შეწყვეტილ'))
   )
     return false
   return true
