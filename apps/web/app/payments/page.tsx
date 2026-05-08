@@ -544,8 +544,12 @@ export default function PaymentsPage() {
 
   const renderTransactionRow = (txn: BankTransaction, isGroupChild = false) => {
     const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
-    const expectedAmount =
-      !isGroupChild && contract ? getExpectedForPeriod(contract, monthsInRange) : null
+    // Group headers show period-total expected; child rows show per-payment expected
+    const expectedAmount = contract
+      ? isGroupChild
+        ? contract.monthly_amount || contract.invoice_amount || null
+        : getExpectedForPeriod(contract, monthsInRange)
+      : null
     const diff = expectedAmount != null ? txn.amount - expectedAmount : null
 
     return (
@@ -616,7 +620,7 @@ export default function PaymentsPage() {
 
         {/* Expected */}
         <td className="px-4 py-2.5 text-right">
-          {isGroupChild ? null : contractsLoading ? (
+          {contractsLoading ? (
             <span className="text-text-tertiary text-xs">...</span>
           ) : expectedAmount ? (
             <span className="text-xs text-text-secondary whitespace-nowrap">
@@ -629,7 +633,7 @@ export default function PaymentsPage() {
 
         {/* Difference */}
         <td className="px-4 py-2.5 text-right">
-          {isGroupChild ? null : contractsLoading ? (
+          {contractsLoading ? (
             <span className="text-text-tertiary text-xs">...</span>
           ) : diff != null ? (
             <span
