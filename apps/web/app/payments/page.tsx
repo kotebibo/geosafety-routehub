@@ -170,9 +170,9 @@ export default function PaymentsPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 
-  // Grouping
+  // Grouping — all collapsed by default
   const [groupByCompany, setGroupByCompany] = useState(true)
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string> | null>(null)
 
   // Copy & actions
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -277,9 +277,10 @@ export default function PaymentsPage() {
     }
   }, [authLoading, isAdmin, isDispatcher, fetchTransactions])
 
-  // Reset page on filter change
+  // Reset page and collapse state on filter change
   useEffect(() => {
     setPage(1)
+    setCollapsedGroups(null)
   }, [statusFilter, selectedMonth, selectedYear, dateFrom, dateTo, searchDebounced])
 
   // Computed stats — expected is per-company (not per-transaction)
@@ -405,6 +406,13 @@ export default function PaymentsPage() {
     return Object.values(groups).sort((a, b) => b.totalPaid - a.totalPaid)
   }, [transactions, contracts, groupByCompany, monthsInRange, effectiveDateRange])
 
+  // Initialize all groups as collapsed on first load / data change
+  useEffect(() => {
+    if (grouped.length > 0 && collapsedGroups === null) {
+      setCollapsedGroups(new Set(grouped.map(g => g.key)))
+    }
+  }, [grouped, collapsedGroups])
+
   // Totals for the table footer — per-company expected, not per-transaction
   const tableTotals = useMemo(() => {
     let totalPaid = 0
@@ -440,7 +448,7 @@ export default function PaymentsPage() {
 
   const toggleGroup = (key: string) => {
     setCollapsedGroups(prev => {
-      const next = new Set(prev)
+      const next = new Set(prev || [])
       if (next.has(key)) next.delete(key)
       else next.add(key)
       return next
@@ -575,21 +583,6 @@ export default function PaymentsPage() {
     )
   }
 
-  const getMatchMethodLabel = (method: string | null) => {
-    switch (method) {
-      case 'inn_exact':
-        return 'ს/კ'
-      case 'name_exact':
-        return 'სახელი'
-      case 'fuzzy':
-        return 'მსგავსი'
-      case 'manual':
-        return 'ხელით'
-      default:
-        return '—'
-    }
-  }
-
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -601,36 +594,92 @@ export default function PaymentsPage() {
   // Year options for dropdown
   const yearOptions = Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i)
 
-  // ── Render Transaction Row ──
+  // ── Render child transaction row (inside a group) ──
 
-  const renderTransactionRow = (txn: BankTransaction, isGroupChild = false) => {
+  const renderChildRow = (txn: BankTransaction) => (
+    <tr
+      key={txn.id}
+      className="border-b border-border-light/50 hover:bg-bg-secondary/30 transition-colors"
+    >
+      {/* Indent + date */}
+      <td className="py-2 pl-10 pr-4 whitespace-nowrap">
+        <span className="text-xs text-text-secondary">{formatDate(txn.entry_date)}</span>
+      </td>
+
+      {/* Paid Amount */}
+      <td className="px-4 py-2 text-right">
+        <span className="text-sm font-medium text-text-primary whitespace-nowrap">
+          {formatAmount(txn.amount, txn.currency)}
+        </span>
+      </td>
+
+      {/* Expected — empty for child rows */}
+      <td className="px-4 py-2" />
+
+      {/* Difference — empty for child rows */}
+      <td className="px-4 py-2" />
+
+      {/* Purpose */}
+      <td className="px-4 py-2 max-w-[300px]">
+        {txn.purpose ? (
+          <span className="text-xs text-text-tertiary truncate block" title={txn.purpose}>
+            {txn.purpose}
+          </span>
+        ) : (
+          <span className="text-text-tertiary text-xs">—</span>
+        )}
+      </td>
+
+      {/* Status */}
+      <td className="px-4 py-2">{getStatusBadge(txn.status)}</td>
+
+      {/* Actions */}
+      <td className="px-3 py-2">
+        {txn.status === 'unmatched' && (
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => router.push(`/payments/unmatched`)}
+              title="დაკავშირება"
+              className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
+            >
+              <Link2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => handleIgnore(txn.id)}
+              title="იგნორირება"
+              disabled={actionLoading === txn.id}
+              className="p-1 rounded hover:bg-bg-secondary text-text-tertiary hover:text-red-500 disabled:opacity-30"
+            >
+              <EyeOff className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+      </td>
+    </tr>
+  )
+
+  // ── Render flat transaction row (ungrouped mode) ──
+
+  const renderFlatRow = (txn: BankTransaction) => {
     const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
-    // Group headers show period-total expected; child rows show per-payment expected
     const expectedAmount = contract
-      ? isGroupChild
-        ? contract.monthly_amount || contract.invoice_amount || null
-        : getExpectedForPeriod(
-            contract,
-            monthsInRange,
-            effectiveDateRange.from,
-            effectiveDateRange.to
-          )
+      ? getExpectedForPeriod(
+          contract,
+          monthsInRange,
+          effectiveDateRange.from,
+          effectiveDateRange.to
+        )
       : null
     const diff = expectedAmount != null ? txn.amount - expectedAmount : null
 
     return (
       <tr
         key={txn.id}
-        className={cn(
-          'border-b border-border-light hover:bg-bg-secondary/40 transition-colors',
-          isGroupChild && 'bg-bg-secondary/20'
-        )}
+        className="border-b border-border-light hover:bg-bg-secondary/40 transition-colors"
       >
         {/* შპს - Company */}
-        <td className="px-4 py-2.5 max-w-[200px]">
-          {isGroupChild ? (
-            <span className="text-text-tertiary text-xs pl-6">↳</span>
-          ) : txn.sender_name ? (
+        <td className="px-4 py-2.5 max-w-[250px]">
+          {txn.sender_name ? (
             <div className="group flex items-center gap-1">
               <span className="text-sm text-text-primary truncate" title={txn.sender_name}>
                 {txn.sender_name}
@@ -649,32 +698,6 @@ export default function PaymentsPage() {
           ) : (
             <span className="text-text-tertiary text-sm">—</span>
           )}
-        </td>
-
-        {/* ს/კ - Tax ID */}
-        <td className="px-4 py-2.5">
-          {!isGroupChild && txn.sender_inn ? (
-            <div className="group flex items-center gap-1">
-              <span className="text-xs font-mono text-text-secondary">{txn.sender_inn}</span>
-              <button
-                onClick={() => handleCopy(txn.sender_inn!, `inn-${txn.id}`)}
-                className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-              >
-                {copiedId === `inn-${txn.id}` ? (
-                  <Check className="w-3 h-3 text-emerald-500" />
-                ) : (
-                  <Copy className="w-3 h-3 text-text-tertiary" />
-                )}
-              </button>
-            </div>
-          ) : !isGroupChild ? (
-            <span className="text-text-tertiary text-xs">—</span>
-          ) : null}
-        </td>
-
-        {/* Payment ID */}
-        <td className="px-4 py-2.5">
-          <span className="text-xs font-mono text-text-tertiary">{txn.doc_key}</span>
         </td>
 
         {/* Paid Amount */}
@@ -719,13 +742,8 @@ export default function PaymentsPage() {
           )}
         </td>
 
-        {/* Date */}
-        <td className="px-4 py-2.5 whitespace-nowrap">
-          <span className="text-xs text-text-secondary">{formatDate(txn.entry_date)}</span>
-        </td>
-
         {/* Purpose */}
-        <td className="px-4 py-2.5 max-w-[200px]">
+        <td className="px-4 py-2.5 max-w-[300px]">
           {txn.purpose ? (
             <span className="text-xs text-text-secondary truncate block" title={txn.purpose}>
               {txn.purpose}
@@ -737,15 +755,6 @@ export default function PaymentsPage() {
 
         {/* Status */}
         <td className="px-4 py-2.5">{getStatusBadge(txn.status)}</td>
-
-        {/* Method */}
-        <td className="px-4 py-2.5 text-center">
-          {!isGroupChild ? (
-            <span className="text-[11px] text-text-tertiary">
-              {getMatchMethodLabel(txn.match_method)}
-            </span>
-          ) : null}
-        </td>
 
         {/* Actions */}
         <td className="px-3 py-2.5">
@@ -1076,13 +1085,7 @@ export default function PaymentsPage() {
             <thead>
               <tr className="border-b border-border-light bg-bg-secondary/50">
                 <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                  შპს
-                </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                  ს/კ
-                </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                  გადახდის ID
+                  {groupByCompany ? 'კომპანია / თარიღი' : 'შპს'}
                 </th>
                 <th className="text-right px-4 py-2.5 font-semibold text-text-secondary text-xs">
                   გადახდილი
@@ -1094,16 +1097,10 @@ export default function PaymentsPage() {
                   სხვაობა
                 </th>
                 <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                  თარიღი
-                </th>
-                <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
                   დანიშნულება
                 </th>
                 <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
                   სტატუსი
-                </th>
-                <th className="text-center px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                  მეთოდი
                 </th>
                 <th className="w-[70px]" />
               </tr>
@@ -1111,21 +1108,21 @@ export default function PaymentsPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={11} className="text-center py-16">
+                  <td colSpan={7} className="text-center py-16">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-monday-primary mx-auto" />
                     <p className="text-xs text-text-tertiary mt-2">იტვირთება...</p>
                   </td>
                 </tr>
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={11} className="text-center py-16">
+                  <td colSpan={7} className="text-center py-16">
                     <Banknote className="w-8 h-8 text-text-disabled mx-auto mb-2" />
                     <p className="text-sm text-text-tertiary">ტრანზაქციები არ მოიძებნა</p>
                   </td>
                 </tr>
               ) : groupByCompany ? (
                 grouped.map(group => {
-                  const isCollapsed = collapsedGroups.has(group.key)
+                  const isCollapsed = collapsedGroups?.has(group.key) ?? true
                   const diff =
                     group.totalExpected != null ? group.totalPaid - group.totalExpected : null
 
@@ -1133,49 +1130,49 @@ export default function PaymentsPage() {
                     <Fragment key={group.key}>
                       {/* Group header */}
                       <tr
-                        className="bg-bg-secondary/70 border-b border-border-light cursor-pointer hover:bg-bg-secondary transition-colors"
+                        className="border-b border-border-light cursor-pointer hover:bg-bg-secondary/80 transition-colors bg-bg-secondary/60 border-l-2 border-l-monday-primary"
                         onClick={() => toggleGroup(group.key)}
                       >
-                        <td className="px-4 py-2" colSpan={3}>
+                        <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
                             {isCollapsed ? (
-                              <ChevronRightIcon className="w-3.5 h-3.5 text-text-tertiary" />
+                              <ChevronRightIcon className="w-4 h-4 text-text-tertiary flex-shrink-0" />
                             ) : (
-                              <ChevronDown className="w-3.5 h-3.5 text-text-tertiary" />
+                              <ChevronDown className="w-4 h-4 text-monday-primary flex-shrink-0" />
                             )}
-                            <Building2 className="w-3.5 h-3.5 text-monday-primary" />
-                            <span className="text-sm font-semibold text-text-primary">
+                            <Building2 className="w-3.5 h-3.5 text-monday-primary flex-shrink-0" />
+                            <span className="text-sm font-semibold text-text-primary truncate">
                               {group.senderName}
                             </span>
                             {group.senderInn && (
-                              <span className="text-[11px] font-mono text-text-tertiary">
+                              <span className="text-[11px] font-mono text-text-tertiary flex-shrink-0">
                                 {group.senderInn}
                               </span>
                             )}
-                            <span className="text-[11px] text-text-tertiary bg-bg-primary px-1.5 py-0.5 rounded">
-                              {group.transactions.length} ტრანზ.
+                            <span className="text-[11px] text-text-tertiary bg-bg-primary px-1.5 py-0.5 rounded flex-shrink-0">
+                              {group.transactions.length}
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-2 text-right">
-                          <span className="text-sm font-bold text-text-primary">
+                        <td className="px-4 py-2.5 text-right">
+                          <span className="text-sm font-bold text-text-primary whitespace-nowrap">
                             {formatAmount(group.totalPaid)}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-4 py-2.5 text-right">
                           {group.totalExpected != null ? (
-                            <span className="text-xs text-text-secondary">
+                            <span className="text-xs text-text-secondary whitespace-nowrap">
                               {formatAmount(group.totalExpected)}
                             </span>
                           ) : (
                             <span className="text-xs text-text-tertiary">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-2 text-right">
+                        <td className="px-4 py-2.5 text-right">
                           {diff != null ? (
                             <span
                               className={cn(
-                                'text-xs font-bold',
+                                'text-xs font-bold whitespace-nowrap',
                                 Math.abs(diff) < 0.5
                                   ? 'text-emerald-600'
                                   : diff < 0
@@ -1191,23 +1188,22 @@ export default function PaymentsPage() {
                             <span className="text-xs text-text-tertiary">—</span>
                           )}
                         </td>
-                        <td colSpan={5} />
+                        <td colSpan={3} />
                       </tr>
 
                       {/* Group children */}
-                      {!isCollapsed &&
-                        group.transactions.map(txn => renderTransactionRow(txn, true))}
+                      {!isCollapsed && group.transactions.map(txn => renderChildRow(txn))}
                     </Fragment>
                   )
                 })
               ) : (
-                transactions.map(txn => renderTransactionRow(txn))
+                transactions.map(txn => renderFlatRow(txn))
               )}
 
               {/* Totals row */}
               {!loading && transactions.length > 0 && (
                 <tr className="border-t-2 border-border-light bg-bg-secondary/50 font-semibold">
-                  <td className="px-4 py-2.5 text-xs text-text-primary" colSpan={3}>
+                  <td className="px-4 py-2.5 text-xs text-text-primary">
                     ჯამი ({transactions.length} ტრანზაქცია)
                   </td>
                   <td className="px-4 py-2.5 text-right text-sm text-text-primary">
@@ -1235,7 +1231,7 @@ export default function PaymentsPage() {
                       <span className="text-xs text-text-tertiary">—</span>
                     )}
                   </td>
-                  <td colSpan={5} />
+                  <td colSpan={3} />
                 </tr>
               )}
             </tbody>
