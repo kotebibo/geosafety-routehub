@@ -60,7 +60,8 @@ function getPaymentsPerYear(frequency: string | null): number {
   return 12
 }
 
-/** Expected total revenue from a contract within a date range */
+/** Expected total revenue from a contract within a date range.
+ *  When no period is given ("all" mode), uses contract start → today. */
 function getExpectedForPeriod(
   contract: ContractInfo,
   months: number,
@@ -70,25 +71,40 @@ function getExpectedForPeriod(
   const amount = contract.monthly_amount || contract.invoice_amount
   if (!amount) return null
   const ppy = getPaymentsPerYear(contract.frequency)
+  const today = new Date()
 
-  // Clamp to contract's actual active range if dates are known
-  let activeMonths = months
+  const cStart = contract.start_date ? new Date(contract.start_date) : null
+  const cEnd = contract.end_date ? new Date(contract.end_date) : null
+
+  let activeMonths: number
+
   if (periodFrom && periodTo) {
+    // Specific period (month or custom range)
     const pFrom = new Date(periodFrom)
     const pTo = new Date(periodTo)
-    const cStart = contract.start_date ? new Date(contract.start_date) : null
-    const cEnd = contract.end_date ? new Date(contract.end_date) : null
 
     const effectiveFrom = cStart && cStart > pFrom ? cStart : pFrom
-    const effectiveTo = cEnd && cEnd < pTo ? cEnd : pTo
+    let effectiveTo = cEnd && cEnd < pTo ? cEnd : pTo
+    if (today < effectiveTo) effectiveTo = today
 
-    if (effectiveFrom > effectiveTo) return null // contract not active in this period
+    if (effectiveFrom > effectiveTo) return null
 
     activeMonths =
       (effectiveTo.getFullYear() - effectiveFrom.getFullYear()) * 12 +
       (effectiveTo.getMonth() - effectiveFrom.getMonth()) +
       1
     activeMonths = Math.max(1, Math.min(activeMonths, months))
+  } else {
+    // "All" mode — contract start (or first payment) to today
+    const from =
+      cStart || (contract.first_payment_date ? new Date(contract.first_payment_date) : null)
+    if (!from) return null
+    const to = cEnd && cEnd < today ? cEnd : today
+    if (from > to) return null
+
+    activeMonths =
+      (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth()) + 1
+    activeMonths = Math.max(1, activeMonths)
   }
 
   return Math.round(((amount * ppy * activeMonths) / 12) * 100) / 100
@@ -197,17 +213,18 @@ export default function PaymentsPage() {
       return { from: dateFrom || undefined, to: dateTo || undefined }
     }
     if (selectedMonth === null) {
-      // Full year
-      return { from: `${selectedYear}-01-01`, to: `${selectedYear}-12-31` }
+      // All history — no date bounds
+      return { from: undefined, to: undefined }
     }
     return getMonthRange(selectedYear, selectedMonth)
   }, [selectedYear, selectedMonth, dateFrom, dateTo])
 
   // How many months the current view covers (for expected amount calculation)
+  // When "all", this is ignored — getExpectedForPeriod uses contract start → today
   const monthsInRange = useMemo(() => {
     const { from, to } = effectiveDateRange
     if (from && to) return monthsBetween(from, to)
-    return 1
+    return 0 // "all" mode — getExpectedForPeriod handles this
   }, [effectiveDateRange])
 
   // Fetch transactions — server-side search, no client-side filtering
@@ -352,22 +369,6 @@ export default function PaymentsPage() {
     }
   }, [transactions, contracts, loading, contractsLoading, monthsInRange, effectiveDateRange])
 
-  // Overdue contracts — active companies that haven't paid in this period
-  const overdueContracts = useMemo(() => {
-    if (contractsLoading || loading) return []
-    const paidTaxIds = new Set(
-      transactions.filter(t => t.sender_inn && t.status !== 'ignored').map(t => t.sender_inn!)
-    )
-    return Object.entries(contracts)
-      .filter(([taxId, contract]) => {
-        if (!isActiveContract(contract)) return false
-        // For monthly view, only show overdue for monthly-frequency contracts
-        if (selectedMonth !== null && getPaymentsPerYear(contract.frequency) < 12) return false
-        return !paidTaxIds.has(taxId)
-      })
-      .map(([taxId, contract]) => ({ taxId, ...contract }))
-  }, [contracts, transactions, contractsLoading, loading, selectedMonth])
-
   // Grouped transactions
   const grouped = useMemo((): GroupedTransactions[] => {
     if (!groupByCompany) return []
@@ -403,8 +404,41 @@ export default function PaymentsPage() {
       }
     }
 
+    // Add active contracts with zero transactions in this period
+    if (!contractsLoading) {
+      for (const [taxId, contract] of Object.entries(contracts)) {
+        if (groups[taxId]) continue // already has transactions
+        if (!isActiveContract(contract)) continue
+        // For monthly view, skip non-monthly contracts
+        if (selectedMonth !== null && getPaymentsPerYear(contract.frequency) < 12) continue
+        const expected = getExpectedForPeriod(
+          contract,
+          monthsInRange,
+          effectiveDateRange.from,
+          effectiveDateRange.to
+        )
+        if (!expected) continue // contract not active in this period
+        groups[taxId] = {
+          key: taxId,
+          senderName: contract.company_name || '—',
+          senderInn: taxId,
+          transactions: [],
+          totalPaid: 0,
+          totalExpected: expected,
+        }
+      }
+    }
+
     return Object.values(groups).sort((a, b) => b.totalPaid - a.totalPaid)
-  }, [transactions, contracts, groupByCompany, monthsInRange, effectiveDateRange])
+  }, [
+    transactions,
+    contracts,
+    contractsLoading,
+    groupByCompany,
+    monthsInRange,
+    effectiveDateRange,
+    selectedMonth,
+  ])
 
   // Initialize all groups as collapsed on first load / data change
   useEffect(() => {
@@ -413,14 +447,27 @@ export default function PaymentsPage() {
     }
   }, [grouped, collapsedGroups])
 
-  // Totals for the table footer — per-company expected, not per-transaction
+  // Totals for the table footer — derived from grouped data (includes zero-payment companies)
   const tableTotals = useMemo(() => {
+    if (groupByCompany && grouped.length > 0) {
+      let totalPaid = 0
+      let totalExpected = 0
+      let hasExpected = false
+      for (const group of grouped) {
+        totalPaid += group.totalPaid
+        if (group.totalExpected != null) {
+          totalExpected += group.totalExpected
+          hasExpected = true
+        }
+      }
+      return { totalPaid, totalExpected: hasExpected ? totalExpected : null }
+    }
+
+    // Flat mode — sum from transactions
     let totalPaid = 0
     for (const txn of transactions) {
       if (txn.status !== 'ignored') totalPaid += txn.amount
     }
-
-    // Expected: sum once per company that appears in non-ignored transactions
     let totalExpected = 0
     let hasExpected = false
     const seenTaxIds = new Set<string>()
@@ -442,9 +489,8 @@ export default function PaymentsPage() {
         }
       }
     }
-
     return { totalPaid, totalExpected: hasExpected ? totalExpected : null }
-  }, [transactions, contracts, monthsInRange, effectiveDateRange])
+  }, [transactions, contracts, grouped, groupByCompany, monthsInRange, effectiveDateRange])
 
   const toggleGroup = (key: string) => {
     setCollapsedGroups(prev => {
@@ -1043,41 +1089,6 @@ export default function PaymentsPage() {
         </button>
       </div>
 
-      {/* ── Overdue Contracts ── */}
-      {!contractsLoading && !loading && overdueContracts.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-4 h-4 text-red-600" />
-            <span className="text-sm font-semibold text-red-700">
-              გადაუხდელი კომპანიები ({overdueContracts.length})
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {overdueContracts.slice(0, 10).map(c => (
-              <span
-                key={c.taxId}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white border border-red-200 text-xs text-red-700"
-              >
-                <span className="font-medium">{c.company_name}</span>
-                <span className="text-red-400">|</span>
-                <span className="font-mono">{c.taxId}</span>
-                {(c.monthly_amount || c.invoice_amount) && (
-                  <>
-                    <span className="text-red-400">|</span>
-                    <span>{formatAmount(c.monthly_amount || c.invoice_amount || 0)}</span>
-                  </>
-                )}
-              </span>
-            ))}
-            {overdueContracts.length > 10 && (
-              <span className="text-xs text-red-500 self-center">
-                +{overdueContracts.length - 10} სხვა
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* ── Transactions Table ── */}
       <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden">
         <div className="overflow-x-auto">
@@ -1113,7 +1124,7 @@ export default function PaymentsPage() {
                     <p className="text-xs text-text-tertiary mt-2">იტვირთება...</p>
                   </td>
                 </tr>
-              ) : transactions.length === 0 ? (
+              ) : transactions.length === 0 && grouped.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="text-center py-16">
                     <Banknote className="w-8 h-8 text-text-disabled mx-auto mb-2" />
@@ -1201,10 +1212,13 @@ export default function PaymentsPage() {
               )}
 
               {/* Totals row */}
-              {!loading && transactions.length > 0 && (
+              {!loading && (transactions.length > 0 || grouped.length > 0) && (
                 <tr className="border-t-2 border-border-light bg-bg-secondary/50 font-semibold">
                   <td className="px-4 py-2.5 text-xs text-text-primary">
-                    ჯამი ({transactions.length} ტრანზაქცია)
+                    ჯამი
+                    {groupByCompany
+                      ? ` (${grouped.length} კომპანია)`
+                      : ` (${transactions.length} ტრანზაქცია)`}
                   </td>
                   <td className="px-4 py-2.5 text-right text-sm text-text-primary">
                     {formatAmount(tableTotals.totalPaid)}
