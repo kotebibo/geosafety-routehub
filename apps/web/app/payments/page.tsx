@@ -369,6 +369,12 @@ export default function PaymentsPage() {
     }
   }, [transactions, contracts, loading, contractsLoading, monthsInRange, effectiveDateRange])
 
+  // Difference for stat card — uses server-side total (not paginated client array)
+  const statsDifference = useMemo(() => {
+    const totalPaid = (stats?.matched_amount || 0) + (stats?.unmatched_amount || 0)
+    return totalPaid - (monthStats?.totalExpected || 0)
+  }, [stats, monthStats])
+
   // Grouped transactions
   const grouped = useMemo((): GroupedTransactions[] => {
     if (!groupByCompany) return []
@@ -974,14 +980,18 @@ export default function PaymentsPage() {
         <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <p className="text-xs text-text-tertiary mb-1">მიღებული</p>
           <p className="text-xl font-bold text-emerald-600">
-            {statsLoading ? '...' : formatAmount(stats?.matched_amount || 0)}
+            {statsLoading
+              ? '...'
+              : formatAmount((stats?.matched_amount || 0) + (stats?.unmatched_amount || 0))}
           </p>
         </div>
 
         <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <p className="text-xs text-text-tertiary mb-1">მოსალოდნელი</p>
           <p className="text-xl font-bold text-monday-primary">
-            {loading || contractsLoading ? '...' : formatAmount(monthStats?.totalExpected || 0)}
+            {statsLoading || contractsLoading
+              ? '...'
+              : formatAmount(monthStats?.totalExpected || 0)}
           </p>
         </div>
 
@@ -990,17 +1000,16 @@ export default function PaymentsPage() {
           <p
             className={cn(
               'text-xl font-bold',
-              !monthStats
+              !stats || !monthStats
                 ? 'text-text-secondary'
-                : monthStats.difference >= 0
+                : statsDifference >= 0
                   ? 'text-emerald-600'
                   : 'text-red-600'
             )}
           >
-            {loading || contractsLoading
+            {statsLoading || contractsLoading
               ? '...'
-              : ((monthStats?.difference || 0) >= 0 ? '+' : '') +
-                formatAmount(monthStats?.difference || 0)}
+              : (statsDifference >= 0 ? '+' : '') + formatAmount(statsDifference)}
           </p>
           {monthStats && (monthStats.underpaid > 0 || monthStats.overpaid > 0) && (
             <div className="flex items-center gap-2 mt-1">
