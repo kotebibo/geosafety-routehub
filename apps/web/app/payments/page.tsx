@@ -231,16 +231,45 @@ export default function PaymentsPage() {
       setLoading(true)
       // 'unpaid' is a client-side filter, don't send to API
       const apiStatus = statusFilter && statusFilter !== 'unpaid' ? statusFilter : undefined
-      const data = await paymentsService.getTransactions({
-        status: apiStatus,
-        from: effectiveDateRange.from,
-        to: effectiveDateRange.to,
-        search: searchDebounced || undefined,
-        page: groupByCompany ? 1 : page,
-        limit: groupByCompany ? 1000 : limit,
-      })
-      setTransactions(data.transactions || [])
-      setTotal(data.total || 0)
+
+      if (groupByCompany) {
+        // Grouped mode: fetch ALL transactions (paginate through everything)
+        const PAGE_SIZE = 1000
+        let allTxns: BankTransaction[] = []
+        let currentPage = 1
+        let totalCount = 0
+
+        while (true) {
+          const data = await paymentsService.getTransactions({
+            status: apiStatus,
+            from: effectiveDateRange.from,
+            to: effectiveDateRange.to,
+            search: searchDebounced || undefined,
+            page: currentPage,
+            limit: PAGE_SIZE,
+          })
+          const batch = data.transactions || []
+          allTxns = allTxns.concat(batch)
+          totalCount = data.total || 0
+          if (batch.length < PAGE_SIZE || allTxns.length >= totalCount) break
+          currentPage++
+        }
+
+        setTransactions(allTxns)
+        setTotal(totalCount)
+      } else {
+        // Flat mode: single page
+        const data = await paymentsService.getTransactions({
+          status: apiStatus,
+          from: effectiveDateRange.from,
+          to: effectiveDateRange.to,
+          search: searchDebounced || undefined,
+          page,
+          limit,
+        })
+        setTransactions(data.transactions || [])
+        setTotal(data.total || 0)
+      }
     } catch (err) {
       console.error('Error fetching transactions:', err)
     } finally {
