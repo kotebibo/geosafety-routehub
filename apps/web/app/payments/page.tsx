@@ -229,8 +229,10 @@ export default function PaymentsPage() {
   const fetchTransactions = useCallback(async () => {
     try {
       setLoading(true)
+      // 'unpaid' is a client-side filter, don't send to API
+      const apiStatus = statusFilter && statusFilter !== 'unpaid' ? statusFilter : undefined
       const data = await paymentsService.getTransactions({
-        status: statusFilter || undefined,
+        status: apiStatus,
         from: effectiveDateRange.from,
         to: effectiveDateRange.to,
         search: searchDebounced || undefined,
@@ -403,10 +405,11 @@ export default function PaymentsPage() {
     }
 
     // Add active contracts with zero transactions in this period
-    // Only when no status filter is active (zero-payment companies have no status)
-    if (!contractsLoading && !statusFilter) {
+    // Show on "all" filter and "unpaid" filter
+    if (!contractsLoading && (!statusFilter || statusFilter === 'unpaid')) {
+      const paidTaxIds = new Set(Object.keys(groups))
       for (const [taxId, contract] of Object.entries(contracts)) {
-        if (groups[taxId]) continue // already has transactions
+        if (paidTaxIds.has(taxId)) continue // already has transactions
         if (!isActiveContract(contract)) continue
         // For monthly view, skip non-monthly contracts
         if (selectedMonth !== null && getPaymentsPerYear(contract.frequency) < 12) continue
@@ -425,6 +428,13 @@ export default function PaymentsPage() {
           totalPaid: 0,
           totalExpected: expected,
         }
+      }
+    }
+
+    // For "unpaid" filter, only keep groups with zero payments
+    if (statusFilter === 'unpaid') {
+      for (const key of Object.keys(groups)) {
+        if (groups[key].totalPaid > 0) delete groups[key]
       }
     }
 
@@ -1033,6 +1043,7 @@ export default function PaymentsPage() {
             { value: '', label: 'ყველა' },
             { value: 'matched', label: 'დაკავშ.' },
             { value: 'unmatched', label: 'დაუკავშ.' },
+            { value: 'unpaid', label: 'გადაუხდელი' },
             { value: 'ignored', label: 'იგნორ.' },
           ].map(opt => (
             <button
@@ -1041,7 +1052,9 @@ export default function PaymentsPage() {
               className={cn(
                 'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
                 statusFilter === opt.value
-                  ? 'bg-monday-primary text-white'
+                  ? opt.value === 'unpaid'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-monday-primary text-white'
                   : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
               )}
             >
