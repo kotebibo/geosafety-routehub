@@ -61,6 +61,7 @@ function getPaymentsPerYear(frequency: string | null): number {
 }
 
 /** Expected total revenue from a contract within a date range.
+ *  End dates are ignored — contracts auto-renew. If it's on the active board, it's active.
  *  When no period is given ("all" mode), uses contract start → today. */
 function getExpectedForPeriod(
   contract: ContractInfo,
@@ -74,7 +75,6 @@ function getExpectedForPeriod(
   const today = new Date()
 
   const cStart = contract.start_date ? new Date(contract.start_date) : null
-  const cEnd = contract.end_date ? new Date(contract.end_date) : null
 
   let activeMonths: number
 
@@ -84,7 +84,7 @@ function getExpectedForPeriod(
     const pTo = new Date(periodTo)
 
     const effectiveFrom = cStart && cStart > pFrom ? cStart : pFrom
-    let effectiveTo = cEnd && cEnd < pTo ? cEnd : pTo
+    let effectiveTo = pTo
     if (today < effectiveTo) effectiveTo = today
 
     if (effectiveFrom > effectiveTo) return null
@@ -99,11 +99,9 @@ function getExpectedForPeriod(
     const from =
       cStart || (contract.first_payment_date ? new Date(contract.first_payment_date) : null)
     if (!from) return null
-    const to = cEnd && cEnd < today ? cEnd : today
-    if (from > to) return null
 
     activeMonths =
-      (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth()) + 1
+      (today.getFullYear() - from.getFullYear()) * 12 + (today.getMonth() - from.getMonth()) + 1
     activeMonths = Math.max(1, activeMonths)
   }
 
