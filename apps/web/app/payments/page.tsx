@@ -403,7 +403,8 @@ export default function PaymentsPage() {
     }
 
     // Add active contracts with zero transactions in this period
-    if (!contractsLoading) {
+    // Only when no status filter is active (zero-payment companies have no status)
+    if (!contractsLoading && !statusFilter) {
       for (const [taxId, contract] of Object.entries(contracts)) {
         if (groups[taxId]) continue // already has transactions
         if (!isActiveContract(contract)) continue
@@ -436,6 +437,7 @@ export default function PaymentsPage() {
     monthsInRange,
     effectiveDateRange,
     selectedMonth,
+    statusFilter,
   ])
 
   // Initialize all groups as collapsed on first load / data change
@@ -1209,7 +1211,37 @@ export default function PaymentsPage() {
                             <span className="text-xs text-text-tertiary">—</span>
                           )}
                         </td>
-                        <td colSpan={3} />
+                        <td />
+                        <td />
+                        <td className="px-3 py-2.5">
+                          {group.transactions.some(t => t.status === 'unmatched') && (
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  router.push('/payments/unmatched')
+                                }}
+                                title="დაკავშირება"
+                                className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
+                              >
+                                <Link2 className="w-3.5 h-3.5" />
+                              </button>
+                              {group.transactions.length === 1 && (
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    handleIgnore(group.transactions[0].id)
+                                  }}
+                                  title="იგნორირება"
+                                  disabled={actionLoading === group.transactions[0].id}
+                                  className="p-1 rounded hover:bg-bg-secondary text-text-tertiary hover:text-red-500 disabled:opacity-30"
+                                >
+                                  <EyeOff className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </td>
                       </tr>
 
                       {/* Group children */}
