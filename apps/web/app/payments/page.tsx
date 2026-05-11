@@ -666,7 +666,7 @@ export default function PaymentsPage() {
       <td className="px-4 py-2" />
 
       {/* Purpose */}
-      <td className="px-4 py-2 max-w-[300px]">
+      <td className="px-4 py-2 overflow-hidden">
         {txn.purpose ? (
           <span className="text-xs text-text-tertiary truncate block" title={txn.purpose}>
             {txn.purpose}
@@ -724,10 +724,10 @@ export default function PaymentsPage() {
         className="border-b border-border-light hover:bg-bg-secondary/40 transition-colors"
       >
         {/* შპს - Company */}
-        <td className="px-4 py-2.5 max-w-[250px]">
+        <td className="px-4 py-2.5 overflow-hidden">
           {txn.sender_name ? (
-            <div className="group flex items-center gap-1">
-              <span className="text-sm text-text-primary truncate" title={txn.sender_name}>
+            <div className="group flex items-center gap-1 min-w-0">
+              <span className="text-sm text-text-primary truncate min-w-0" title={txn.sender_name}>
                 {txn.sender_name}
               </span>
               <button
@@ -789,7 +789,7 @@ export default function PaymentsPage() {
         </td>
 
         {/* Purpose */}
-        <td className="px-4 py-2.5 max-w-[300px]">
+        <td className="px-4 py-2.5 overflow-hidden">
           {txn.purpose ? (
             <span className="text-xs text-text-secondary truncate block" title={txn.purpose}>
               {txn.purpose}
@@ -1092,7 +1092,16 @@ export default function PaymentsPage() {
       {/* ── Transactions Table ── */}
       <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
+            <colgroup>
+              <col className="w-[35%]" />
+              <col className="w-[12%]" />
+              <col className="w-[12%]" />
+              <col className="w-[12%]" />
+              <col className="w-[19%]" />
+              <col className="w-[7%]" />
+              <col className="w-[3%]" />
+            </colgroup>
             <thead>
               <tr className="border-b border-border-light bg-bg-secondary/50">
                 <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
@@ -1113,7 +1122,7 @@ export default function PaymentsPage() {
                 <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
                   სტატუსი
                 </th>
-                <th className="w-[70px]" />
+                <th />
               </tr>
             </thead>
             <tbody>
@@ -1144,15 +1153,18 @@ export default function PaymentsPage() {
                         className="border-b border-border-light cursor-pointer hover:bg-bg-secondary/80 transition-colors bg-bg-secondary/60 border-l-2 border-l-monday-primary"
                         onClick={() => toggleGroup(group.key)}
                       >
-                        <td className="px-4 py-2.5">
-                          <div className="flex items-center gap-2">
+                        <td className="px-4 py-2.5 overflow-hidden">
+                          <div className="flex items-center gap-2 min-w-0">
                             {isCollapsed ? (
                               <ChevronRightIcon className="w-4 h-4 text-text-tertiary flex-shrink-0" />
                             ) : (
                               <ChevronDown className="w-4 h-4 text-monday-primary flex-shrink-0" />
                             )}
                             <Building2 className="w-3.5 h-3.5 text-monday-primary flex-shrink-0" />
-                            <span className="text-sm font-semibold text-text-primary truncate">
+                            <span
+                              className="text-sm font-semibold text-text-primary truncate min-w-0"
+                              title={group.senderName}
+                            >
                               {group.senderName}
                             </span>
                             {group.senderInn && (
