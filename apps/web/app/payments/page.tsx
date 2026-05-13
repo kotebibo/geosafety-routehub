@@ -380,6 +380,8 @@ export default function PaymentsPage() {
     let totalExpected = 0
     for (const contract of Object.values(contracts)) {
       if (!isActiveContract(contract)) continue
+      // Exclude one_time from "all" view — only show when explicitly filtered
+      if (!matchSourceFilter && contract.contract_source === 'one_time') continue
       if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
       const expected = getExpectedForPeriod(
         contract,
@@ -402,6 +404,7 @@ export default function PaymentsPage() {
     }
     for (const [taxId, contract] of Object.entries(contracts)) {
       if (!isActiveContract(contract)) continue
+      if (!matchSourceFilter && contract.contract_source === 'one_time') continue
       if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
       const expected = getExpectedForPeriod(
         contract,
@@ -469,6 +472,9 @@ export default function PaymentsPage() {
       if (group.senderInn && contracts[group.senderInn]) {
         const contract = contracts[group.senderInn]
         group.boardId = contract.board_id || null
+        // Skip one_time expected in "all" view
+        if (!matchSourceFilter && contract.contract_source === 'one_time') continue
+        if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
         const expected = getExpectedForPeriod(
           contract,
           monthsInRange,
@@ -486,6 +492,9 @@ export default function PaymentsPage() {
       for (const [taxId, contract] of Object.entries(contracts)) {
         if (paidTaxIds.has(taxId)) continue // already has transactions
         if (!isActiveContract(contract)) continue
+        // Exclude one_time from "all" view
+        if (!matchSourceFilter && contract.contract_source === 'one_time') continue
+        if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
         // Only show active/one_time contracts as "unpaid" — paused/ended are expected to not pay
         if (contract.contract_source === 'paused' || contract.contract_source === 'ended') continue
         // For monthly view, skip non-monthly contracts
