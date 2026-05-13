@@ -28,6 +28,7 @@ const NUMERIC_TYPES = ['numeric', 'number']
 
 interface ContractInfo {
   item_id: string
+  board_id: string
   company_name: string
   tax_id: string
   monthly_amount: number | null
@@ -169,6 +170,7 @@ export async function GET() {
 
         const contract: ContractInfo = {
           item_id: item.id,
+          board_id: board.id,
           company_name: item.name,
           tax_id: taxId,
           monthly_amount: monthlyAmount,
