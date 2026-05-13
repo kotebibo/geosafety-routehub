@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('bank_transactions')
-      .select('*, companies:matched_company_id(id, name, tax_id)', { count: 'exact' })
+      .select('*', { count: 'exact' })
       .order('entry_date', { ascending: false })
       .range(offset, offset + limit - 1)
 
