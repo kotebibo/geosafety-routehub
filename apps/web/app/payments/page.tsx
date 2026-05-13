@@ -1234,7 +1234,12 @@ export default function PaymentsPage() {
                               <button
                                 onClick={e => {
                                   e.stopPropagation()
-                                  router.push(`/boards/${group.boardId}`)
+                                  const contractItemId = group.senderInn
+                                    ? contracts[group.senderInn]?.item_id
+                                    : null
+                                  router.push(
+                                    `/boards/${group.boardId}${contractItemId ? `?item=${contractItemId}` : ''}`
+                                  )
                                 }}
                                 title="ხელშეკრულების ბორდზე გადასვლა"
                                 className="p-0.5 rounded hover:bg-bg-primary text-text-tertiary hover:text-monday-primary flex-shrink-0"
