@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { paymentsService } from '@/services/payments.service'
@@ -312,11 +312,14 @@ export default function PaymentsPage() {
     }
   }, [effectiveDateRange, matchSourceFilter])
 
+  const contractsFetchedRef = useRef(false)
   const fetchContracts = useCallback(async () => {
+    if (contractsFetchedRef.current) return
     try {
       setContractsLoading(true)
       const data = await paymentsService.getContracts()
       setContracts(data.contracts || {})
+      contractsFetchedRef.current = true
     } catch (err) {
       console.error('Error fetching contracts:', err)
     } finally {
