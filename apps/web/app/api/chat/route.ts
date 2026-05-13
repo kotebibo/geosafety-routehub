@@ -301,7 +301,7 @@ export async function POST(req: Request) {
         execute: async ({ from_date, to_date }) => {
           let query = supabase
             .from('bank_transactions')
-            .select('amount, status, sender_name, matched_company_id')
+            .select('amount, status, sender_name, sender_inn')
           if (from_date) query = query.gte('entry_date', from_date)
           if (to_date) query = query.lte('entry_date', to_date)
 
@@ -316,7 +316,7 @@ export async function POST(req: Request) {
           // Top payers
           const byCompany: Record<string, { name: string; total: number; count: number }> = {}
           for (const t of matched) {
-            const key = t.matched_company_id || 'unknown'
+            const key = t.sender_inn || 'unknown'
             if (!byCompany[key])
               byCompany[key] = { name: t.sender_name || 'Unknown', total: 0, count: 0 }
             byCompany[key].total += t.amount || 0
