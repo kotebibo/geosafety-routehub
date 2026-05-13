@@ -726,15 +726,17 @@ export default function PaymentsPage() {
 
       {/* Actions */}
       <td className="px-3 py-2">
-        {txn.status === 'unmatched' && (
+        {txn.status !== 'ignored' && (
           <div className="flex items-center gap-1">
-            <button
-              onClick={() => router.push(`/payments/unmatched`)}
-              title="დაკავშირება"
-              className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
-            >
-              <Link2 className="w-3.5 h-3.5" />
-            </button>
+            {txn.status === 'unmatched' && (
+              <button
+                onClick={() => router.push(`/payments/unmatched`)}
+                title="დაკავშირება"
+                className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
+              >
+                <Link2 className="w-3.5 h-3.5" />
+              </button>
+            )}
             <button
               onClick={() => handleIgnore(txn.id)}
               title="იგნორირება"
@@ -849,15 +851,17 @@ export default function PaymentsPage() {
 
         {/* Actions */}
         <td className="px-3 py-2.5">
-          {txn.status === 'unmatched' && (
+          {txn.status !== 'ignored' && (
             <div className="flex items-center gap-1">
-              <button
-                onClick={() => router.push(`/payments/unmatched`)}
-                title="დაკავშირება"
-                className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
-              >
-                <Link2 className="w-3.5 h-3.5" />
-              </button>
+              {txn.status === 'unmatched' && (
+                <button
+                  onClick={() => router.push(`/payments/unmatched`)}
+                  title="დაკავშირება"
+                  className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
                 onClick={() => handleIgnore(txn.id)}
                 title="იგნორირება"
@@ -1265,18 +1269,20 @@ export default function PaymentsPage() {
                         <td />
                         <td />
                         <td className="px-3 py-2.5">
-                          {group.transactions.some(t => t.status === 'unmatched') && (
+                          {group.transactions.some(t => t.status !== 'ignored') && (
                             <div className="flex items-center gap-1">
-                              <button
-                                onClick={e => {
-                                  e.stopPropagation()
-                                  router.push('/payments/unmatched')
-                                }}
-                                title="დაკავშირება"
-                                className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
-                              >
-                                <Link2 className="w-3.5 h-3.5" />
-                              </button>
+                              {group.transactions.some(t => t.status === 'unmatched') && (
+                                <button
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    router.push('/payments/unmatched')
+                                  }}
+                                  title="დაკავშირება"
+                                  className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
+                                >
+                                  <Link2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
                               {group.transactions.length === 1 && (
                                 <button
                                   onClick={e => {
