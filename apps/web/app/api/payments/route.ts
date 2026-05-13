@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     const fromDate = searchParams.get('from')
     const toDate = searchParams.get('to')
     const search = searchParams.get('search')
+    const matchSource = searchParams.get('matchSource') // 'active', 'paused', 'ended', 'one_time'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = (page - 1) * limit
@@ -43,6 +44,9 @@ export async function GET(request: NextRequest) {
 
     if (status) {
       query = query.eq('status', status)
+    }
+    if (matchSource) {
+      query = query.eq('match_source', matchSource)
     }
     if (companyId) {
       query = query.eq('matched_company_id', companyId)
