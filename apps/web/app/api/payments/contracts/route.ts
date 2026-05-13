@@ -108,7 +108,7 @@ export async function GET() {
 
     // Fetch columns and items for ALL boards in parallel
     const boardData = await Promise.all(
-      boards.map(async board => {
+      boards.map(async (board: { id: string; name: string }) => {
         const boardName = board.name.toLowerCase()
         const contractSource: ContractInfo['contract_source'] = boardName.includes('ერთჯერადი')
           ? 'one_time'
