@@ -302,6 +302,7 @@ export default function PaymentsPage() {
       const data = await paymentsService.getStats({
         from: effectiveDateRange.from,
         to: effectiveDateRange.to,
+        matchSource: matchSourceFilter || undefined,
       })
       setStats(data)
     } catch (err) {
@@ -309,7 +310,7 @@ export default function PaymentsPage() {
     } finally {
       setStatsLoading(false)
     }
-  }, [effectiveDateRange])
+  }, [effectiveDateRange, matchSourceFilter])
 
   const fetchContracts = useCallback(async () => {
     try {
@@ -374,10 +375,12 @@ export default function PaymentsPage() {
       if (txn.status === 'unmatched') unmatched++
     }
 
-    // Sum expected: once per active contract, frequency-aware
+    // Sum expected: once per contract, frequency-aware
+    // When matchSource filter is active, only count contracts matching that source
     let totalExpected = 0
     for (const contract of Object.values(contracts)) {
       if (!isActiveContract(contract)) continue
+      if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
       const expected = getExpectedForPeriod(
         contract,
         monthsInRange,
@@ -399,6 +402,7 @@ export default function PaymentsPage() {
     }
     for (const [taxId, contract] of Object.entries(contracts)) {
       if (!isActiveContract(contract)) continue
+      if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
       const expected = getExpectedForPeriod(
         contract,
         monthsInRange,
@@ -422,7 +426,15 @@ export default function PaymentsPage() {
       overpaid,
       count: transactions.length,
     }
-  }, [transactions, contracts, loading, contractsLoading, monthsInRange, effectiveDateRange])
+  }, [
+    transactions,
+    contracts,
+    loading,
+    contractsLoading,
+    monthsInRange,
+    effectiveDateRange,
+    matchSourceFilter,
+  ])
 
   // Difference for stat card — uses server-side total (not paginated client array)
   const statsDifference = useMemo(() => {
@@ -497,10 +509,18 @@ export default function PaymentsPage() {
       }
     }
 
-    // For "unpaid" filter, only keep groups with zero payments
+    // For "unpaid" filter, keep groups that paid less than expected
     if (statusFilter === 'unpaid') {
       for (const key of Object.keys(groups)) {
-        if (groups[key].totalPaid > 0) delete groups[key]
+        const g = groups[key]
+        // Keep if: no payments, or paid less than expected (with 5% tolerance)
+        if (g.totalExpected != null && g.totalPaid >= g.totalExpected * 0.95) {
+          delete groups[key]
+        }
+        // Also remove groups with no expected (can't determine if unpaid)
+        if (g.totalExpected == null && g.totalPaid > 0) {
+          delete groups[key]
+        }
       }
     }
 
