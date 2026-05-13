@@ -23,7 +23,7 @@ export interface BankTransaction {
   status: 'matched' | 'unmatched' | 'ignored'
   created_at: string
   updated_at: string
-  companies: {
+  companies?: {
     id: string
     name: string
     tax_id: string | null
