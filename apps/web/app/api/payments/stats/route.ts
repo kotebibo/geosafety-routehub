@@ -20,15 +20,29 @@ export async function GET(request: NextRequest) {
     const fromDate = searchParams.get('from')
     const toDate = searchParams.get('to')
 
-    let query = supabase.from('bank_transactions').select('status, amount')
+    // Fetch ALL transactions (Supabase default limit is 1000, so paginate)
+    let allTxns: Array<{ status: string; amount: number }> = []
+    const PAGE = 1000
+    let from = 0
 
-    if (fromDate) query = query.gte('entry_date', fromDate)
-    if (toDate) query = query.lte('entry_date', toDate)
+    while (true) {
+      let query = supabase
+        .from('bank_transactions')
+        .select('status, amount')
+        .range(from, from + PAGE - 1)
 
-    const { data: allTxns, error: txnError } = await query
-    if (txnError) throw txnError
+      if (fromDate) query = query.gte('entry_date', fromDate)
+      if (toDate) query = query.lte('entry_date', toDate)
 
-    const txns: Array<{ status: string; amount: number }> = allTxns || []
+      const { data, error: txnError } = await query
+      if (txnError) throw txnError
+      if (!data || data.length === 0) break
+      allTxns = allTxns.concat(data)
+      if (data.length < PAGE) break
+      from += PAGE
+    }
+
+    const txns = allTxns
 
     const stats = {
       total_transactions: txns.length,
