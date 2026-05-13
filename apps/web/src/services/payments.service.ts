@@ -20,6 +20,7 @@ export interface BankTransaction {
   matched_company_id: string | null
   match_method: string | null
   match_confidence: number | null
+  match_source: 'active' | 'paused' | 'ended' | 'one_time' | null
   status: 'matched' | 'unmatched' | 'ignored'
   created_at: string
   updated_at: string
@@ -50,6 +51,7 @@ export interface UnmatchedTransaction extends BankTransaction {
 export interface ContractInfo {
   item_id: string
   board_id: string
+  contract_source: 'active' | 'one_time' | 'paused' | 'ended'
   company_name: string
   tax_id: string
   monthly_amount: number | null
@@ -74,6 +76,7 @@ export const paymentsService = {
     from?: string
     to?: string
     search?: string
+    matchSource?: string
     page?: number
     limit?: number
   }): Promise<TransactionsResponse> => {
@@ -83,6 +86,7 @@ export const paymentsService = {
     if (params?.from) searchParams.set('from', params.from)
     if (params?.to) searchParams.set('to', params.to)
     if (params?.search) searchParams.set('search', params.search)
+    if (params?.matchSource) searchParams.set('matchSource', params.matchSource)
     if (params?.page) searchParams.set('page', params.page.toString())
     if (params?.limit) searchParams.set('limit', params.limit.toString())
 
@@ -94,10 +98,15 @@ export const paymentsService = {
     return response.json()
   },
 
-  getStats: async (params?: { from?: string; to?: string }): Promise<PaymentStats> => {
+  getStats: async (params?: {
+    from?: string
+    to?: string
+    matchSource?: string
+  }): Promise<PaymentStats> => {
     const searchParams = new URLSearchParams()
     if (params?.from) searchParams.set('from', params.from)
     if (params?.to) searchParams.set('to', params.to)
+    if (params?.matchSource) searchParams.set('matchSource', params.matchSource)
     const qs = searchParams.toString()
     const response = await fetch(`/api/payments/stats${qs ? '?' + qs : ''}`)
     if (!response.ok) {

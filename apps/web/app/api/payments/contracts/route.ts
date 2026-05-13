@@ -29,6 +29,7 @@ const NUMERIC_TYPES = ['numeric', 'number']
 interface ContractInfo {
   item_id: string
   board_id: string
+  contract_source: 'active' | 'one_time' | 'paused' | 'ended'
   company_name: string
   tax_id: string
   monthly_amount: number | null
@@ -89,11 +90,13 @@ export async function GET() {
     await requireAdminOrDispatcher()
     const supabase = createServerClient() as any
 
-    // Find ხელშეკრულებები boards (there may be multiple — active contracts, one-time, etc.)
+    // Find all contract-related boards (active, one-time, paused, ended)
     const { data: boards, error: boardError } = await supabase
       .from('boards')
       .select('id, name')
-      .ilike('name', '%ხელშეკრულებ%')
+      .or(
+        'name.ilike.%ხელშეკრულებ%,name.ilike.%შეწყვეტილ%,name.ilike.%დასრულებულ%,name.ilike.%შეჩერებული%,name.ilike.%ერთჯერადი%'
+      )
 
     if (boardError) throw boardError
     if (!boards || boards.length === 0) {
@@ -103,17 +106,62 @@ export async function GET() {
     const contractsByTaxId: Record<string, ContractInfo> = {}
     const boardsSummary: Array<{ id: string; name: string; count: number }> = []
 
-    for (const board of boards) {
-      // Get columns for this board
-      const { data: columns } = await supabase
-        .from('board_columns')
-        .select('column_id, column_name, column_name_ka, column_type, config')
-        .eq('board_id', board.id)
-        .order('position')
+    // Fetch columns and items for ALL boards in parallel
+    const boardData = await Promise.all(
+      boards.map(async (board: { id: string; name: string }) => {
+        const boardName = board.name.toLowerCase()
+        const contractSource: ContractInfo['contract_source'] = boardName.includes('ერთჯერადი')
+          ? 'one_time'
+          : boardName.includes('შეჩერებული')
+            ? 'paused'
+            : boardName.includes('შეწყვეტილ') || boardName.includes('დასრულებულ')
+              ? 'ended'
+              : 'active'
 
-      if (!columns || columns.length === 0) continue
+        // Fetch columns and first page of items in parallel
+        const [colResult, itemResult] = await Promise.all([
+          supabase
+            .from('board_columns')
+            .select('column_id, column_name, column_name_ka, column_type, config')
+            .eq('board_id', board.id)
+            .order('position'),
+          supabase
+            .from('board_items')
+            .select('id, name, data')
+            .eq('board_id', board.id)
+            .is('deleted_at', null)
+            .range(0, 999),
+        ])
 
-      // Discover column IDs by name
+        const columns = colResult.data || []
+        let allItems = itemResult.data || []
+        if (itemResult.error) throw itemResult.error
+
+        // Paginate remaining items if needed
+        if (allItems.length === 1000) {
+          let from = 1000
+          while (true) {
+            const { data, error } = await supabase
+              .from('board_items')
+              .select('id, name, data')
+              .eq('board_id', board.id)
+              .is('deleted_at', null)
+              .range(from, from + 999)
+            if (error) throw error
+            if (!data || data.length === 0) break
+            allItems = allItems.concat(data)
+            if (data.length < 1000) break
+            from += 1000
+          }
+        }
+
+        return { board, contractSource, columns, items: allItems }
+      })
+    )
+
+    for (const { board, contractSource, columns, items } of boardData) {
+      if (columns.length === 0) continue
+
       const taxIdCol = findColumnId(columns, COLUMN_PATTERNS.tax_id, 'text')
       const monthlyCol = findColumnId(columns, COLUMN_PATTERNS.monthly_amount, NUMERIC_TYPES)
       const frequencyCol =
@@ -125,52 +173,24 @@ export async function GET() {
       const endDateCol = findColumnId(columns, COLUMN_PATTERNS.end_date, 'date')
       const payMethodCol = findColumnId(columns, COLUMN_PATTERNS.payment_method, 'status')
 
-      // If no tax ID column found, skip this board
       if (!taxIdCol) continue
 
-      // Fetch all items from this board
-      let allItems: any[] = []
-      let from = 0
-      const PAGE = 1000
-      while (true) {
-        const { data, error } = await supabase
-          .from('board_items')
-          .select('id, name, data')
-          .eq('board_id', board.id)
-          .is('deleted_at', null)
-          .range(from, from + PAGE - 1)
-        if (error) throw error
-        if (!data || data.length === 0) break
-        allItems = allItems.concat(data)
-        if (data.length < PAGE) break
-        from += PAGE
-      }
+      boardsSummary.push({ id: board.id, name: board.name, count: items.length })
 
-      boardsSummary.push({ id: board.id, name: board.name, count: allItems.length })
-
-      for (const item of allItems) {
+      for (const item of items) {
         const d = item.data || {}
         const taxId = d[taxIdCol]
         if (!taxId) continue
 
-        // If we have no monthly amount column, try to find any numeric column
         const monthlyAmount = monthlyCol ? Number(d[monthlyCol]) || null : null
         const invoiceAmount = invoiceCol ? Number(d[invoiceCol]) || null : null
-
         const contractStatus = resolveStatusLabel(d[statusCol!], columns, statusCol)
         const frequency = resolveStatusLabel(d[frequencyCol!], columns, frequencyCol)
-
-        // Skip inactive contracts (terminated, paused, completed)
-        const isInactive =
-          contractStatus &&
-          (contractStatus.includes('შეწყვეტილ') ||
-            contractStatus.includes('შეჩერებულ') ||
-            contractStatus.includes('დასრულებულ'))
-        if (isInactive) continue
 
         const contract: ContractInfo = {
           item_id: item.id,
           board_id: board.id,
+          contract_source: contractSource,
           company_name: item.name,
           tax_id: taxId,
           monthly_amount: monthlyAmount,
@@ -180,11 +200,9 @@ export async function GET() {
           start_date: startDateCol ? d[startDateCol] : null,
           end_date: endDateCol ? d[endDateCol] : null,
           payment_method: resolveStatusLabel(d[payMethodCol!], columns, payMethodCol),
-          first_payment_date: null, // populated below from bank_transactions
+          first_payment_date: null,
         }
 
-        // Sum amounts across multiple contracts for the same tax ID
-        // (a company may have separate contracts for different services)
         if (!contractsByTaxId[taxId]) {
           contractsByTaxId[taxId] = contract
         } else {
@@ -223,10 +241,13 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       contracts: contractsByTaxId,
       boards_found: boardsSummary,
     })
+    // Cache for 5 minutes — contracts change infrequently
+    response.headers.set('Cache-Control', 's-maxage=300, stale-while-revalidate=60')
+    return response
   } catch (error: any) {
     console.error('Error fetching payment contracts:', error)
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo, Fragment } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef, Fragment } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { paymentsService } from '@/services/payments.service'
@@ -76,6 +76,10 @@ function getExpectedForPeriod(
   const today = new Date()
 
   const cStart = contract.start_date ? new Date(contract.start_date) : null
+  // For paused/ended contracts, respect the end date as a hard cap
+  const respectEndDate =
+    contract.contract_source === 'paused' || contract.contract_source === 'ended'
+  const cEnd = respectEndDate && contract.end_date ? new Date(contract.end_date) : null
 
   let activeMonths: number
 
@@ -87,6 +91,8 @@ function getExpectedForPeriod(
     const effectiveFrom = cStart && cStart > pFrom ? cStart : pFrom
     let effectiveTo = pTo
     if (today < effectiveTo) effectiveTo = today
+    // Cap at contract end date for paused/ended
+    if (cEnd && cEnd < effectiveTo) effectiveTo = cEnd
 
     if (effectiveFrom > effectiveTo) return null
 
@@ -96,29 +102,27 @@ function getExpectedForPeriod(
       1
     activeMonths = Math.max(1, Math.min(activeMonths, months))
   } else {
-    // "All" mode — contract start (or first payment) to today
+    // "All" mode — contract start (or first payment) to end (or today)
     const from =
       cStart || (contract.first_payment_date ? new Date(contract.first_payment_date) : null)
     if (!from) return null
 
+    const to = cEnd && cEnd < today ? cEnd : today
+
+    if (from > to) return null
+
     activeMonths =
-      (today.getFullYear() - from.getFullYear()) * 12 + (today.getMonth() - from.getMonth()) + 1
+      (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth()) + 1
     activeMonths = Math.max(1, activeMonths)
   }
 
   return Math.round(((amount * ppy * activeMonths) / 12) * 100) / 100
 }
 
-/** Whether a contract is active (not ended or paused) */
+/** Whether a contract has payment amounts (may be from any board type).
+ *  For paused/ended, getExpectedForPeriod handles date capping. */
 function isActiveContract(contract: ContractInfo): boolean {
   if (!contract.monthly_amount && !contract.invoice_amount) return false
-  if (
-    contract.status &&
-    (contract.status.includes('შეჩერებულ') ||
-      contract.status.includes('დასრულებულ') ||
-      contract.status.includes('შეწყვეტილ'))
-  )
-    return false
   return true
 }
 
@@ -181,6 +185,7 @@ export default function PaymentsPage() {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [matchSourceFilter, setMatchSourceFilter] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchDebounced, setSearchDebounced] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -233,6 +238,7 @@ export default function PaymentsPage() {
       setLoading(true)
       // 'unpaid' is a client-side filter, don't send to API
       const apiStatus = statusFilter && statusFilter !== 'unpaid' ? statusFilter : undefined
+      const apiMatchSource = matchSourceFilter || undefined
 
       if (groupByCompany) {
         // Grouped mode: fetch ALL transactions (paginate through everything)
@@ -247,6 +253,7 @@ export default function PaymentsPage() {
             from: effectiveDateRange.from,
             to: effectiveDateRange.to,
             search: searchDebounced || undefined,
+            matchSource: apiMatchSource,
             page: currentPage,
             limit: PAGE_SIZE,
           })
@@ -266,6 +273,7 @@ export default function PaymentsPage() {
           from: effectiveDateRange.from,
           to: effectiveDateRange.to,
           search: searchDebounced || undefined,
+          matchSource: apiMatchSource,
           page,
           limit,
         })
@@ -277,7 +285,15 @@ export default function PaymentsPage() {
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, effectiveDateRange, searchDebounced, page, limit, groupByCompany])
+  }, [
+    statusFilter,
+    matchSourceFilter,
+    effectiveDateRange,
+    searchDebounced,
+    page,
+    limit,
+    groupByCompany,
+  ])
 
   // Fetch stats — month-scoped
   const fetchStats = useCallback(async () => {
@@ -286,6 +302,7 @@ export default function PaymentsPage() {
       const data = await paymentsService.getStats({
         from: effectiveDateRange.from,
         to: effectiveDateRange.to,
+        matchSource: matchSourceFilter || undefined,
       })
       setStats(data)
     } catch (err) {
@@ -293,13 +310,16 @@ export default function PaymentsPage() {
     } finally {
       setStatsLoading(false)
     }
-  }, [effectiveDateRange])
+  }, [effectiveDateRange, matchSourceFilter])
 
+  const contractsFetchedRef = useRef(false)
   const fetchContracts = useCallback(async () => {
+    if (contractsFetchedRef.current) return
     try {
       setContractsLoading(true)
       const data = await paymentsService.getContracts()
       setContracts(data.contracts || {})
+      contractsFetchedRef.current = true
     } catch (err) {
       console.error('Error fetching contracts:', err)
     } finally {
@@ -329,7 +349,15 @@ export default function PaymentsPage() {
   useEffect(() => {
     setPage(1)
     setCollapsedGroups(null)
-  }, [statusFilter, selectedMonth, selectedYear, dateFrom, dateTo, searchDebounced])
+  }, [
+    statusFilter,
+    matchSourceFilter,
+    selectedMonth,
+    selectedYear,
+    dateFrom,
+    dateTo,
+    searchDebounced,
+  ])
 
   // Computed stats — expected is per-company (not per-transaction)
   const monthStats = useMemo(() => {
@@ -350,10 +378,14 @@ export default function PaymentsPage() {
       if (txn.status === 'unmatched') unmatched++
     }
 
-    // Sum expected: once per active contract, frequency-aware
+    // Sum expected: once per contract, frequency-aware
+    // When matchSource filter is active, only count contracts matching that source
     let totalExpected = 0
     for (const contract of Object.values(contracts)) {
       if (!isActiveContract(contract)) continue
+      // Exclude one_time from "all" view — only show when explicitly filtered
+      if (!matchSourceFilter && contract.contract_source === 'one_time') continue
+      if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
       const expected = getExpectedForPeriod(
         contract,
         monthsInRange,
@@ -375,6 +407,8 @@ export default function PaymentsPage() {
     }
     for (const [taxId, contract] of Object.entries(contracts)) {
       if (!isActiveContract(contract)) continue
+      if (!matchSourceFilter && contract.contract_source === 'one_time') continue
+      if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
       const expected = getExpectedForPeriod(
         contract,
         monthsInRange,
@@ -398,7 +432,15 @@ export default function PaymentsPage() {
       overpaid,
       count: transactions.length,
     }
-  }, [transactions, contracts, loading, contractsLoading, monthsInRange, effectiveDateRange])
+  }, [
+    transactions,
+    contracts,
+    loading,
+    contractsLoading,
+    monthsInRange,
+    effectiveDateRange,
+    matchSourceFilter,
+  ])
 
   // Difference for stat card — uses server-side total (not paginated client array)
   const statsDifference = useMemo(() => {
@@ -433,6 +475,9 @@ export default function PaymentsPage() {
       if (group.senderInn && contracts[group.senderInn]) {
         const contract = contracts[group.senderInn]
         group.boardId = contract.board_id || null
+        // Skip one_time expected in "all" view
+        if (!matchSourceFilter && contract.contract_source === 'one_time') continue
+        if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
         const expected = getExpectedForPeriod(
           contract,
           monthsInRange,
@@ -450,6 +495,11 @@ export default function PaymentsPage() {
       for (const [taxId, contract] of Object.entries(contracts)) {
         if (paidTaxIds.has(taxId)) continue // already has transactions
         if (!isActiveContract(contract)) continue
+        // Exclude one_time from "all" view
+        if (!matchSourceFilter && contract.contract_source === 'one_time') continue
+        if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
+        // Only show active/one_time contracts as "unpaid" — paused/ended are expected to not pay
+        if (contract.contract_source === 'paused' || contract.contract_source === 'ended') continue
         // For monthly view, skip non-monthly contracts
         if (selectedMonth !== null && getPaymentsPerYear(contract.frequency) < 12) continue
         const expected = getExpectedForPeriod(
@@ -471,10 +521,18 @@ export default function PaymentsPage() {
       }
     }
 
-    // For "unpaid" filter, only keep groups with zero payments
+    // For "unpaid" filter, keep groups that paid less than expected
     if (statusFilter === 'unpaid') {
       for (const key of Object.keys(groups)) {
-        if (groups[key].totalPaid > 0) delete groups[key]
+        const g = groups[key]
+        // Keep if: no payments, or paid less than expected (with 5% tolerance)
+        if (g.totalExpected != null && g.totalPaid >= g.totalExpected * 0.95) {
+          delete groups[key]
+        }
+        // Also remove groups with no expected (can't determine if unpaid)
+        if (g.totalExpected == null && g.totalPaid > 0) {
+          delete groups[key]
+        }
       }
     }
 
@@ -650,6 +708,28 @@ export default function PaymentsPage() {
 
   const totalPages = groupByCompany ? 1 : Math.ceil(total / limit)
 
+  const getSourceBadge = (source: string | null) => {
+    if (!source) return null
+    const config: Record<string, { label: string; className: string }> = {
+      active: { label: 'აქტიური', className: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
+      one_time: { label: 'ერთჯერადი', className: 'bg-blue-50 text-blue-600 border-blue-200' },
+      paused: { label: 'შეჩერებ.', className: 'bg-amber-50 text-amber-600 border-amber-200' },
+      ended: { label: 'შეწყვეტ.', className: 'bg-red-50 text-red-600 border-red-200' },
+    }
+    const c = config[source]
+    if (!c) return null
+    return (
+      <span
+        className={cn(
+          'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border',
+          c.className
+        )}
+      >
+        {c.label}
+      </span>
+    )
+  }
+
   const getStatusBadge = (status: string) => {
     const styles = {
       matched: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -727,7 +807,12 @@ export default function PaymentsPage() {
       </td>
 
       {/* Status */}
-      <td className="px-4 py-2">{getStatusBadge(txn.status)}</td>
+      <td className="px-4 py-2">
+        <div className="flex items-center gap-1 flex-wrap">
+          {getStatusBadge(txn.status)}
+          {getSourceBadge(txn.match_source)}
+        </div>
+      </td>
 
       {/* Actions */}
       <td className="px-3 py-2">
@@ -852,7 +937,12 @@ export default function PaymentsPage() {
         </td>
 
         {/* Status */}
-        <td className="px-4 py-2.5">{getStatusBadge(txn.status)}</td>
+        <td className="px-4 py-2.5">
+          <div className="flex items-center gap-1 flex-wrap">
+            {getStatusBadge(txn.status)}
+            {getSourceBadge(txn.match_source)}
+          </div>
+        </td>
 
         {/* Actions */}
         <td className="px-3 py-2.5">
@@ -1109,6 +1199,36 @@ export default function PaymentsPage() {
             </button>
           ))}
         </div>
+
+        {/* Match source filter pills */}
+        {statusFilter !== 'unmatched' && statusFilter !== 'ignored' && (
+          <div className="flex items-center gap-0.5 bg-bg-primary border border-border-light rounded-lg p-0.5">
+            {[
+              { value: '', label: 'ყველა წყარო' },
+              { value: 'active', label: 'აქტიური' },
+              { value: 'one_time', label: 'ერთჯერადი' },
+              { value: 'paused', label: 'შეჩერებული' },
+              { value: 'ended', label: 'შეწყვეტილი' },
+            ].map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setMatchSourceFilter(opt.value)}
+                className={cn(
+                  'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+                  matchSourceFilter === opt.value
+                    ? opt.value === 'paused'
+                      ? 'bg-amber-500 text-white'
+                      : opt.value === 'ended'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-monday-primary text-white'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Date range — always visible */}
         <div className="flex items-center gap-2">
