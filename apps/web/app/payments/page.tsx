@@ -24,6 +24,7 @@ import {
   Download,
   Link2,
   EyeOff,
+  ExternalLink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -153,6 +154,7 @@ interface GroupedTransactions {
   transactions: BankTransaction[]
   totalPaid: number
   totalExpected: number | null
+  boardId: string | null
 }
 
 // ── Component ────────────────────────────────────────────────────────
@@ -420,6 +422,7 @@ export default function PaymentsPage() {
           transactions: [],
           totalPaid: 0,
           totalExpected: null,
+          boardId: null,
         }
       }
       groups[key].transactions.push(txn)
@@ -429,6 +432,7 @@ export default function PaymentsPage() {
     for (const group of Object.values(groups)) {
       if (group.senderInn && contracts[group.senderInn]) {
         const contract = contracts[group.senderInn]
+        group.boardId = contract.board_id || null
         const expected = getExpectedForPeriod(
           contract,
           monthsInRange,
@@ -462,6 +466,7 @@ export default function PaymentsPage() {
           transactions: [],
           totalPaid: 0,
           totalExpected: expected,
+          boardId: contract.board_id || null,
         }
       }
     }
@@ -1222,14 +1227,21 @@ export default function PaymentsPage() {
                             >
                               {group.senderName}
                             </span>
-                            {group.senderInn && (
-                              <span className="text-[11px] font-mono text-text-tertiary flex-shrink-0">
-                                {group.senderInn}
-                              </span>
-                            )}
                             <span className="text-[11px] text-text-tertiary bg-bg-primary px-1.5 py-0.5 rounded flex-shrink-0">
                               {group.transactions.length}
                             </span>
+                            {group.boardId && (
+                              <button
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  router.push(`/boards/${group.boardId}`)
+                                }}
+                                title="ხელშეკრულების ბორდზე გადასვლა"
+                                className="p-0.5 rounded hover:bg-bg-primary text-text-tertiary hover:text-monday-primary flex-shrink-0"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </td>
                         <td className="px-4 py-2.5 text-right">

@@ -49,6 +49,7 @@ export interface UnmatchedTransaction extends BankTransaction {
 
 export interface ContractInfo {
   item_id: string
+  board_id: string
   company_name: string
   tax_id: string
   monthly_amount: number | null
