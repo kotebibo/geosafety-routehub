@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
 
     const fromDate = searchParams.get('from')
     const toDate = searchParams.get('to')
+    const matchSource = searchParams.get('matchSource')
 
     // Fetch ALL transactions (Supabase default limit is 1000, so paginate)
     let allTxns: Array<{ status: string; amount: number }> = []
@@ -33,6 +34,7 @@ export async function GET(request: NextRequest) {
 
       if (fromDate) query = query.gte('entry_date', fromDate)
       if (toDate) query = query.lte('entry_date', toDate)
+      if (matchSource) query = query.eq('match_source', matchSource)
 
       const { data, error: txnError } = await query
       if (txnError) throw txnError

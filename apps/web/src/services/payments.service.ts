@@ -98,10 +98,15 @@ export const paymentsService = {
     return response.json()
   },
 
-  getStats: async (params?: { from?: string; to?: string }): Promise<PaymentStats> => {
+  getStats: async (params?: {
+    from?: string
+    to?: string
+    matchSource?: string
+  }): Promise<PaymentStats> => {
     const searchParams = new URLSearchParams()
     if (params?.from) searchParams.set('from', params.from)
     if (params?.to) searchParams.set('to', params.to)
+    if (params?.matchSource) searchParams.set('matchSource', params.matchSource)
     const qs = searchParams.toString()
     const response = await fetch(`/api/payments/stats${qs ? '?' + qs : ''}`)
     if (!response.ok) {
