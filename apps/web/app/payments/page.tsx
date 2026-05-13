@@ -112,6 +112,7 @@ function getExpectedForPeriod(
 /** Whether a contract is active (not ended or paused) */
 function isActiveContract(contract: ContractInfo): boolean {
   if (!contract.monthly_amount && !contract.invoice_amount) return false
+  if (contract.contract_source === 'paused' || contract.contract_source === 'ended') return false
   if (
     contract.status &&
     (contract.status.includes('შეჩერებულ') ||
@@ -181,6 +182,7 @@ export default function PaymentsPage() {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('')
+  const [matchSourceFilter, setMatchSourceFilter] = useState<string>('')
   const [searchQuery, setSearchQuery] = useState('')
   const [searchDebounced, setSearchDebounced] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -233,6 +235,7 @@ export default function PaymentsPage() {
       setLoading(true)
       // 'unpaid' is a client-side filter, don't send to API
       const apiStatus = statusFilter && statusFilter !== 'unpaid' ? statusFilter : undefined
+      const apiMatchSource = matchSourceFilter || undefined
 
       if (groupByCompany) {
         // Grouped mode: fetch ALL transactions (paginate through everything)
@@ -247,6 +250,7 @@ export default function PaymentsPage() {
             from: effectiveDateRange.from,
             to: effectiveDateRange.to,
             search: searchDebounced || undefined,
+            matchSource: apiMatchSource,
             page: currentPage,
             limit: PAGE_SIZE,
           })
@@ -266,6 +270,7 @@ export default function PaymentsPage() {
           from: effectiveDateRange.from,
           to: effectiveDateRange.to,
           search: searchDebounced || undefined,
+          matchSource: apiMatchSource,
           page,
           limit,
         })
@@ -277,7 +282,15 @@ export default function PaymentsPage() {
     } finally {
       setLoading(false)
     }
-  }, [statusFilter, effectiveDateRange, searchDebounced, page, limit, groupByCompany])
+  }, [
+    statusFilter,
+    matchSourceFilter,
+    effectiveDateRange,
+    searchDebounced,
+    page,
+    limit,
+    groupByCompany,
+  ])
 
   // Fetch stats — month-scoped
   const fetchStats = useCallback(async () => {
@@ -329,7 +342,15 @@ export default function PaymentsPage() {
   useEffect(() => {
     setPage(1)
     setCollapsedGroups(null)
-  }, [statusFilter, selectedMonth, selectedYear, dateFrom, dateTo, searchDebounced])
+  }, [
+    statusFilter,
+    matchSourceFilter,
+    selectedMonth,
+    selectedYear,
+    dateFrom,
+    dateTo,
+    searchDebounced,
+  ])
 
   // Computed stats — expected is per-company (not per-transaction)
   const monthStats = useMemo(() => {
@@ -650,6 +671,28 @@ export default function PaymentsPage() {
 
   const totalPages = groupByCompany ? 1 : Math.ceil(total / limit)
 
+  const getSourceBadge = (source: string | null) => {
+    if (!source) return null
+    const config: Record<string, { label: string; className: string }> = {
+      active: { label: 'აქტიური', className: 'bg-emerald-50 text-emerald-600 border-emerald-200' },
+      one_time: { label: 'ერთჯერადი', className: 'bg-blue-50 text-blue-600 border-blue-200' },
+      paused: { label: 'შეჩერებ.', className: 'bg-amber-50 text-amber-600 border-amber-200' },
+      ended: { label: 'შეწყვეტ.', className: 'bg-red-50 text-red-600 border-red-200' },
+    }
+    const c = config[source]
+    if (!c) return null
+    return (
+      <span
+        className={cn(
+          'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border',
+          c.className
+        )}
+      >
+        {c.label}
+      </span>
+    )
+  }
+
   const getStatusBadge = (status: string) => {
     const styles = {
       matched: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -727,7 +770,12 @@ export default function PaymentsPage() {
       </td>
 
       {/* Status */}
-      <td className="px-4 py-2">{getStatusBadge(txn.status)}</td>
+      <td className="px-4 py-2">
+        <div className="flex items-center gap-1 flex-wrap">
+          {getStatusBadge(txn.status)}
+          {getSourceBadge(txn.match_source)}
+        </div>
+      </td>
 
       {/* Actions */}
       <td className="px-3 py-2">
@@ -852,7 +900,12 @@ export default function PaymentsPage() {
         </td>
 
         {/* Status */}
-        <td className="px-4 py-2.5">{getStatusBadge(txn.status)}</td>
+        <td className="px-4 py-2.5">
+          <div className="flex items-center gap-1 flex-wrap">
+            {getStatusBadge(txn.status)}
+            {getSourceBadge(txn.match_source)}
+          </div>
+        </td>
 
         {/* Actions */}
         <td className="px-3 py-2.5">
@@ -1109,6 +1162,36 @@ export default function PaymentsPage() {
             </button>
           ))}
         </div>
+
+        {/* Match source filter pills */}
+        {statusFilter !== 'unmatched' && statusFilter !== 'ignored' && (
+          <div className="flex items-center gap-0.5 bg-bg-primary border border-border-light rounded-lg p-0.5">
+            {[
+              { value: '', label: 'ყველა წყარო' },
+              { value: 'active', label: 'აქტიური' },
+              { value: 'one_time', label: 'ერთჯერადი' },
+              { value: 'paused', label: 'შეჩერებული' },
+              { value: 'ended', label: 'შეწყვეტილი' },
+            ].map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setMatchSourceFilter(opt.value)}
+                className={cn(
+                  'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+                  matchSourceFilter === opt.value
+                    ? opt.value === 'paused'
+                      ? 'bg-amber-500 text-white'
+                      : opt.value === 'ended'
+                        ? 'bg-red-500 text-white'
+                        : 'bg-monday-primary text-white'
+                    : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Date range — always visible */}
         <div className="flex items-center gap-2">

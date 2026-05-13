@@ -29,6 +29,7 @@ const NUMERIC_TYPES = ['numeric', 'number']
 interface ContractInfo {
   item_id: string
   board_id: string
+  contract_source: 'active' | 'one_time' | 'paused' | 'ended'
   company_name: string
   tax_id: string
   monthly_amount: number | null
@@ -89,11 +90,13 @@ export async function GET() {
     await requireAdminOrDispatcher()
     const supabase = createServerClient() as any
 
-    // Find ხელშეკრულებები boards (there may be multiple — active contracts, one-time, etc.)
+    // Find all contract-related boards (active, one-time, paused, ended)
     const { data: boards, error: boardError } = await supabase
       .from('boards')
       .select('id, name')
-      .ilike('name', '%ხელშეკრულებ%')
+      .or(
+        'name.ilike.%ხელშეკრულებ%,name.ilike.%შეწყვეტილ%,name.ilike.%დასრულებულ%,name.ilike.%შეჩერებული%,name.ilike.%ერთჯერადი%'
+      )
 
     if (boardError) throw boardError
     if (!boards || boards.length === 0) {
@@ -104,6 +107,16 @@ export async function GET() {
     const boardsSummary: Array<{ id: string; name: string; count: number }> = []
 
     for (const board of boards) {
+      // Determine contract source type from board name
+      const boardName = board.name.toLowerCase()
+      const contractSource: ContractInfo['contract_source'] = boardName.includes('ერთჯერადი')
+        ? 'one_time'
+        : boardName.includes('შეჩერებული')
+          ? 'paused'
+          : boardName.includes('შეწყვეტილ') || boardName.includes('დასრულებულ')
+            ? 'ended'
+            : 'active'
+
       // Get columns for this board
       const { data: columns } = await supabase
         .from('board_columns')
@@ -160,17 +173,10 @@ export async function GET() {
         const contractStatus = resolveStatusLabel(d[statusCol!], columns, statusCol)
         const frequency = resolveStatusLabel(d[frequencyCol!], columns, frequencyCol)
 
-        // Skip inactive contracts (terminated, paused, completed)
-        const isInactive =
-          contractStatus &&
-          (contractStatus.includes('შეწყვეტილ') ||
-            contractStatus.includes('შეჩერებულ') ||
-            contractStatus.includes('დასრულებულ'))
-        if (isInactive) continue
-
         const contract: ContractInfo = {
           item_id: item.id,
           board_id: board.id,
+          contract_source: contractSource,
           company_name: item.name,
           tax_id: taxId,
           monthly_amount: monthlyAmount,
