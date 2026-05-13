@@ -76,6 +76,10 @@ function getExpectedForPeriod(
   const today = new Date()
 
   const cStart = contract.start_date ? new Date(contract.start_date) : null
+  // For paused/ended contracts, respect the end date as a hard cap
+  const respectEndDate =
+    contract.contract_source === 'paused' || contract.contract_source === 'ended'
+  const cEnd = respectEndDate && contract.end_date ? new Date(contract.end_date) : null
 
   let activeMonths: number
 
@@ -87,6 +91,8 @@ function getExpectedForPeriod(
     const effectiveFrom = cStart && cStart > pFrom ? cStart : pFrom
     let effectiveTo = pTo
     if (today < effectiveTo) effectiveTo = today
+    // Cap at contract end date for paused/ended
+    if (cEnd && cEnd < effectiveTo) effectiveTo = cEnd
 
     if (effectiveFrom > effectiveTo) return null
 
@@ -96,30 +102,27 @@ function getExpectedForPeriod(
       1
     activeMonths = Math.max(1, Math.min(activeMonths, months))
   } else {
-    // "All" mode — contract start (or first payment) to today
+    // "All" mode — contract start (or first payment) to end (or today)
     const from =
       cStart || (contract.first_payment_date ? new Date(contract.first_payment_date) : null)
     if (!from) return null
 
+    const to = cEnd && cEnd < today ? cEnd : today
+
+    if (from > to) return null
+
     activeMonths =
-      (today.getFullYear() - from.getFullYear()) * 12 + (today.getMonth() - from.getMonth()) + 1
+      (to.getFullYear() - from.getFullYear()) * 12 + (to.getMonth() - from.getMonth()) + 1
     activeMonths = Math.max(1, activeMonths)
   }
 
   return Math.round(((amount * ppy * activeMonths) / 12) * 100) / 100
 }
 
-/** Whether a contract is active (not ended or paused) */
+/** Whether a contract has payment amounts (may be from any board type).
+ *  For paused/ended, getExpectedForPeriod handles date capping. */
 function isActiveContract(contract: ContractInfo): boolean {
   if (!contract.monthly_amount && !contract.invoice_amount) return false
-  if (contract.contract_source === 'paused' || contract.contract_source === 'ended') return false
-  if (
-    contract.status &&
-    (contract.status.includes('შეჩერებულ') ||
-      contract.status.includes('დასრულებულ') ||
-      contract.status.includes('შეწყვეტილ'))
-  )
-    return false
   return true
 }
 
@@ -471,6 +474,8 @@ export default function PaymentsPage() {
       for (const [taxId, contract] of Object.entries(contracts)) {
         if (paidTaxIds.has(taxId)) continue // already has transactions
         if (!isActiveContract(contract)) continue
+        // Only show active/one_time contracts as "unpaid" — paused/ended are expected to not pay
+        if (contract.contract_source === 'paused' || contract.contract_source === 'ended') continue
         // For monthly view, skip non-monthly contracts
         if (selectedMonth !== null && getPaymentsPerYear(contract.frequency) < 12) continue
         const expected = getExpectedForPeriod(
