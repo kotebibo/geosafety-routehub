@@ -10,6 +10,7 @@ import {
   AlertCircle,
   Loader2,
   ArrowRightLeft,
+  Search,
 } from 'lucide-react'
 import { Button } from '@/components/ui-monday'
 import { useAuth } from '@/contexts/AuthContext'
@@ -33,6 +34,7 @@ export function MoveItemModal({
 }: MoveItemModalProps) {
   const [selectedBoardId, setSelectedBoardId] = useState<string>('')
   const [showBoardDropdown, setShowBoardDropdown] = useState(false)
+  const [boardSearch, setBoardSearch] = useState('')
   const [columnMapping, setColumnMapping] = useState<Record<string, string>>({})
   const [preserveUnmapped, setPreserveUnmapped] = useState(true)
 
@@ -60,6 +62,15 @@ export function MoveItemModal({
     return (boards || []).filter(board => board.id !== sourceBoardId)
   }, [boards, sourceBoardId])
 
+  // Filter boards by search query
+  const filteredBoards = useMemo(() => {
+    if (!boardSearch.trim()) return availableBoards
+    const q = boardSearch.toLowerCase()
+    return availableBoards.filter(
+      board => board.name.toLowerCase().includes(q) || board.board_type?.toLowerCase().includes(q)
+    )
+  }, [availableBoards, boardSearch])
+
   // Initialize column mapping from auto-mapped values
   useEffect(() => {
     if (mappingData?.autoMapped) {
@@ -73,6 +84,7 @@ export function MoveItemModal({
       setSelectedBoardId('')
       setColumnMapping({})
       setShowBoardDropdown(false)
+      setBoardSearch('')
     }
   }, [isOpen])
 
@@ -176,41 +188,61 @@ export function MoveItemModal({
                 </button>
 
                 {showBoardDropdown && (
-                  <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-80 overflow-y-auto">
-                    {boardsLoading ? (
-                      <div className="px-4 py-8 text-center text-text-tertiary">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                        Loading boards...
+                  <div className="absolute z-10 w-full mt-1 bg-bg-primary border border-border-light rounded-lg shadow-lg max-h-80 flex flex-col">
+                    {/* Search input */}
+                    <div className="px-3 py-2 border-b border-border-light flex-shrink-0">
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
+                        <input
+                          type="text"
+                          value={boardSearch}
+                          onChange={e => setBoardSearch(e.target.value)}
+                          placeholder="ბორდის ძიება..."
+                          className="w-full pl-8 pr-3 py-2 text-sm border border-border-light rounded-md bg-bg-secondary focus:outline-none focus:border-monday-primary focus:ring-1 focus:ring-monday-primary/20"
+                          autoFocus
+                          onClick={e => e.stopPropagation()}
+                        />
                       </div>
-                    ) : availableBoards.length === 0 ? (
-                      <div className="px-4 py-8 text-center text-text-tertiary">
-                        No other boards available
-                      </div>
-                    ) : (
-                      availableBoards.map(board => (
-                        <button
-                          key={board.id}
-                          onClick={() => {
-                            setSelectedBoardId(board.id)
-                            setShowBoardDropdown(false)
-                          }}
-                          className={cn(
-                            'w-full px-4 py-3 text-left hover:bg-bg-hover flex items-center justify-between',
-                            board.id === selectedBoardId && 'bg-monday-primary/5'
-                          )}
-                        >
-                          <div>
-                            <p className="font-medium text-text-primary">{board.name}</p>
-                            <p className="text-xs text-text-tertiary capitalize">
-                              {board.board_type}
-                            </p>
-                          </div>
-                          {board.id === selectedBoardId && (
-                            <Check className="w-5 h-5 text-monday-primary" />
-                          )}
-                        </button>
-                      ))
-                    )}
+                    </div>
+
+                    {/* Board list */}
+                    <div className="overflow-y-auto flex-1">
+                      {boardsLoading ? (
+                        <div className="px-4 py-8 text-center text-text-tertiary">
+                          <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                          Loading boards...
+                        </div>
+                      ) : filteredBoards.length === 0 ? (
+                        <div className="px-4 py-8 text-center text-text-tertiary">
+                          {boardSearch ? 'ბორდი ვერ მოიძებნა' : 'No other boards available'}
+                        </div>
+                      ) : (
+                        filteredBoards.map(board => (
+                          <button
+                            key={board.id}
+                            onClick={() => {
+                              setSelectedBoardId(board.id)
+                              setShowBoardDropdown(false)
+                              setBoardSearch('')
+                            }}
+                            className={cn(
+                              'w-full px-4 py-3 text-left hover:bg-bg-hover flex items-center justify-between',
+                              board.id === selectedBoardId && 'bg-monday-primary/5'
+                            )}
+                          >
+                            <div>
+                              <p className="font-medium text-text-primary">{board.name}</p>
+                              <p className="text-xs text-text-tertiary capitalize">
+                                {board.board_type}
+                              </p>
+                            </div>
+                            {board.id === selectedBoardId && (
+                              <Check className="w-5 h-5 text-monday-primary" />
+                            )}
+                          </button>
+                        ))
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
