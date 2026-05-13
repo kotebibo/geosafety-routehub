@@ -1149,13 +1149,13 @@ export default function PaymentsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm table-fixed">
             <colgroup>
-              <col className="w-[35%]" />
+              <col className="w-[34%]" />
               <col className="w-[12%]" />
               <col className="w-[12%]" />
               <col className="w-[12%]" />
-              <col className="w-[19%]" />
+              <col className="w-[16%]" />
               <col className="w-[7%]" />
-              <col className="w-[3%]" />
+              <col className="w-[7%]" />
             </colgroup>
             <thead>
               <tr className="border-b border-border-light bg-bg-secondary/50">
