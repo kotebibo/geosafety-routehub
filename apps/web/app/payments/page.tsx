@@ -401,9 +401,15 @@ export default function PaymentsPage() {
       if (txn.status === 'unmatched') unmatched++
     }
 
-    // Sum expected: per tax ID, each contract calculated with its own frequency
+    // Sum expected: only for tax IDs that appear in the current transactions
+    // This matches the table — companies with no transactions won't inflate the expected total
+    const txnTaxIds = new Set<string>()
+    for (const txn of transactions) {
+      if (txn.sender_inn) txnTaxIds.add(txn.sender_inn)
+    }
     let totalExpected = 0
-    for (const contractList of Object.values(contracts)) {
+    for (const [taxId, contractList] of Object.entries(contracts)) {
+      if (!txnTaxIds.has(taxId)) continue
       const expected = sumExpectedForContracts(
         contractList,
         monthsInRange,
@@ -607,7 +613,15 @@ export default function PaymentsPage() {
       }
     }
     return { totalPaid, totalExpected: hasExpected ? totalExpected : null }
-  }, [transactions, contracts, grouped, groupByCompany, monthsInRange, effectiveDateRange])
+  }, [
+    transactions,
+    contracts,
+    grouped,
+    groupByCompany,
+    monthsInRange,
+    effectiveDateRange,
+    matchSourceFilter,
+  ])
 
   const toggleGroup = (key: string) => {
     setExpandedGroups(prev => {
