@@ -65,7 +65,7 @@ export interface ContractInfo {
 }
 
 export interface ContractsResponse {
-  contracts: Record<string, ContractInfo>
+  contracts: Record<string, ContractInfo[]>
   boards_found: Array<{ id: string; name: string; count: number }>
 }
 

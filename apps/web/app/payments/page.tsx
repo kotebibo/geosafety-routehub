@@ -126,6 +126,29 @@ function isActiveContract(contract: ContractInfo): boolean {
   return true
 }
 
+/** Sum expected amounts across multiple contracts for a tax ID, each with its own frequency */
+function sumExpectedForContracts(
+  contractList: ContractInfo[],
+  months: number,
+  periodFrom?: string,
+  periodTo?: string,
+  matchSourceFilter?: string | null
+): number | null {
+  let total = 0
+  let hasAny = false
+  for (const contract of contractList) {
+    if (!isActiveContract(contract)) continue
+    if (!matchSourceFilter && contract.contract_source === 'one_time') continue
+    if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
+    const expected = getExpectedForPeriod(contract, months, periodFrom, periodTo)
+    if (expected) {
+      total += expected
+      hasAny = true
+    }
+  }
+  return hasAny ? total : null
+}
+
 /** Months between two date strings */
 function monthsBetween(from: string, to: string): number {
   const d1 = new Date(from)
@@ -175,7 +198,7 @@ export default function PaymentsPage() {
   // Data
   const [stats, setStats] = useState<PaymentStats | null>(null)
   const [transactions, setTransactions] = useState<BankTransaction[]>([])
-  const [contracts, setContracts] = useState<Record<string, ContractInfo>>({})
+  const [contracts, setContracts] = useState<Record<string, ContractInfo[]>>({})
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -378,19 +401,15 @@ export default function PaymentsPage() {
       if (txn.status === 'unmatched') unmatched++
     }
 
-    // Sum expected: once per contract, frequency-aware
-    // When matchSource filter is active, only count contracts matching that source
+    // Sum expected: per tax ID, each contract calculated with its own frequency
     let totalExpected = 0
-    for (const contract of Object.values(contracts)) {
-      if (!isActiveContract(contract)) continue
-      // Exclude one_time from "all" view — only show when explicitly filtered
-      if (!matchSourceFilter && contract.contract_source === 'one_time') continue
-      if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
-      const expected = getExpectedForPeriod(
-        contract,
+    for (const contractList of Object.values(contracts)) {
+      const expected = sumExpectedForContracts(
+        contractList,
         monthsInRange,
         effectiveDateRange.from,
-        effectiveDateRange.to
+        effectiveDateRange.to,
+        matchSourceFilter
       )
       if (expected) totalExpected += expected
     }
@@ -405,15 +424,13 @@ export default function PaymentsPage() {
         paidByTaxId[txn.sender_inn] = (paidByTaxId[txn.sender_inn] || 0) + txn.amount
       }
     }
-    for (const [taxId, contract] of Object.entries(contracts)) {
-      if (!isActiveContract(contract)) continue
-      if (!matchSourceFilter && contract.contract_source === 'one_time') continue
-      if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
-      const expected = getExpectedForPeriod(
-        contract,
+    for (const [taxId, contractList] of Object.entries(contracts)) {
+      const expected = sumExpectedForContracts(
+        contractList,
         monthsInRange,
         effectiveDateRange.from,
-        effectiveDateRange.to
+        effectiveDateRange.to,
+        matchSourceFilter
       )
       if (!expected) continue
       const paid = paidByTaxId[taxId] || 0
@@ -473,16 +490,14 @@ export default function PaymentsPage() {
 
     for (const group of Object.values(groups)) {
       if (group.senderInn && contracts[group.senderInn]) {
-        const contract = contracts[group.senderInn]
-        group.boardId = contract.board_id || null
-        // Skip one_time expected in "all" view
-        if (!matchSourceFilter && contract.contract_source === 'one_time') continue
-        if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
-        const expected = getExpectedForPeriod(
-          contract,
+        const contractList = contracts[group.senderInn]
+        group.boardId = contractList[0]?.board_id || null
+        const expected = sumExpectedForContracts(
+          contractList,
           monthsInRange,
           effectiveDateRange.from,
-          effectiveDateRange.to
+          effectiveDateRange.to,
+          matchSourceFilter
         )
         if (expected) group.totalExpected = expected
       }
@@ -492,31 +507,37 @@ export default function PaymentsPage() {
     // Show on "all" filter and "unpaid" filter
     if (!contractsLoading && (!statusFilter || statusFilter === 'unpaid')) {
       const paidTaxIds = new Set(Object.keys(groups))
-      for (const [taxId, contract] of Object.entries(contracts)) {
+      for (const [taxId, contractList] of Object.entries(contracts)) {
         if (paidTaxIds.has(taxId)) continue // already has transactions
-        if (!isActiveContract(contract)) continue
-        // Exclude one_time from "all" view
-        if (!matchSourceFilter && contract.contract_source === 'one_time') continue
-        if (matchSourceFilter && contract.contract_source !== matchSourceFilter) continue
+        // Check if any contract in this list has amounts
+        const hasActive = contractList.some(c => isActiveContract(c))
+        if (!hasActive) continue
         // Only show active/one_time contracts as "unpaid" — paused/ended are expected to not pay
-        if (contract.contract_source === 'paused' || contract.contract_source === 'ended') continue
-        // For monthly view, skip non-monthly contracts
-        if (selectedMonth !== null && getPaymentsPerYear(contract.frequency) < 12) continue
-        const expected = getExpectedForPeriod(
-          contract,
+        const hasNonPausedEnded = contractList.some(
+          c => c.contract_source !== 'paused' && c.contract_source !== 'ended'
+        )
+        if (!hasNonPausedEnded) continue
+        // For monthly view, skip if all contracts are non-monthly
+        if (selectedMonth !== null) {
+          const hasMonthly = contractList.some(c => getPaymentsPerYear(c.frequency) >= 12)
+          if (!hasMonthly) continue
+        }
+        const expected = sumExpectedForContracts(
+          contractList,
           monthsInRange,
           effectiveDateRange.from,
-          effectiveDateRange.to
+          effectiveDateRange.to,
+          matchSourceFilter
         )
-        if (!expected) continue // contract not active in this period
+        if (!expected) continue // no active contracts in this period
         groups[taxId] = {
           key: taxId,
-          senderName: contract.company_name || '—',
+          senderName: contractList[0]?.company_name || '—',
           senderInn: taxId,
           transactions: [],
           totalPaid: 0,
           totalExpected: expected,
-          boardId: contract.board_id || null,
+          boardId: contractList[0]?.board_id || null,
         }
       }
     }
@@ -576,13 +597,14 @@ export default function PaymentsPage() {
       if (txn.status === 'ignored') continue
       if (!txn.sender_inn || seenTaxIds.has(txn.sender_inn)) continue
       seenTaxIds.add(txn.sender_inn)
-      const contract = contracts[txn.sender_inn]
-      if (contract) {
-        const expected = getExpectedForPeriod(
-          contract,
+      const contractList = contracts[txn.sender_inn]
+      if (contractList) {
+        const expected = sumExpectedForContracts(
+          contractList,
           monthsInRange,
           effectiveDateRange.from,
-          effectiveDateRange.to
+          effectiveDateRange.to,
+          matchSourceFilter
         )
         if (expected) {
           totalExpected += expected
@@ -663,13 +685,14 @@ export default function PaymentsPage() {
       'მეთოდი',
     ]
     const rows = transactions.map(txn => {
-      const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
-      const expected = contract
-        ? getExpectedForPeriod(
-            contract,
+      const contractList = txn.sender_inn ? contracts[txn.sender_inn] : null
+      const expected = contractList
+        ? sumExpectedForContracts(
+            contractList,
             monthsInRange,
             effectiveDateRange.from,
-            effectiveDateRange.to
+            effectiveDateRange.to,
+            matchSourceFilter
           )
         : null
       const diff = expected != null ? txn.amount - expected : null
@@ -837,13 +860,14 @@ export default function PaymentsPage() {
   // ── Render flat transaction row (ungrouped mode) ──
 
   const renderFlatRow = (txn: BankTransaction) => {
-    const contract = txn.sender_inn ? contracts[txn.sender_inn] : null
-    const expectedAmount = contract
-      ? getExpectedForPeriod(
-          contract,
+    const contractList = txn.sender_inn ? contracts[txn.sender_inn] : null
+    const expectedAmount = contractList
+      ? sumExpectedForContracts(
+          contractList,
           monthsInRange,
           effectiveDateRange.from,
-          effectiveDateRange.to
+          effectiveDateRange.to,
+          matchSourceFilter
         )
       : null
     const diff = expectedAmount != null ? txn.amount - expectedAmount : null
@@ -1348,7 +1372,7 @@ export default function PaymentsPage() {
                                 onClick={e => {
                                   e.stopPropagation()
                                   const contractItemId = group.senderInn
-                                    ? contracts[group.senderInn]?.item_id
+                                    ? contracts[group.senderInn]?.[0]?.item_id
                                     : null
                                   router.push(
                                     `/boards/${group.boardId}${contractItemId ? `?item=${contractItemId}` : ''}`
