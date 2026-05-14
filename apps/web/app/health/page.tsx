@@ -1,0 +1,445 @@
+'use client'
+
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import {
+  Activity,
+  RefreshCw,
+  Database,
+  CheckCircle2,
+  AlertTriangle,
+  XCircle,
+  Clock,
+  Server,
+  TrendingUp,
+} from 'lucide-react'
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  Cell,
+} from 'recharts'
+
+interface HealthCheck {
+  name: string
+  status: 'ok' | 'slow' | 'error'
+  time_ms: number
+  result?: any
+  error?: string
+}
+
+interface HealthResponse {
+  status: 'healthy' | 'degraded' | 'unhealthy'
+  timestamp: string
+  checks: HealthCheck[]
+  summary: { total: number; ok: number; slow: number; failed: number }
+}
+
+interface HistoryEntry {
+  timestamp: string
+  label: string
+  status: string
+  avg_ms: number
+  max_ms: number
+  checks: HealthCheck[]
+}
+
+const CHECK_LABELS: Record<string, string> = {
+  db_ping: 'DB Ping',
+  boards_count: 'Boards',
+  board_items_count: 'Board Items',
+  bank_transactions_count: 'Transactions',
+  active_inspectors: 'Inspectors',
+  users_count: 'Users',
+  recent_checkins: 'Checkins (24h)',
+}
+
+const STATUS_CONFIG = {
+  healthy: {
+    color: 'text-green-400',
+    bg: 'bg-green-500/10',
+    border: 'border-green-500/20',
+    icon: CheckCircle2,
+    label: 'Healthy',
+  },
+  degraded: {
+    color: 'text-yellow-400',
+    bg: 'bg-yellow-500/10',
+    border: 'border-yellow-500/20',
+    icon: AlertTriangle,
+    label: 'Degraded',
+  },
+  unhealthy: {
+    color: 'text-red-400',
+    bg: 'bg-red-500/10',
+    border: 'border-red-500/20',
+    icon: XCircle,
+    label: 'Unhealthy',
+  },
+}
+
+const BAR_COLORS = {
+  ok: '#22c55e',
+  slow: '#eab308',
+  error: '#ef4444',
+}
+
+export default function HealthPage() {
+  const { userRole } = useAuth()
+  const [current, setCurrent] = useState<HealthResponse | null>(null)
+  const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [loading, setLoading] = useState(false)
+  const [autoRefresh, setAutoRefresh] = useState(false)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  const fetchHealth = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await fetch('/api/health')
+      if (!res.ok) throw new Error('Failed to fetch health')
+      const data: HealthResponse = await res.json()
+      setCurrent(data)
+
+      setHistory(prev => {
+        const entry: HistoryEntry = {
+          timestamp: data.timestamp,
+          label: new Date(data.timestamp).toLocaleTimeString('ka-GE', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+          }),
+          status: data.status,
+          avg_ms: Math.round(data.checks.reduce((s, c) => s + c.time_ms, 0) / data.checks.length),
+          max_ms: Math.max(...data.checks.map(c => c.time_ms)),
+          checks: data.checks,
+        }
+        const next = [...prev, entry].slice(-30) // Keep last 30 checks
+        return next
+      })
+    } catch {
+      // Silently fail — user sees stale data
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchHealth()
+  }, [fetchHealth])
+
+  useEffect(() => {
+    if (autoRefresh) {
+      intervalRef.current = setInterval(fetchHealth, 15000)
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [autoRefresh, fetchHealth])
+
+  if (userRole?.role !== 'admin') {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-text-secondary">Admin access required</p>
+      </div>
+    )
+  }
+
+  const statusConfig = current ? STATUS_CONFIG[current.status] : null
+  const StatusIcon = statusConfig?.icon || Activity
+
+  // Per-check trend data (one line per check across history)
+  const trendData = history.map(h => {
+    const point: Record<string, any> = { label: h.label }
+    for (const check of h.checks) {
+      point[check.name] = check.time_ms
+    }
+    return point
+  })
+
+  // Current check names for chart lines
+  const checkNames = current?.checks.map(c => c.name) || []
+  const lineColors = ['#6366f1', '#06b6d4', '#f59e0b', '#ef4444', '#22c55e', '#8b5cf6', '#ec4899']
+
+  return (
+    <div className="min-h-screen bg-bg-primary p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-lg ${statusConfig?.bg || 'bg-bg-secondary'}`}>
+              <Server className={`w-6 h-6 ${statusConfig?.color || 'text-text-secondary'}`} />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-text-primary">System Health</h1>
+              {current && (
+                <p className="text-sm text-text-secondary">
+                  Last check: {new Date(current.timestamp).toLocaleTimeString('ka-GE')}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setAutoRefresh(!autoRefresh)}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                autoRefresh
+                  ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                  : 'bg-bg-secondary text-text-secondary border border-border-light hover:text-text-primary'
+              }`}
+            >
+              {autoRefresh ? 'Auto: ON (15s)' : 'Auto: OFF'}
+            </button>
+            <button
+              onClick={fetchHealth}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-bg-secondary border border-border-light rounded-lg text-sm font-medium text-text-primary hover:bg-bg-tertiary transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Status Banner */}
+        {current && (
+          <div
+            className={`flex items-center gap-4 p-4 rounded-xl border ${statusConfig?.bg} ${statusConfig?.border}`}
+          >
+            <StatusIcon className={`w-8 h-8 ${statusConfig?.color}`} />
+            <div className="flex-1">
+              <p className={`text-lg font-bold ${statusConfig?.color}`}>{statusConfig?.label}</p>
+              <p className="text-sm text-text-secondary">
+                {current.summary.ok} ok · {current.summary.slow} slow · {current.summary.failed}{' '}
+                failed
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-mono font-bold text-text-primary">
+                {current.checks.length > 0
+                  ? Math.round(
+                      current.checks.reduce((s, c) => s + c.time_ms, 0) / current.checks.length
+                    )
+                  : 0}
+                <span className="text-sm text-text-secondary ml-1">ms avg</span>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Individual Checks — Bar Chart + Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Bar Chart */}
+          <div className="bg-bg-secondary border border-border-light rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-text-secondary" />
+              Query Response Times
+            </h2>
+            {current && (
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart
+                  data={current.checks.map(c => ({
+                    name: CHECK_LABELS[c.name] || c.name,
+                    time_ms: c.time_ms,
+                    status: c.status,
+                  }))}
+                  layout="vertical"
+                  margin={{ left: 90, right: 20, top: 5, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
+                  <XAxis
+                    type="number"
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 12 }}
+                    unit="ms"
+                  />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    tick={{ fill: 'var(--text-primary)', fontSize: 12 }}
+                    width={85}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)',
+                    }}
+                    formatter={(value: any) => [`${value} ms`, 'Response Time']}
+                  />
+                  <Bar dataKey="time_ms" radius={[0, 4, 4, 0]}>
+                    {current.checks.map((c, i) => (
+                      <Cell key={i} fill={BAR_COLORS[c.status]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+
+          {/* Check Cards */}
+          <div className="grid grid-cols-2 gap-3">
+            {current?.checks.map(check => {
+              const isOk = check.status === 'ok'
+              const isSlow = check.status === 'slow'
+              return (
+                <div
+                  key={check.name}
+                  className={`p-4 rounded-xl border ${
+                    isOk
+                      ? 'bg-bg-secondary border-border-light'
+                      : isSlow
+                        ? 'bg-yellow-500/5 border-yellow-500/20'
+                        : 'bg-red-500/5 border-red-500/20'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-medium text-text-secondary uppercase tracking-wider">
+                      {CHECK_LABELS[check.name] || check.name}
+                    </span>
+                    {isOk ? (
+                      <CheckCircle2 className="w-4 h-4 text-green-400" />
+                    ) : isSlow ? (
+                      <AlertTriangle className="w-4 h-4 text-yellow-400" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-red-400" />
+                    )}
+                  </div>
+                  <p className="text-2xl font-mono font-bold text-text-primary">
+                    {check.time_ms}
+                    <span className="text-xs text-text-secondary ml-1">ms</span>
+                  </p>
+                  {check.result !== undefined && check.result !== 'connected' && (
+                    <p className="text-xs text-text-secondary mt-1">
+                      {typeof check.result === 'number'
+                        ? check.result.toLocaleString() + ' rows'
+                        : check.result}
+                    </p>
+                  )}
+                  {check.error && (
+                    <p className="text-xs text-red-400 mt-1 truncate">{check.error}</p>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Trend Chart */}
+        {history.length > 1 && (
+          <div className="bg-bg-secondary border border-border-light rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-text-secondary" />
+              Response Time Trends
+              <span className="text-xs font-normal text-text-secondary">
+                ({history.length} checks)
+              </span>
+            </h2>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={trendData} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} unit="ms" />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                  }}
+                  formatter={(value: any, name: any) => [`${value} ms`, CHECK_LABELS[name] || name]}
+                />
+                {checkNames.map((name, i) => (
+                  <Line
+                    key={name}
+                    type="monotone"
+                    dataKey={name}
+                    stroke={lineColors[i % lineColors.length]}
+                    strokeWidth={2}
+                    dot={false}
+                    name={name}
+                  />
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
+
+            {/* Legend */}
+            <div className="flex flex-wrap gap-4 mt-3 justify-center">
+              {checkNames.map((name, i) => (
+                <div key={name} className="flex items-center gap-1.5 text-xs text-text-secondary">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: lineColors[i % lineColors.length] }}
+                  />
+                  {CHECK_LABELS[name] || name}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Avg/Max Trend */}
+        {history.length > 1 && (
+          <div className="bg-bg-secondary border border-border-light rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-text-secondary" />
+              Average vs Max Response Time
+            </h2>
+            <ResponsiveContainer width="100%" height={200}>
+              <LineChart data={history} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} unit="ms" />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="avg_ms"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Average"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="max_ms"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Max"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!current && !loading && (
+          <div className="text-center py-16 text-text-secondary">
+            <Database className="w-12 h-12 mx-auto mb-3 opacity-40" />
+            <p>No health data yet. Click Refresh to run checks.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

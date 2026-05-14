@@ -23,51 +23,70 @@ export async function GET(request: NextRequest) {
 
     if (inspError) throw inspError
 
-    const result = []
-
-    for (const inspector of inspectors || []) {
-      // Get latest location from history
-      // PostGIS table not in generated types
-      const { data: latestLoc } = await (supabase as any)
-        .from('inspector_location_history')
-        .select('lat, lng')
-        .eq('inspector_id', inspector.id)
-        .order('recorded_at', { ascending: false })
-        .limit(1)
-        .single()
-
-      if (!latestLoc) continue
-
-      // Get active route for today
-      const { data: route } = await supabase
-        .from('routes')
-        .select('id, name, status, route_stops(id, status)')
-        .eq('inspector_id', inspector.id)
-        .eq('date', today)
-        .in('status', ['planned', 'in_progress'])
-        .limit(1)
-        .single()
-
-      result.push({
-        id: inspector.id,
-        full_name: inspector.full_name,
-        phone: inspector.phone,
-        lat: latestLoc.lat,
-        lng: latestLoc.lng,
-        last_location_update: inspector.last_location_update,
-        active_route: route
-          ? {
-              id: route.id,
-              name: route.name,
-              status: route.status,
-              total_stops: (route.route_stops as any[])?.length || 0,
-              completed_stops:
-                (route.route_stops as any[])?.filter((s: any) => s.status === 'completed').length ||
-                0,
-            }
-          : null,
-      })
+    if (!inspectors || inspectors.length === 0) {
+      return NextResponse.json([])
     }
+
+    const inspectorIds = inspectors.map((i: any) => i.id)
+
+    // Fetch all locations and routes in parallel (2 queries instead of 2*N)
+    const [{ data: allLocations }, { data: allRoutes }] = await Promise.all([
+      (supabase as any)
+        .from('inspector_location_history')
+        .select('inspector_id, lat, lng, recorded_at')
+        .in('inspector_id', inspectorIds)
+        .order('recorded_at', { ascending: false }),
+      supabase
+        .from('routes')
+        .select('id, name, status, inspector_id, route_stops(id, status)')
+        .in('inspector_id', inspectorIds)
+        .eq('date', today)
+        .in('status', ['planned', 'in_progress']),
+    ])
+
+    // Index: latest location per inspector (first occurrence since ordered desc)
+    const latestLocByInspector = new Map<string, { lat: number; lng: number }>()
+    for (const loc of allLocations || []) {
+      if (!latestLocByInspector.has(loc.inspector_id)) {
+        latestLocByInspector.set(loc.inspector_id, { lat: loc.lat, lng: loc.lng })
+      }
+    }
+
+    // Index: route per inspector
+    const routeByInspector = new Map<string, any>()
+    for (const route of allRoutes || []) {
+      if (route.inspector_id && !routeByInspector.has(route.inspector_id)) {
+        routeByInspector.set(route.inspector_id, route)
+      }
+    }
+
+    const result = inspectors
+      .map((inspector: any) => {
+        const loc = latestLocByInspector.get(inspector.id)
+        if (!loc) return null
+
+        const route = routeByInspector.get(inspector.id)
+        return {
+          id: inspector.id,
+          full_name: inspector.full_name,
+          phone: inspector.phone,
+          lat: loc.lat,
+          lng: loc.lng,
+          last_location_update: inspector.last_location_update,
+          active_route: route
+            ? {
+                id: route.id,
+                name: route.name,
+                status: route.status,
+                total_stops: (route.route_stops as any[])?.length || 0,
+                completed_stops:
+                  (route.route_stops as any[])?.filter((s: any) => s.status === 'completed')
+                    .length || 0,
+              }
+            : null,
+        }
+      })
+      .filter(Boolean)
 
     return NextResponse.json(result)
   } catch (error: any) {
