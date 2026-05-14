@@ -120,8 +120,8 @@ export async function GET(request: NextRequest) {
 
     const userEmails = (users || []).filter(u => u.email).map(u => u.email)
 
-    // Create in-app notifications for each alert
-    let notificationsCreated = 0
+    // Create in-app notifications for each alert (all in parallel)
+    const notificationPromises: Promise<any>[] = []
     for (const alert of alerts) {
       const contractName = alert.item.name
       const amount = alert.item.data?.act_amount || 0
@@ -138,22 +138,25 @@ export async function GET(request: NextRequest) {
       const message = `${contractName} — ₾${amount.toLocaleString()} — ${urgencyLabel}`
 
       for (const userId of userIds) {
-        await supabase.rpc('create_notification', {
-          p_user_id: userId,
-          p_type: 'contract_expiring',
-          p_title: title,
-          p_message: message,
-          p_data: {
-            board_id: board.id,
-            item_id: alert.item.id,
-            contract_name: contractName,
-            end_date: alert.item.data.end_date,
-            days_remaining: alert.daysRemaining,
-          },
-        })
-        notificationsCreated++
+        notificationPromises.push(
+          (supabase as any).rpc('create_notification', {
+            p_user_id: userId,
+            p_type: 'contract_expiring',
+            p_title: title,
+            p_message: message,
+            p_data: {
+              board_id: board.id,
+              item_id: alert.item.id,
+              contract_name: contractName,
+              end_date: alert.item.data.end_date,
+              days_remaining: alert.daysRemaining,
+            },
+          })
+        )
       }
     }
+    await Promise.all(notificationPromises)
+    const notificationsCreated = notificationPromises.length
 
     // Send summary email
     if (userEmails.length > 0) {

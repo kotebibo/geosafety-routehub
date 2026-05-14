@@ -1,6 +1,7 @@
 /**
  * Payment Stats API
  * Returns summary statistics for the payments dashboard
+ * Uses DB-side aggregation (RPC) for performance
  * Supports date range filtering (from/to query params)
  * Protected: Admin or Dispatcher
  */
@@ -21,7 +22,18 @@ export async function GET(request: NextRequest) {
     const toDate = searchParams.get('to')
     const matchSource = searchParams.get('matchSource')
 
-    // Fetch ALL transactions (Supabase default limit is 1000, so paginate)
+    // Try DB-side aggregation first (migration 086)
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('get_payment_stats', {
+      p_from_date: fromDate || null,
+      p_to_date: toDate || null,
+      p_match_source: matchSource || null,
+    })
+
+    if (!rpcError && rpcResult) {
+      return NextResponse.json(rpcResult)
+    }
+
+    // Fallback: client-side aggregation if RPC not available yet
     let allTxns: Array<{ status: string; amount: number }> = []
     const PAGE = 1000
     let from = 0

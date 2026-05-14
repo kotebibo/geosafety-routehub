@@ -50,6 +50,7 @@ import {
   GripVertical,
   Banknote,
   Bot,
+  Activity,
 } from 'lucide-react'
 import {
   DndContext,
@@ -864,6 +865,13 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       labelEn: 'Roles & Permissions',
       icon: KeyRound,
       permission: 'pages:roles',
+    },
+    {
+      href: '/health',
+      label: 'სისტემის ჯანმრთელობა',
+      labelEn: 'System Health',
+      icon: Activity,
+      permission: 'pages:settings',
     },
     {
       href: '/settings',
