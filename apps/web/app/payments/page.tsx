@@ -401,15 +401,9 @@ export default function PaymentsPage() {
       if (txn.status === 'unmatched') unmatched++
     }
 
-    // Sum expected: only for tax IDs that appear in the current transactions
-    // This matches the table — companies with no transactions won't inflate the expected total
-    const txnTaxIds = new Set<string>()
-    for (const txn of transactions) {
-      if (txn.sender_inn) txnTaxIds.add(txn.sender_inn)
-    }
+    // Sum expected: ALL contracts (not just those with transactions)
     let totalExpected = 0
-    for (const [taxId, contractList] of Object.entries(contracts)) {
-      if (!txnTaxIds.has(taxId)) continue
+    for (const contractList of Object.values(contracts)) {
       const expected = sumExpectedForContracts(
         contractList,
         monthsInRange,
@@ -569,59 +563,14 @@ export default function PaymentsPage() {
     statusFilter,
   ])
 
-  // Totals for the table footer — derived from grouped data (includes zero-payment companies)
-  const tableTotals = useMemo(() => {
-    if (groupByCompany && grouped.length > 0) {
-      let totalPaid = 0
-      let totalExpected = 0
-      let hasExpected = false
-      for (const group of grouped) {
-        totalPaid += group.totalPaid
-        if (group.totalExpected != null) {
-          totalExpected += group.totalExpected
-          hasExpected = true
-        }
-      }
-      return { totalPaid, totalExpected: hasExpected ? totalExpected : null }
-    }
-
-    // Flat mode — sum from transactions
-    let totalPaid = 0
-    for (const txn of transactions) {
-      if (txn.status !== 'ignored') totalPaid += txn.amount
-    }
-    let totalExpected = 0
-    let hasExpected = false
-    const seenTaxIds = new Set<string>()
-    for (const txn of transactions) {
-      if (txn.status === 'ignored') continue
-      if (!txn.sender_inn || seenTaxIds.has(txn.sender_inn)) continue
-      seenTaxIds.add(txn.sender_inn)
-      const contractList = contracts[txn.sender_inn]
-      if (contractList) {
-        const expected = sumExpectedForContracts(
-          contractList,
-          monthsInRange,
-          effectiveDateRange.from,
-          effectiveDateRange.to,
-          matchSourceFilter
-        )
-        if (expected) {
-          totalExpected += expected
-          hasExpected = true
-        }
-      }
-    }
-    return { totalPaid, totalExpected: hasExpected ? totalExpected : null }
-  }, [
-    transactions,
-    contracts,
-    grouped,
-    groupByCompany,
-    monthsInRange,
-    effectiveDateRange,
-    matchSourceFilter,
-  ])
+  // Table footer totals — same as stats cards for consistency
+  const tableTotals = useMemo(
+    () => ({
+      totalPaid: monthStats?.totalPaid || 0,
+      totalExpected: monthStats?.totalExpected ?? null,
+    }),
+    [monthStats]
+  )
 
   const toggleGroup = (key: string) => {
     setExpandedGroups(prev => {
