@@ -103,7 +103,7 @@ export async function GET() {
       return NextResponse.json({ contracts: {}, boards_found: 0 })
     }
 
-    const contractsByTaxId: Record<string, ContractInfo> = {}
+    const contractsByTaxId: Record<string, ContractInfo[]> = {}
     const boardsSummary: Array<{ id: string; name: string; count: number }> = []
 
     // Fetch columns and items for ALL boards in parallel
@@ -204,15 +204,9 @@ export async function GET() {
         }
 
         if (!contractsByTaxId[taxId]) {
-          contractsByTaxId[taxId] = contract
+          contractsByTaxId[taxId] = [contract]
         } else {
-          const existing = contractsByTaxId[taxId]
-          if (monthlyAmount) {
-            existing.monthly_amount = (existing.monthly_amount || 0) + monthlyAmount
-          }
-          if (invoiceAmount) {
-            existing.invoice_amount = (existing.invoice_amount || 0) + invoiceAmount
-          }
+          contractsByTaxId[taxId].push(contract)
         }
       }
     }
@@ -236,7 +230,9 @@ export async function GET() {
 
       for (const [inn, date] of Object.entries(earliest)) {
         if (contractsByTaxId[inn]) {
-          contractsByTaxId[inn].first_payment_date = date
+          for (const c of contractsByTaxId[inn]) {
+            c.first_payment_date = date
+          }
         }
       }
     }
