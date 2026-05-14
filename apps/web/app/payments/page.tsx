@@ -459,12 +459,6 @@ export default function PaymentsPage() {
     matchSourceFilter,
   ])
 
-  // Difference for stat card — uses server-side total (not paginated client array)
-  const statsDifference = useMemo(() => {
-    const totalPaid = (stats?.matched_amount || 0) + (stats?.unmatched_amount || 0)
-    return totalPaid - (monthStats?.totalExpected || 0)
-  }, [stats, monthStats])
-
   // Grouped transactions
   const grouped = useMemo((): GroupedTransactions[] => {
     if (!groupByCompany) return []
@@ -1110,14 +1104,12 @@ export default function PaymentsPage() {
         <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <p className="text-xs text-text-tertiary mb-1">ტრანზაქციები</p>
           <p className="text-xl font-bold text-text-primary">
-            {statsLoading ? '...' : stats?.total_transactions || 0}
+            {loading ? '...' : monthStats?.count || 0}
           </p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-[11px] text-emerald-600">
-              {stats?.matched_count || 0} დაკავშ.
-            </span>
+            <span className="text-[11px] text-emerald-600">{monthStats?.matched || 0} დაკავშ.</span>
             <span className="text-[11px] text-amber-600">
-              {stats?.unmatched_count || 0} დაუკავშ.
+              {monthStats?.unmatched || 0} დაუკავშ.
             </span>
           </div>
         </div>
@@ -1125,18 +1117,14 @@ export default function PaymentsPage() {
         <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <p className="text-xs text-text-tertiary mb-1">მიღებული</p>
           <p className="text-xl font-bold text-emerald-600">
-            {statsLoading
-              ? '...'
-              : formatAmount((stats?.matched_amount || 0) + (stats?.unmatched_amount || 0))}
+            {loading ? '...' : formatAmount(monthStats?.totalPaid || 0)}
           </p>
         </div>
 
         <div className="bg-bg-primary rounded-xl border border-border-light p-4">
           <p className="text-xs text-text-tertiary mb-1">მოსალოდნელი</p>
           <p className="text-xl font-bold text-monday-primary">
-            {statsLoading || contractsLoading
-              ? '...'
-              : formatAmount(monthStats?.totalExpected || 0)}
+            {loading || contractsLoading ? '...' : formatAmount(monthStats?.totalExpected || 0)}
           </p>
         </div>
 
@@ -1145,16 +1133,17 @@ export default function PaymentsPage() {
           <p
             className={cn(
               'text-xl font-bold',
-              !stats || !monthStats
+              !monthStats
                 ? 'text-text-secondary'
-                : statsDifference >= 0
+                : monthStats.difference >= 0
                   ? 'text-emerald-600'
                   : 'text-red-600'
             )}
           >
-            {statsLoading || contractsLoading
+            {loading || contractsLoading
               ? '...'
-              : (statsDifference >= 0 ? '+' : '') + formatAmount(statsDifference)}
+              : ((monthStats?.difference || 0) >= 0 ? '+' : '') +
+                formatAmount(monthStats?.difference || 0)}
           </p>
           {monthStats && (monthStats.underpaid > 0 || monthStats.overpaid > 0) && (
             <div className="flex items-center gap-2 mt-1">
