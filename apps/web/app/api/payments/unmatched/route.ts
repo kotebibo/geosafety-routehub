@@ -24,76 +24,71 @@ export async function GET() {
       .limit(100)
 
     if (unmatchedError) throw unmatchedError
+    if (!unmatched || unmatched.length === 0) return NextResponse.json([])
 
-    // For each unmatched transaction, find suggested matches
-    const results = await Promise.all(
-      (unmatched || []).map(async (txn: any) => {
-        const suggestions: Array<{
-          company_id: string
-          company_name: string
-          tax_id: string | null
-          confidence: number
-          reason: string
-        }> = []
+    // Batch fetch: all companies at once (instead of per-transaction)
+    const { data: allCompanies } = await supabase.from('companies').select('id, name, tax_id')
 
-        // Suggest by tax ID partial match
-        if (txn.sender_inn) {
-          const { data: innMatches } = await supabase
-            .from('companies')
-            .select('id, name, tax_id')
-            .eq('tax_id', txn.sender_inn)
-            .limit(3)
+    const companies = allCompanies || []
 
-          if (innMatches) {
-            for (const c of innMatches) {
-              suggestions.push({
-                company_id: c.id,
-                company_name: c.name,
-                tax_id: c.tax_id,
-                confidence: 1.0,
-                reason: 'Tax ID exact match',
-              })
-            }
-          }
+    // Index companies by tax_id for O(1) lookup
+    const companiesByTaxId = new Map<string, typeof companies>()
+    for (const c of companies) {
+      if (!c.tax_id) continue
+      const existing = companiesByTaxId.get(c.tax_id) || []
+      existing.push(c)
+      companiesByTaxId.set(c.tax_id, existing)
+    }
+
+    // Match all transactions client-side (single pass, no extra queries)
+    const results = unmatched.map((txn: any) => {
+      const suggestions: Array<{
+        company_id: string
+        company_name: string
+        tax_id: string | null
+        confidence: number
+        reason: string
+      }> = []
+
+      // Tax ID exact match
+      if (txn.sender_inn) {
+        const innMatches = companiesByTaxId.get(txn.sender_inn) || []
+        for (const c of innMatches.slice(0, 3)) {
+          suggestions.push({
+            company_id: c.id,
+            company_name: c.name,
+            tax_id: c.tax_id,
+            confidence: 1.0,
+            reason: 'Tax ID exact match',
+          })
         }
+      }
 
-        // Suggest by name similarity (if no INN match found)
-        if (suggestions.length === 0 && txn.sender_name) {
-          const { data: nameMatches } = await supabase
-            .from('companies')
-            .select('id, name, tax_id')
-            .limit(5)
+      // Name similarity fallback
+      if (suggestions.length === 0 && txn.sender_name) {
+        const senderLower = txn.sender_name.toLowerCase()
+        const scored = companies
+          .map((c: any) => ({
+            ...c,
+            score: basicSimilarity(c.name.toLowerCase(), senderLower),
+          }))
+          .filter((c: any) => c.score > 0.2)
+          .sort((a: any, b: any) => b.score - a.score)
+          .slice(0, 3)
 
-          // Client-side similarity check (rough, since Supabase JS doesn't support pg_trgm directly)
-          if (nameMatches) {
-            const senderLower = txn.sender_name.toLowerCase()
-            const scored = nameMatches
-              .map((c: any) => ({
-                ...c,
-                score: basicSimilarity(c.name.toLowerCase(), senderLower),
-              }))
-              .filter((c: any) => c.score > 0.2)
-              .sort((a: any, b: any) => b.score - a.score)
-              .slice(0, 3)
-
-            for (const c of scored) {
-              suggestions.push({
-                company_id: c.id,
-                company_name: c.name,
-                tax_id: c.tax_id,
-                confidence: c.score,
-                reason: 'Name similarity',
-              })
-            }
-          }
+        for (const c of scored) {
+          suggestions.push({
+            company_id: c.id,
+            company_name: c.name,
+            tax_id: c.tax_id,
+            confidence: c.score,
+            reason: 'Name similarity',
+          })
         }
+      }
 
-        return {
-          ...txn,
-          suggested_companies: suggestions,
-        }
-      })
-    )
+      return { ...txn, suggested_companies: suggestions }
+    })
 
     return NextResponse.json(results)
   } catch (error: any) {
