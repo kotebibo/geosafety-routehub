@@ -193,7 +193,7 @@ export default function PaymentsPage() {
 
   // Grouping — all collapsed by default
   const [groupByCompany, setGroupByCompany] = useState(true)
-  const [collapsedGroups, setCollapsedGroups] = useState<Set<string> | null>(null)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
 
   // Copy & actions
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -345,10 +345,10 @@ export default function PaymentsPage() {
     }
   }, [authLoading, isAdmin, isDispatcher, fetchTransactions])
 
-  // Reset page and collapse state on filter change
+  // Reset page on filter change
   useEffect(() => {
     setPage(1)
-    setCollapsedGroups(null)
+    setExpandedGroups(new Set())
   }, [
     statusFilter,
     matchSourceFilter,
@@ -548,13 +548,6 @@ export default function PaymentsPage() {
     statusFilter,
   ])
 
-  // Initialize all groups as collapsed on first load / data change
-  useEffect(() => {
-    if (grouped.length > 0 && collapsedGroups === null) {
-      setCollapsedGroups(new Set(grouped.map(g => g.key)))
-    }
-  }, [grouped, collapsedGroups])
-
   // Totals for the table footer — derived from grouped data (includes zero-payment companies)
   const tableTotals = useMemo(() => {
     if (groupByCompany && grouped.length > 0) {
@@ -601,8 +594,8 @@ export default function PaymentsPage() {
   }, [transactions, contracts, grouped, groupByCompany, monthsInRange, effectiveDateRange])
 
   const toggleGroup = (key: string) => {
-    setCollapsedGroups(prev => {
-      const next = new Set(prev || [])
+    setExpandedGroups(prev => {
+      const next = new Set(prev)
       if (next.has(key)) next.delete(key)
       else next.add(key)
       return next
@@ -1322,7 +1315,7 @@ export default function PaymentsPage() {
                 </tr>
               ) : groupByCompany ? (
                 grouped.map(group => {
-                  const isCollapsed = collapsedGroups?.has(group.key) ?? true
+                  const isCollapsed = !expandedGroups.has(group.key)
                   const diff =
                     group.totalExpected != null ? group.totalPaid - group.totalExpected : null
 
