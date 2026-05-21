@@ -8,27 +8,16 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useWalkthrough } from '@/components/Walkthrough'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/shared/components/ui'
-import { useToast } from '@/components/ui-monday/Toast'
-import {
-  ArrowLeft,
-  User,
-  Bell,
-  Globe,
-  Shield,
-  Save,
-  Check,
-  PlayCircle,
-  Palette,
-  Sun,
-  Moon,
-  Star,
-  Snowflake,
-  Sunset,
-  Coffee,
-} from 'lucide-react'
+import { ArrowLeft, User, Bell, Globe, Shield, Palette } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import type { Theme } from '@/contexts/ThemeContext'
 import { cn } from '@/lib/utils'
+
+import { ProfileTab } from './components/ProfileTab'
+import { NotificationsTab } from './components/NotificationsTab'
+import { LanguageTab } from './components/LanguageTab'
+import { AppearanceTab } from './components/AppearanceTab'
+import { SecurityTab } from './components/SecurityTab'
 
 type TabType = 'profile' | 'notifications' | 'language' | 'security' | 'appearance'
 
@@ -54,11 +43,19 @@ const defaultSettings: UserSettings = {
   },
 }
 
+const TABS: { id: TabType; icon: React.ComponentType<{ className?: string }>; labelKey: string }[] =
+  [
+    { id: 'profile', icon: User, labelKey: 'settings.tab.profile' },
+    { id: 'notifications', icon: Bell, labelKey: 'settings.tab.notifications' },
+    { id: 'language', icon: Globe, labelKey: 'settings.tab.language' },
+    { id: 'appearance', icon: Palette, labelKey: 'settings.tab.appearance' },
+    { id: 'security', icon: Shield, labelKey: 'settings.tab.security' },
+  ]
+
 export default function SettingsPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const { t } = useLanguage()
-  const { showToast } = useToast()
   const { theme: currentTheme, setTheme } = useTheme()
   const { restartWalkthrough } = useWalkthrough()
   const [activeTab, setActiveTab] = useState<TabType>('profile')
@@ -90,7 +87,6 @@ export default function SettingsPage() {
     try {
       const supabase = createClient()
 
-      // Fetch user profile
       const { data: profile } = (await supabase
         .from('users')
         .select('full_name, phone')
@@ -102,7 +98,6 @@ export default function SettingsPage() {
         setPhone(profile.phone || '')
       }
 
-      // Fetch user settings
       const { data: userSettings } = (await supabase
         .from('user_settings')
         .select('*')
@@ -123,7 +118,6 @@ export default function SettingsPage() {
           notification_settings:
             userSettings.notification_settings || defaultSettings.notification_settings,
         })
-        // Sync theme context with saved preference
         if (['light', 'dark', 'night', 'arctic', 'sunset', 'coffee'].includes(savedTheme)) {
           setTheme(savedTheme)
         }
@@ -190,24 +184,6 @@ export default function SettingsPage() {
     }
   }
 
-  const SaveButton = ({ onClick }: { onClick: () => void }) => (
-    <div className="pt-4 border-t border-border-light">
-      <Button variant="primary" onClick={onClick} disabled={isSaving}>
-        {saveSuccess ? (
-          <>
-            <Check className="w-4 h-4 mr-2" />
-            {t('settings.saved')}
-          </>
-        ) : (
-          <>
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? t('settings.saving') : t('common.save')}
-          </>
-        )}
-      </Button>
-    </div>
-  )
-
   if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -242,767 +218,90 @@ export default function SettingsPage() {
 
           {/* Tabs */}
           <div className="flex gap-1 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('profile')}
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
-                activeTab === 'profile'
-                  ? 'bg-bg-secondary text-text-primary'
-                  : 'text-text-secondary hover:text-text-primary'
-              )}
-            >
-              <User className="w-4 h-4 inline mr-2" />
-              {t('settings.tab.profile')}
-            </button>
-            <button
-              onClick={() => setActiveTab('notifications')}
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
-                activeTab === 'notifications'
-                  ? 'bg-bg-secondary text-text-primary'
-                  : 'text-text-secondary hover:text-text-primary'
-              )}
-            >
-              <Bell className="w-4 h-4 inline mr-2" />
-              {t('settings.tab.notifications')}
-            </button>
-            <button
-              onClick={() => setActiveTab('language')}
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
-                activeTab === 'language'
-                  ? 'bg-bg-secondary text-text-primary'
-                  : 'text-text-secondary hover:text-text-primary'
-              )}
-            >
-              <Globe className="w-4 h-4 inline mr-2" />
-              {t('settings.tab.language')}
-            </button>
-            <button
-              onClick={() => setActiveTab('appearance')}
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
-                activeTab === 'appearance'
-                  ? 'bg-bg-secondary text-text-primary'
-                  : 'text-text-secondary hover:text-text-primary'
-              )}
-            >
-              <Palette className="w-4 h-4 inline mr-2" />
-              {t('settings.tab.appearance')}
-            </button>
-            <button
-              onClick={() => setActiveTab('security')}
-              className={cn(
-                'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
-                activeTab === 'security'
-                  ? 'bg-bg-secondary text-text-primary'
-                  : 'text-text-secondary hover:text-text-primary'
-              )}
-            >
-              <Shield className="w-4 h-4 inline mr-2" />
-              {t('settings.tab.security')}
-            </button>
+            {TABS.map(tab => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={cn(
+                    'px-4 py-2 text-sm font-medium rounded-t-md transition-colors whitespace-nowrap',
+                    activeTab === tab.id
+                      ? 'bg-bg-secondary text-text-primary'
+                      : 'text-text-secondary hover:text-text-primary'
+                  )}
+                >
+                  <Icon className="w-4 h-4 inline mr-2" />
+                  {t(tab.labelKey)}
+                </button>
+              )
+            })}
           </div>
         </div>
       </div>
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8">
-        {/* Profile Tab */}
         {activeTab === 'profile' && (
-          <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">
-              {t('settings.profile.title')}
-            </h3>
-
-            {/* Avatar */}
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-monday-primary flex items-center justify-center text-white text-2xl font-semibold">
-                {fullName?.charAt(0) || user.email?.charAt(0) || 'U'}
-              </div>
-              <div>
-                <p className="font-medium text-text-primary">
-                  {fullName || t('settings.profile.user')}
-                </p>
-                <p className="text-sm text-text-tertiary">{user.email}</p>
-              </div>
-            </div>
-
-            {/* Name */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">
-                {t('settings.profile.name')}
-              </label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={e => setFullName(e.target.value)}
-                className={cn(
-                  'w-full max-w-md px-3 py-2 border border-border-default rounded-lg',
-                  'focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary'
-                )}
-                placeholder={t('settings.profile.namePlaceholder')}
-              />
-            </div>
-
-            {/* Email (read-only) */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">
-                {t('settings.profile.email')}
-              </label>
-              <input
-                type="email"
-                value={user.email || ''}
-                disabled
-                className={cn(
-                  'w-full max-w-md px-3 py-2 border border-border-default rounded-lg',
-                  'bg-bg-secondary text-text-tertiary cursor-not-allowed'
-                )}
-              />
-              <p className="text-sm text-text-tertiary mt-1">
-                {t('settings.profile.emailReadonly')}
-              </p>
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">
-                {t('settings.profile.phone')}
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={e => setPhone(e.target.value)}
-                className={cn(
-                  'w-full max-w-md px-3 py-2 border border-border-default rounded-lg',
-                  'focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary'
-                )}
-                placeholder="+995 5XX XXX XXX"
-              />
-            </div>
-
-            {/* Walkthrough Restart */}
-            <div className="p-4 border border-border-default rounded-lg">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h4 className="font-medium text-text-primary">
-                    {t('settings.walkthrough.title')}
-                  </h4>
-                  <p className="text-sm text-text-tertiary mt-1">
-                    {t('settings.walkthrough.description')}
-                  </p>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={() => {
-                    localStorage.removeItem('routehub-walkthrough-completed')
-                    restartWalkthrough()
-                    router.push('/')
-                  }}
-                >
-                  <PlayCircle className="w-4 h-4 mr-2" />
-                  {t('settings.walkthrough.restart')}
-                </Button>
-              </div>
-            </div>
-
-            <SaveButton onClick={handleSaveProfile} />
-          </div>
+          <ProfileTab
+            fullName={fullName}
+            onFullNameChange={setFullName}
+            phone={phone}
+            onPhoneChange={setPhone}
+            email={user.email || ''}
+            onSave={handleSaveProfile}
+            isSaving={isSaving}
+            saveSuccess={saveSuccess}
+            onRestartWalkthrough={() => {
+              localStorage.removeItem('routehub-walkthrough-completed')
+              restartWalkthrough()
+              router.push('/')
+            }}
+          />
         )}
 
-        {/* Notifications Tab */}
         {activeTab === 'notifications' && (
-          <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">
-              {t('settings.notifications.title')}
-            </h3>
-
-            {/* Email Notifications */}
-            <div className="flex items-center justify-between max-w-md">
-              <div>
-                <label className="block text-sm font-medium text-text-primary">
-                  {t('settings.notifications.email')}
-                </label>
-                <p className="text-sm text-text-tertiary">
-                  {t('settings.notifications.emailDesc')}
-                </p>
-              </div>
-              <button
-                onClick={() =>
-                  setSettings(s => ({
-                    ...s,
-                    notification_settings: {
-                      ...s.notification_settings,
-                      email_notifications: !s.notification_settings.email_notifications,
-                    },
-                  }))
-                }
-                role="switch"
-                aria-checked={settings.notification_settings.email_notifications}
-                className={cn(
-                  'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
-                  settings.notification_settings.email_notifications
-                    ? 'bg-monday-primary'
-                    : 'bg-text-disabled'
-                )}
-              >
-                <div
-                  className={cn(
-                    'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
-                    settings.notification_settings.email_notifications ? 'right-1' : 'left-1'
-                  )}
-                />
-              </button>
-            </div>
-
-            {/* Assignment Alerts */}
-            <div className="flex items-center justify-between max-w-md">
-              <div>
-                <label className="block text-sm font-medium text-text-primary">
-                  {t('settings.notifications.assignments')}
-                </label>
-                <p className="text-sm text-text-tertiary">
-                  {t('settings.notifications.assignmentsDesc')}
-                </p>
-              </div>
-              <button
-                onClick={() =>
-                  setSettings(s => ({
-                    ...s,
-                    notification_settings: {
-                      ...s.notification_settings,
-                      assignment_alerts: !s.notification_settings.assignment_alerts,
-                    },
-                  }))
-                }
-                role="switch"
-                aria-checked={settings.notification_settings.assignment_alerts}
-                className={cn(
-                  'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
-                  settings.notification_settings.assignment_alerts
-                    ? 'bg-monday-primary'
-                    : 'bg-text-disabled'
-                )}
-              >
-                <div
-                  className={cn(
-                    'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
-                    settings.notification_settings.assignment_alerts ? 'right-1' : 'left-1'
-                  )}
-                />
-              </button>
-            </div>
-
-            {/* Route Updates */}
-            <div className="flex items-center justify-between max-w-md">
-              <div>
-                <label className="block text-sm font-medium text-text-primary">
-                  {t('settings.notifications.routes')}
-                </label>
-                <p className="text-sm text-text-tertiary">
-                  {t('settings.notifications.routesDesc')}
-                </p>
-              </div>
-              <button
-                onClick={() =>
-                  setSettings(s => ({
-                    ...s,
-                    notification_settings: {
-                      ...s.notification_settings,
-                      route_updates: !s.notification_settings.route_updates,
-                    },
-                  }))
-                }
-                role="switch"
-                aria-checked={settings.notification_settings.route_updates}
-                className={cn(
-                  'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
-                  settings.notification_settings.route_updates
-                    ? 'bg-monday-primary'
-                    : 'bg-text-disabled'
-                )}
-              >
-                <div
-                  className={cn(
-                    'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
-                    settings.notification_settings.route_updates ? 'right-1' : 'left-1'
-                  )}
-                />
-              </button>
-            </div>
-
-            <SaveButton onClick={handleSaveSettings} />
-          </div>
+          <NotificationsTab
+            notificationSettings={settings.notification_settings}
+            onToggle={key =>
+              setSettings(s => ({
+                ...s,
+                notification_settings: {
+                  ...s.notification_settings,
+                  [key]: !s.notification_settings[key],
+                },
+              }))
+            }
+            onSave={handleSaveSettings}
+            isSaving={isSaving}
+            saveSuccess={saveSuccess}
+          />
         )}
 
-        {/* Language Tab */}
         {activeTab === 'language' && (
-          <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">
-              {t('settings.language.title')}
-            </h3>
-
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-4">
-                {t('settings.language.interface')}
-              </label>
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setSettings(s => ({ ...s, language: 'ka' }))}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors',
-                    settings.language === 'ka'
-                      ? 'border-monday-primary bg-monday-primary/5'
-                      : 'border-border-default hover:border-monday-primary'
-                  )}
-                >
-                  <span className="text-2xl">🇬🇪</span>
-                  <div className="text-left">
-                    <p className="font-medium text-text-primary">ქართული</p>
-                    <p className="text-sm text-text-tertiary">Georgian</p>
-                  </div>
-                  {settings.language === 'ka' && (
-                    <Check className="w-5 h-5 text-monday-primary ml-2" />
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setSettings(s => ({ ...s, language: 'en' }))}
-                  className={cn(
-                    'flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors',
-                    settings.language === 'en'
-                      ? 'border-monday-primary bg-monday-primary/5'
-                      : 'border-border-default hover:border-monday-primary'
-                  )}
-                >
-                  <span className="text-2xl">🇬🇧</span>
-                  <div className="text-left">
-                    <p className="font-medium text-text-primary">English</p>
-                    <p className="text-sm text-text-tertiary">ინგლისური</p>
-                  </div>
-                  {settings.language === 'en' && (
-                    <Check className="w-5 h-5 text-monday-primary ml-2" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <SaveButton onClick={handleSaveSettings} />
-          </div>
+          <LanguageTab
+            language={settings.language}
+            onLanguageChange={lang => setSettings(s => ({ ...s, language: lang }))}
+            onSave={handleSaveSettings}
+            isSaving={isSaving}
+            saveSuccess={saveSuccess}
+          />
         )}
 
-        {/* Appearance Tab */}
         {activeTab === 'appearance' && (
-          <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">
-              {t('settings.appearance.title')}
-            </h3>
-
-            <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">
-                {t('settings.appearance.theme')}
-              </label>
-              <p className="text-sm text-text-tertiary mb-4">
-                {t('settings.appearance.themeDesc')}
-              </p>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-3xl">
-                {/* Light Theme */}
-                <button
-                  onClick={() => {
-                    setTheme('light')
-                    setSettings(s => ({ ...s, theme: 'light' }))
-                  }}
-                  className={cn(
-                    'group relative rounded-lg border-2 p-1 transition-all',
-                    currentTheme === 'light'
-                      ? 'border-monday-primary ring-2 ring-monday-primary/20'
-                      : 'border-border-light hover:border-monday-primary/40'
-                  )}
-                >
-                  {/* Theme preview */}
-                  <div className="rounded-md overflow-hidden bg-white">
-                    {/* Mini sidebar + content preview */}
-                    <div className="flex h-[100px]">
-                      <div className="w-10 bg-[#f7f7f7] border-r border-[#e6e9ef] flex flex-col items-center pt-2 gap-1.5">
-                        <div className="w-5 h-5 rounded bg-[#6161ff]" />
-                        <div className="w-5 h-1.5 rounded bg-[#e6e9ef]" />
-                        <div className="w-5 h-1.5 rounded bg-[#e6e9ef]" />
-                        <div className="w-5 h-1.5 rounded bg-[#e6e9ef]" />
-                      </div>
-                      <div className="flex-1 p-2">
-                        <div className="h-3 w-16 rounded bg-[#323338] mb-2" />
-                        <div className="space-y-1.5">
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#f7f7f7]" />
-                            <div className="h-2 w-8 rounded bg-[#00c875]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#f7f7f7]" />
-                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#f7f7f7]" />
-                            <div className="h-2 w-8 rounded bg-[#6161ff]" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Label */}
-                  <div className="flex items-center gap-2 px-2 py-2">
-                    <Sun className="w-4 h-4 text-text-secondary" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-text-primary">
-                        {t('settings.theme.light')}
-                      </p>
-                      <p className="text-xs text-text-tertiary">{t('settings.theme.lightDesc')}</p>
-                    </div>
-                    {currentTheme === 'light' && (
-                      <Check className="w-4 h-4 text-monday-primary ml-auto shrink-0" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Dark Theme */}
-                <button
-                  onClick={() => {
-                    setTheme('dark')
-                    setSettings(s => ({ ...s, theme: 'dark' }))
-                  }}
-                  className={cn(
-                    'group relative rounded-lg border-2 p-1 transition-all',
-                    currentTheme === 'dark'
-                      ? 'border-monday-primary ring-2 ring-monday-primary/20'
-                      : 'border-border-light hover:border-monday-primary/40'
-                  )}
-                >
-                  <div className="rounded-md overflow-hidden bg-[#1e1e2e]">
-                    <div className="flex h-[100px]">
-                      <div className="w-10 bg-[#262637] border-r border-[#35354d] flex flex-col items-center pt-2 gap-1.5">
-                        <div className="w-5 h-5 rounded bg-[#7c7cff]" />
-                        <div className="w-5 h-1.5 rounded bg-[#35354d]" />
-                        <div className="w-5 h-1.5 rounded bg-[#35354d]" />
-                        <div className="w-5 h-1.5 rounded bg-[#35354d]" />
-                      </div>
-                      <div className="flex-1 p-2">
-                        <div className="h-3 w-16 rounded bg-[#e2e2e8] mb-2" />
-                        <div className="space-y-1.5">
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#262637]" />
-                            <div className="h-2 w-8 rounded bg-[#00c875]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#262637]" />
-                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#262637]" />
-                            <div className="h-2 w-8 rounded bg-[#7c7cff]" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-2">
-                    <Moon className="w-4 h-4 text-text-secondary" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-text-primary">
-                        {t('settings.theme.dark')}
-                      </p>
-                      <p className="text-xs text-text-tertiary">{t('settings.theme.darkDesc')}</p>
-                    </div>
-                    {currentTheme === 'dark' && (
-                      <Check className="w-4 h-4 text-monday-primary ml-auto shrink-0" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Night Theme */}
-                <button
-                  onClick={() => {
-                    setTheme('night')
-                    setSettings(s => ({ ...s, theme: 'night' }))
-                  }}
-                  className={cn(
-                    'group relative rounded-lg border-2 p-1 transition-all',
-                    currentTheme === 'night'
-                      ? 'border-monday-primary ring-2 ring-monday-primary/20'
-                      : 'border-border-light hover:border-monday-primary/40'
-                  )}
-                >
-                  <div className="rounded-md overflow-hidden bg-[#0d1b2a]">
-                    <div className="flex h-[100px]">
-                      <div className="w-10 bg-[#142233] border-r border-[#1e3045] flex flex-col items-center pt-2 gap-1.5">
-                        <div className="w-5 h-5 rounded bg-[#64b5f6]" />
-                        <div className="w-5 h-1.5 rounded bg-[#1e3045]" />
-                        <div className="w-5 h-1.5 rounded bg-[#1e3045]" />
-                        <div className="w-5 h-1.5 rounded bg-[#1e3045]" />
-                      </div>
-                      <div className="flex-1 p-2">
-                        <div className="h-3 w-16 rounded bg-[#d8e2ec] mb-2" />
-                        <div className="space-y-1.5">
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#142233]" />
-                            <div className="h-2 w-8 rounded bg-[#00c875]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#142233]" />
-                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#142233]" />
-                            <div className="h-2 w-8 rounded bg-[#64b5f6]" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-2">
-                    <Star className="w-4 h-4 text-text-secondary" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-text-primary">
-                        {t('settings.theme.night')}
-                      </p>
-                      <p className="text-xs text-text-tertiary">{t('settings.theme.nightDesc')}</p>
-                    </div>
-                    {currentTheme === 'night' && (
-                      <Check className="w-4 h-4 text-monday-primary ml-auto shrink-0" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Arctic Theme */}
-                <button
-                  onClick={() => {
-                    setTheme('arctic')
-                    setSettings(s => ({ ...s, theme: 'arctic' }))
-                  }}
-                  className={cn(
-                    'group relative rounded-lg border-2 p-1 transition-all',
-                    currentTheme === 'arctic'
-                      ? 'border-[#0ea5e9] ring-2 ring-[#0ea5e9]/20'
-                      : 'border-border-light hover:border-[#0ea5e9]/40'
-                  )}
-                >
-                  <div className="rounded-md overflow-hidden bg-[#f0f9ff]">
-                    <div className="flex h-[100px]">
-                      <div className="w-10 bg-[#e0f2fe] border-r border-[#bae6fd] flex flex-col items-center pt-2 gap-1.5">
-                        <div className="w-5 h-5 rounded bg-[#0ea5e9]" />
-                        <div className="w-5 h-1.5 rounded bg-[#bae6fd]" />
-                        <div className="w-5 h-1.5 rounded bg-[#bae6fd]" />
-                        <div className="w-5 h-1.5 rounded bg-[#bae6fd]" />
-                      </div>
-                      <div className="flex-1 p-2">
-                        <div className="h-3 w-16 rounded bg-[#0c4a6e] mb-2" />
-                        <div className="space-y-1.5">
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#e0f2fe]" />
-                            <div className="h-2 w-8 rounded bg-[#00c875]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#e0f2fe]" />
-                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#e0f2fe]" />
-                            <div className="h-2 w-8 rounded bg-[#0ea5e9]" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-2">
-                    <Snowflake className="w-4 h-4 text-text-secondary" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-text-primary">
-                        {t('settings.theme.arctic')}
-                      </p>
-                      <p className="text-xs text-text-tertiary">{t('settings.theme.arcticDesc')}</p>
-                    </div>
-                    {currentTheme === 'arctic' && (
-                      <Check className="w-4 h-4 text-[#0ea5e9] ml-auto shrink-0" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Sunset Theme */}
-                <button
-                  onClick={() => {
-                    setTheme('sunset')
-                    setSettings(s => ({ ...s, theme: 'sunset' }))
-                  }}
-                  className={cn(
-                    'group relative rounded-lg border-2 p-1 transition-all',
-                    currentTheme === 'sunset'
-                      ? 'border-[#f59e0b] ring-2 ring-[#f59e0b]/20'
-                      : 'border-border-light hover:border-[#f59e0b]/40'
-                  )}
-                >
-                  <div className="rounded-md overflow-hidden bg-[#1c1210]">
-                    <div className="flex h-[100px]">
-                      <div className="w-10 bg-[#271a15] border-r border-[#3d2b20] flex flex-col items-center pt-2 gap-1.5">
-                        <div className="w-5 h-5 rounded bg-[#f59e0b]" />
-                        <div className="w-5 h-1.5 rounded bg-[#3d2b20]" />
-                        <div className="w-5 h-1.5 rounded bg-[#3d2b20]" />
-                        <div className="w-5 h-1.5 rounded bg-[#3d2b20]" />
-                      </div>
-                      <div className="flex-1 p-2">
-                        <div className="h-3 w-16 rounded bg-[#fef3c7] mb-2" />
-                        <div className="space-y-1.5">
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#271a15]" />
-                            <div className="h-2 w-8 rounded bg-[#00c875]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#271a15]" />
-                            <div className="h-2 w-8 rounded bg-[#fbbf24]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#271a15]" />
-                            <div className="h-2 w-8 rounded bg-[#f59e0b]" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-2">
-                    <Sunset className="w-4 h-4 text-text-secondary" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-text-primary">
-                        {t('settings.theme.sunset')}
-                      </p>
-                      <p className="text-xs text-text-tertiary">{t('settings.theme.sunsetDesc')}</p>
-                    </div>
-                    {currentTheme === 'sunset' && (
-                      <Check className="w-4 h-4 text-[#f59e0b] ml-auto shrink-0" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Coffee Theme */}
-                <button
-                  onClick={() => {
-                    setTheme('coffee')
-                    setSettings(s => ({ ...s, theme: 'coffee' }))
-                  }}
-                  className={cn(
-                    'group relative rounded-lg border-2 p-1 transition-all',
-                    currentTheme === 'coffee'
-                      ? 'border-[#d4a574] ring-2 ring-[#d4a574]/20'
-                      : 'border-border-light hover:border-[#d4a574]/40'
-                  )}
-                >
-                  <div className="rounded-md overflow-hidden bg-[#1a1614]">
-                    <div className="flex h-[100px]">
-                      <div className="w-10 bg-[#231e1b] border-r border-[#382f2a] flex flex-col items-center pt-2 gap-1.5">
-                        <div className="w-5 h-5 rounded bg-[#d4a574]" />
-                        <div className="w-5 h-1.5 rounded bg-[#382f2a]" />
-                        <div className="w-5 h-1.5 rounded bg-[#382f2a]" />
-                        <div className="w-5 h-1.5 rounded bg-[#382f2a]" />
-                      </div>
-                      <div className="flex-1 p-2">
-                        <div className="h-3 w-16 rounded bg-[#ede9e3] mb-2" />
-                        <div className="space-y-1.5">
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#231e1b]" />
-                            <div className="h-2 w-8 rounded bg-[#00c875]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#231e1b]" />
-                            <div className="h-2 w-8 rounded bg-[#ffca00]" />
-                          </div>
-                          <div className="flex gap-1.5">
-                            <div className="h-2 flex-1 rounded bg-[#231e1b]" />
-                            <div className="h-2 w-8 rounded bg-[#d4a574]" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 px-2 py-2">
-                    <Coffee className="w-4 h-4 text-text-secondary" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-text-primary">
-                        {t('settings.theme.coffee')}
-                      </p>
-                      <p className="text-xs text-text-tertiary">{t('settings.theme.coffeeDesc')}</p>
-                    </div>
-                    {currentTheme === 'coffee' && (
-                      <Check className="w-4 h-4 text-[#d4a574] ml-auto shrink-0" />
-                    )}
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <SaveButton onClick={handleSaveSettings} />
-          </div>
+          <AppearanceTab
+            currentTheme={currentTheme}
+            onThemeChange={theme => {
+              setTheme(theme)
+              setSettings(s => ({ ...s, theme }))
+            }}
+            onSave={handleSaveSettings}
+            isSaving={isSaving}
+            saveSuccess={saveSuccess}
+          />
         )}
 
-        {/* Security Tab */}
-        {activeTab === 'security' && (
-          <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">
-              {t('settings.security.title')}
-            </h3>
-
-            {/* Password Change */}
-            <div className="p-4 border border-border-default rounded-lg">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h4 className="font-medium text-text-primary">
-                    {t('settings.security.changePassword')}
-                  </h4>
-                  <p className="text-sm text-text-tertiary mt-1">
-                    {t('settings.security.changePasswordDesc')}
-                  </p>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={async () => {
-                    if (!user?.email) return
-                    const supabase = createClient()
-                    const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-                      redirectTo: `${window.location.origin}/auth/reset-password`,
-                    })
-                    if (error) {
-                      showToast(error.message || 'Failed to send reset email', 'error')
-                    } else {
-                      showToast(t('settings.security.passwordSent'), 'success')
-                    }
-                  }}
-                >
-                  {t('settings.security.changePassword')}
-                </Button>
-              </div>
-            </div>
-
-            {/* Active Sessions */}
-            <div className="p-4 border border-border-default rounded-lg">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h4 className="font-medium text-text-primary">
-                    {t('settings.security.sessions')}
-                  </h4>
-                  <p className="text-sm text-text-tertiary mt-1">
-                    {t('settings.security.sessionsDesc')}
-                  </p>
-                </div>
-                <Button
-                  variant="secondary"
-                  onClick={async () => {
-                    const supabase = createClient()
-                    await supabase.auth.signOut({ scope: 'global' })
-                    router.push('/auth/login')
-                  }}
-                >
-                  {t('settings.security.signOutAll')}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        {activeTab === 'security' && <SecurityTab userEmail={user.email || ''} />}
       </div>
     </div>
   )

@@ -8,31 +8,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
-import { PDPOnboardingManager } from '@/components/PDPOnboardingManager'
-import { LocationManager } from '@/features/companies/components/LocationManager'
 import { useToast } from '@/components/ui-monday/Toast'
-import {
-  Save,
-  ArrowLeft,
-  Edit2,
-  MapPin,
-  MapPinned,
-  Building2,
-  Phone,
-  Mail,
-  User,
-  FileText,
-  Calendar,
-  AlertTriangle,
-  Clock,
-  ChevronRight,
-  X,
-  Shield,
-  Navigation,
-} from 'lucide-react'
+import { ArrowLeft, MapPin, Building2, Shield, AlertTriangle, ChevronRight } from 'lucide-react'
 import { companiesService } from '@/services/companies.service'
 import type { CompanyLocation, LocationFormData, CompanyLocationInput } from '@/types/company'
 import type { LocationCheckin } from '@/types/checkin'
+
+import { CompanyInfoCard } from './components/CompanyInfoCard'
+import { LocationsCard } from './components/LocationsCard'
+import { ServicesCard } from './components/ServicesCard'
+import { CheckinsCard } from './components/CheckinsCard'
 
 interface Company {
   id: string
@@ -66,26 +51,25 @@ interface CompanyService {
   } | null
 }
 
-const priorityConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  high: { label: 'მაღალი', bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
-  medium: { label: 'საშუალო', bg: 'bg-amber-50', text: 'text-amber-700', dot: 'bg-amber-500' },
-  low: { label: 'დაბალი', bg: 'bg-blue-50', text: 'text-blue-700', dot: 'bg-blue-500' },
-}
-
 const statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
   active: {
-    label: 'აქტიური',
+    label: '\u10D0\u10E5\u10E2\u10D8\u10E3\u10E0\u10D8',
     bg: 'bg-emerald-50',
     text: 'text-emerald-700',
     dot: 'bg-emerald-500',
   },
   inactive: {
-    label: 'არააქტიური',
+    label: '\u10D0\u10E0\u10D0\u10D0\u10E5\u10E2\u10D8\u10E3\u10E0\u10D8',
     bg: 'bg-bg-tertiary',
     text: 'text-text-secondary',
     dot: 'bg-text-tertiary',
   },
-  suspended: { label: 'შეჩერებული', bg: 'bg-red-50', text: 'text-red-700', dot: 'bg-red-500' },
+  suspended: {
+    label: '\u10E8\u10D4\u10E9\u10D4\u10E0\u10D4\u10D1\u10E3\u10DA\u10D8',
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    dot: 'bg-red-500',
+  },
 }
 
 export default function CompanyDetailsPage() {
@@ -102,8 +86,6 @@ export default function CompanyDetailsPage() {
   const [editingLocations, setEditingLocations] = useState(false)
   const [editingServices, setEditingServices] = useState(false)
   const [saving, setSaving] = useState(false)
-
-  // For location editing
   const [editableLocations, setEditableLocations] = useState<LocationFormData[]>([])
 
   const fetchCompanyData = useCallback(async () => {
@@ -136,18 +118,20 @@ export default function CompanyDetailsPage() {
       setLocations(locationsData)
       setServices(servicesResult.data || [])
 
-      // Load recent check-ins for this company
       try {
         const checkinRes = await fetch(`/api/checkins?company_id=${companyId}&limit=10`)
         if (checkinRes.ok) {
           setCheckins(await checkinRes.json())
         }
       } catch {
-        // silent — check-ins are not critical
+        // silent -- check-ins are not critical
       }
     } catch (error) {
       console.error('Error fetching company:', error)
-      showToast('შეცდომა მონაცემების ჩატვირთვისას', 'error')
+      showToast(
+        '\u10E8\u10D4\u10EA\u10D3\u10DD\u10DB\u10D0 \u10DB\u10DD\u10DC\u10D0\u10EA\u10D4\u10DB\u10D4\u10D1\u10D8\u10E1 \u10E9\u10D0\u10E2\u10D5\u10D8\u10E0\u10D7\u10D5\u10D8\u10E1\u10D0\u10E1',
+        'error'
+      )
     } finally {
       setLoading(false)
     }
@@ -175,10 +159,12 @@ export default function CompanyDetailsPage() {
     setEditingLocations(true)
   }
 
-  // Smart location save: update existing, create new, delete removed
   async function handleSaveLocations() {
     if (editableLocations.length === 0) {
-      showToast('გთხოვთ დაამატოთ მინიმუმ ერთი ლოკაცია', 'warning')
+      showToast(
+        '\u10D2\u10D7\u10EE\u10DD\u10D5\u10D7 \u10D3\u10D0\u10D0\u10DB\u10D0\u10E2\u10DD\u10D7 \u10DB\u10D8\u10DC\u10D8\u10DB\u10E3\u10DB \u10D4\u10E0\u10D7\u10D8 \u10DA\u10DD\u10D9\u10D0\u10EA\u10D8\u10D0',
+        'warning'
+      )
       return
     }
 
@@ -187,13 +173,11 @@ export default function CompanyDetailsPage() {
       const existingIds = new Set(locations.map(l => l.id))
       const editedIds = new Set(editableLocations.filter(l => l.id).map(l => l.id!))
 
-      // Delete removed locations
       const toDelete = locations.filter(l => !editedIds.has(l.id))
       for (const loc of toDelete) {
         await companiesService.locations.delete(loc.id)
       }
 
-      // Update existing locations
       for (const loc of editableLocations) {
         if (loc.id && existingIds.has(loc.id)) {
           await companiesService.locations.update(loc.id, {
@@ -210,7 +194,6 @@ export default function CompanyDetailsPage() {
         }
       }
 
-      // Create new locations
       const newLocations = editableLocations.filter(l => !l.id)
       if (newLocations.length > 0) {
         const locationsForApi: CompanyLocationInput[] = newLocations.map(loc => ({
@@ -229,23 +212,16 @@ export default function CompanyDetailsPage() {
 
       await fetchCompanyData()
       setEditingLocations(false)
-      showToast('ლოკაციები წარმატებით განახლდა', 'success')
+      showToast(
+        '\u10DA\u10DD\u10D9\u10D0\u10EA\u10D8\u10D4\u10D1\u10D8 \u10EC\u10D0\u10E0\u10DB\u10D0\u10E2\u10D4\u10D1\u10D8\u10D7 \u10D2\u10D0\u10DC\u10D0\u10EE\u10DA\u10D3\u10D0',
+        'success'
+      )
     } catch (error: any) {
       console.error('Error saving locations:', error)
-      showToast('შეცდომა: ' + error.message, 'error')
+      showToast('\u10E8\u10D4\u10EA\u10D3\u10DD\u10DB\u10D0: ' + error.message, 'error')
     } finally {
       setSaving(false)
     }
-  }
-
-  function isOverdue(nextDate: string | null): boolean {
-    if (!nextDate) return false
-    return new Date(nextDate) < new Date()
-  }
-
-  function daysUntil(date: string): number {
-    const diff = new Date(date).getTime() - Date.now()
-    return Math.ceil(diff / (1000 * 60 * 60 * 24))
   }
 
   // Loading skeleton
@@ -275,14 +251,24 @@ export default function CompanyDetailsPage() {
     return (
       <div className="max-w-5xl mx-auto px-6 py-16 text-center">
         <Building2 className="w-16 h-16 text-text-disabled mx-auto mb-4" />
-        <h1 className="text-xl font-semibold text-text-primary mb-2">კომპანია არ მოიძებნა</h1>
-        <p className="text-text-tertiary mb-6">მოთხოვნილი კომპანია არ არსებობს ან წაშლილია</p>
+        <h1 className="text-xl font-semibold text-text-primary mb-2">
+          {
+            '\u10D9\u10DD\u10DB\u10DE\u10D0\u10DC\u10D8\u10D0 \u10D0\u10E0 \u10DB\u10DD\u10D8\u10EB\u10D4\u10D1\u10DC\u10D0'
+          }
+        </h1>
+        <p className="text-text-tertiary mb-6">
+          {
+            '\u10DB\u10DD\u10D7\u10EE\u10DD\u10D5\u10DC\u10D8\u10DA\u10D8 \u10D9\u10DD\u10DB\u10DE\u10D0\u10DC\u10D8\u10D0 \u10D0\u10E0 \u10D0\u10E0\u10E1\u10D4\u10D1\u10DD\u10D1\u10E1 \u10D0\u10DC \u10EC\u10D0\u10E8\u10DA\u10D8\u10DA\u10D8\u10D0'
+          }
+        </p>
         <button
           onClick={() => router.push('/companies')}
           className="inline-flex items-center gap-2 px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          კომპანიებზე დაბრუნება
+          {
+            '\u10D9\u10DD\u10DB\u10DE\u10D0\u10DC\u10D8\u10D4\u10D1\u10D6\u10D4 \u10D3\u10D0\u10D1\u10E0\u10E3\u10DC\u10D4\u10D1\u10D0'
+          }
         </button>
       </div>
     )
@@ -290,8 +276,9 @@ export default function CompanyDetailsPage() {
 
   const primaryLocation = locations.find(loc => loc.is_primary)
   const status = statusConfig[company.status ?? 'inactive'] || statusConfig.inactive
-  const priority = priorityConfig[company.priority ?? 'low'] || priorityConfig.low
-  const overdueServices = services.filter(s => isOverdue(s.next_inspection_date))
+  const overdueServices = services.filter(
+    s => s.next_inspection_date && new Date(s.next_inspection_date) < new Date()
+  )
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-8">
@@ -301,7 +288,7 @@ export default function CompanyDetailsPage() {
           onClick={() => router.push('/companies')}
           className="hover:text-text-primary transition-colors"
         >
-          კომპანიები
+          {'\u10D9\u10DD\u10DB\u10DE\u10D0\u10DC\u10D8\u10D4\u10D1\u10D8'}
         </button>
         <ChevronRight className="w-3.5 h-3.5" />
         <span className="text-text-primary font-medium truncate max-w-[200px]">{company.name}</span>
@@ -348,7 +335,9 @@ export default function CompanyDetailsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-text-primary">{locations.length}</p>
-              <p className="text-xs text-text-tertiary">ლოკაცია</p>
+              <p className="text-xs text-text-tertiary">
+                {'\u10DA\u10DD\u10D9\u10D0\u10EA\u10D8\u10D0'}
+              </p>
             </div>
           </div>
         </div>
@@ -359,7 +348,9 @@ export default function CompanyDetailsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-text-primary">{services.length}</p>
-              <p className="text-xs text-text-tertiary">სერვისი</p>
+              <p className="text-xs text-text-tertiary">
+                {'\u10E1\u10D4\u10E0\u10D5\u10D8\u10E1\u10D8'}
+              </p>
             </div>
           </div>
         </div>
@@ -383,455 +374,52 @@ export default function CompanyDetailsPage() {
               <p
                 className={`text-xs ${overdueServices.length > 0 ? 'text-red-600' : 'text-text-tertiary'}`}
               >
-                ვადაგადაცილებული
+                {
+                  '\u10D5\u10D0\u10D3\u10D0\u10D2\u10D0\u10D3\u10D0\u10EA\u10D8\u10DA\u10D4\u10D1\u10E3\u10DA\u10D8'
+                }
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Company Info Card */}
-      <div className="bg-bg-primary border border-border-light rounded-xl mb-6 overflow-hidden">
-        <div className="px-6 py-4 border-b border-border-light flex items-center gap-2">
-          <FileText className="w-4.5 h-4.5 text-text-tertiary" />
-          <h2 className="font-semibold text-text-primary">ძირითადი ინფორმაცია</h2>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-5">
-            <InfoField
-              icon={<Shield className="w-4 h-4" />}
-              label="ტიპი"
-              value={company.type || '—'}
-            />
-            <InfoField
-              icon={<AlertTriangle className="w-4 h-4" />}
-              label="პრიორიტეტი"
-              badge={
-                <span
-                  className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${priority.bg} ${priority.text}`}
-                >
-                  <span className={`w-1.5 h-1.5 rounded-full ${priority.dot}`} />
-                  {priority.label}
-                </span>
-              }
-            />
-            {company.contact_name && (
-              <InfoField
-                icon={<User className="w-4 h-4" />}
-                label="საკონტაქტო პირი"
-                value={company.contact_name}
-              />
-            )}
-            {company.contact_phone && (
-              <InfoField
-                icon={<Phone className="w-4 h-4" />}
-                label="ტელეფონი"
-                value={company.contact_phone}
-                href={`tel:${company.contact_phone}`}
-              />
-            )}
-            {company.contact_email && (
-              <InfoField
-                icon={<Mail className="w-4 h-4" />}
-                label="ელ. ფოსტა"
-                value={company.contact_email}
-                href={`mailto:${company.contact_email}`}
-              />
-            )}
-            {company.created_at && (
-              <InfoField
-                icon={<Calendar className="w-4 h-4" />}
-                label="დამატების თარიღი"
-                value={new Date(company.created_at).toLocaleDateString('ka-GE')}
-              />
-            )}
-          </div>
-          {company.notes && (
-            <div className="mt-5 pt-5 border-t border-border-light">
-              <p className="text-xs font-medium text-text-tertiary uppercase tracking-wide mb-1.5">
-                შენიშვნები
-              </p>
-              <p className="text-sm text-text-secondary leading-relaxed">{company.notes}</p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Company Info */}
+      <CompanyInfoCard company={company} />
 
-      {/* Locations Card */}
-      <div className="bg-bg-primary border border-border-light rounded-xl mb-6 overflow-hidden">
-        <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-4.5 h-4.5 text-text-tertiary" />
-            <h2 className="font-semibold text-text-primary">ლოკაციები</h2>
-            <span className="text-xs text-text-tertiary font-medium bg-bg-tertiary px-1.5 py-0.5 rounded">
-              {locations.length}
-            </span>
-          </div>
-          {!editingLocations && (
-            <button
-              onClick={handleStartEditLocations}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-              რედაქტირება
-            </button>
-          )}
-        </div>
+      {/* Locations */}
+      <LocationsCard
+        locations={locations}
+        editingLocations={editingLocations}
+        editableLocations={editableLocations}
+        saving={saving}
+        onStartEdit={handleStartEditLocations}
+        onSave={handleSaveLocations}
+        onCancel={() => setEditingLocations(false)}
+        onEditableLocationsChange={setEditableLocations}
+      />
 
-        <div className="p-6">
-          {editingLocations ? (
-            <div>
-              <LocationManager locations={editableLocations} onChange={setEditableLocations} />
-              <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border-light">
-                <button
-                  onClick={handleSaveLocations}
-                  disabled={saving}
-                  className="flex items-center gap-2 px-5 py-2 bg-monday-primary text-white text-sm font-medium rounded-lg hover:bg-monday-primary-hover disabled:opacity-50 transition-colors"
-                >
-                  <Save className="w-4 h-4" />
-                  {saving ? 'ინახება...' : 'შენახვა'}
-                </button>
-                <button
-                  onClick={() => setEditingLocations(false)}
-                  disabled={saving}
-                  className="flex items-center gap-2 px-5 py-2 text-sm text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                  გაუქმება
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {locations.length === 0 ? (
-                <div className="text-center py-10">
-                  <MapPin className="w-10 h-10 text-text-disabled mx-auto mb-3" />
-                  <p className="text-sm text-text-tertiary mb-4">ლოკაციები არ არის დამატებული</p>
-                  <button
-                    onClick={handleStartEditLocations}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
-                  >
-                    <MapPin className="w-4 h-4" />
-                    ლოკაციის დამატება
-                  </button>
-                </div>
-              ) : (
-                locations.map(location => (
-                  <div
-                    key={location.id}
-                    className={`rounded-lg border p-4 transition-colors ${
-                      location.is_primary
-                        ? 'border-amber-200 bg-amber-50/50'
-                        : 'border-border-light bg-bg-secondary/50 hover:bg-bg-secondary'
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                          location.is_primary ? 'bg-amber-100' : 'bg-bg-tertiary'
-                        }`}
-                      >
-                        <MapPin
-                          className={`w-4 h-4 ${location.is_primary ? 'text-amber-600' : 'text-text-tertiary'}`}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="font-medium text-text-primary text-sm">
-                            {location.name}
-                          </span>
-                          {location.is_primary && (
-                            <span className="text-[10px] font-semibold uppercase tracking-wider bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded">
-                              მთავარი
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-sm text-text-tertiary">{location.address}</p>
-                        {(location.contact_phone ||
-                          location.contact_email ||
-                          location.contact_name) && (
-                          <div className="flex items-center gap-4 mt-2 text-xs text-text-tertiary">
-                            {location.contact_name && (
-                              <span className="flex items-center gap-1">
-                                <User className="w-3 h-3" />
-                                {location.contact_name}
-                              </span>
-                            )}
-                            {location.contact_phone && (
-                              <a
-                                href={`tel:${location.contact_phone}`}
-                                className="flex items-center gap-1 hover:text-text-secondary"
-                              >
-                                <Phone className="w-3 h-3" />
-                                {location.contact_phone}
-                              </a>
-                            )}
-                            {location.contact_email && (
-                              <a
-                                href={`mailto:${location.contact_email}`}
-                                className="flex items-center gap-1 hover:text-text-secondary"
-                              >
-                                <Mail className="w-3 h-3" />
-                                {location.contact_email}
-                              </a>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Services */}
+      <ServicesCard
+        services={services}
+        companyId={companyId}
+        editingServices={editingServices}
+        onStartEdit={() => setEditingServices(true)}
+        onFinish={() => {
+          setEditingServices(false)
+          fetchCompanyData()
+          showToast(
+            '\u10E1\u10D4\u10E0\u10D5\u10D8\u10E1\u10D4\u10D1\u10D8 \u10D2\u10D0\u10DC\u10D0\u10EE\u10DA\u10D3\u10D0',
+            'success'
+          )
+        }}
+        onCancel={() => {
+          setEditingServices(false)
+          fetchCompanyData()
+        }}
+      />
 
-      {/* Services Card */}
-      <div className="bg-bg-primary border border-border-light rounded-xl mb-6 overflow-hidden">
-        <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Shield className="w-4.5 h-4.5 text-text-tertiary" />
-            <h2 className="font-semibold text-text-primary">სერვისები</h2>
-            <span className="text-xs text-text-tertiary font-medium bg-bg-tertiary px-1.5 py-0.5 rounded">
-              {services.length}
-            </span>
-          </div>
-          {!editingServices && (
-            <button
-              onClick={() => setEditingServices(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
-            >
-              <Edit2 className="w-3.5 h-3.5" />
-              რედაქტირება
-            </button>
-          )}
-        </div>
-
-        <div className="p-6">
-          {editingServices ? (
-            <div>
-              <PDPOnboardingManager
-                companyId={companyId}
-                onPhaseChange={() => {
-                  // Phase change handled by PDPOnboardingManager
-                }}
-              />
-              <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border-light">
-                <button
-                  onClick={() => {
-                    setEditingServices(false)
-                    fetchCompanyData()
-                    showToast('სერვისები განახლდა', 'success')
-                  }}
-                  className="flex items-center gap-2 px-5 py-2 bg-monday-primary text-white text-sm font-medium rounded-lg hover:bg-monday-primary-hover transition-colors"
-                >
-                  <Save className="w-4 h-4" />
-                  დასრულება
-                </button>
-                <button
-                  onClick={() => {
-                    setEditingServices(false)
-                    fetchCompanyData()
-                  }}
-                  className="flex items-center gap-2 px-5 py-2 text-sm text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                  გაუქმება
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div>
-              {services.length === 0 ? (
-                <div className="text-center py-10">
-                  <Shield className="w-10 h-10 text-text-disabled mx-auto mb-3" />
-                  <p className="text-sm text-text-tertiary mb-4">სერვისები არ არის დამატებული</p>
-                  <button
-                    onClick={() => setEditingServices(true)}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
-                  >
-                    <Shield className="w-4 h-4" />
-                    სერვისის დამატება
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {services.map(service => {
-                    const overdue = isOverdue(service.next_inspection_date)
-                    const days = service.next_inspection_date
-                      ? daysUntil(service.next_inspection_date)
-                      : null
-                    const sPriority =
-                      priorityConfig[service.priority ?? 'low'] || priorityConfig.low
-
-                    return (
-                      <div
-                        key={service.id}
-                        className={`rounded-lg border p-4 transition-colors ${
-                          overdue
-                            ? 'border-red-200 bg-red-50/50'
-                            : 'border-border-light bg-bg-secondary/50 hover:bg-bg-secondary'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2.5 mb-2">
-                              <h3 className="font-semibold text-text-primary text-sm">
-                                {service.service_types?.name_ka || service.service_types?.name}
-                              </h3>
-                              <span
-                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${sPriority.bg} ${sPriority.text}`}
-                              >
-                                <span className={`w-1 h-1 rounded-full ${sPriority.dot}`} />
-                                {sPriority.label}
-                              </span>
-                            </div>
-
-                            <div className="flex items-center gap-5 text-xs text-text-tertiary">
-                              <span className="flex items-center gap-1.5">
-                                <User className="w-3.5 h-3.5" />
-                                {service.inspectors?.full_name || (
-                                  <span className="text-amber-600">არ არის მინიჭებული</span>
-                                )}
-                              </span>
-                              <span className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5" />
-                                ყოველ {service.inspection_frequency_days} დღეში
-                              </span>
-                            </div>
-                          </div>
-
-                          {/* Next inspection date */}
-                          <div className="text-right flex-shrink-0">
-                            {service.next_inspection_date ? (
-                              <div>
-                                <p
-                                  className={`text-sm font-medium ${overdue ? 'text-red-600' : 'text-text-primary'}`}
-                                >
-                                  {new Date(service.next_inspection_date).toLocaleDateString(
-                                    'ka-GE'
-                                  )}
-                                </p>
-                                <p
-                                  className={`text-xs mt-0.5 ${overdue ? 'text-red-500' : 'text-text-tertiary'}`}
-                                >
-                                  {overdue
-                                    ? `${Math.abs(days!)} დღით ვადაგადაცილებული`
-                                    : days === 0
-                                      ? 'დღეს'
-                                      : `${days} დღეში`}
-                                </p>
-                              </div>
-                            ) : (
-                              <p className="text-xs text-text-tertiary">არ არის დაგეგმილი</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Recent Check-ins Card */}
-      {checkins.length > 0 && (
-        <div className="bg-bg-primary border border-border-light rounded-xl overflow-hidden">
-          <div className="px-6 py-4 border-b border-border-light flex items-center gap-2">
-            <MapPinned className="w-4.5 h-4.5 text-text-tertiary" />
-            <h2 className="font-semibold text-text-primary">ბოლო ჩეკ-ინები</h2>
-            <span className="text-xs text-text-tertiary font-medium bg-bg-tertiary px-1.5 py-0.5 rounded">
-              {checkins.length}
-            </span>
-          </div>
-          <div className="divide-y divide-border-light">
-            {checkins.map(checkin => (
-              <div key={checkin.id} className="px-6 py-3 flex items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                    checkin.location_updated
-                      ? 'bg-green-100 text-green-600'
-                      : 'bg-bg-tertiary text-text-tertiary'
-                  }`}
-                >
-                  <MapPinned className="w-4 h-4" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-text-primary">
-                      {checkin.inspector_name}
-                    </span>
-                    {checkin.location_name && (
-                      <span className="text-xs text-text-tertiary">— {checkin.location_name}</span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-text-tertiary mt-0.5">
-                    <span>
-                      {new Date(checkin.created_at).toLocaleDateString('ka-GE', {
-                        day: 'numeric',
-                        month: 'short',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                    {checkin.distance_from_location != null && (
-                      <span
-                        className={`font-medium ${
-                          checkin.distance_from_location < 100
-                            ? 'text-green-600'
-                            : checkin.distance_from_location < 500
-                              ? 'text-amber-600'
-                              : 'text-red-600'
-                        }`}
-                      >
-                        {checkin.distance_from_location}მ
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {checkin.location_updated && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700 rounded-full flex-shrink-0">
-                    <Navigation className="w-3 h-3" />
-                    GPS განახლდა
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// Reusable info field component
-interface InfoFieldProps {
-  icon: React.ReactNode
-  label: string
-  value?: string
-  badge?: React.ReactNode
-  href?: string
-}
-
-function InfoField({ icon, label, value, badge, href }: InfoFieldProps) {
-  return (
-    <div>
-      <p className="text-xs font-medium text-text-tertiary uppercase tracking-wide mb-1 flex items-center gap-1.5">
-        {icon}
-        {label}
-      </p>
-      {badge ||
-        (href ? (
-          <a href={href} className="text-sm font-medium text-monday-primary hover:underline">
-            {value}
-          </a>
-        ) : (
-          <p className="text-sm font-medium text-text-primary">{value}</p>
-        ))}
+      {/* Recent Check-ins */}
+      <CheckinsCard checkins={checkins} />
     </div>
   )
 }

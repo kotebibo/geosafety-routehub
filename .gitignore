@@ -67,6 +67,11 @@ nul
 
 # Local utility scripts
 apps/web/scripts/
+scripts/_*
+scripts/*.js
+
+# Local docs / research
+docs/
 
 # Data exports (Monday.com, geocoding, etc.)
 apps/web/*.json
