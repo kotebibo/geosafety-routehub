@@ -2,7 +2,8 @@
  * Health Check API - Admin only
  * GET /api/health
  *
- * Runs parallel DB checks against Supabase and returns timed results.
+ * Runs parallel checks against Supabase and returns timed results.
+ * Includes: DB ping, table counts, auth latency, RLS performance, storage.
  */
 
 export const dynamic = 'force-dynamic'
@@ -10,6 +11,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/middleware/auth'
 import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
 
 interface HealthCheck {
   name: string
@@ -40,6 +42,7 @@ export async function GET() {
     await requireAdmin()
     const supabase = createServerClient() as any
 
+    // Core DB checks
     const checks = await Promise.all([
       runCheck('db_ping', async () => {
         const { data, error } = await supabase.from('users').select('id').limit(1)
@@ -91,17 +94,71 @@ export async function GET() {
       runCheck('recent_checkins', async () => {
         const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
         const { count, error } = await supabase
-          .from('checkins')
+          .from('location_checkins')
           .select('*', { count: 'exact', head: true })
           .gte('created_at', oneDayAgo)
         if (error) throw error
         return count
       }),
+
+      // Auth latency — how long does Supabase auth take
+      runCheck('auth_latency', async () => {
+        const start = performance.now()
+        const { data, error } = await supabase.auth.getUser()
+        if (error) throw error
+        return `${Math.round(performance.now() - start)}ms`
+      }),
+
+      // RLS performance — query board_items through RLS (not service role)
+      runCheck('rls_query', async () => {
+        const { data, error } = await supabase.from('board_items').select('id').limit(5)
+        if (error) throw error
+        return `${data?.length || 0} rows`
+      }),
+
+      // Storage check
+      runCheck('storage', async () => {
+        const { data, error } = await supabase.storage.listBuckets()
+        if (error) throw error
+        return `${data?.length || 0} buckets`
+      }),
     ])
 
-    const failed = checks.filter(c => c.status === 'error').length
-    const slow = checks.filter(c => c.status === 'slow').length
-    const ok = checks.filter(c => c.status === 'ok').length
+    // Team2/Team3 instance pings (if configured)
+    const instanceChecks: Promise<HealthCheck>[] = []
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL_TEAM2 && process.env.SUPABASE_SERVICE_ROLE_KEY_TEAM2) {
+      instanceChecks.push(
+        runCheck('team2_ping', async () => {
+          const client = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL_TEAM2!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY_TEAM2!
+          )
+          const { error } = await client.from('users').select('id').limit(1)
+          if (error) throw error
+          return 'pong'
+        })
+      )
+    }
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL_TEAM3 && process.env.SUPABASE_SERVICE_ROLE_KEY_TEAM3) {
+      instanceChecks.push(
+        runCheck('team3_ping', async () => {
+          const client = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL_TEAM3!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY_TEAM3!
+          )
+          const { error } = await client.from('users').select('id').limit(1)
+          if (error) throw error
+          return 'pong'
+        })
+      )
+    }
+
+    const extraChecks = await Promise.all(instanceChecks)
+    const allChecks = [...checks, ...extraChecks]
+
+    const failed = allChecks.filter(c => c.status === 'error').length
+    const slow = allChecks.filter(c => c.status === 'slow').length
+    const ok = allChecks.filter(c => c.status === 'ok').length
 
     let status: OverallStatus = 'healthy'
     if (failed > 0) status = 'unhealthy'
@@ -110,9 +167,9 @@ export async function GET() {
     return NextResponse.json({
       status,
       timestamp: new Date().toISOString(),
-      checks,
+      checks: allChecks,
       summary: {
-        total: checks.length,
+        total: allChecks.length,
         ok,
         slow,
         failed,
