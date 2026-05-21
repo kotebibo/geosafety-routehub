@@ -12,6 +12,10 @@ import {
   Clock,
   Server,
   TrendingUp,
+  Shield,
+  Zap,
+  HardDrive,
+  Globe,
 } from 'lucide-react'
 import {
   LineChart,
@@ -58,6 +62,20 @@ const CHECK_LABELS: Record<string, string> = {
   active_inspectors: 'Inspectors',
   users_count: 'Users',
   recent_checkins: 'Checkins (24h)',
+  auth_latency: 'Auth Latency',
+  rls_query: 'RLS Query',
+  storage: 'Storage',
+  team2_ping: 'Team 2 DB',
+  team3_ping: 'Team 3 DB',
+}
+
+const CHECK_ICONS: Record<string, typeof Database> = {
+  db_ping: Zap,
+  auth_latency: Shield,
+  rls_query: Shield,
+  storage: HardDrive,
+  team2_ping: Globe,
+  team3_ping: Globe,
 }
 
 const STATUS_CONFIG = {
@@ -90,6 +108,31 @@ const BAR_COLORS = {
   error: '#ef4444',
 }
 
+// Group checks by category for better display
+function groupChecks(checks: HealthCheck[]) {
+  const groups: Record<string, HealthCheck[]> = {
+    performance: [],
+    data: [],
+    infrastructure: [],
+  }
+  for (const check of checks) {
+    if (['db_ping', 'auth_latency', 'rls_query'].includes(check.name)) {
+      groups.performance.push(check)
+    } else if (['team2_ping', 'team3_ping', 'storage'].includes(check.name)) {
+      groups.infrastructure.push(check)
+    } else {
+      groups.data.push(check)
+    }
+  }
+  return groups
+}
+
+const GROUP_LABELS: Record<string, { label: string; icon: typeof Database }> = {
+  performance: { label: 'Performance', icon: Zap },
+  data: { label: 'Data', icon: Database },
+  infrastructure: { label: 'Infrastructure', icon: Server },
+}
+
 export default function HealthPage() {
   const { userRole } = useAuth()
   const [current, setCurrent] = useState<HealthResponse | null>(null)
@@ -119,8 +162,7 @@ export default function HealthPage() {
           max_ms: Math.max(...data.checks.map(c => c.time_ms)),
           checks: data.checks,
         }
-        const next = [...prev, entry].slice(-30) // Keep last 30 checks
-        return next
+        return [...prev, entry].slice(-30)
       })
     } catch {
       // Silently fail — user sees stale data
@@ -152,8 +194,9 @@ export default function HealthPage() {
 
   const statusConfig = current ? STATUS_CONFIG[current.status] : null
   const StatusIcon = statusConfig?.icon || Activity
+  const groups = current ? groupChecks(current.checks) : null
 
-  // Per-check trend data (one line per check across history)
+  // Trend data
   const trendData = history.map(h => {
     const point: Record<string, any> = { label: h.label }
     for (const check of h.checks) {
@@ -162,9 +205,21 @@ export default function HealthPage() {
     return point
   })
 
-  // Current check names for chart lines
   const checkNames = current?.checks.map(c => c.name) || []
-  const lineColors = ['#6366f1', '#06b6d4', '#f59e0b', '#ef4444', '#22c55e', '#8b5cf6', '#ec4899']
+  const lineColors = [
+    '#6366f1',
+    '#06b6d4',
+    '#f59e0b',
+    '#ef4444',
+    '#22c55e',
+    '#8b5cf6',
+    '#ec4899',
+    '#14b8a6',
+    '#f97316',
+    '#a855f7',
+    '#64748b',
+    '#0ea5e9',
+  ]
 
   return (
     <div className="min-h-screen bg-bg-primary p-6">
@@ -228,20 +283,90 @@ export default function HealthPage() {
                   : 0}
                 <span className="text-sm text-text-secondary ml-1">ms avg</span>
               </p>
+              <p className="text-xs text-text-secondary">
+                max: {Math.max(...current.checks.map(c => c.time_ms))}ms
+              </p>
             </div>
           </div>
         )}
 
-        {/* Individual Checks — Bar Chart + Cards */}
+        {/* Grouped Check Cards */}
+        {groups && (
+          <div className="space-y-4">
+            {Object.entries(groups).map(([groupKey, groupChecks]) => {
+              if (groupChecks.length === 0) return null
+              const groupInfo = GROUP_LABELS[groupKey]
+              const GroupIcon = groupInfo.icon
+              return (
+                <div key={groupKey}>
+                  <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <GroupIcon className="w-3.5 h-3.5" />
+                    {groupInfo.label}
+                  </h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                    {groupChecks.map(check => {
+                      const isOk = check.status === 'ok'
+                      const isSlow = check.status === 'slow'
+                      const CheckIcon = CHECK_ICONS[check.name] || Database
+                      return (
+                        <div
+                          key={check.name}
+                          className={`p-4 rounded-xl border ${
+                            isOk
+                              ? 'bg-bg-secondary border-border-light'
+                              : isSlow
+                                ? 'bg-yellow-500/5 border-yellow-500/20'
+                                : 'bg-red-500/5 border-red-500/20'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium text-text-secondary">
+                              {CHECK_LABELS[check.name] || check.name}
+                            </span>
+                            {isOk ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+                            ) : isSlow ? (
+                              <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />
+                            ) : (
+                              <XCircle className="w-3.5 h-3.5 text-red-400" />
+                            )}
+                          </div>
+                          <p className="text-xl font-mono font-bold text-text-primary">
+                            {check.time_ms}
+                            <span className="text-xs text-text-secondary ml-1">ms</span>
+                          </p>
+                          {check.result !== undefined && check.result !== 'pong' && (
+                            <p className="text-xs text-text-secondary mt-1">
+                              {typeof check.result === 'number'
+                                ? check.result.toLocaleString() + ' rows'
+                                : String(check.result)}
+                            </p>
+                          )}
+                          {check.error && (
+                            <p className="text-xs text-red-400 mt-1 truncate" title={check.error}>
+                              {check.error}
+                            </p>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Charts Row */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bar Chart */}
-          <div className="bg-bg-secondary border border-border-light rounded-xl p-5">
-            <h2 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-text-secondary" />
-              Query Response Times
-            </h2>
-            {current && (
-              <ResponsiveContainer width="100%" height={280}>
+          {current && (
+            <div className="bg-bg-secondary border border-border-light rounded-xl p-5">
+              <h2 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-text-secondary" />
+                Response Times
+              </h2>
+              <ResponsiveContainer width="100%" height={Math.max(280, current.checks.length * 32)}>
                 <BarChart
                   data={current.checks.map(c => ({
                     name: CHECK_LABELS[c.name] || c.name,
@@ -279,66 +404,64 @@ export default function HealthPage() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Check Cards */}
-          <div className="grid grid-cols-2 gap-3">
-            {current?.checks.map(check => {
-              const isOk = check.status === 'ok'
-              const isSlow = check.status === 'slow'
-              return (
-                <div
-                  key={check.name}
-                  className={`p-4 rounded-xl border ${
-                    isOk
-                      ? 'bg-bg-secondary border-border-light'
-                      : isSlow
-                        ? 'bg-yellow-500/5 border-yellow-500/20'
-                        : 'bg-red-500/5 border-red-500/20'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-medium text-text-secondary uppercase tracking-wider">
-                      {CHECK_LABELS[check.name] || check.name}
-                    </span>
-                    {isOk ? (
-                      <CheckCircle2 className="w-4 h-4 text-green-400" />
-                    ) : isSlow ? (
-                      <AlertTriangle className="w-4 h-4 text-yellow-400" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-400" />
-                    )}
-                  </div>
-                  <p className="text-2xl font-mono font-bold text-text-primary">
-                    {check.time_ms}
-                    <span className="text-xs text-text-secondary ml-1">ms</span>
-                  </p>
-                  {check.result !== undefined && check.result !== 'connected' && (
-                    <p className="text-xs text-text-secondary mt-1">
-                      {typeof check.result === 'number'
-                        ? check.result.toLocaleString() + ' rows'
-                        : check.result}
-                    </p>
-                  )}
-                  {check.error && (
-                    <p className="text-xs text-red-400 mt-1 truncate">{check.error}</p>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+          {/* Avg/Max Trend */}
+          {history.length > 1 && (
+            <div className="bg-bg-secondary border border-border-light rounded-xl p-5">
+              <h2 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-text-secondary" />
+                Avg vs Max
+                <span className="text-xs font-normal text-text-secondary">
+                  ({history.length} checks)
+                </span>
+              </h2>
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart data={history} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
+                    interval="preserveStartEnd"
+                  />
+                  <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} unit="ms" />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--bg-secondary)',
+                      border: '1px solid var(--border-light)',
+                      borderRadius: '8px',
+                      color: 'var(--text-primary)',
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="avg_ms"
+                    stroke="#6366f1"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Average"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="max_ms"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    dot={false}
+                    name="Max"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
-        {/* Trend Chart */}
+        {/* Detailed Trend Chart */}
         {history.length > 1 && (
           <div className="bg-bg-secondary border border-border-light rounded-xl p-5">
             <h2 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-text-secondary" />
-              Response Time Trends
-              <span className="text-xs font-normal text-text-secondary">
-                ({history.length} checks)
-              </span>
+              Per-Check Trends
             </h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={trendData} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
@@ -384,51 +507,6 @@ export default function HealthPage() {
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {/* Avg/Max Trend */}
-        {history.length > 1 && (
-          <div className="bg-bg-secondary border border-border-light rounded-xl p-5">
-            <h2 className="text-sm font-semibold text-text-primary mb-4 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-text-secondary" />
-              Average vs Max Response Time
-            </h2>
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={history} margin={{ left: 10, right: 10, top: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fill: 'var(--text-secondary)', fontSize: 11 }}
-                  interval="preserveStartEnd"
-                />
-                <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} unit="ms" />
-                <Tooltip
-                  contentStyle={{
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-light)',
-                    borderRadius: '8px',
-                    color: 'var(--text-primary)',
-                  }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="avg_ms"
-                  stroke="#6366f1"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Average"
-                />
-                <Line
-                  type="monotone"
-                  dataKey="max_ms"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  dot={false}
-                  name="Max"
-                />
-              </LineChart>
-            </ResponsiveContainer>
           </div>
         )}
 
