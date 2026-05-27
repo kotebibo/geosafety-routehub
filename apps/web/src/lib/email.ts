@@ -1,44 +1,41 @@
-import nodemailer from 'nodemailer'
+import { Resend } from 'resend'
 
-function createTransporter() {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
-    return null
-  }
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_PORT === '465',
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASSWORD,
-    },
-  })
-}
+const FROM_EMAIL = process.env.EMAIL_FROM || 'RouteHub <noreply@routehub.app>'
 
 export interface EmailOptions {
   to: string | string[]
   subject: string
   text: string
   html?: string
+  attachments?: { filename: string; content: Buffer; contentType?: string }[]
 }
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
-  const transporter = createTransporter()
-
-  if (!transporter) {
-    console.warn('Email skipped — SMTP not configured')
+  if (!resend) {
+    console.warn('Email skipped — RESEND_API_KEY not configured')
     return false
   }
 
   try {
-    await transporter.sendMail({
-      from: process.env.SMTP_FROM || 'noreply@routehub.app',
-      to: Array.isArray(options.to) ? options.to.join(', ') : options.to,
+    const { error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: Array.isArray(options.to) ? options.to : [options.to],
       subject: options.subject,
       text: options.text,
       html: options.html,
+      attachments: options.attachments?.map(a => ({
+        filename: a.filename,
+        content: a.content,
+        contentType: a.contentType,
+      })),
     })
+
+    if (error) {
+      console.error('Resend error:', error)
+      return false
+    }
     return true
   } catch (error) {
     console.error('Email send failed:', error)
