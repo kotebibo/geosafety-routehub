@@ -56,7 +56,45 @@ export const boardMembersService = {
       .single()
 
     if (error) throw error
+
+    // Send email notification (fire-and-forget)
+    // The DB trigger already creates the in-app notification
+    this._sendBoardSharedEmail(boardId, userId, addedBy, role).catch(() => {})
+
     return data as unknown as BoardMember
+  },
+
+  /** @internal Send email when board is shared */
+  async _sendBoardSharedEmail(
+    boardId: string,
+    userId: string,
+    addedBy: string,
+    role: string
+  ): Promise<void> {
+    const db = getSupabase()
+
+    const [{ data: board }, { data: sharer }] = await Promise.all([
+      db.from('boards').select('name').eq('id', boardId).maybeSingle(),
+      db.from('users').select('full_name').eq('id', addedBy).maybeSingle(),
+    ])
+
+    const boardName = (board as any)?.name || 'a board'
+    const sharerName = (sharer as any)?.full_name || 'Someone'
+
+    fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/notifications/send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-secret': process.env.CRON_SECRET || '',
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        type: 'board_shared',
+        title: `${sharerName} გაგიზიარათ დაფა`,
+        message: `${sharerName} shared "${boardName}" with you`,
+        data: { board_id: boardId, board_name: boardName, shared_by: sharerName, role },
+      }),
+    }).catch(() => {})
   },
 
   async updateBoardMemberRole(

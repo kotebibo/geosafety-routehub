@@ -438,7 +438,8 @@ export const activityService = {
   },
 
   /**
-   * Send notifications to mentioned users in a comment
+   * Send notifications to mentioned users in a comment.
+   * Creates in-app notification AND sends email.
    * @internal
    */
   async _notifyMentionedUsers(comment: {
@@ -479,22 +480,45 @@ export const activityService = {
 
     if (!roles || roles.length === 0) return
 
-    // Create a notification for each mentioned user
+    const notificationData = {
+      board_id: boardId,
+      item_id: comment.item_id,
+      mentioned_by: commenterName,
+    }
+    const title = `${commenterName} მოგნიშნათ კომენტარში`
+    const message = comment.content.substring(0, 200)
+
+    // Create notification + send email for each mentioned user
     for (const role of roles) {
       // Don't notify the commenter themselves
       if ((role as any).inspector_id === comment.user_id) continue
 
+      const userId = (role as any).user_id
+
+      // Create in-app notification
       await db.rpc('create_notification', {
-        p_user_id: (role as any).user_id,
+        p_user_id: userId,
         p_type: 'item_mention',
-        p_title: `${commenterName} მოგნიშნათ კომენტარში`,
-        p_message: comment.content.substring(0, 200),
-        p_data: {
-          board_id: boardId,
-          item_id: comment.item_id,
-          mentioned_by: commenterName,
-        },
+        p_title: title,
+        p_message: message,
+        p_data: notificationData,
       })
+
+      // Send email (fire-and-forget via internal API)
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/notifications/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-internal-secret': process.env.CRON_SECRET || '',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          type: 'item_mention',
+          title,
+          message,
+          data: notificationData,
+        }),
+      }).catch(() => {})
     }
   },
 
