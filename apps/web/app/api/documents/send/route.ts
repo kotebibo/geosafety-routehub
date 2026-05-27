@@ -81,16 +81,28 @@ export async function POST(request: NextRequest) {
 
     const text = [subject, '', message || '', '', 'დოკუმენტი თანდართულია ამ წერილზე.'].join('\n')
 
-    // Send email with attachment via Resend
-    if (!process.env.RESEND_API_KEY) {
+    // Send email with attachment using nodemailer directly (sendEmail doesn't support attachments)
+    const nodemailer = require('nodemailer')
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587'),
+      secure: process.env.SMTP_PORT === '465',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    })
+
+    if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
       return NextResponse.json(
-        { error: 'Email not configured (RESEND_API_KEY missing)' },
+        { error: 'Email not configured (SMTP settings missing)' },
         { status: 503 }
       )
     }
 
-    const sent = await sendEmail({
-      to,
+    await transporter.sendMail({
+      from: process.env.SMTP_FROM || 'noreply@routehub.app',
+      to: to.join(', '),
       subject,
       text,
       html,
@@ -102,10 +114,6 @@ export async function POST(request: NextRequest) {
         },
       ],
     })
-
-    if (!sent) {
-      return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
-    }
 
     // Update generated_documents record
     await supabase
