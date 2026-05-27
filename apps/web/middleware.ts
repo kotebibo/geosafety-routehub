@@ -2,7 +2,20 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { rateLimitMiddleware } from '@/middleware/rateLimit'
 
+// Paths that don't need auth session refresh
+const PUBLIC_PATHS = ['/auth/', '/api/cron/', '/api/health', '/manifest.json', '/sw.js']
+
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Skip auth refresh for public/static paths
+  if (PUBLIC_PATHS.some(p => pathname.startsWith(p))) {
+    const response = NextResponse.next({ request: { headers: request.headers } })
+    response.headers.set('X-Frame-Options', 'DENY')
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    return response
+  }
+
   // Apply rate limiting
   const rateLimitResponse = rateLimitMiddleware(request)
   if (rateLimitResponse) {
@@ -14,7 +27,15 @@ export async function middleware(request: NextRequest) {
     request: { headers: request.headers },
   })
 
-  // Refresh Supabase auth session on every request.
+  // Skip auth refresh if no auth cookie exists (user not logged in)
+  const hasAuthCookie = request.cookies.getAll().some(c => c.name.includes('routehub-auth'))
+  if (!hasAuthCookie) {
+    response.headers.set('X-Frame-Options', 'DENY')
+    response.headers.set('X-Content-Type-Options', 'nosniff')
+    return response
+  }
+
+  // Refresh Supabase auth session.
   // This keeps the JWT alive by exchanging the refresh token for a new
   // access token before it expires (default 1 hour).
   const supabase = createServerClient(
