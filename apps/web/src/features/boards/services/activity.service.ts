@@ -491,7 +491,7 @@ export const activityService = {
     // Create notification + send email for each mentioned user
     for (const role of roles) {
       // Don't notify the commenter themselves
-      if ((role as any).inspector_id === comment.user_id) continue
+      if ((role as any).user_id === comment.user_id) continue
 
       const userId = (role as any).user_id
 
