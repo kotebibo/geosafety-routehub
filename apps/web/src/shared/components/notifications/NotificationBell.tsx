@@ -13,22 +13,18 @@ import type { Notification, NotificationType } from '@/types/notification'
 
 const TYPE_ICONS: Record<NotificationType, string> = {
   board_shared: '📋',
-  assignment_changed: '👤',
-  route_updated: '🗺️',
   item_mention: '@',
   item_comment: '💬',
+  item_overdue: '⚠️',
   announcement_new: '📢',
-  contract_expiring: '⚠️',
 }
 
 const TYPE_COLORS: Record<NotificationType, string> = {
   board_shared: 'bg-blue-100 text-blue-700',
-  assignment_changed: 'bg-green-100 text-green-700',
-  route_updated: 'bg-purple-100 text-purple-700',
   item_mention: 'bg-amber-100 text-amber-700',
   item_comment: 'bg-bg-tertiary text-text-secondary',
+  item_overdue: 'bg-red-100 text-red-700',
   announcement_new: 'bg-indigo-100 text-indigo-700',
-  contract_expiring: 'bg-red-100 text-red-700',
 }
 
 interface NotificationBellProps {
@@ -111,24 +107,18 @@ export function NotificationBell({ className }: NotificationBellProps) {
           router.push(`/boards/${data.board_id}`)
         }
         break
-      case 'assignment_changed':
-        router.push('/admin/assignments')
-        break
-      case 'route_updated':
-        if (data.route_id) {
-          router.push(`/routes/${data.route_id}`)
-        } else {
-          router.push('/routes/manage')
-        }
-        break
       case 'item_mention':
       case 'item_comment':
         if (data.board_id && data.item_id) {
           router.push(`/boards/${data.board_id}?item=${data.item_id}&tab=comments`)
         }
         break
-      case 'contract_expiring':
-        router.push('/payments')
+      case 'item_overdue':
+        if (data.board_id && data.item_id) {
+          router.push(`/boards/${data.board_id}?item=${data.item_id}`)
+        } else if (data.board_id) {
+          router.push(`/boards/${data.board_id}`)
+        }
         break
       case 'announcement_new':
         router.push('/news')
