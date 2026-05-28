@@ -258,9 +258,13 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
 
   const pathname = usePathname()
 
-  // Auto-close mobile sidebar on navigation
+  // Auto-close mobile sidebar on navigation (but not on initial mount)
+  const prevPathRef = React.useRef(pathname)
   React.useEffect(() => {
-    onMobileClose?.()
+    if (prevPathRef.current !== pathname) {
+      prevPathRef.current = pathname
+      onMobileClose?.()
+    }
   }, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
   const router = useRouter()
   const queryClient = useQueryClient()
