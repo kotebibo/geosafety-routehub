@@ -2,26 +2,30 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { requireAuth } from '@/middleware/auth'
 import { sendEmail } from '@/lib/email'
 import { generateNotificationEmail } from '@/lib/email-templates'
 
 /**
  * POST /api/notifications/send-email
  *
- * Sends an email notification to a user. Called internally after
+ * Sends an email notification to a user. Called after
  * creating an in-app notification.
  *
  * Body: { user_id, type, title, message, data }
  *
- * Protected by internal secret — not meant for client-side calls.
+ * Accepts either: authenticated user session OR internal secret header.
  */
 
 export async function POST(request: NextRequest) {
-  // Verify internal secret
+  // Check internal secret first (for server-side calls like cron)
   const authHeader = request.headers.get('x-internal-secret')
   const secret = process.env.INTERNAL_API_SECRET || process.env.CRON_SECRET
-  if (!secret || authHeader !== secret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const hasInternalSecret = secret && authHeader === secret
+
+  // If no internal secret, verify user is authenticated
+  if (!hasInternalSecret) {
+    await requireAuth()
   }
 
   try {

@@ -500,8 +500,8 @@ export const activityService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-internal-secret': process.env.CRON_SECRET || '',
         },
+        credentials: 'include',
         body: JSON.stringify({
           user_id: userId,
           type: 'item_mention',
