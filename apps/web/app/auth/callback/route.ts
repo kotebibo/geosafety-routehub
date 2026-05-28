@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error exchanging code for session:', error)
-      return NextResponse.redirect(`${origin}/auth/login?error=oauth_error`)
+      return NextResponse.redirect(`${origin}/auth/login?error=auth_error`)
     }
 
     // If this is a password recovery, redirect to reset password page
