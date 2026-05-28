@@ -456,7 +456,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       </div>
 
       {/* Table Area */}
-      <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-6 py-4">
+      <div className="flex-1 min-h-0 overflow-auto px-2 md:px-6 py-4">
         {itemsError ? (
           <div className="flex flex-col items-center justify-center py-24 bg-bg-primary rounded-lg border border-border-light">
             <div className="flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-red-50">
