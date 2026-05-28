@@ -1,4 +1,5 @@
-import { History, FileCheck, Users, Columns, FileText } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { History, FileCheck, Users, Columns, FileText, MoreVertical } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/shared/components/ui'
 import { BoardPresenceIndicator } from './BoardPresence'
@@ -41,6 +42,30 @@ export function BoardPageHeader({
   onShowColumnConfig,
   onShowDocTemplates,
 }: BoardPageHeaderProps) {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMobileMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [mobileMenuOpen])
+
+  const menuItems = [
+    { icon: History, label: 'Activity', onClick: onShowActivityLog },
+    { icon: FileCheck, label: 'Save Template', onClick: onShowSaveAsTemplate },
+    { icon: Users, label: 'Access', onClick: onShowAccessModal },
+    ...(onShowDocTemplates
+      ? [{ icon: FileText, label: 'Doc Templates', onClick: onShowDocTemplates }]
+      : []),
+    { icon: Columns, label: 'Columns', onClick: onShowColumnConfig },
+  ]
+
   return (
     <div className="flex-shrink-0 bg-bg-primary border-b border-border-light">
       <div className="w-full mx-auto px-4 md:px-6 py-2">
@@ -60,29 +85,29 @@ export function BoardPageHeader({
             <h1 className="text-base font-semibold text-text-primary truncate">{board.name}</h1>
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+          {/* Desktop Actions */}
+          <div className="hidden md:flex items-center gap-3 flex-shrink-0">
             <BoardPresenceIndicator presence={presence} isConnected={isConnected} />
 
             <Button variant="secondary" size="sm" onClick={onShowActivityLog}>
               <History className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Activity</span>
+              Activity
             </Button>
 
             <Button variant="secondary" size="sm" onClick={onShowSaveAsTemplate}>
               <FileCheck className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Save Template</span>
+              Save Template
             </Button>
 
             <Button variant="secondary" size="sm" onClick={onShowAccessModal}>
               <Users className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Access</span>
+              Access
             </Button>
 
             {onShowDocTemplates && (
               <Button variant="secondary" size="sm" onClick={onShowDocTemplates}>
                 <FileText className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Doc Templates</span>
+                Doc Templates
               </Button>
             )}
 
@@ -90,6 +115,34 @@ export function BoardPageHeader({
               <Columns className="w-4 h-4 mr-2" />
               Columns
             </Button>
+          </div>
+
+          {/* Mobile Actions - overflow menu */}
+          <div className="flex md:hidden items-center gap-2 flex-shrink-0" ref={menuRef}>
+            <BoardPresenceIndicator presence={presence} isConnected={isConnected} />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-md hover:bg-bg-hover text-text-secondary"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+            {mobileMenuOpen && (
+              <div className="absolute right-4 top-12 w-48 bg-bg-primary rounded-lg shadow-lg border border-border-light z-50 py-1">
+                {menuItems.map(item => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      item.onClick()
+                      setMobileMenuOpen(false)
+                    }}
+                    className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary"
+                  >
+                    <item.icon className="w-4 h-4 text-text-secondary" />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
