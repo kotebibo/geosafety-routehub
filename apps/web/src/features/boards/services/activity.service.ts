@@ -472,13 +472,9 @@ export const activityService = {
       boardId = (item as any)?.board_id || null
     }
 
-    // Look up auth user_ids for mentioned inspector_ids
-    const { data: roles } = await db
-      .from('user_roles')
-      .select('user_id, inspector_id')
-      .in('inspector_id', comment.mentions)
-
-    if (!roles || roles.length === 0) return
+    // mentions array contains user_ids directly from the users table
+    const mentionedUserIds = comment.mentions.filter(id => id !== comment.user_id)
+    if (mentionedUserIds.length === 0) return
 
     const notificationData = {
       board_id: boardId,
@@ -489,12 +485,7 @@ export const activityService = {
     const message = comment.content.substring(0, 200)
 
     // Create notification + send email for each mentioned user
-    for (const role of roles) {
-      // Don't notify the commenter themselves
-      if ((role as any).user_id === comment.user_id) continue
-
-      const userId = (role as any).user_id
-
+    for (const userId of mentionedUserIds) {
       // Create in-app notification
       await db.rpc('create_notification', {
         p_user_id: userId,
