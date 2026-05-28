@@ -2,12 +2,10 @@
 
 export type NotificationType =
   | 'board_shared'
-  | 'assignment_changed'
-  | 'route_updated'
   | 'item_mention'
   | 'item_comment'
+  | 'item_overdue'
   | 'announcement_new'
-  | 'contract_expiring'
 
 export interface Notification {
   id: string
@@ -28,10 +26,6 @@ export interface NotificationData {
   item_name?: string
   company_id?: string
   company_name?: string
-  route_id?: string
-  route_name?: string
-  service_type_id?: string
-  service_name?: string
   shared_by?: string
   mentioned_by?: string
   comment_by?: string

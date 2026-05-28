@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
         notificationPromises.push(
           (supabase as any).rpc('create_notification', {
             p_user_id: userId,
-            p_type: 'contract_expiring',
+            p_type: 'item_overdue',
             p_title: title,
             p_message: message,
             p_data: {
