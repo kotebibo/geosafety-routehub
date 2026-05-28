@@ -81,14 +81,6 @@ export function generateNotificationEmail(notification: NotificationEmailData): 
       }
     }
 
-    case 'assignment_changed': {
-      return {
-        subject: title,
-        text: `${title}\n\n${message}\n\nნახე: ${APP_URL}`,
-        html: wrapHtml(title, p(message), APP_URL, 'RouteHub-ში ნახვა'),
-      }
-    }
-
     case 'announcement_new': {
       return {
         subject: `სიახლე: ${data.announcement_title || title}`,
@@ -97,18 +89,16 @@ export function generateNotificationEmail(notification: NotificationEmailData): 
       }
     }
 
-    case 'contract_expiring': {
+    case 'item_overdue': {
       const daysText =
         data.days_remaining === 0 ? 'ვადა ამოიწურა' : `ვადის გასვლამდე ${data.days_remaining} დღე`
+      const boardUrl = data.board_id
+        ? `${APP_URL}/boards/${data.board_id}${data.item_id ? `?item=${data.item_id}` : ''}`
+        : APP_URL
       return {
-        subject: `კონტრაქტი: ${data.contract_name || ''} — ${daysText}`,
-        text: `${title}\n\n${message}\n\nნახე: ${APP_URL}/payments`,
-        html: wrapHtml(
-          title,
-          p(message) + p(`<strong>${daysText}</strong>`),
-          `${APP_URL}/payments`,
-          'გადახდების ნახვა'
-        ),
+        subject: `${data.item_name || title} — ${daysText}`,
+        text: `${title}\n\n${message}\n\nნახე: ${boardUrl}`,
+        html: wrapHtml(title, p(message) + p(`<strong>${daysText}</strong>`), boardUrl, 'ნახვა'),
       }
     }
 
