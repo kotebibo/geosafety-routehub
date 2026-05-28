@@ -124,8 +124,11 @@ export function NotificationBell({ className }: NotificationBellProps) {
       case 'item_mention':
       case 'item_comment':
         if (data.board_id && data.item_id) {
-          router.push(`/boards/${data.board_id}?item=${data.item_id}`)
+          router.push(`/boards/${data.board_id}?item=${data.item_id}&tab=comments`)
         }
+        break
+      case 'contract_expiring':
+        router.push('/payments')
         break
       case 'announcement_new':
         router.push('/news')
