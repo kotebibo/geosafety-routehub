@@ -56,10 +56,21 @@ export function NotificationBell({ className }: NotificationBellProps) {
   const updatePosition = useCallback(() => {
     if (!buttonRef.current) return
     const rect = buttonRef.current.getBoundingClientRect()
-    setDropdownPos({
-      top: rect.bottom + 8,
-      left: rect.left,
-    })
+    const isMobile = window.innerWidth < 640
+    if (isMobile) {
+      setDropdownPos({
+        top: rect.bottom + 8,
+        left: 8,
+      })
+    } else {
+      // Ensure dropdown doesn't overflow right edge
+      const dropdownWidth = 384 // w-96
+      const maxLeft = window.innerWidth - dropdownWidth - 16
+      setDropdownPos({
+        top: rect.bottom + 8,
+        left: Math.min(rect.left, maxLeft),
+      })
+    }
   }, [])
 
   useEffect(() => {
@@ -146,7 +157,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
         createPortal(
           <div
             ref={dropdownRef}
-            className="fixed w-96 bg-bg-primary rounded-lg shadow-xl border border-border-light z-[9999] overflow-hidden"
+            className="fixed w-[calc(100vw-16px)] sm:w-96 bg-bg-primary rounded-lg shadow-xl border border-border-light z-[9999] overflow-hidden"
             style={{
               top: dropdownPos.top,
               left: dropdownPos.left,
