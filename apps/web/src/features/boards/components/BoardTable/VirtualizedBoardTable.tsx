@@ -317,16 +317,32 @@ export function VirtualizedBoardTable({
     return checkboxWidth + colorBarWidth + columnsWidth + addColumnWidth
   }, [visibleColumns, getColumnWidth, onSelectionChange])
 
-  // Sticky column offsets for horizontal scroll
+  // Detect mobile viewport (disable sticky columns on small screens)
+  const [isMobile, setIsMobile] = useState(false)
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
+  // Sticky column offsets for horizontal scroll (disabled on mobile)
   const stickyOffsets = useMemo(() => {
     const checkboxWidth = onSelectionChange ? 40 : 0
     const colorBarWidth = 6
     return {
-      checkbox: 0,
-      colorBar: checkboxWidth,
-      firstCol: checkboxWidth + colorBarWidth,
+      checkbox: isMobile ? undefined : 0,
+      colorBar: isMobile ? undefined : checkboxWidth,
+      firstCol: isMobile ? undefined : checkboxWidth + colorBarWidth,
     }
-  }, [onSelectionChange])
+  }, [onSelectionChange, isMobile])
+
+  // Helper: returns sticky style or empty object for mobile
+  const stickyStyle = useCallback(
+    (left: number | undefined, zIndex = 2): React.CSSProperties =>
+      left !== undefined ? { position: 'sticky', left, zIndex } : {},
+    []
+  )
 
   // Handle group collapse toggle
   const handleGroupCollapseToggle = useCallback(
@@ -797,7 +813,7 @@ export function VirtualizedBoardTable({
                   {onSelectionChange && (
                     <td
                       className="w-10 h-9 text-center align-middle bg-bg-primary"
-                      style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                      style={stickyStyle(stickyOffsets.checkbox)}
                     >
                       {(() => {
                         const groupItems = data.filter(item => {
@@ -832,9 +848,7 @@ export function VirtualizedBoardTable({
                     style={{
                       width: 6,
                       backgroundColor: group.color || '#579bfc',
-                      position: 'sticky',
-                      left: stickyOffsets.colorBar,
-                      zIndex: 2,
+                      ...stickyStyle(stickyOffsets.colorBar),
                     }}
                   />
                   {/* Group info - sticky first col */}
@@ -842,9 +856,7 @@ export function VirtualizedBoardTable({
                     className="h-9 px-3 align-middle bg-bg-primary"
                     style={{
                       width: getColumnWidth(visibleColumns[0]),
-                      position: 'sticky',
-                      left: stickyOffsets.firstCol,
-                      zIndex: 2,
+                      ...stickyStyle(stickyOffsets.firstCol),
                     }}
                   >
                     <div className="flex items-center gap-2 whitespace-nowrap">
@@ -995,7 +1007,7 @@ export function VirtualizedBoardTable({
                   {onSelectionChange && (
                     <th
                       className="bg-bg-secondary border border-border-medium p-0 w-10"
-                      style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                      style={stickyStyle(stickyOffsets.checkbox)}
                     />
                   )}
                   <th
@@ -1003,9 +1015,7 @@ export function VirtualizedBoardTable({
                     style={{
                       width: 6,
                       backgroundColor: colHeaderGroup.color || '#579bfc',
-                      position: 'sticky',
-                      left: stickyOffsets.colorBar,
-                      zIndex: 2,
+                      ...stickyStyle(stickyOffsets.colorBar),
                     }}
                   />
                   {visibleColumns.map((col, idx) => (
@@ -1016,9 +1026,7 @@ export function VirtualizedBoardTable({
                         width: getColumnWidth(col),
                         ...(idx === 0
                           ? {
-                              position: 'sticky' as const,
-                              left: stickyOffsets.firstCol,
-                              zIndex: 2,
+                              ...stickyStyle(stickyOffsets.firstCol),
                               backgroundColor: 'var(--bg-secondary)',
                             }
                           : {}),
@@ -1062,7 +1070,7 @@ export function VirtualizedBoardTable({
                   {onSelectionChange && (
                     <td
                       className="bg-bg-secondary border border-border-medium w-10 h-7"
-                      style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                      style={stickyStyle(stickyOffsets.checkbox)}
                     />
                   )}
                   <td
@@ -1071,9 +1079,7 @@ export function VirtualizedBoardTable({
                       width: 6,
                       backgroundColor: summaryGroup.color || '#579bfc',
                       opacity: 0.3,
-                      position: 'sticky',
-                      left: stickyOffsets.colorBar,
-                      zIndex: 2,
+                      ...stickyStyle(stickyOffsets.colorBar),
                     }}
                   />
                   {visibleColumns.map((col, colIndex) => (
@@ -1082,9 +1088,7 @@ export function VirtualizedBoardTable({
                       className="border border-border-medium bg-bg-secondary h-7 p-0"
                       style={{
                         width: getColumnWidth(col),
-                        ...(colIndex === 0
-                          ? { position: 'sticky' as const, left: stickyOffsets.firstCol, zIndex: 2 }
-                          : {}),
+                        ...(colIndex === 0 ? stickyStyle(stickyOffsets.firstCol) : {}),
                       }}
                     >
                       <SummaryCell column={col} items={groupItems} />
@@ -1115,7 +1119,7 @@ export function VirtualizedBoardTable({
                   {onSelectionChange && (
                     <td
                       className="bg-bg-primary border border-border-medium w-10 h-9"
-                      style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                      style={stickyStyle(stickyOffsets.checkbox)}
                     />
                   )}
                   <td
@@ -1124,18 +1128,14 @@ export function VirtualizedBoardTable({
                       width: 6,
                       backgroundColor: footerGroup.color || '#579bfc',
                       opacity: 0.3,
-                      position: 'sticky',
-                      left: stickyOffsets.colorBar,
-                      zIndex: 2,
+                      ...stickyStyle(stickyOffsets.colorBar),
                     }}
                   />
                   <td
                     className="bg-bg-primary border border-border-medium px-3 h-9 text-sm text-text-secondary"
                     style={{
                       width: getColumnWidth(visibleColumns[0]),
-                      position: 'sticky',
-                      left: stickyOffsets.firstCol,
-                      zIndex: 2,
+                      ...stickyStyle(stickyOffsets.firstCol),
                     }}
                   >
                     {onAddItem && (
@@ -1183,7 +1183,7 @@ export function VirtualizedBoardTable({
                   {onSelectionChange && (
                     <td
                       className="bg-bg-secondary border-b border-r border-border-medium w-10 h-8"
-                      style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                      style={stickyStyle(stickyOffsets.checkbox)}
                     />
                   )}
                   <td
@@ -1191,9 +1191,7 @@ export function VirtualizedBoardTable({
                     style={{
                       width: 6,
                       backgroundColor: 'var(--bg-secondary)',
-                      position: 'sticky',
-                      left: stickyOffsets.colorBar,
-                      zIndex: 2,
+                      ...stickyStyle(stickyOffsets.colorBar),
                     }}
                   >
                     <div
@@ -1205,9 +1203,7 @@ export function VirtualizedBoardTable({
                     className="bg-bg-secondary border-b border-r border-border-medium px-0 py-0 h-8"
                     style={{
                       width: getColumnWidth(visibleColumns[0]),
-                      position: 'sticky',
-                      left: stickyOffsets.firstCol,
-                      zIndex: 2,
+                      ...stickyStyle(stickyOffsets.firstCol),
                     }}
                   >
                     {onAddSubitem && (
@@ -1308,7 +1304,7 @@ export function VirtualizedBoardTable({
                 {onSelectionChange && (
                   <td
                     className="bg-bg-primary border border-border-medium w-10 h-9 text-center"
-                    style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                    style={stickyStyle(stickyOffsets.checkbox)}
                   >
                     <input
                       type="checkbox"
@@ -1334,9 +1330,7 @@ export function VirtualizedBoardTable({
                   style={{
                     width: 6,
                     backgroundColor: group?.color || '#579bfc',
-                    position: 'sticky',
-                    left: stickyOffsets.colorBar,
-                    zIndex: 2,
+                    ...stickyStyle(stickyOffsets.colorBar),
                   }}
                 />
                 {/* Data columns */}
@@ -1367,9 +1361,7 @@ export function VirtualizedBoardTable({
                       )}
                       style={{
                         width: getColumnWidth(col),
-                        ...(colIndex === 0
-                          ? { position: 'sticky' as const, left: stickyOffsets.firstCol, zIndex: 2 }
-                          : {}),
+                        ...(colIndex === 0 ? stickyStyle(stickyOffsets.firstCol) : {}),
                       }}
                       onClick={e => {
                         e.stopPropagation()
@@ -1536,7 +1528,7 @@ export function VirtualizedBoardTable({
                     {onSelectionChange && (
                       <th
                         className="bg-bg-secondary border border-border-medium p-0 w-10"
-                        style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 12 }}
+                        style={stickyStyle(stickyOffsets.checkbox, 12)}
                       >
                         <div className="flex items-center justify-center h-9">
                           <input
@@ -1560,9 +1552,7 @@ export function VirtualizedBoardTable({
                       style={{
                         width: 6,
                         backgroundColor: 'var(--border-medium)',
-                        position: 'sticky',
-                        left: stickyOffsets.colorBar,
-                        zIndex: 12,
+                        ...stickyStyle(stickyOffsets.colorBar, 12),
                       }}
                     />
                     <SortableContext
@@ -1591,13 +1581,7 @@ export function VirtualizedBoardTable({
                           menuRef={menuRef as React.RefObject<HTMLDivElement>}
                           sortConfig={sortConfig}
                           stickyStyle={
-                            idx === 0
-                              ? {
-                                  position: 'sticky',
-                                  left: stickyOffsets.firstCol,
-                                  zIndex: 12,
-                                }
-                              : undefined
+                            idx === 0 ? stickyStyle(stickyOffsets.firstCol, 12) : undefined
                           }
                         />
                       ))}
@@ -1645,7 +1629,7 @@ export function VirtualizedBoardTable({
                       {onSelectionChange && (
                         <td
                           className="w-10 h-9 bg-bg-primary"
-                          style={{ position: 'sticky', left: stickyOffsets.checkbox, zIndex: 2 }}
+                          style={stickyStyle(stickyOffsets.checkbox)}
                         />
                       )}
                       <td
@@ -1654,18 +1638,14 @@ export function VirtualizedBoardTable({
                         style={{
                           width: 6,
                           backgroundColor: '#579bfc',
-                          position: 'sticky',
-                          left: stickyOffsets.colorBar,
-                          zIndex: 2,
+                          ...stickyStyle(stickyOffsets.colorBar),
                         }}
                       />
                       <td
                         className="h-9 px-3 align-middle bg-bg-primary"
                         style={{
                           width: getColumnWidth(visibleColumns[0]),
-                          position: 'sticky',
-                          left: stickyOffsets.firstCol,
-                          zIndex: 2,
+                          ...stickyStyle(stickyOffsets.firstCol),
                         }}
                       >
                         <div className="flex items-center gap-2 whitespace-nowrap">
