@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
@@ -33,6 +33,7 @@ import {
   FileText,
   Undo2,
   Redo2,
+  MoreHorizontal,
 } from 'lucide-react'
 
 // Lazy-load heavy components that aren't needed on initial render
@@ -117,6 +118,19 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   // ─── UI state (page-local) ───
   const [selection, setSelection] = useState<Set<string>>(new Set())
   const [searchQuery, setSearchQuery] = useState('')
+  const [mobileToolbarOpen, setMobileToolbarOpen] = useState(false)
+  const toolbarMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!mobileToolbarOpen) return
+    const handleClick = (e: MouseEvent) => {
+      if (toolbarMenuRef.current && !toolbarMenuRef.current.contains(e.target as Node)) {
+        setMobileToolbarOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [mobileToolbarOpen])
 
   // ─── Data ───
   const data = useBoardPageData(params.id)
@@ -382,75 +396,151 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             )}
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* Undo/Redo */}
-            <div className="flex items-center gap-1">
-              <button
-                onClick={performUndo}
-                disabled={!canUndo}
-                className="p-1.5 rounded hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
-                title="Undo (Ctrl+Z)"
-              >
-                <Undo2 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={performRedo}
-                disabled={!canRedo}
-                className="p-1.5 rounded hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
-                title="Redo (Ctrl+Y)"
-              >
-                <Redo2 className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="w-px h-5 bg-border-light" />
-
-            <Button variant="secondary" size="sm" onClick={() => openModal('importModal')}>
-              <Upload className="w-4 h-4 mr-2" />
-              Import
-            </Button>
-
-            {/* Export Button */}
-            <div className="relative">
-              <Button variant="secondary" size="sm" onClick={() => toggleModal('exportMenu')}>
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-              {modals.exportMenu && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => closeModal('exportMenu')} />
-                  <div className="absolute right-0 top-full mt-1 w-44 bg-bg-primary rounded-lg shadow-lg border border-border-light z-50 py-1">
-                    <button
-                      onClick={() => handlers.handleExport('csv', filteredItems)}
-                      className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
-                    >
-                      <Download className="w-4 h-4 text-color-success" />
-                      Export to CSV
-                    </button>
-                    <button
-                      onClick={() => handlers.handleExport('excel', filteredItems)}
-                      className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
-                    >
-                      <Download className="w-4 h-4 text-monday-primary" />
-                      Export to Excel
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-
+          <div className="flex items-center gap-2 md:gap-3">
             {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary" />
               <input
                 type="text"
-                placeholder="Search items..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 py-1.5 text-sm border border-border-light rounded-md bg-bg-primary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent w-48"
+                className="pl-9 pr-3 py-1.5 text-sm border border-border-light rounded-md bg-bg-primary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent w-32 md:w-48"
               />
             </div>
-            <span className="text-sm text-text-secondary">{filteredItems?.length || 0} items</span>
+            <span className="hidden md:inline text-sm text-text-secondary">
+              {filteredItems?.length || 0} items
+            </span>
+
+            {/* Desktop: Undo/Redo, Import, Export */}
+            <div className="hidden md:flex items-center gap-3">
+              <div className="w-px h-5 bg-border-light" />
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={performUndo}
+                  disabled={!canUndo}
+                  className="p-1.5 rounded hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
+                  title="Undo (Ctrl+Z)"
+                >
+                  <Undo2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={performRedo}
+                  disabled={!canRedo}
+                  className="p-1.5 rounded hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
+                  title="Redo (Ctrl+Y)"
+                >
+                  <Redo2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="w-px h-5 bg-border-light" />
+
+              <Button variant="secondary" size="sm" onClick={() => openModal('importModal')}>
+                <Upload className="w-4 h-4 mr-2" />
+                Import
+              </Button>
+
+              {/* Export Button */}
+              <div className="relative">
+                <Button variant="secondary" size="sm" onClick={() => toggleModal('exportMenu')}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+                {modals.exportMenu && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => closeModal('exportMenu')} />
+                    <div className="absolute right-0 top-full mt-1 w-44 bg-bg-primary rounded-lg shadow-lg border border-border-light z-50 py-1">
+                      <button
+                        onClick={() => handlers.handleExport('csv', filteredItems)}
+                        className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4 text-color-success" />
+                        Export to CSV
+                      </button>
+                      <button
+                        onClick={() => handlers.handleExport('excel', filteredItems)}
+                        className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4 text-monday-primary" />
+                        Export to Excel
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Mobile: overflow menu for undo/redo, import, export */}
+            <div className="flex md:hidden relative" ref={toolbarMenuRef}>
+              <button
+                onClick={() => setMobileToolbarOpen(!mobileToolbarOpen)}
+                className="p-2 rounded-md hover:bg-bg-hover text-text-secondary"
+              >
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
+              {mobileToolbarOpen && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-bg-primary rounded-lg shadow-lg border border-border-light z-50 py-1">
+                  <button
+                    onClick={() => {
+                      performUndo()
+                      setMobileToolbarOpen(false)
+                    }}
+                    disabled={!canUndo}
+                    className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary disabled:opacity-30"
+                  >
+                    <Undo2 className="w-4 h-4 text-text-secondary" />
+                    Undo
+                  </button>
+                  <button
+                    onClick={() => {
+                      performRedo()
+                      setMobileToolbarOpen(false)
+                    }}
+                    disabled={!canRedo}
+                    className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary disabled:opacity-30"
+                  >
+                    <Redo2 className="w-4 h-4 text-text-secondary" />
+                    Redo
+                  </button>
+                  <div className="my-1 border-t border-border-light" />
+                  <button
+                    onClick={() => {
+                      openModal('importModal')
+                      setMobileToolbarOpen(false)
+                    }}
+                    className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary"
+                  >
+                    <Upload className="w-4 h-4 text-text-secondary" />
+                    Import
+                  </button>
+                  <button
+                    onClick={() => {
+                      handlers.handleExport('csv', filteredItems)
+                      setMobileToolbarOpen(false)
+                    }}
+                    className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary"
+                  >
+                    <Download className="w-4 h-4 text-color-success" />
+                    Export CSV
+                  </button>
+                  <button
+                    onClick={() => {
+                      handlers.handleExport('excel', filteredItems)
+                      setMobileToolbarOpen(false)
+                    }}
+                    className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary"
+                  >
+                    <Download className="w-4 h-4 text-monday-primary" />
+                    Export Excel
+                  </button>
+                  <div className="my-1 border-t border-border-light" />
+                  <span className="px-4 py-2 text-xs text-text-tertiary">
+                    {filteredItems?.length || 0} items
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
