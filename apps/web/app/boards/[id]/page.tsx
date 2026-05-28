@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/react-query'
 import { useRealtimeBoard } from '@/features/boards/hooks'
@@ -106,6 +106,7 @@ const TemplateManagementModal = dynamic(
 
 export default function BoardDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const queryClient = useQueryClient()
   const { showToast } = useToast()
 
@@ -159,6 +160,26 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     fetchLookups,
     commentCounts,
   } = data
+
+  // ─── Deep-link: open item from URL ?item=...&tab=... ───
+  const [initialTab, setInitialTab] = useState<string | null>(null)
+  const deepLinkHandled = useRef(false)
+
+  useEffect(() => {
+    if (deepLinkHandled.current || !items || items.length === 0) return
+    const itemId = searchParams.get('item')
+    const tab = searchParams.get('tab')
+    if (!itemId) return
+
+    const found = items.find(i => i.id === itemId)
+    if (found) {
+      setSelectedItem(found)
+      if (tab) setInitialTab(tab)
+      deepLinkHandled.current = true
+      // Clean URL without triggering navigation
+      window.history.replaceState(null, '', `/boards/${params.id}`)
+    }
+  }, [items, searchParams, setSelectedItem, params.id])
 
   // ─── Activity log (deferred fetch) ───
   const {
@@ -652,7 +673,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         <ItemDetailDrawer
           item={selectedItem}
           columns={columns}
-          onClose={() => setSelectedItem(null)}
+          initialTab={initialTab as any}
+          onClose={() => {
+            setSelectedItem(null)
+            setInitialTab(null)
+          }}
           onUpdate={async (itemId, updates) => {
             await updateItem.mutateAsync({ itemId, updates })
           }}

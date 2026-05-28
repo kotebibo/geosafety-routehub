@@ -34,6 +34,7 @@ import { useInspectorId } from '@/hooks/useInspectorId'
 interface ItemDetailDrawerProps {
   item: BoardItem
   columns: BoardColumn[]
+  initialTab?: 'details' | 'activity' | 'comments' | 'files'
   onClose: () => void
   onUpdate: (itemId: string, updates: Partial<BoardItem>) => void
 }
@@ -69,9 +70,15 @@ function isImageFile(filename: string): boolean {
   return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(ext || '')
 }
 
-export function ItemDetailDrawer({ item, columns, onClose, onUpdate }: ItemDetailDrawerProps) {
+export function ItemDetailDrawer({
+  item,
+  columns,
+  initialTab,
+  onClose,
+  onUpdate,
+}: ItemDetailDrawerProps) {
   const [activeTab, setActiveTab] = useState<'details' | 'activity' | 'comments' | 'files'>(
-    'details'
+    initialTab || 'details'
   )
   const [newComment, setNewComment] = useState('')
   const [replyingTo, setReplyingTo] = useState<string | null>(null)
