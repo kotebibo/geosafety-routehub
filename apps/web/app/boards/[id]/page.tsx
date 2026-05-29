@@ -30,6 +30,7 @@ import {
   Copy,
   Trash2,
   ArrowRightLeft,
+  FolderInput,
   FileText,
   Undo2,
   Redo2,
@@ -87,6 +88,13 @@ const BoardAccessModal = dynamic(
 const MoveItemModal = dynamic(
   () =>
     import('@/features/boards/components/MoveItemModal').then(m => ({ default: m.MoveItemModal })),
+  { ssr: false }
+)
+const MoveToGroupModal = dynamic(
+  () =>
+    import('@/features/boards/components/MoveToGroupModal').then(m => ({
+      default: m.MoveToGroupModal,
+    })),
   { ssr: false }
 )
 const GenerateDocumentModal = dynamic(
@@ -375,6 +383,12 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   <ArrowRightLeft className="w-4 h-4 mr-1" />
                   Move
                 </Button>
+                {groups && groups.length > 1 && (
+                  <Button variant="secondary" size="sm" onClick={() => openModal('moveToGroup')}>
+                    <FolderInput className="w-4 h-4 mr-1" />
+                    Move to Group
+                  </Button>
+                )}
                 <Button
                   variant="secondary"
                   size="sm"
@@ -765,6 +779,17 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               showToast('Failed to move items', 'error')
             }
           }}
+        />
+      )}
+
+      {modals.moveToGroup && selection.size > 0 && groups && items && (
+        <MoveToGroupModal
+          isOpen={modals.moveToGroup}
+          onClose={() => closeModal('moveToGroup')}
+          groups={groups}
+          items={items.filter(item => selection.has(item.id))}
+          onMove={handlers.handleItemMove}
+          onComplete={() => setSelection(new Set())}
         />
       )}
     </div>
