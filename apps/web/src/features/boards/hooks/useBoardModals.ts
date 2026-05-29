@@ -9,6 +9,7 @@ export type ModalName =
   | 'saveAsTemplate'
   | 'accessModal'
   | 'moveModal'
+  | 'moveToGroup'
   | 'generateDoc'
   | 'docTemplates'
 
@@ -28,6 +29,7 @@ const initialState: ModalState = {
   saveAsTemplate: false,
   accessModal: false,
   moveModal: false,
+  moveToGroup: false,
   generateDoc: false,
   docTemplates: false,
 }
