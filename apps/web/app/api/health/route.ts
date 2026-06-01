@@ -164,7 +164,7 @@ export async function GET() {
     if (failed > 0) status = 'unhealthy'
     else if (slow > 0) status = 'degraded'
 
-    return NextResponse.json({
+    const response = {
       status,
       timestamp: new Date().toISOString(),
       checks: allChecks,
@@ -174,7 +174,28 @@ export async function GET() {
         slow,
         failed,
       },
-    })
+    }
+
+    // Persist to health_check_logs (fire-and-forget, don't block response)
+    const avgMs =
+      allChecks.length > 0
+        ? Math.round(allChecks.reduce((s, c) => s + c.time_ms, 0) / allChecks.length)
+        : 0
+    const maxMs = allChecks.length > 0 ? Math.max(...allChecks.map(c => c.time_ms)) : 0
+    supabase
+      .from('health_check_logs')
+      .insert({
+        status,
+        avg_ms: avgMs,
+        max_ms: maxMs,
+        checks: allChecks.map(c => ({ name: c.name, status: c.status, time_ms: c.time_ms })),
+        region: process.env.VERCEL_REGION || 'local',
+      })
+      .then(({ error: logErr }) => {
+        if (logErr) console.warn('Failed to log health check:', logErr.message)
+      })
+
+    return NextResponse.json(response)
   } catch (error: any) {
     if (error?.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })

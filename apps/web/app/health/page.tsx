@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase/client'
 import {
   Activity,
   RefreshCw,
@@ -16,6 +17,8 @@ import {
   Zap,
   HardDrive,
   Globe,
+  History,
+  Calendar,
 } from 'lucide-react'
 import {
   LineChart,
@@ -53,6 +56,18 @@ interface HistoryEntry {
   max_ms: number
   checks: HealthCheck[]
 }
+
+interface PersistedLog {
+  id: string
+  status: string
+  avg_ms: number
+  max_ms: number
+  checks: { name: string; status: string; time_ms: number }[]
+  region: string
+  created_at: string
+}
+
+type HistoryRange = '1h' | '24h' | '7d' | '30d'
 
 const CHECK_LABELS: Record<string, string> = {
   db_ping: 'DB Ping',
@@ -140,6 +155,9 @@ export default function HealthPage() {
   const [loading, setLoading] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState(false)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const [persistedLogs, setPersistedLogs] = useState<PersistedLog[]>([])
+  const [historyRange, setHistoryRange] = useState<HistoryRange>('24h')
+  const [loadingHistory, setLoadingHistory] = useState(false)
 
   const fetchHealth = useCallback(async () => {
     setLoading(true)
@@ -171,9 +189,30 @@ export default function HealthPage() {
     }
   }, [])
 
+  const fetchPersistedHistory = useCallback(async (range: HistoryRange) => {
+    setLoadingHistory(true)
+    try {
+      const rangeMs = { '1h': 3600000, '24h': 86400000, '7d': 604800000, '30d': 2592000000 }
+      const since = new Date(Date.now() - rangeMs[range]).toISOString()
+      const { data, error } = await (supabase as any)
+        .from('health_check_logs')
+        .select('*')
+        .gte('created_at', since)
+        .order('created_at', { ascending: true })
+        .limit(500)
+      if (error) throw error
+      setPersistedLogs(data || [])
+    } catch {
+      // Silently fail
+    } finally {
+      setLoadingHistory(false)
+    }
+  }, [])
+
   useEffect(() => {
     fetchHealth()
-  }, [fetchHealth])
+    fetchPersistedHistory(historyRange)
+  }, [fetchHealth, fetchPersistedHistory, historyRange])
 
   useEffect(() => {
     if (autoRefresh) {
@@ -183,6 +222,52 @@ export default function HealthPage() {
       if (intervalRef.current) clearInterval(intervalRef.current)
     }
   }, [autoRefresh, fetchHealth])
+
+  // Persisted history chart data (must be before early return)
+  const persistedTrendData = useMemo(() => {
+    return persistedLogs.map(log => {
+      const point: Record<string, any> = {
+        label: new Date(log.created_at).toLocaleString('ka-GE', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        avg_ms: log.avg_ms,
+        max_ms: log.max_ms,
+      }
+      for (const check of log.checks) {
+        point[check.name] = check.time_ms
+      }
+      return point
+    })
+  }, [persistedLogs])
+
+  const persistedCheckNames = useMemo(() => {
+    if (persistedLogs.length === 0) return []
+    const names = new Set<string>()
+    for (const log of persistedLogs) {
+      for (const c of log.checks) names.add(c.name)
+    }
+    return Array.from(names)
+  }, [persistedLogs])
+
+  const persistedStats = useMemo(() => {
+    if (persistedLogs.length === 0) return null
+    const avgValues = persistedLogs.map(l => l.avg_ms)
+    const maxValues = persistedLogs.map(l => l.max_ms)
+    return {
+      count: persistedLogs.length,
+      avgOfAvg: Math.round(avgValues.reduce((a, b) => a + b, 0) / avgValues.length),
+      minAvg: Math.min(...avgValues),
+      maxAvg: Math.max(...avgValues),
+      avgOfMax: Math.round(maxValues.reduce((a, b) => a + b, 0) / maxValues.length),
+      maxOfMax: Math.max(...maxValues),
+      healthy: persistedLogs.filter(l => l.status === 'healthy').length,
+      degraded: persistedLogs.filter(l => l.status === 'degraded').length,
+      unhealthy: persistedLogs.filter(l => l.status === 'unhealthy').length,
+    }
+  }, [persistedLogs])
 
   if (userRole?.role !== 'admin') {
     return (
@@ -509,6 +594,143 @@ export default function HealthPage() {
             </div>
           </div>
         )}
+
+        {/* Persistent History */}
+        <div className="bg-bg-secondary border border-border-light rounded-xl p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-semibold text-text-primary flex items-center gap-2">
+              <History className="w-4 h-4 text-text-secondary" />
+              Historical Performance
+              {persistedStats && (
+                <span className="text-xs font-normal text-text-secondary">
+                  ({persistedStats.count} checks)
+                </span>
+              )}
+            </h2>
+            <div className="flex items-center gap-1">
+              {(['1h', '24h', '7d', '30d'] as HistoryRange[]).map(range => (
+                <button
+                  key={range}
+                  onClick={() => setHistoryRange(range)}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    historyRange === range
+                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30'
+                      : 'text-text-secondary hover:text-text-primary'
+                  }`}
+                >
+                  {range}
+                </button>
+              ))}
+              <button
+                onClick={() => fetchPersistedHistory(historyRange)}
+                disabled={loadingHistory}
+                className="ml-2 p-1 text-text-secondary hover:text-text-primary"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingHistory ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+          </div>
+
+          {/* Stats summary */}
+          {persistedStats && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div className="p-3 rounded-lg bg-bg-primary">
+                <p className="text-xs text-text-secondary">Avg Response</p>
+                <p className="text-lg font-mono font-bold text-text-primary">
+                  {persistedStats.avgOfAvg}
+                  <span className="text-xs text-text-secondary ml-1">ms</span>
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-bg-primary">
+                <p className="text-xs text-text-secondary">Best Avg</p>
+                <p className="text-lg font-mono font-bold text-green-400">
+                  {persistedStats.minAvg}
+                  <span className="text-xs text-text-secondary ml-1">ms</span>
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-bg-primary">
+                <p className="text-xs text-text-secondary">Worst Avg</p>
+                <p className="text-lg font-mono font-bold text-red-400">
+                  {persistedStats.maxAvg}
+                  <span className="text-xs text-text-secondary ml-1">ms</span>
+                </p>
+              </div>
+              <div className="p-3 rounded-lg bg-bg-primary">
+                <p className="text-xs text-text-secondary">Uptime</p>
+                <p className="text-lg font-mono font-bold text-text-primary">
+                  {persistedStats.count > 0
+                    ? Math.round((persistedStats.healthy / persistedStats.count) * 100)
+                    : 0}
+                  <span className="text-xs text-text-secondary ml-1">%</span>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Historical avg/max trend */}
+          {persistedTrendData.length > 1 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <LineChart
+                data={persistedTrendData}
+                margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fill: 'var(--text-secondary)', fontSize: 10 }}
+                  interval="preserveStartEnd"
+                />
+                <YAxis tick={{ fill: 'var(--text-secondary)', fontSize: 12 }} unit="ms" />
+                <Tooltip
+                  contentStyle={{
+                    background: 'var(--bg-secondary)',
+                    border: '1px solid var(--border-light)',
+                    borderRadius: '8px',
+                    color: 'var(--text-primary)',
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="avg_ms"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Average"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="max_ms"
+                  stroke="#ef4444"
+                  strokeWidth={1.5}
+                  dot={false}
+                  name="Max"
+                  strokeDasharray="4 2"
+                />
+                {persistedCheckNames
+                  .filter(n => ['db_ping', 'auth_latency', 'rls_query'].includes(n))
+                  .map((name, i) => (
+                    <Line
+                      key={name}
+                      type="monotone"
+                      dataKey={name}
+                      stroke={lineColors[(i + 2) % lineColors.length]}
+                      strokeWidth={1}
+                      dot={false}
+                      name={CHECK_LABELS[name] || name}
+                      strokeOpacity={0.6}
+                    />
+                  ))}
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center py-12 text-text-secondary">
+              <Calendar className="w-8 h-8 mx-auto mb-2 opacity-40" />
+              <p className="text-sm">
+                No historical data yet. Health checks will be saved automatically.
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Empty state */}
         {!current && !loading && (
