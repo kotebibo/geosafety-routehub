@@ -424,6 +424,16 @@ COMMENT ON COLUMN public.routes.inspector_id IS 'References auth.users.id — as
 COMMENT ON COLUMN public.inspections.inspector_id IS 'References auth.users.id — assigned inspector (legacy column name)';
 
 -- ================================================
+-- PHASE 4: Re-add FKs pointing to public.users (not inspectors)
+-- PostgREST needs FKs for relationship joins (e.g. users:user_id!left)
+-- ================================================
+ALTER TABLE public.item_updates
+  ADD CONSTRAINT item_updates_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+-- item_comments already has FK to users (was never changed)
+
+-- ================================================
 -- DONE!
 -- After this migration:
 -- 1. No FK constraints reference inspectors(id) anywhere
