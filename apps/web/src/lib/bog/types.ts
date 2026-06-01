@@ -25,7 +25,8 @@ export type BogTokenResponse = z.infer<typeof bogTokenResponseSchema>
 
 export const bogTodayActivitySchema = z.object({
   DocKey: z.union([z.string(), z.number()]).transform(v => String(v)),
-  EntryDate: z.string(),
+  EntryDate: z.string().optional().nullable(),
+  DocumentDate: z.string().optional().nullable(), // BOG sometimes uses this instead
   DocDate: z.string().optional().nullable(),
   Credit: z.number().default(0),
   Debit: z.number().default(0),

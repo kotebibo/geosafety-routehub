@@ -34,10 +34,13 @@ function parseSenderDetails(raw: string | null): {
  */
 function transformTodayActivity(txn: BogTodayActivity): BankTransactionInsert {
   const sender = parseSenderDetails(txn.Sender)
+  // BOG changed field names — fall back through alternatives
+  const entryDate =
+    txn.EntryDate || txn.DocumentDate || txn.DocDate || new Date().toISOString().split('T')[0]
   return {
     doc_key: txn.DocKey,
-    entry_date: txn.EntryDate,
-    doc_date: txn.DocDate || null,
+    entry_date: entryDate,
+    doc_date: txn.DocDate || txn.DocumentDate || null,
     amount: txn.Credit || txn.Debit,
     currency: txn.Currency,
     sender_name: sender.name,
