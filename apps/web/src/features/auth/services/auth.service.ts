@@ -6,7 +6,7 @@ export const authService = {
       email,
       password,
     })
-    
+
     if (error) throw error
     return data
   },
@@ -17,13 +17,19 @@ export const authService = {
   },
 
   getCurrentUser: async () => {
-    const { data: { user }, error } = await supabase.auth.getUser()
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
     if (error) throw error
     return user
   },
 
   getSession: async () => {
-    const { data: { session }, error } = await supabase.auth.getSession()
+    const {
+      data: { session },
+      error,
+    } = await supabase.auth.getSession()
     if (error) throw error
     return session
   },
@@ -31,10 +37,10 @@ export const authService = {
   getUserRole: async (userId: string) => {
     const { data, error } = await supabase
       .from('user_roles')
-      .select('role, inspector_id')
+      .select('role')
       .eq('user_id', userId)
       .single()
-    
+
     if (error) throw error
     return data
   },
