@@ -191,7 +191,7 @@ export async function GET() {
         checks: allChecks.map(c => ({ name: c.name, status: c.status, time_ms: c.time_ms })),
         region: process.env.VERCEL_REGION || 'local',
       })
-      .then(({ error: logErr }) => {
+      .then(({ error: logErr }: { error: any }) => {
         if (logErr) console.warn('Failed to log health check:', logErr.message)
       })
 
