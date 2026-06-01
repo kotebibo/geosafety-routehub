@@ -22,14 +22,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = createEntrySchema.parse(body)
 
-    // Get user's inspector_id
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('inspector_id')
-      .eq('user_id', session.user.id)
-      .single()
-
-    const createdBy = userRole?.inspector_id || session.user.id
+    const createdBy = session.user.id
 
     // Find all data_collection boards
     const { data: boards } = await supabase
@@ -113,14 +106,7 @@ export async function GET(request: NextRequest) {
     const session = await requireAuth()
     const supabase = createServerClient()
 
-    // Get user's inspector_id
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('inspector_id')
-      .eq('user_id', session.user.id)
-      .single()
-
-    const createdBy = userRole?.inspector_id || session.user.id
+    const createdBy = session.user.id
 
     // Find data_collection boards
     const { data: boards } = await supabase

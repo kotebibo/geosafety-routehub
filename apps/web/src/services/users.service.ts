@@ -25,7 +25,6 @@ export interface UserRole {
   id: string
   user_id: string
   role: string
-  inspector_id: string | null
   created_at: string
   updated_at: string
 }
@@ -137,7 +136,7 @@ export const usersService = {
   /**
    * Assign role to user
    */
-  async assignRole(userId: string, roleName: string, inspectorId?: string): Promise<UserRole> {
+  async assignRole(userId: string, roleName: string): Promise<UserRole> {
     // Check if user already has a role
     const { data: existing } = await getSupabase()
       .from('user_roles')
@@ -151,7 +150,6 @@ export const usersService = {
         .from('user_roles')
         .update({
           role: roleName,
-          inspector_id: inspectorId || null,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId)
@@ -167,7 +165,6 @@ export const usersService = {
         .insert({
           user_id: userId,
           role: roleName,
-          inspector_id: inspectorId || null,
         })
         .select()
         .single()

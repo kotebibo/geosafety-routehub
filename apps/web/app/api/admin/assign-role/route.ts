@@ -14,7 +14,6 @@ import { requireAdmin } from '@/middleware/auth'
 const assignRoleSchema = z.object({
   userId: z.string().uuid('userId must be a valid UUID'),
   roleName: z.string().min(1, 'roleName must be a non-empty string'),
-  inspectorId: z.string().uuid().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -23,7 +22,7 @@ export async function POST(request: NextRequest) {
     const supabase = createServerClient()
 
     const body = await request.json()
-    const { userId, roleName, inspectorId } = assignRoleSchema.parse(body)
+    const { userId, roleName } = assignRoleSchema.parse(body)
 
     // Check if user already has a role
     const { data: existing } = await supabase
@@ -40,7 +39,6 @@ export async function POST(request: NextRequest) {
         .from('user_roles')
         .update({
           role: roleName,
-          inspector_id: inspectorId || null,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId)
@@ -56,7 +54,6 @@ export async function POST(request: NextRequest) {
         .insert({
           user_id: userId,
           role: roleName,
-          inspector_id: inspectorId || null,
         })
         .select()
         .single()

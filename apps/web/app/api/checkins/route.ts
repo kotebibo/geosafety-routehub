@@ -49,7 +49,7 @@ async function syncCheckinToBoards(
   if (!boards || boards.length === 0) return
 
   const [inspectorRes, companyRes, locationRes] = await Promise.all([
-    supabase.from('inspectors').select('full_name').eq('id', checkin.inspector_id).single(),
+    supabase.from('users').select('full_name').eq('id', checkin.inspector_id).single(),
     supabase.from('companies').select('name').eq('id', checkin.company_id).single(),
     checkin.company_location_id
       ? supabase
@@ -157,10 +157,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = createCheckinSchema.parse(body)
 
-    // Verify inspector ownership: user must own this inspector_id or be admin/dispatcher
+    // Verify ownership: user must own this inspector_id or be admin/dispatcher
     const { data: userRole } = await supabase
       .from('user_roles')
-      .select('role, inspector_id')
+      .select('role')
       .eq('user_id', session.user.id)
       .single()
 
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
     }
 
     const isAdminOrDispatcher = userRole.role === 'admin' || userRole.role === 'dispatcher'
-    if (!isAdminOrDispatcher && userRole.inspector_id !== validated.inspector_id) {
+    if (!isAdminOrDispatcher && session.user.id !== validated.inspector_id) {
       return NextResponse.json({ error: 'Cannot check in as another inspector' }, { status: 403 })
     }
 
@@ -318,7 +318,7 @@ export async function PATCH(request: NextRequest) {
     // Verify ownership
     const { data: userRole } = await supabase
       .from('user_roles')
-      .select('role, inspector_id')
+      .select('role')
       .eq('user_id', session.user.id)
       .single()
 
@@ -327,7 +327,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const isAdminOrDispatcher = userRole.role === 'admin' || userRole.role === 'dispatcher'
-    if (!isAdminOrDispatcher && userRole.inspector_id !== checkin.inspector_id) {
+    if (!isAdminOrDispatcher && session.user.id !== checkin.inspector_id) {
       return NextResponse.json({ error: 'Cannot check out another inspector' }, { status: 403 })
     }
 
@@ -408,7 +408,7 @@ export async function GET(request: NextRequest) {
     // Get user role
     const { data: userRole } = await supabase
       .from('user_roles')
-      .select('role, inspector_id')
+      .select('role')
       .eq('user_id', session.user.id)
       .single()
 
@@ -421,12 +421,9 @@ export async function GET(request: NextRequest) {
       .select('*, inspectors(full_name), companies(name), company_locations(name)')
       .order('created_at', { ascending: false })
 
-    // Inspectors only see their own
+    // Officers only see their own
     if (userRole.role === 'officer') {
-      if (!userRole.inspector_id) {
-        return NextResponse.json([])
-      }
-      query = query.eq('inspector_id', userRole.inspector_id)
+      query = query.eq('inspector_id', session.user.id)
     }
 
     // Filters

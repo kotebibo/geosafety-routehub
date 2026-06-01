@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = locationSchema.parse(body)
 
-    // Verify the inspector belongs to this user (or user is admin/dispatcher)
+    // Verify ownership: user must own this ID or be admin/dispatcher
     const { data: userRole } = await supabase
       .from('user_roles')
       .select('role')
@@ -32,16 +32,8 @@ export async function POST(request: NextRequest) {
 
     const isPrivileged = userRole?.role === 'admin' || userRole?.role === 'dispatcher'
 
-    if (!isPrivileged) {
-      const { data: inspector } = await supabase
-        .from('inspectors')
-        .select('email')
-        .eq('id', validated.inspector_id)
-        .single()
-
-      if (!inspector || inspector.email !== session.user.email) {
-        return NextResponse.json({ error: 'Not authorized for this inspector' }, { status: 403 })
-      }
+    if (!isPrivileged && session.user.id !== validated.inspector_id) {
+      return NextResponse.json({ error: 'Not authorized for this user' }, { status: 403 })
     }
 
     const pointWKT = `POINT(${validated.longitude} ${validated.latitude})`

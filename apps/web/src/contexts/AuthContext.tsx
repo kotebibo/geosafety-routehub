@@ -7,7 +7,6 @@ import { User } from '@supabase/supabase-js'
 
 interface UserRole {
   role: 'admin' | 'dispatcher' | 'officer' | string // Allow custom roles
-  inspector_id?: string
   permissions?: string[] // For custom role permissions
 }
 
@@ -72,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fetch role + permissions in parallel (not sequentially)
       const { data: roleData, error: roleError } = await (supabase as any)
         .from('user_roles')
-        .select('role, inspector_id')
+        .select('role')
         .eq('user_id', userId)
         .single()
 
@@ -84,7 +83,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const role = roleData?.role as string
-      const inspectorId = roleData?.inspector_id as string | undefined
 
       // Admin has wildcard - no need to fetch from DB
       let permissions: string[] = []
@@ -103,7 +101,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUserRole({
         role,
-        inspector_id: inspectorId,
         permissions,
       })
 
