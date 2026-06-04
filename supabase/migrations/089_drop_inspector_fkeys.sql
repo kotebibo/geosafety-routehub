@@ -190,6 +190,46 @@ END $$;
 -- Now safe because all FK constraints are dropped
 -- ================================================
 
+-- board_items.created_by (missed by migration 046 on some instances)
+UPDATE public.board_items bi
+SET created_by = (
+    SELECT u.id FROM auth.users u
+    JOIN public.inspectors i ON i.email = u.email
+    WHERE i.id = bi.created_by
+)
+WHERE created_by IS NOT NULL
+AND EXISTS (
+    SELECT 1 FROM public.inspectors i WHERE i.id = bi.created_by
+)
+AND NOT EXISTS (
+    SELECT 1 FROM auth.users u WHERE u.id = bi.created_by
+)
+AND EXISTS (
+    SELECT 1 FROM auth.users u
+    JOIN public.inspectors i ON i.email = u.email
+    WHERE i.id = bi.created_by
+);
+
+-- board_items.assigned_to (missed by migration 046 on some instances)
+UPDATE public.board_items bi
+SET assigned_to = (
+    SELECT u.id FROM auth.users u
+    JOIN public.inspectors i ON i.email = u.email
+    WHERE i.id = bi.assigned_to
+)
+WHERE assigned_to IS NOT NULL
+AND EXISTS (
+    SELECT 1 FROM public.inspectors i WHERE i.id = bi.assigned_to
+)
+AND NOT EXISTS (
+    SELECT 1 FROM auth.users u WHERE u.id = bi.assigned_to
+)
+AND EXISTS (
+    SELECT 1 FROM auth.users u
+    JOIN public.inspectors i ON i.email = u.email
+    WHERE i.id = bi.assigned_to
+);
+
 -- item_updates (293 rows on team3)
 UPDATE public.item_updates iu
 SET user_id = (

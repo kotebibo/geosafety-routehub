@@ -619,6 +619,52 @@ export const activityService = {
     return counts
   },
 
+  // ==================== REACTIONS ====================
+
+  /**
+   * Toggle a reaction on a comment (add if not present, remove if already reacted)
+   */
+  async toggleReaction(
+    commentId: string,
+    userId: string,
+    emoji: string
+  ): Promise<Record<string, string[]>> {
+    // Get current reactions (cast needed — column added after types were generated)
+    const { data: comment, error: fetchError } = await (getSupabase()
+      .from('item_comments')
+      .select('reactions')
+      .eq('id', commentId)
+      .single() as any)
+
+    if (fetchError) throw fetchError
+
+    const reactions: Record<string, string[]> = (comment as any)?.reactions || {}
+    const users = reactions[emoji] || []
+    const idx = users.indexOf(userId)
+
+    if (idx >= 0) {
+      // Remove reaction
+      users.splice(idx, 1)
+      if (users.length === 0) {
+        delete reactions[emoji]
+      } else {
+        reactions[emoji] = users
+      }
+    } else {
+      // Add reaction
+      reactions[emoji] = [...users, userId]
+    }
+
+    const { error: updateError } = await (getSupabase()
+      .from('item_comments')
+      .update({ reactions } as any)
+      .eq('id', commentId) as any)
+
+    if (updateError) throw updateError
+
+    return reactions
+  },
+
   // ==================== REAL-TIME SUBSCRIPTIONS ====================
 
   /**
