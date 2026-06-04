@@ -623,46 +623,21 @@ export const activityService = {
 
   /**
    * Toggle a reaction on a comment (add if not present, remove if already reacted)
+   * Uses RPC to bypass RLS (UPDATE policy restricts to comment owner)
    */
   async toggleReaction(
     commentId: string,
-    userId: string,
+    _userId: string,
     emoji: string
   ): Promise<Record<string, string[]>> {
-    // Get current reactions (cast needed — column added after types were generated)
-    const { data: comment, error: fetchError } = await (getSupabase()
-      .from('item_comments')
-      .select('reactions')
-      .eq('id', commentId)
-      .single() as any)
+    const { data, error } = await (getSupabase() as any).rpc('toggle_comment_reaction', {
+      p_comment_id: commentId,
+      p_emoji: emoji,
+    })
 
-    if (fetchError) throw fetchError
+    if (error) throw error
 
-    const reactions: Record<string, string[]> = (comment as any)?.reactions || {}
-    const users = reactions[emoji] || []
-    const idx = users.indexOf(userId)
-
-    if (idx >= 0) {
-      // Remove reaction
-      users.splice(idx, 1)
-      if (users.length === 0) {
-        delete reactions[emoji]
-      } else {
-        reactions[emoji] = users
-      }
-    } else {
-      // Add reaction
-      reactions[emoji] = [...users, userId]
-    }
-
-    const { error: updateError } = await (getSupabase()
-      .from('item_comments')
-      .update({ reactions } as any)
-      .eq('id', commentId) as any)
-
-    if (updateError) throw updateError
-
-    return reactions
+    return (data as Record<string, string[]>) || {}
   },
 
   // ==================== REAL-TIME SUBSCRIPTIONS ====================
