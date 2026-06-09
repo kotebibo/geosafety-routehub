@@ -7,7 +7,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import { useUserBoards } from '@/features/boards/hooks'
 import { userBoardsService } from '@/features/boards/services/user-boards.service'
 import { useQueryClient } from '@tanstack/react-query'
@@ -269,10 +268,6 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { user, userRole, loading: authLoading, hasPermission } = useAuth()
-  const { data: inspectorId } = useInspectorId(user?.email)
-
-  // Use auth user ID for board queries - RLS policies filter by auth.uid()
-  // This ensures boards show up even if user doesn't have an inspector record
   const userId = user?.id || ''
 
   const { unreadCount: unreadNews } = useAnnouncements()

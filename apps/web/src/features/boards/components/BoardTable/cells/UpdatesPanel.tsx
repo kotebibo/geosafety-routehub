@@ -36,7 +36,6 @@ import { supabase } from '@/lib/supabase/client'
 import { activityService } from '@/features/boards/services/activity.service'
 import { formatTimeAgo } from '@/lib/formatTime'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import { useUsers } from '@/hooks/useUsers'
 import { useToast } from '@/components/ui-monday/Toast'
 import { FilePreviewModal } from './FilePreviewModal'
@@ -100,7 +99,7 @@ export function UpdatesPanel({
 }: UpdatesPanelProps) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const { data: inspectorId } = useInspectorId(user?.email ?? undefined)
+  const userId = user?.id ?? null
   const { users } = useUsers()
   const { showToast } = useToast()
 
@@ -412,7 +411,7 @@ export function UpdatesPanel({
   }
 
   const handleSubmitComment = async () => {
-    if ((!newComment.trim() && pendingFiles.length === 0) || !itemId || submitting || !inspectorId)
+    if ((!newComment.trim() && pendingFiles.length === 0) || !itemId || submitting || !userId)
       return
 
     setSubmitting(true)
@@ -420,7 +419,7 @@ export function UpdatesPanel({
       await activityService.createComment({
         item_type: itemType,
         item_id: itemId,
-        user_id: inspectorId,
+        user_id: userId,
         content:
           newComment.trim() ||
           (pendingFiles.length > 0 ? `Attached ${pendingFiles.length} file(s)` : ''),
@@ -475,13 +474,9 @@ export function UpdatesPanel({
   }
 
   const handleToggleReaction = async (commentId: string, emojiKey: string) => {
-    if (!inspectorId) return
+    if (!userId) return
     try {
-      const updatedReactions = await activityService.toggleReaction(
-        commentId,
-        inspectorId,
-        emojiKey
-      )
+      const updatedReactions = await activityService.toggleReaction(commentId, userId, emojiKey)
       // Update local state optimistically
       setComments(prev =>
         prev.map(c => {
@@ -931,7 +926,7 @@ export function UpdatesPanel({
                         >
                           <SmilePlus className="w-3.5 h-3.5" />
                         </button>
-                        {comment.user_id === inspectorId && (
+                        {comment.user_id === userId && (
                           <>
                             <button
                               onClick={() => {
@@ -977,7 +972,7 @@ export function UpdatesPanel({
                           ([emojiKey, userIds]) => {
                             const emojiInfo = REACTION_EMOJIS.find(e => e.key === emojiKey)
                             if (!emojiInfo || !userIds.length) return null
-                            const hasReacted = inspectorId && userIds.includes(inspectorId)
+                            const hasReacted = userId && userIds.includes(userId)
                             return (
                               <button
                                 key={emojiKey}
@@ -1039,7 +1034,7 @@ export function UpdatesPanel({
                             >
                               <SmilePlus className="w-3 h-3" />
                             </button>
-                            {reply.user_id === inspectorId && (
+                            {reply.user_id === userId && (
                               <button
                                 onClick={() => handleDeleteComment(reply.id)}
                                 className="flex items-center gap-1 text-xs text-text-secondary hover:text-red-500 transition-colors"
@@ -1068,7 +1063,7 @@ export function UpdatesPanel({
                                 ([emojiKey, userIds]) => {
                                   const emojiInfo = REACTION_EMOJIS.find(e => e.key === emojiKey)
                                   if (!emojiInfo || !userIds.length) return null
-                                  const hasReacted = inspectorId && userIds.includes(inspectorId)
+                                  const hasReacted = userId && userIds.includes(userId)
                                   return (
                                     <button
                                       key={emojiKey}
@@ -1522,11 +1517,11 @@ export function UpdatesPanel({
                 <button
                   onClick={handleSubmitComment}
                   disabled={
-                    (!newComment.trim() && pendingFiles.length === 0) || submitting || !inspectorId
+                    (!newComment.trim() && pendingFiles.length === 0) || submitting || !userId
                   }
                   className={cn(
                     'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                    (newComment.trim() || pendingFiles.length > 0) && !submitting && inspectorId
+                    (newComment.trim() || pendingFiles.length > 0) && !submitting && userId
                       ? 'bg-monday-primary text-text-inverse hover:bg-[var(--monday-primary-hover)]'
                       : 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   )}

@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import { MobileTrackingView } from '@/features/tracking/components/MobileTrackingView'
 import { RefreshCw, Navigation } from 'lucide-react'
 
 export default function InspectorTrackingPage() {
   const { user, userRole, loading: authLoading } = useAuth()
   const router = useRouter()
-  const { data: inspectorId, isLoading: inspectorLoading } = useInspectorId(user?.email)
+  const inspectorId = user?.id ?? null
+  const inspectorLoading = false
 
   const currentRole = userRole?.role || ''
   const isAllowed =

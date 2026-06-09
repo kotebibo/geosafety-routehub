@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import { companiesService } from '@/services/companies.service'
 import { useToast } from '@/components/ui-monday/Toast'
 import { MapPinned, RefreshCw, StickyNote, Loader2, AlertCircle } from 'lucide-react'
@@ -30,7 +29,8 @@ type PageState = 'idle' | 'active' | 'loading'
 export default function InspectorCheckinPage() {
   const { user, userRole, loading: authLoading } = useAuth()
   const router = useRouter()
-  const { data: inspectorId, isLoading: inspectorLoading } = useInspectorId(user?.email)
+  const inspectorId = user?.id ?? null
+  const inspectorLoading = false
   const { showToast } = useToast()
 
   // Page state

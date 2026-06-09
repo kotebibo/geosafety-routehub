@@ -23,7 +23,7 @@ interface UseBoardHandlersParams {
   items: BoardItem[] | undefined
   columns: BoardColumn[] | undefined
   groups: BoardGroup[]
-  inspectorId: string | null | undefined
+  userId: string | null | undefined
   // Mutations
   createItem: { mutateAsync: (args: any) => Promise<any> }
   updateItem: { mutateAsync: (args: { itemId: string; updates: any }) => Promise<any> }
@@ -58,7 +58,7 @@ export function useBoardHandlers({
   items,
   columns,
   groups,
-  inspectorId,
+  userId,
   createItem,
   updateItem,
   duplicateItems,
@@ -82,7 +82,7 @@ export function useBoardHandlers({
 
   const handleAddItem = useCallback(
     async (groupId?: string) => {
-      if (!inspectorId) return
+      if (!userId) return
 
       try {
         const newItem = await createItem.mutateAsync({
@@ -93,7 +93,7 @@ export function useBoardHandlers({
           name: 'New Item',
           status: 'default',
           priority: 0,
-          created_by: inspectorId,
+          created_by: userId,
         })
 
         if (newItem?.id) {
@@ -106,7 +106,7 @@ export function useBoardHandlers({
         showToast('Failed to create item', 'error')
       }
     },
-    [boardId, groups, items, inspectorId, createItem, publishItemChange, showToast]
+    [boardId, groups, items, userId, createItem, publishItemChange, showToast]
   )
 
   const handleCellEdit = useCallback(
@@ -268,11 +268,11 @@ export function useBoardHandlers({
         } as any)
         await refetchColumns()
 
-        if (inspectorId) {
+        if (userId) {
           createUpdate.mutate({
             item_type: 'board_item',
             item_id: boardId,
-            user_id: inspectorId,
+            user_id: userId,
             update_type: 'created',
             content: `Added column: ${columnData.column_name}`,
             metadata: {
@@ -290,16 +290,7 @@ export function useBoardHandlers({
         showToast('Failed to add column', 'error')
       }
     },
-    [
-      board,
-      boardId,
-      columns,
-      refetchColumns,
-      showToast,
-      setShowAddColumn,
-      inspectorId,
-      createUpdate,
-    ]
+    [board, boardId, columns, refetchColumns, showToast, setShowAddColumn, userId, createUpdate]
   )
 
   const handleDeleteColumn = useCallback(
@@ -327,11 +318,11 @@ export function useBoardHandlers({
 
         await refetchColumns()
 
-        if (inspectorId && columnName) {
+        if (userId && columnName) {
           createUpdate.mutate({
             item_type: 'board_item',
             item_id: boardId,
-            user_id: inspectorId,
+            user_id: userId,
             update_type: 'deleted',
             content: `Deleted column: ${columnName}`,
             metadata: { entity_type: 'column', column_name: columnName, column_id: columnKey },
@@ -344,7 +335,7 @@ export function useBoardHandlers({
         showToast('Failed to delete column', 'error')
       }
     },
-    [columns, items, updateItem, refetchColumns, showToast, inspectorId, createUpdate, boardId]
+    [columns, items, updateItem, refetchColumns, showToast, userId, createUpdate, boardId]
   )
 
   const handleColumnResize = useCallback(
@@ -435,11 +426,11 @@ export function useBoardHandlers({
         await boardsService.updateColumn(columnId, { column_name: newName })
         await refetchColumns()
 
-        if (inspectorId && oldColumn) {
+        if (userId && oldColumn) {
           createUpdate.mutate({
             item_type: 'board_item',
             item_id: boardId,
-            user_id: inspectorId,
+            user_id: userId,
             update_type: 'updated',
             field_name: 'column_name',
             old_value: oldColumn.column_name,
@@ -454,7 +445,7 @@ export function useBoardHandlers({
         showToast('Failed to rename column', 'error')
       }
     },
-    [refetchColumns, showToast, columns, inspectorId, createUpdate, boardId]
+    [refetchColumns, showToast, columns, userId, createUpdate, boardId]
   )
 
   const handleColumnConfigUpdate = useCallback(
@@ -521,11 +512,11 @@ export function useBoardHandlers({
         position: groups.length,
       })
 
-      if (inspectorId && newGroup?.id) {
+      if (userId && newGroup?.id) {
         createUpdate.mutate({
           item_type: 'board_item',
           item_id: newGroup.id,
-          user_id: inspectorId,
+          user_id: userId,
           update_type: 'created',
           content: 'Created group: New Group',
           metadata: { entity_type: 'group', group_name: 'New Group' },
@@ -537,7 +528,7 @@ export function useBoardHandlers({
       console.error('Failed to add group:', error)
       showToast('Failed to add group', 'error')
     }
-  }, [groups, createGroup, showToast, inspectorId, createUpdate])
+  }, [groups, createGroup, showToast, userId, createUpdate])
 
   const handleGroupRename = useCallback(
     async (groupId: string, newName: string) => {
@@ -546,11 +537,11 @@ export function useBoardHandlers({
         const oldGroup = groups.find(g => g.id === groupId)
         await updateGroup.mutateAsync({ groupId, updates: { name: newName } })
 
-        if (inspectorId) {
+        if (userId) {
           createUpdate.mutate({
             item_type: 'board_item',
             item_id: groupId,
-            user_id: inspectorId,
+            user_id: userId,
             update_type: 'updated',
             field_name: 'group_name',
             old_value: oldGroup?.name || '',
@@ -565,7 +556,7 @@ export function useBoardHandlers({
         showToast('Failed to rename group', 'error')
       }
     },
-    [updateGroup, showToast, groups, inspectorId, createUpdate]
+    [updateGroup, showToast, groups, userId, createUpdate]
   )
 
   const handleGroupColorChange = useCallback(
@@ -575,11 +566,11 @@ export function useBoardHandlers({
         const oldGroup = groups.find(g => g.id === groupId)
         await updateGroup.mutateAsync({ groupId, updates: { color } })
 
-        if (inspectorId) {
+        if (userId) {
           createUpdate.mutate({
             item_type: 'board_item',
             item_id: groupId,
-            user_id: inspectorId,
+            user_id: userId,
             update_type: 'updated',
             field_name: 'group_color',
             old_value: oldGroup?.color || '',
@@ -592,7 +583,7 @@ export function useBoardHandlers({
         showToast('Failed to change group color', 'error')
       }
     },
-    [updateGroup, showToast, groups, inspectorId, createUpdate]
+    [updateGroup, showToast, groups, userId, createUpdate]
   )
 
   const handleGroupCollapseToggle = useCallback(
@@ -642,11 +633,11 @@ export function useBoardHandlers({
         const deletedGroup = groups.find(g => g.id === groupId)
         await deleteGroup.mutateAsync(groupId)
 
-        if (inspectorId && deletedGroup) {
+        if (userId && deletedGroup) {
           createUpdate.mutate({
             item_type: 'board_item',
             item_id: groupId,
-            user_id: inspectorId,
+            user_id: userId,
             update_type: 'deleted',
             content: `Deleted group: ${deletedGroup.name}`,
             metadata: {
@@ -664,7 +655,7 @@ export function useBoardHandlers({
         showToast('Failed to delete group', 'error')
       }
     },
-    [groups, items, updateItem, deleteGroup, showToast, inspectorId, createUpdate]
+    [groups, items, updateItem, deleteGroup, showToast, userId, createUpdate]
   )
 
   // ==================== MOVEMENT HANDLERS ====================
@@ -787,7 +778,7 @@ export function useBoardHandlers({
 
   const handleImportItems = useCallback(
     async (importedItems: Array<{ name: string; data: Record<string, any>; group_id: string }>) => {
-      if (!inspectorId) {
+      if (!userId) {
         showToast('You must be logged in to import items', 'error')
         return
       }
@@ -801,7 +792,7 @@ export function useBoardHandlers({
             name: item.name,
             status: 'default',
             priority: 0,
-            created_by: inspectorId,
+            created_by: userId,
           })
         }
 
@@ -811,7 +802,7 @@ export function useBoardHandlers({
         throw error
       }
     },
-    [boardId, items, inspectorId, createItem, showToast]
+    [boardId, items, userId, createItem, showToast]
   )
 
   return {
