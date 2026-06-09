@@ -237,6 +237,7 @@ function SearchBoardSection({
       data={boardItems}
       groups={groups}
       onRowDoubleClick={onRowDoubleClick}
+      containerClassName="outline-none"
       scrollContainerClassName="overflow-visible bg-bg-primary"
       highlightQuery={highlightQuery}
       hideFooters
