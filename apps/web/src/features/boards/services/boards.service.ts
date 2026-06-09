@@ -13,6 +13,10 @@ import type { BoardGroup } from '../types/board'
 // IMPORTANT: Must be called inside functions, not at module level
 const getSupabase = () => createClient()
 
+// UUID v4 pattern — synthetic columns like "${boardId}_name" won't match
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const isRealColumnId = (id: string) => UUID_RE.test(id)
+
 /**
  * Board Configuration Service
  * Handles board columns, views, and configuration
@@ -83,6 +87,9 @@ export const boardsService = {
    * Update column configuration
    */
   async updateColumn(columnId: string, updates: Partial<BoardColumn>): Promise<BoardColumn> {
+    // Skip synthetic columns (e.g. "${boardId}_name" injected by getColumns)
+    if (!isRealColumnId(columnId)) return { id: columnId } as BoardColumn
+
     const { data, error } = await getSupabase()
       .from('board_columns')
       .update(updates)
@@ -100,7 +107,11 @@ export const boardsService = {
   async updateColumns(
     columns: Array<{ id: string; position: number; width?: number }>
   ): Promise<void> {
-    const updates = columns.map(col =>
+    // Filter out synthetic columns
+    const realColumns = columns.filter(col => isRealColumnId(col.id))
+    if (realColumns.length === 0) return
+
+    const updates = realColumns.map(col =>
       getSupabase()
         .from('board_columns')
         .update({ position: col.position, width: col.width })
@@ -151,6 +162,8 @@ export const boardsService = {
    * Delete a column
    */
   async deleteColumn(columnId: string): Promise<void> {
+    if (!isRealColumnId(columnId)) return
+
     const { error } = await getSupabase().from('board_columns').delete().eq('id', columnId)
 
     if (error) throw error
