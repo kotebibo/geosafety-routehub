@@ -92,6 +92,8 @@ interface VirtualizedBoardTableProps {
   highlightQuery?: string
   /** Hide footer, summary, and gap rows (used in search results) */
   hideFooters?: boolean
+  /** Override the outer container class. Default uses h-full for full-page boards. */
+  containerClassName?: string
   // ─── Subitem props ───
   /** Set of item IDs whose subitems are expanded */
   expandedItems?: Set<string>
@@ -147,6 +149,7 @@ export function VirtualizedBoardTable({
   scrollContainerClassName,
   highlightQuery,
   hideFooters,
+  containerClassName,
   expandedItems,
   subitemCounts,
   subitemsByParent,
@@ -1500,7 +1503,7 @@ export function VirtualizedBoardTable({
   }
 
   return (
-    <div ref={tableRef} tabIndex={0} className="outline-none h-full">
+    <div ref={tableRef} tabIndex={0} className={containerClassName || 'outline-none h-full'}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
