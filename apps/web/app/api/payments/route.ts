@@ -1,9 +1,128 @@
 /**
- * Payments API
- * List, filter, and manage bank transactions
- * Protected: Admin or Dispatcher
- * - GET: List transactions with filters
- * - POST: Manual match or ignore transaction
+ * @swagger
+ * /api/payments:
+ *   get:
+ *     summary: List bank transactions
+ *     description: Returns paginated bank transactions with optional filters for status, company, date range, and text search.
+ *     tags: [Payments]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: status
+ *         in: query
+ *         schema:
+ *           type: string
+ *           enum: [matched, unmatched, ignored]
+ *         description: Filter by transaction status
+ *       - name: companyId
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by matched company ID
+ *       - name: from
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for date range filter
+ *       - name: to
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for date range filter
+ *       - name: search
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: Free-text search across sender name, tax ID, purpose, and doc key
+ *       - name: matchSource
+ *         in: query
+ *         schema:
+ *           type: string
+ *           enum: [active, paused, ended, one_time]
+ *         description: Filter by contract match source
+ *       - name: page
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number (1-based)
+ *       - name: limit
+ *         in: query
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Number of results per page
+ *     responses:
+ *       200:
+ *         description: Paginated list of transactions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 transactions:
+ *                   type: array
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or dispatcher access required
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     summary: Manually match or ignore a transaction
+ *     description: Admin-only action to manually match a transaction to a company or mark it as ignored. Creates an audit trail for matches.
+ *     tags: [Payments]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [action, transactionId]
+ *             properties:
+ *               action:
+ *                 type: string
+ *                 enum: [match, ignore]
+ *               transactionId:
+ *                 type: string
+ *                 format: uuid
+ *               companyId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Required when action is "match"
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Action completed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 action:
+ *                   type: string
+ *       400:
+ *         description: Validation failed or missing companyId for match action
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

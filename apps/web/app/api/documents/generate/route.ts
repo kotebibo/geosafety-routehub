@@ -1,3 +1,60 @@
+/**
+ * @swagger
+ * /api/documents/generate:
+ *   post:
+ *     summary: Generate a document from a template and board item data
+ *     tags: [Documents]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - templateId
+ *               - itemId
+ *               - boardId
+ *             properties:
+ *               templateId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the document template to use
+ *               itemId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the board item to pull data from
+ *               boardId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the board (used to fetch columns)
+ *     responses:
+ *       200:
+ *         description: Document generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 documentId:
+ *                   type: string
+ *                   format: uuid
+ *                 downloadUrl:
+ *                   type: string
+ *                 previewHtml:
+ *                   type: string
+ *                 fileName:
+ *                   type: string
+ *       400:
+ *         description: Validation failed (invalid UUIDs)
+ *       401:
+ *         description: Authentication required
+ *       404:
+ *         description: Template or board item not found
+ *       500:
+ *         description: Internal server error
+ */
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

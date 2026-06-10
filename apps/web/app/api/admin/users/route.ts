@@ -1,10 +1,134 @@
 /**
- * Admin Users API
- * List, create, and update users (server-side protected)
- * Protected: Admin only
- * - GET: List all users with roles
- * - POST: Create a new user account
- * - PUT: Update user profile
+ * @swagger
+ * /api/admin/users:
+ *   get:
+ *     summary: List all users with roles
+ *     description: Returns all users ordered by creation date, each merged with their role from user_roles.
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of users with their assigned roles
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   email:
+ *                     type: string
+ *                   full_name:
+ *                     type: string
+ *                   phone:
+ *                     type: string
+ *                     nullable: true
+ *                   is_active:
+ *                     type: boolean
+ *                   role:
+ *                     type: object
+ *                     nullable: true
+ *                     properties:
+ *                       role:
+ *                         type: string
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     summary: Create a new user account
+ *     description: Creates a user in Supabase Auth (auto-confirmed), inserts a profile in the users table, and optionally assigns a role.
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, full_name]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               full_name:
+ *                 type: string
+ *                 minLength: 1
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 userId:
+ *                   type: string
+ *                   format: uuid
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       409:
+ *         description: User with this email already exists
+ *       500:
+ *         description: Internal server error
+ *   put:
+ *     summary: Update a user profile
+ *     description: Updates user fields (full_name, phone, is_active) by user ID.
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userId]
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 format: uuid
+ *               full_name:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               is_active:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Updated user object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

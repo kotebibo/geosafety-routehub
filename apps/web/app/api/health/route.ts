@@ -1,9 +1,54 @@
 /**
- * Health Check API - Admin only
- * GET /api/health
- *
- * Runs parallel checks against Supabase and returns timed results.
- * Includes: DB ping, table counts, auth latency, RLS performance, storage.
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: System health check
+ *     description: Runs parallel checks against Supabase (DB ping, table counts, auth latency, RLS query, storage) and returns timed results with an overall status. Results are persisted to health_check_logs.
+ *     tags: [Health]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Health check results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [healthy, degraded, unhealthy]
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 checks:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [ok, slow, error]
+ *                       time_ms:
+ *                         type: integer
+ *                       result:
+ *                         description: Check-specific result value
+ *                       error:
+ *                         type: string
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                     ok:
+ *                       type: integer
+ *                     slow:
+ *                       type: integer
+ *                     failed:
+ *                       type: integer
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

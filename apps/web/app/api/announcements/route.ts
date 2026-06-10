@@ -1,3 +1,65 @@
+/**
+ * @swagger
+ * /api/announcements:
+ *   get:
+ *     summary: List all published announcements
+ *     tags: [Announcements]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of published announcements ordered by creation date descending
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     summary: Create a new announcement and notify all active users
+ *     tags: [Announcements]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - content
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 maxLength: 200
+ *               content:
+ *                 type: string
+ *                 maxLength: 5000
+ *               priority:
+ *                 type: string
+ *                 enum: [normal, important, urgent]
+ *                 default: normal
+ *               is_published:
+ *                 type: boolean
+ *                 default: true
+ *                 description: If true, in-app notifications and emails are sent to all active users
+ *     responses:
+ *       201:
+ *         description: Announcement created successfully
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

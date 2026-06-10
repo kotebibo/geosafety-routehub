@@ -1,7 +1,68 @@
 /**
- * Company Services API
- * POST - Save/update services for a company
- * Protected: Requires admin or dispatcher role
+ * @swagger
+ * /api/companies/services:
+ *   post:
+ *     summary: Save or update services for a company
+ *     description: >
+ *       Syncs the full list of services for a company. Inserts new services,
+ *       updates existing ones, and deletes any that are no longer in the list.
+ *       Requires admin or dispatcher role.
+ *     tags: [Services]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [companyId, services]
+ *             properties:
+ *               companyId:
+ *                 type: string
+ *                 format: uuid
+ *               services:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     service_type_id:
+ *                       type: string
+ *                       format: uuid
+ *                     next_inspection_date:
+ *                       type: string
+ *                       format: date
+ *                     priority:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                     assigned_inspector_id:
+ *                       type: string
+ *                       format: uuid
+ *     responses:
+ *       200:
+ *         description: Services synced successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 inserted:
+ *                   type: integer
+ *                 updated:
+ *                   type: integer
+ *                 deleted:
+ *                   type: integer
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or dispatcher access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

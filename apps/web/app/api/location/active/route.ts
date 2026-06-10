@@ -1,3 +1,59 @@
+/**
+ * @swagger
+ * /api/location/active:
+ *   get:
+ *     summary: Get currently active inspectors with live locations
+ *     description: Returns inspectors who reported a location within the last 30 minutes, including their latest coordinates and today's active route progress.
+ *     tags: [Location]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of active inspectors with location and route data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   full_name:
+ *                     type: string
+ *                   phone:
+ *                     type: string
+ *                   lat:
+ *                     type: number
+ *                   lng:
+ *                     type: number
+ *                   last_location_update:
+ *                     type: string
+ *                     format: date-time
+ *                   active_route:
+ *                     type: object
+ *                     nullable: true
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       name:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                       total_stops:
+ *                         type: integer
+ *                       completed_stops:
+ *                         type: integer
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or dispatcher role required
+ *       500:
+ *         description: Internal server error
+ */
+
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

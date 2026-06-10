@@ -1,7 +1,40 @@
 /**
- * Company Services API
- * Get company services with filters
- * Protected: Requires authentication
+ * @swagger
+ * /api/company-services:
+ *   get:
+ *     summary: List company services with optional filters
+ *     description: >
+ *       Returns company services joined with company and service_type data,
+ *       ordered by next_inspection_date ascending. Supports filtering by
+ *       inspector, service type, and status.
+ *     tags: [Services]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: service_type_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by service type
+ *       - in: query
+ *         name: inspector_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by assigned inspector
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by service status
+ *     responses:
+ *       200:
+ *         description: Array of company service objects with joined company and service_type
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

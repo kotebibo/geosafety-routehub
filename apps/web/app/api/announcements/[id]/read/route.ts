@@ -1,3 +1,34 @@
+/**
+ * @swagger
+ * /api/announcements/{id}/read:
+ *   post:
+ *     summary: Mark an announcement as read by the current user
+ *     tags: [Announcements]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Announcement ID
+ *     responses:
+ *       200:
+ *         description: Announcement marked as read (upsert on announcement_id + user_id)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Internal server error
+ */
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

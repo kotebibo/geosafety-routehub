@@ -1,7 +1,50 @@
 /**
- * Admin Assign Role API
- * Assigns a role to a user (server-side protected)
- * Protected: Admin only
+ * @swagger
+ * /api/admin/assign-role:
+ *   post:
+ *     summary: Assign or update a user's role
+ *     description: Upserts a role for a given user. If the user already has a role, it is updated; otherwise a new role assignment is created.
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userId, roleName]
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 format: uuid
+ *               roleName:
+ *                 type: string
+ *                 minLength: 1
+ *     responses:
+ *       200:
+ *         description: The created or updated role assignment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                 user_id:
+ *                   type: string
+ *                   format: uuid
+ *                 role:
+ *                   type: string
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

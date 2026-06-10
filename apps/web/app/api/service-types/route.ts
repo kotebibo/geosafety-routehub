@@ -1,8 +1,121 @@
 /**
- * Service Types API Routes
- * Handles CRUD operations for service types
- * - GET: Public (cached reference data)
- * - POST/PUT/DELETE: Admin only
+ * @swagger
+ * /api/service-types:
+ *   get:
+ *     summary: List all service types
+ *     description: Returns all service types ordered by name. Cached for 5 minutes.
+ *     tags: [Services]
+ *     responses:
+ *       200:
+ *         description: Array of service type objects
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   name:
+ *                     type: string
+ *                   name_ka:
+ *                     type: string
+ *                   is_active:
+ *                     type: boolean
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     summary: Create a new service type
+ *     description: Admin only. Validates input with Zod schema.
+ *     tags: [Services]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name:
+ *                 type: string
+ *               name_ka:
+ *                 type: string
+ *               is_active:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Created service type object
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ *   put:
+ *     summary: Update a service type
+ *     description: Admin only. Requires id in the request body.
+ *     tags: [Services]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [id]
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 format: uuid
+ *               name:
+ *                 type: string
+ *               name_ka:
+ *                 type: string
+ *               is_active:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Updated service type object
+ *       400:
+ *         description: Missing id or validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ *   delete:
+ *     summary: Delete a service type
+ *     description: Admin only. Pass id as query parameter.
+ *     tags: [Services]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Service type ID to delete
+ *     responses:
+ *       200:
+ *         description: Deletion successful
+ *       400:
+ *         description: Missing id parameter
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

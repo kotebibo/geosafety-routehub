@@ -1,3 +1,44 @@
+/**
+ * @swagger
+ * /api/documents/download:
+ *   get:
+ *     summary: Download a generated document as a binary file
+ *     tags: [Documents]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Generated document ID
+ *     responses:
+ *       200:
+ *         description: Binary file download (.docx, .xlsx, or .xls)
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           application/vnd.ms-excel:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       400:
+ *         description: Missing document ID
+ *       401:
+ *         description: Authentication required
+ *       404:
+ *         description: Document not found
+ *       500:
+ *         description: Internal server error
+ */
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

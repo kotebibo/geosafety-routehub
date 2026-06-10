@@ -1,3 +1,60 @@
+/**
+ * @swagger
+ * /api/checkins/ping:
+ *   post:
+ *     summary: Submit a GPS ping during an active check-in
+ *     description: Records the inspector's current position while checked in. Computes distance from the reference location (company location or original check-in coords) and flags whether the inspector is within the 100m geofence. Violation counts are aggregated at checkout.
+ *     tags: [Checkins]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [checkin_id, lat, lng]
+ *             properties:
+ *               checkin_id:
+ *                 type: string
+ *                 format: uuid
+ *               lat:
+ *                 type: number
+ *                 minimum: -90
+ *                 maximum: 90
+ *               lng:
+ *                 type: number
+ *                 minimum: -180
+ *                 maximum: 180
+ *               accuracy:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Ping recorded with distance result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 distance:
+ *                   type: integer
+ *                   description: Distance in meters from reference location
+ *                 within_radius:
+ *                   type: boolean
+ *                 warning:
+ *                   type: string
+ *                   nullable: true
+ *                   description: Warning message when outside radius
+ *       400:
+ *         description: Validation failed or check-in already closed
+ *       401:
+ *         description: Authentication required
+ *       404:
+ *         description: Check-in not found
+ *       500:
+ *         description: Internal server error
+ */
+
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

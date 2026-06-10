@@ -1,3 +1,155 @@
+/**
+ * @swagger
+ * /api/checkins:
+ *   get:
+ *     summary: List check-ins with optional filters
+ *     description: Returns check-ins with joined inspector, company, and location names. Officers see only their own; admins/dispatchers see all.
+ *     tags: [Checkins]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: inspector_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by inspector
+ *       - in: query
+ *         name: company_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by company
+ *       - in: query
+ *         name: from_date
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Start of date range
+ *       - in: query
+ *         name: to_date
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: End of date range
+ *       - in: query
+ *         name: active
+ *         schema:
+ *           type: string
+ *           enum: ["true", "false"]
+ *         description: If "true", return only check-ins without a checkout
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Maximum number of results
+ *     responses:
+ *       200:
+ *         description: Array of check-in records
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: User role not found
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     summary: Create a new check-in
+ *     description: Records an inspector arriving at a company location. Enforces a 100m radius geofence when the location has GPS coordinates. Prevents double check-ins. Auto-populates location coords if missing. Syncs to checkins boards.
+ *     tags: [Checkins]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [inspector_id, company_id, lat, lng]
+ *             properties:
+ *               inspector_id:
+ *                 type: string
+ *                 format: uuid
+ *               company_id:
+ *                 type: string
+ *                 format: uuid
+ *               company_location_id:
+ *                 type: string
+ *                 format: uuid
+ *                 nullable: true
+ *               route_stop_id:
+ *                 type: string
+ *                 format: uuid
+ *                 nullable: true
+ *               lat:
+ *                 type: number
+ *                 minimum: -90
+ *                 maximum: 90
+ *               lng:
+ *                 type: number
+ *                 minimum: -180
+ *                 maximum: 180
+ *               accuracy:
+ *                 type: number
+ *               notes:
+ *                 type: string
+ *                 maxLength: 2000
+ *     responses:
+ *       201:
+ *         description: Check-in created
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Cannot check in as another inspector
+ *       409:
+ *         description: Inspector already has an active check-in
+ *       422:
+ *         description: Inspector is outside the allowed geofence radius
+ *       500:
+ *         description: Internal server error
+ *   patch:
+ *     summary: Check out (close an active check-in)
+ *     description: Closes an active check-in by recording checkout coordinates and computing duration. Calculates effective minutes based on GPS ping radius compliance. Syncs checkout to checkins boards.
+ *     tags: [Checkins]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [checkin_id, lat, lng]
+ *             properties:
+ *               checkin_id:
+ *                 type: string
+ *                 format: uuid
+ *               lat:
+ *                 type: number
+ *                 minimum: -90
+ *                 maximum: 90
+ *               lng:
+ *                 type: number
+ *                 minimum: -180
+ *                 maximum: 180
+ *               accuracy:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Check-out completed
+ *       400:
+ *         description: Validation failed or already checked out
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Cannot check out another inspector
+ *       404:
+ *         description: Check-in not found
+ *       500:
+ *         description: Internal server error
+ */
+
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

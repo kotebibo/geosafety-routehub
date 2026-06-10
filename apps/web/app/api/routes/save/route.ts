@@ -1,8 +1,99 @@
 /**
- * Enhanced Save Route API Endpoint (Phase 4)
- * POST /api/routes/save
- * Service-aware route saving with inspection tracking
- * Protected: Requires authentication (admin/dispatcher)
+ * @swagger
+ * /api/routes/save:
+ *   post:
+ *     summary: Save a planned route with stops
+ *     description: Creates a route record and its stops. When a service type and inspector are specified, updates company_services inspection dates and creates inspection_history records. Requires admin or dispatcher role.
+ *     tags: [Routes]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name, date, stops]
+ *             properties:
+ *               name:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               inspectorId:
+ *                 type: string
+ *                 format: uuid
+ *               serviceTypeId:
+ *                 type: string
+ *                 format: uuid
+ *               startTime:
+ *                 type: string
+ *               totalDistance:
+ *                 type: number
+ *                 description: Total route distance in km
+ *               totalDuration:
+ *                 type: number
+ *                 description: Total route duration in minutes
+ *               optimizationType:
+ *                 type: string
+ *                 enum: [distance, duration]
+ *               routeGeometry:
+ *                 type: object
+ *                 description: GeoJSON route geometry from OSRM
+ *               stops:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: [companyId, position]
+ *                   properties:
+ *                     companyId:
+ *                       type: string
+ *                       format: uuid
+ *                     companyServiceId:
+ *                       type: string
+ *                       format: uuid
+ *                     position:
+ *                       type: integer
+ *                     distanceFromPrevious:
+ *                       type: number
+ *                     durationFromPrevious:
+ *                       type: number
+ *     responses:
+ *       200:
+ *         description: Route saved with inspection dates updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 route:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     name:
+ *                       type: string
+ *                     date:
+ *                       type: string
+ *                       format: date
+ *                     serviceTypeId:
+ *                       type: string
+ *                       format: uuid
+ *                     totalStops:
+ *                       type: integer
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or dispatcher role required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'
