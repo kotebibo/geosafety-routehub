@@ -1,5 +1,8 @@
 # Dependencies
 node_modules/
+
+# Generated swagger spec (built from JSDoc annotations at build time)
+apps/web/src/lib/swagger-spec.json
 .pnp
 .pnp.js
 
