@@ -75,6 +75,7 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.7.0",
+    "@vitest/coverage-v8": "^4.1.8",
     "autoprefixer": "^10.4.17",
     "cross-env": "^10.1.0",
     "eslint": "^8.56.0",
