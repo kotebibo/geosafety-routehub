@@ -36,14 +36,17 @@ export function useKeyboardNavigation({
   const visibleColumns = columns.filter(col => col.is_visible)
 
   // Navigate to a cell
-  const navigateToCell = useCallback((rowIndex: number, columnIndex: number) => {
-    // Clamp values
-    const newRowIndex = Math.max(0, Math.min(items.length - 1, rowIndex))
-    const newColIndex = Math.max(0, Math.min(visibleColumns.length - 1, columnIndex))
+  const navigateToCell = useCallback(
+    (rowIndex: number, columnIndex: number) => {
+      // Clamp values
+      const newRowIndex = Math.max(0, Math.min(items.length - 1, rowIndex))
+      const newColIndex = Math.max(0, Math.min(visibleColumns.length - 1, columnIndex))
 
-    setFocusedCell({ rowIndex: newRowIndex, columnIndex: newColIndex })
-    setIsEditing(false)
-  }, [items.length, visibleColumns.length])
+      setFocusedCell({ rowIndex: newRowIndex, columnIndex: newColIndex })
+      setIsEditing(false)
+    },
+    [items.length, visibleColumns.length]
+  )
 
   // Start editing the current cell
   const startEditing = useCallback(() => {
@@ -85,14 +88,27 @@ export function useKeyboardNavigation({
       }
       case 'date': {
         try {
-          return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(value))
-        } catch { return String(value) }
+          return new Intl.DateTimeFormat('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }).format(new Date(value))
+        } catch {
+          return String(value)
+        }
       }
       case 'date_range': {
         const range = typeof value === 'object' ? value : {}
         const fmt = (d: string) => {
-          try { return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(d)) }
-          catch { return d }
+          try {
+            return new Intl.DateTimeFormat('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            }).format(new Date(d))
+          } catch {
+            return d
+          }
         }
         if (range.start && range.end) return `${fmt(range.start)} → ${fmt(range.end)}`
         if (range.start) return fmt(range.start)
@@ -103,7 +119,10 @@ export function useKeyboardNavigation({
         return value === true || value === 'true' ? 'Yes' : 'No'
       case 'files': {
         if (Array.isArray(value)) {
-          return value.map((f: any) => f.name || f.url || '').filter(Boolean).join(', ')
+          return value
+            .map((f: any) => f.name || f.url || '')
+            .filter(Boolean)
+            .join(', ')
         }
         return String(value)
       }
@@ -120,9 +139,7 @@ export function useKeyboardNavigation({
     if (!data) return
 
     const { item, column } = data
-    const value = column.column_id === 'name'
-      ? item.name
-      : item.data?.[column.column_id]
+    const value = column.column_id === 'name' ? item.name : item.data?.[column.column_id]
 
     // Store in internal clipboard (raw value for paste)
     clipboardRef.current = {
@@ -132,15 +149,17 @@ export function useKeyboardNavigation({
     }
 
     // Copy human-readable text to system clipboard
-    const textValue = column.column_id === 'name'
-      ? String(value ?? '')
-      : formatCellText(value, column)
+    const textValue =
+      column.column_id === 'name' ? String(value ?? '') : formatCellText(value, column)
 
-    navigator.clipboard?.writeText(textValue).then(() => {
-      onCopy?.()
-    }).catch(() => {
-      // Clipboard API not available
-    })
+    navigator.clipboard
+      ?.writeText(textValue)
+      .then(() => {
+        onCopy?.()
+      })
+      .catch(() => {
+        // Clipboard API not available
+      })
   }, [getFocusedData, formatCellText, onCopy])
 
   // Paste cell value
@@ -203,7 +222,8 @@ export function useKeyboardNavigation({
     const handleKeyDown = (e: KeyboardEvent) => {
       // Don't capture if user is typing in an input/textarea (unless it's our cell)
       const target = e.target as HTMLElement
-      const isInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+      const isInput =
+        target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
 
       // If editing a cell, let it handle its own input
       if (isEditing && isInput) {
@@ -228,8 +248,8 @@ export function useKeyboardNavigation({
         return
       }
 
-      // If no focused cell and not in our table, ignore
-      if (!focusedCell && !tableRef.current?.contains(target)) {
+      // If target is outside our table, ignore all keystrokes
+      if (!tableRef.current?.contains(target)) {
         return
       }
 
@@ -417,8 +437,19 @@ export function useKeyboardNavigation({
       }
     }
 
+    const handleClickOutside = (e: MouseEvent) => {
+      if (tableRef.current && !tableRef.current.contains(e.target as Node)) {
+        setFocusedCell(null)
+        setIsEditing(false)
+      }
+    }
+
     document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
   }, [
     enabled,
     focusedCell,
@@ -461,16 +492,36 @@ export function KeyboardShortcutsHelp() {
     <div className="text-xs text-text-tertiary space-y-1">
       <div className="font-medium text-text-secondary mb-2">Keyboard Shortcuts</div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-        <div><kbd className="px-1 bg-bg-tertiary rounded">↑↓←→</kbd> Navigate</div>
-        <div><kbd className="px-1 bg-bg-tertiary rounded">Enter</kbd> Edit cell</div>
-        <div><kbd className="px-1 bg-bg-tertiary rounded">Tab</kbd> Next cell</div>
-        <div><kbd className="px-1 bg-bg-tertiary rounded">Esc</kbd> Cancel</div>
-        <div><kbd className="px-1 bg-bg-tertiary rounded">Space</kbd> Select row</div>
-        <div><kbd className="px-1 bg-bg-tertiary rounded">Ctrl+C</kbd> Copy</div>
-        <div><kbd className="px-1 bg-bg-tertiary rounded">Ctrl+V</kbd> Paste</div>
-        <div><kbd className="px-1 bg-bg-tertiary rounded">Ctrl+A</kbd> Select all</div>
-        <div><kbd className="px-1 bg-bg-tertiary rounded">Delete</kbd> Clear cell</div>
-        <div><kbd className="px-1 bg-bg-tertiary rounded">Shift+Enter</kbd> Open item</div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">↑↓←→</kbd> Navigate
+        </div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">Enter</kbd> Edit cell
+        </div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">Tab</kbd> Next cell
+        </div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">Esc</kbd> Cancel
+        </div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">Space</kbd> Select row
+        </div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">Ctrl+C</kbd> Copy
+        </div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">Ctrl+V</kbd> Paste
+        </div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">Ctrl+A</kbd> Select all
+        </div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">Delete</kbd> Clear cell
+        </div>
+        <div>
+          <kbd className="px-1 bg-bg-tertiary rounded">Shift+Enter</kbd> Open item
+        </div>
       </div>
     </div>
   )
