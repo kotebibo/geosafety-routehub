@@ -496,7 +496,7 @@ export const activityService = {
       })
 
       // Send email (fire-and-forget via internal API)
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/notifications/send-email`, {
+      fetch('/api/notifications/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
