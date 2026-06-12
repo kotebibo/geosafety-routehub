@@ -81,7 +81,7 @@ export const boardMembersService = {
     const boardName = (board as any)?.name || 'a board'
     const sharerName = (sharer as any)?.full_name || 'Someone'
 
-    fetch(`${process.env.NEXT_PUBLIC_APP_URL || ''}/api/notifications/send-email`, {
+    fetch('/api/notifications/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
