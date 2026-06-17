@@ -45,6 +45,10 @@ BEGIN
     JOIN user_boards ub ON bc.board_id = ub.board_id
     WHERE bc.column_type = 'person'
   ),
+  boards_with_person_cols AS (
+    SELECT DISTINCT pc.board_id
+    FROM person_columns pc
+  ),
   due_date_columns AS (
     SELECT DISTINCT ON (bc.board_id) bc.board_id, bc.column_id
     FROM board_columns bc
@@ -54,7 +58,8 @@ BEGIN
       AND (bc.config->>'is_due_date')::boolean = true
     ORDER BY bc.board_id, bc.position
   ),
-  matched_items AS (
+  -- Items where user is assigned via person column
+  person_matched_items AS (
     SELECT DISTINCT ON (bi.id)
       bi.id,
       array_agg(DISTINCT pc.column_id) AS matched_columns
@@ -67,6 +72,21 @@ BEGIN
       bi.data -> pc.column_id @> to_jsonb(p_user_id::text)
     )
     GROUP BY bi.id
+  ),
+  -- All items from boards WITHOUT person columns (user is member = show all)
+  board_member_items AS (
+    SELECT
+      bi.id,
+      ARRAY[]::varchar[] AS matched_columns
+    FROM board_items bi
+    JOIN user_boards ub ON bi.board_id = ub.board_id
+    WHERE bi.deleted_at IS NULL
+    AND bi.board_id NOT IN (SELECT bwpc.board_id FROM boards_with_person_cols bwpc)
+  ),
+  all_matched AS (
+    SELECT * FROM person_matched_items
+    UNION ALL
+    SELECT * FROM board_member_items
   )
   SELECT
     bi.id AS item_id,
@@ -87,10 +107,10 @@ BEGIN
     bi.position AS item_position,
     bi.created_at AS item_created_at,
     bi.updated_at AS item_updated_at,
-    mi.matched_columns::text[] AS person_column_ids,
+    am.matched_columns::text[] AS person_column_ids,
     ddc.column_id::text AS date_column_id
-  FROM matched_items mi
-  JOIN board_items bi ON bi.id = mi.id
+  FROM all_matched am
+  JOIN board_items bi ON bi.id = am.id
   JOIN boards b ON b.id = bi.board_id
   LEFT JOIN board_groups bg ON bg.id = bi.group_id
   LEFT JOIN due_date_columns ddc ON ddc.board_id = bi.board_id
