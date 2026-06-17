@@ -70,16 +70,16 @@ BEGIN
   )
   SELECT
     bi.id AS item_id,
-    bi.name AS item_name,
+    bi.name::text AS item_name,
     b.id AS board_id,
-    b.name AS board_name,
-    b.icon AS board_icon,
-    b.color AS board_color,
+    b.name::text AS board_name,
+    b.icon::text AS board_icon,
+    b.color::text AS board_color,
     bg.id AS group_id,
-    bg.name AS group_name,
-    bg.color AS group_color,
+    bg.name::text AS group_name,
+    bg.color::text AS group_color,
     bi.data AS item_data,
-    bi.status AS item_status,
+    bi.status::text AS item_status,
     COALESCE(
       bi.due_date::date,
       (bi.data ->> ddc.column_id)::date
@@ -87,8 +87,8 @@ BEGIN
     bi.position AS item_position,
     bi.created_at AS item_created_at,
     bi.updated_at AS item_updated_at,
-    mi.matched_columns AS person_column_ids,
-    ddc.column_id AS date_column_id
+    mi.matched_columns::text[] AS person_column_ids,
+    ddc.column_id::text AS date_column_id
   FROM matched_items mi
   JOIN board_items bi ON bi.id = mi.id
   JOIN boards b ON b.id = bi.board_id
