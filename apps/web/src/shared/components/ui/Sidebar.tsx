@@ -50,6 +50,7 @@ import {
   Banknote,
   Bot,
   Activity,
+  ClipboardCheck,
 } from 'lucide-react'
 import {
   DndContext,
@@ -759,6 +760,13 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       labelEn: 'Home',
       icon: Home,
       permission: 'pages:dashboard',
+    },
+    {
+      href: '/my-work',
+      label: 'ჩემი სამუშაო',
+      labelEn: 'My Work',
+      icon: ClipboardCheck,
+      permission: 'pages:my_work',
     },
     {
       href: '/news',
