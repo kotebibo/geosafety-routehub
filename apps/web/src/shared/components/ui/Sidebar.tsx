@@ -496,21 +496,6 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     }
   }, [renameMode])
 
-  // Reposition board menu if it overflows the viewport
-  React.useLayoutEffect(() => {
-    if (menuRef.current && menuState) {
-      const menu = menuRef.current
-      const rect = menu.getBoundingClientRect()
-      const padding = 8
-      if (rect.bottom > window.innerHeight - padding) {
-        menu.style.top = `${Math.max(padding, window.innerHeight - rect.height - padding)}px`
-      }
-      if (rect.right > window.innerWidth - padding) {
-        menu.style.left = `${Math.max(padding, window.innerWidth - rect.width - padding)}px`
-      }
-    }
-  }, [menuState, renameMode, showColorPicker, showDeleteConfirm])
-
   // Board search
   const boardSearchResults = React.useMemo(() => {
     if (!boardSearchQuery.trim() || !allBoards) return []
@@ -565,16 +550,24 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     e.stopPropagation()
 
     const rect = (e.target as HTMLElement).getBoundingClientRect()
+    const menuHeight = 400
+    const menuWidth = 220
+    const pad = 8
+    const top =
+      rect.top + menuHeight > window.innerHeight - pad
+        ? Math.max(pad, window.innerHeight - menuHeight - pad)
+        : rect.top
+    const left =
+      rect.right + 8 + menuWidth > window.innerWidth - pad
+        ? Math.max(pad, rect.left - menuWidth - 8)
+        : rect.right + 8
     setMenuState({
       boardId,
       boardName,
       boardColor,
       isFavorite,
       isArchived,
-      position: {
-        top: rect.top,
-        left: rect.right + 8,
-      },
+      position: { top, left },
     })
     setRenameValue(boardName)
   }
@@ -597,6 +590,17 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     e.stopPropagation()
 
     const rect = (e.target as HTMLElement).getBoundingClientRect()
+    const menuHeight = 250
+    const menuWidth = 220
+    const pad = 8
+    const top =
+      rect.top + menuHeight > window.innerHeight - pad
+        ? Math.max(pad, window.innerHeight - menuHeight - pad)
+        : rect.top
+    const left =
+      rect.right + 8 + menuWidth > window.innerWidth - pad
+        ? Math.max(pad, rect.left - menuWidth - 8)
+        : rect.right + 8
     // Use workspace-level role to determine permissions
     // App-level admins get owner permissions
     const isAppAdmin = userRole?.role === 'admin'
@@ -608,10 +612,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       workspaceName,
       canEditSettings: perms.canEditSettings,
       canDelete: perms.canDelete,
-      position: {
-        top: rect.top,
-        left: rect.right + 8,
-      },
+      position: { top, left },
     })
     setWorkspaceRenameValue(workspaceName)
   }
@@ -1573,7 +1574,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
         createPortal(
           <div
             ref={menuRef}
-            className="fixed z-[9999] bg-bg-primary rounded-lg border border-border-light shadow-lg py-1 min-w-[200px]"
+            className="fixed z-[9999] bg-bg-primary rounded-lg border border-border-light shadow-lg py-1 min-w-[200px] max-h-[calc(100vh-16px)] overflow-y-auto"
             style={{
               top: menuState.position.top,
               left: menuState.position.left,
@@ -1874,24 +1875,10 @@ function WorkspaceActionsMenu({
     onClose()
   }
 
-  React.useLayoutEffect(() => {
-    if (menuRef.current) {
-      const menu = menuRef.current
-      const rect = menu.getBoundingClientRect()
-      const padding = 8
-      if (rect.bottom > window.innerHeight - padding) {
-        menu.style.top = `${Math.max(padding, window.innerHeight - rect.height - padding)}px`
-      }
-      if (rect.right > window.innerWidth - padding) {
-        menu.style.left = `${Math.max(padding, window.innerWidth - rect.width - padding)}px`
-      }
-    }
-  }, [menuState, renameMode, deleteConfirm])
-
   return (
     <div
       ref={menuRef}
-      className="fixed z-[9999] bg-bg-primary rounded-lg border border-border-light shadow-lg py-1 min-w-[200px]"
+      className="fixed z-[9999] bg-bg-primary rounded-lg border border-border-light shadow-lg py-1 min-w-[200px] max-h-[calc(100vh-16px)] overflow-y-auto"
       style={{
         top: menuState.position.top,
         left: menuState.position.left,
