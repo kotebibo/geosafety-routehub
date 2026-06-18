@@ -501,6 +501,21 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     }
   }, [renameMode])
 
+  // Reposition board menu if it overflows the viewport
+  React.useLayoutEffect(() => {
+    if (menuRef.current && menuState) {
+      const menu = menuRef.current
+      const rect = menu.getBoundingClientRect()
+      const padding = 8
+      if (rect.bottom > window.innerHeight - padding) {
+        menu.style.top = `${Math.max(padding, window.innerHeight - rect.height - padding)}px`
+      }
+      if (rect.right > window.innerWidth - padding) {
+        menu.style.left = `${Math.max(padding, window.innerWidth - rect.width - padding)}px`
+      }
+    }
+  }, [menuState, renameMode, showColorPicker, showDeleteConfirm])
+
   // Board search
   const boardSearchResults = React.useMemo(() => {
     if (!boardSearchQuery.trim() || !allBoards) return []
@@ -1863,6 +1878,20 @@ function WorkspaceActionsMenu({
     router.push(`/workspaces/${menuState.workspaceId}/settings`)
     onClose()
   }
+
+  React.useLayoutEffect(() => {
+    if (menuRef.current) {
+      const menu = menuRef.current
+      const rect = menu.getBoundingClientRect()
+      const padding = 8
+      if (rect.bottom > window.innerHeight - padding) {
+        menu.style.top = `${Math.max(padding, window.innerHeight - rect.height - padding)}px`
+      }
+      if (rect.right > window.innerWidth - padding) {
+        menu.style.left = `${Math.max(padding, window.innerWidth - rect.width - padding)}px`
+      }
+    }
+  }, [menuState, renameMode, deleteConfirm])
 
   return (
     <div

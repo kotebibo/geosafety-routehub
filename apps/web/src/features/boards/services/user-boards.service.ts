@@ -64,7 +64,9 @@ export const userBoardsService = {
       name_ka?: string
       type: string
       width: number
+      pinned?: boolean
       config?: Record<string, any>
+      options?: Array<Record<string, any>>
     }>
     const uniqueTemplateColumns = templateColumns.filter(col => {
       if (seenColumnIds.has(col.id)) return false
@@ -72,19 +74,25 @@ export const userBoardsService = {
       return true
     })
 
-    const columns = uniqueTemplateColumns.map((col, index) => ({
-      board_type: template.board_type,
-      board_id: createdBoard.id,
-      column_id: col.id,
-      column_name: col.name,
-      column_name_ka: col.name_ka,
-      column_type: col.type,
-      is_visible: true,
-      is_pinned: false,
-      position: index,
-      width: col.width,
-      config: col.config || {},
-    }))
+    const columns = uniqueTemplateColumns.map((col, index) => {
+      let config = col.config || {}
+      if (col.type === 'status' && !config.options && col.options) {
+        config = { ...config, options: col.options }
+      }
+      return {
+        board_type: template.board_type,
+        board_id: createdBoard.id,
+        column_id: col.id,
+        column_name: col.name,
+        column_name_ka: col.name_ka,
+        column_type: col.type,
+        is_visible: true,
+        is_pinned: !!col.pinned,
+        position: index,
+        width: col.width,
+        config,
+      }
+    })
 
     await getSupabase().from('board_columns').delete().eq('board_id', createdBoard.id)
 
