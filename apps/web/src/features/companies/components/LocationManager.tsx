@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import type { LocationFormData } from '@/types/company'
 import { Tooltip } from '@/shared/components/ui/tooltip'
+import { useToast } from '@/components/ui-monday/Toast'
 
 interface LocationManagerProps {
   locations: LocationFormData[]
@@ -41,6 +42,7 @@ const emptyLocation: LocationFormData = {
 }
 
 export function LocationManager({ locations, onChange, disabled = false }: LocationManagerProps) {
+  const { showToast } = useToast()
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editingData, setEditingData] = useState<LocationFormData | null>(null)
   const [isAdding, setIsAdding] = useState(false)
@@ -49,7 +51,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
   // Add a new location
   const handleAdd = () => {
     if (!newLocation.name.trim() || !newLocation.address.trim()) {
-      alert('გთხოვთ შეავსოთ სახელი და მისამართი')
+      showToast('გთხოვთ შეავსოთ სახელი და მისამართი', 'warning')
       return
     }
 
@@ -77,7 +79,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
     if (editingIndex === null || !editingData) return
 
     if (!editingData.name.trim() || !editingData.address.trim()) {
-      alert('გთხოვთ შეავსოთ სახელი და მისამართი')
+      showToast('გთხოვთ შეავსოთ სახელი და მისამართი', 'warning')
       return
     }
 
@@ -106,7 +108,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
   // Delete a location
   const handleDelete = (index: number) => {
     if (locations.length === 1) {
-      alert('კომპანიას უნდა ჰქონდეს მინიმუმ ერთი ლოკაცია')
+      showToast('კომპანიას უნდა ჰქონდეს მინიმუმ ერთი ლოკაცია', 'warning')
       return
     }
 

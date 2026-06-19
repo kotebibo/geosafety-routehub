@@ -1,6 +1,7 @@
 'use client'
 
 import { User, Mail, Phone, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { useToast } from '@/components/ui-monday/Toast'
 
 interface Inspector {
   id: string
@@ -18,13 +19,15 @@ interface InspectorTableProps {
 }
 
 export function InspectorTable({ inspectors, onDelete, onToggleStatus }: InspectorTableProps) {
+  const { showToast } = useToast()
+
   const handleDelete = async (id: string, name: string) => {
     if (confirm(`დარწმუნებული ხართ, რომ გსურთ ${name}-ის წაშლა?`)) {
       try {
         await onDelete?.(id)
-        alert('ინსპექტორი წაიშალა')
+        showToast('ინსპექტორი წაიშალა', 'success')
       } catch (error) {
-        alert('წაშლისას დაფიქსირდა შეცდომა')
+        showToast('წაშლისას დაფიქსირდა შეცდომა', 'error')
       }
     }
   }
@@ -34,7 +37,7 @@ export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Inspect
     try {
       await onToggleStatus?.(inspector.id, newStatus)
     } catch (error) {
-      alert('სტატუსის ცვლილებისას დაფიქსირდა შეცდომა')
+      showToast('სტატუსის ცვლილებისას დაფიქსირდა შეცდომა', 'error')
     }
   }
 
