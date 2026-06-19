@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { inspectorsService } from '@/services/inspectors.service'
 import { routesService } from '@/services/routes.service'
+import { useToast } from '@/components/ui-monday/Toast'
 
 interface Company {
   id: string
@@ -13,6 +14,7 @@ interface Company {
 }
 
 export function useRouteBuilder() {
+  const { showToast } = useToast()
   const [inspectors, setInspectors] = useState<any[]>([])
   const [selectedInspector, setSelectedInspector] = useState<string>('')
   const [inspectorCompanies, setInspectorCompanies] = useState<Company[]>([])
@@ -86,15 +88,13 @@ export function useRouteBuilder() {
 
   const optimizeRoute = async () => {
     if (selectedCompanies.size === 0) {
-      alert('აირჩიეთ მინიმუმ ერთი კომპანია')
+      showToast('აირჩიეთ მინიმუმ ერთი კომპანია', 'warning')
       return
     }
 
     try {
       setOptimizing(true)
-      const selectedCompaniesList = inspectorCompanies.filter(c => 
-        selectedCompanies.has(c.id)
-      )
+      const selectedCompaniesList = inspectorCompanies.filter(c => selectedCompanies.has(c.id))
 
       // Call OSRM for route optimization
       const coordinates = selectedCompaniesList.map(c => `${c.lng},${c.lat}`).join(';')
@@ -128,7 +128,7 @@ export function useRouteBuilder() {
       }
     } catch (error) {
       console.error('Error optimizing route:', error)
-      alert('მარშრუტის ოპტიმიზაციისას დაფიქსირდა შეცდომა')
+      showToast('მარშრუტის ოპტიმიზაციისას დაფიქსირდა შეცდომა', 'error')
     } finally {
       setOptimizing(false)
     }
@@ -136,12 +136,12 @@ export function useRouteBuilder() {
 
   const saveRoute = async (routeData: {
     name: string
-    date: string  // Changed from scheduled_date
+    date: string // Changed from scheduled_date
     start_time: string
     notes?: string
   }) => {
     if (!optimizedRoute || !selectedInspector) {
-      alert('ჯერ შექმენით ოპტიმიზებული მარშრუტი')
+      showToast('ჯერ შექმენით ოპტიმიზებული მარშრუტი', 'warning')
       return
     }
 
@@ -155,14 +155,14 @@ export function useRouteBuilder() {
         route_geometry: optimizedRoute.geometry || null,
       })
 
-      alert('მარშრუტი წარმატებით შეინახა!')
-      
+      showToast('მარშრუტი წარმატებით შეინახა!', 'success')
+
       // Reset form
       setSelectedCompanies(new Set())
       setOptimizedRoute(null)
     } catch (error) {
       console.error('Error saving route:', error)
-      alert('მარშრუტის შენახვისას დაფიქსირდა შეცდომა')
+      showToast('მარშრუტის შენახვისას დაფიქსირდა შეცდომა', 'error')
     } finally {
       setSaving(false)
     }
