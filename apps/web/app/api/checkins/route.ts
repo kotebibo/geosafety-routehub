@@ -112,7 +112,14 @@ async function syncCheckinToBoards(
 // Sync checkout to matching board items
 async function syncCheckoutToBoards(
   checkinId: string,
-  checkoutData: { checked_out_at: string; lat: number; lng: number; duration_minutes: number }
+  checkoutData: {
+    checked_out_at: string
+    lat: number
+    lng: number
+    duration_minutes: number
+    checkout_distance: number
+    location_match: boolean
+  }
 ) {
   const supabase = createServiceClient()
   const { data: boards } = await supabase.from('boards').select('id').eq('board_type', 'checkins')
@@ -138,6 +145,8 @@ async function syncCheckoutToBoards(
             checkout_date: checkoutData.checked_out_at,
             checkout_coordinates: `${checkoutData.lat.toFixed(6)}, ${checkoutData.lng.toFixed(6)}`,
             duration_minutes: checkoutData.duration_minutes,
+            checkout_distance: checkoutData.checkout_distance,
+            location_match: checkoutData.location_match,
           },
           status: 'completed',
         })
@@ -337,24 +346,12 @@ export async function PATCH(request: NextRequest) {
     const durationMinutes = Math.round((now - checkinTime) / 60000)
     const checkedOutAt = new Date(now).toISOString()
 
-    // Calculate effective minutes (time within radius) from pings
-    let effectiveMinutes = durationMinutes
-    let totalPings = 0
-    let radiusViolations = 0
-
-    const { data: pings } = await (supabase as any)
-      .from('checkin_gps_pings')
-      .select('within_radius, created_at')
-      .eq('checkin_id', validated.checkin_id)
-      .order('created_at', { ascending: true })
-
-    if (pings && pings.length > 0) {
-      totalPings = pings.length
-      radiusViolations = pings.filter((p: any) => !p.within_radius).length
-      const withinPings = pings.filter((p: any) => p.within_radius).length
-      // Effective time = proportional to in-radius pings
-      effectiveMinutes = Math.round(durationMinutes * (withinPings / totalPings))
-    }
+    // Compare checkin vs checkout location
+    const checkoutDistance = Math.round(
+      haversineMeters(checkin.lat, checkin.lng, validated.lat, validated.lng)
+    )
+    const MATCH_RADIUS = 100
+    const locationMatch = checkoutDistance <= MATCH_RADIUS
 
     // Update the checkin
     const { data: updated, error: updateError } = await supabase
@@ -365,9 +362,8 @@ export async function PATCH(request: NextRequest) {
         checkout_lng: validated.lng,
         checkout_accuracy: validated.accuracy || null,
         duration_minutes: durationMinutes,
-        effective_minutes: effectiveMinutes,
-        total_pings: totalPings,
-        radius_violations: radiusViolations,
+        checkout_distance: checkoutDistance,
+        location_match: locationMatch,
       } as any)
       .eq('id', validated.checkin_id)
       .select()
@@ -381,6 +377,8 @@ export async function PATCH(request: NextRequest) {
       lat: validated.lat,
       lng: validated.lng,
       duration_minutes: durationMinutes,
+      checkout_distance: checkoutDistance,
+      location_match: locationMatch,
     }).catch(err => console.error('Board checkout sync error:', err))
 
     return NextResponse.json(updated)

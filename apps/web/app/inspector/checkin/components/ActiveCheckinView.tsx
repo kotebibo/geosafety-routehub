@@ -1,15 +1,6 @@
 'use client'
 
-import {
-  Timer,
-  MapPin,
-  Loader2,
-  LogOut,
-  AlertCircle,
-  ShieldAlert,
-  Radio,
-  CheckCircle2,
-} from 'lucide-react'
+import { Timer, MapPin, Loader2, LogOut, AlertCircle } from 'lucide-react'
 import type { LocationCheckin } from '@/types/checkin'
 
 interface GpsCoords {
@@ -22,10 +13,7 @@ interface ActiveCheckinViewProps {
   activeCheckin: LocationCheckin
   elapsedDisplay: string
   gpsCoords: GpsCoords | null
-  pingStatus: 'ok' | 'warning' | 'error' | null
-  lastPingDistance: number | null
   checkingOut: boolean
-  radiusMeters: number
   onCheckout: () => void
 }
 
@@ -33,10 +21,7 @@ export function ActiveCheckinView({
   activeCheckin,
   elapsedDisplay,
   gpsCoords,
-  pingStatus,
-  lastPingDistance,
   checkingOut,
-  radiusMeters,
   onCheckout,
 }: ActiveCheckinViewProps) {
   return (
@@ -50,11 +35,7 @@ export function ActiveCheckinView({
                 <Timer className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-lg font-bold">
-                  {
-                    '\u10D0\u10E5\u10E2\u10D8\u10E3\u10E0\u10D8 \u10E9\u10D4\u10D9-\u10D8\u10DC\u10D8'
-                  }
-                </h1>
+                <h1 className="text-lg font-bold">აქტიური ჩეკ-ინი</h1>
                 <p className="text-xs text-orange-100">{activeCheckin.company_name}</p>
               </div>
             </div>
@@ -66,95 +47,27 @@ export function ActiveCheckinView({
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-4">
-        {/* Live GPS Status */}
+        {/* GPS status */}
         <div
-          className={`rounded-xl border-2 p-4 ${
-            pingStatus === 'ok'
-              ? 'bg-green-50 border-green-300'
-              : pingStatus === 'warning'
-                ? 'bg-red-50 border-red-300'
-                : 'bg-gray-50 border-gray-200'
-          }`}
+          className={`rounded-xl border-2 p-4 ${gpsCoords ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-200'}`}
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  pingStatus === 'ok'
-                    ? 'bg-green-100'
-                    : pingStatus === 'warning'
-                      ? 'bg-red-100 animate-pulse'
-                      : 'bg-gray-100'
-                }`}
-              >
-                {pingStatus === 'ok' ? (
-                  <CheckCircle2 className="w-5 h-5 text-green-600" />
-                ) : pingStatus === 'warning' ? (
-                  <ShieldAlert className="w-5 h-5 text-red-600" />
-                ) : (
-                  <Radio className="w-5 h-5 text-gray-400 animate-pulse" />
-                )}
-              </div>
-              <div>
-                <p
-                  className={`text-sm font-semibold ${
-                    pingStatus === 'ok'
-                      ? 'text-green-800'
-                      : pingStatus === 'warning'
-                        ? 'text-red-800'
-                        : 'text-gray-600'
-                  }`}
-                >
-                  {pingStatus === 'ok'
-                    ? '\u10E0\u10D0\u10D3\u10D8\u10E3\u10E1\u10E8\u10D8 \u10EE\u10D0\u10E0\u10D7'
-                    : pingStatus === 'warning'
-                      ? '\u10E0\u10D0\u10D3\u10D8\u10E3\u10E1\u10D8\u10E1 \u10D2\u10D0\u10E0\u10D4\u10D7 \u10EE\u10D0\u10E0\u10D7!'
-                      : 'GPS \u10DB\u10DD\u10EC\u10DB\u10D3\u10D4\u10D1\u10D0...'}
-                </p>
-                <p
-                  className={`text-xs ${
-                    pingStatus === 'ok'
-                      ? 'text-green-600'
-                      : pingStatus === 'warning'
-                        ? 'text-red-600'
-                        : 'text-gray-500'
-                  }`}
-                >
-                  {lastPingDistance !== null
-                    ? `\u10DB\u10D0\u10DC\u10EB\u10D8\u10DA\u10D8: ${lastPingDistance}\u10DB`
-                    : '\u10DE\u10D8\u10E0\u10D5\u10D4\u10DA\u10D8 \u10DE\u10D8\u10DC\u10D2\u10D8...'}
-                  {gpsCoords &&
-                    ` \u2022 \u10E1\u10D8\u10D6\u10E3\u10E1\u10E2\u10D4: \u00B1${gpsCoords.accuracy}\u10DB`}
-                </p>
-              </div>
+          <div className="flex items-center gap-3">
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${gpsCoords ? 'bg-green-100' : 'bg-gray-100'}`}
+            >
+              <MapPin className={`w-5 h-5 ${gpsCoords ? 'text-green-600' : 'text-gray-400'}`} />
             </div>
-            <div className="flex items-center gap-1">
-              <div
-                className={`w-2 h-2 rounded-full ${
-                  pingStatus === 'ok'
-                    ? 'bg-green-500'
-                    : pingStatus === 'warning'
-                      ? 'bg-red-500 animate-ping'
-                      : 'bg-gray-400 animate-pulse'
-                }`}
-              />
-              <span className="text-[10px] text-text-tertiary">LIVE</span>
+            <div>
+              <p
+                className={`text-sm font-semibold ${gpsCoords ? 'text-green-800' : 'text-gray-600'}`}
+              >
+                {gpsCoords ? 'GPS აქტიურია' : 'GPS მოწმდება...'}
+              </p>
+              {gpsCoords && (
+                <p className="text-xs text-green-600">სიზუსტე: ±{gpsCoords.accuracy}მ</p>
+              )}
             </div>
           </div>
-
-          {pingStatus === 'warning' && (
-            <div className="mt-3 bg-red-100 rounded-lg px-3 py-2">
-              <p className="text-xs text-red-700 font-medium">
-                {
-                  '\u10D2\u10D0\u10E4\u10E0\u10D7\u10EE\u10D8\u10DA\u10D4\u10D1\u10D0: \u10D7\u10E5\u10D5\u10D4\u10DC \u10D8\u10DB\u10E7\u10DD\u10E4\u10D4\u10D1\u10D8\u10D7'
-                }{' '}
-                {radiusMeters}
-                {
-                  '\u10DB \u10E0\u10D0\u10D3\u10D8\u10E3\u10E1\u10D8\u10E1 \u10D2\u10D0\u10E0\u10D4\u10D7. \u10D4\u10E1 \u10D3\u10D0\u10E4\u10D8\u10E5\u10E1\u10D8\u10E0\u10D3\u10D4\u10D1\u10D0 \u10D7\u10E5\u10D5\u10D4\u10DC\u10E1 \u10E9\u10D4\u10D9-\u10D8\u10DC\u10D8\u10E1 \u10D8\u10E1\u10E2\u10DD\u10E0\u10D8\u10D0\u10E8\u10D8.'
-                }
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Location info */}
@@ -164,6 +77,13 @@ export function ActiveCheckinView({
             <span className="text-sm text-text-secondary">{activeCheckin.location_name}</span>
           </div>
         )}
+
+        {/* Info about 2-ping system */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <p className="text-xs text-blue-700">
+            ჩეკ-აუთის დროს შედარდება თქვენი ამჟამინდელი მდებარეობა ჩეკ-ინის მდებარეობასთან.
+          </p>
+        </div>
 
         {/* Checkout button */}
         <button
@@ -175,16 +95,12 @@ export function ActiveCheckinView({
           {checkingOut ? (
             <>
               <Loader2 className="w-6 h-6 animate-spin" />
-              <span>
-                {
-                  '\u10E9\u10D4\u10D9-\u10D0\u10E3\u10D7\u10D8 \u10DB\u10D8\u10DB\u10D3\u10D8\u10DC\u10D0\u10E0\u10D4\u10DD\u10D1\u10E1...'
-                }
-              </span>
+              <span>ჩეკ-აუთი მიმდინარეობს...</span>
             </>
           ) : (
             <>
               <LogOut className="w-6 h-6" />
-              <span>{'\u10E9\u10D4\u10D9-\u10D0\u10E3\u10D7\u10D8'}</span>
+              <span>ჩეკ-აუთი</span>
             </>
           )}
         </button>
@@ -192,10 +108,7 @@ export function ActiveCheckinView({
         {!gpsCoords && (
           <p className="text-center text-xs text-red-500 flex items-center justify-center gap-1">
             <AlertCircle className="w-3.5 h-3.5" />
-            GPS{' '}
-            {
-              '\u10E1\u10D8\u10D2\u10DC\u10D0\u10DA\u10D8\u10E1 \u10DB\u10DD\u10DA\u10DD\u10D3\u10D8\u10DC\u10D8 \u10E9\u10D4\u10D9-\u10D0\u10E3\u10D7\u10D8\u10E1\u10D7\u10D5\u10D8\u10E1...'
-            }
+            GPS სიგნალის მოლოდინი ჩეკ-აუთისთვის...
           </p>
         )}
       </div>

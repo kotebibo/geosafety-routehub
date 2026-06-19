@@ -18,25 +18,12 @@ export interface LocationCheckin {
   checkout_lng?: number | null
   checkout_accuracy?: number | null
   duration_minutes?: number | null
-  // Tracking fields
-  radius_violations?: number
-  total_pings?: number
-  effective_minutes?: number | null
+  checkout_distance?: number | null
+  location_match?: boolean | null
   // Joined fields
   inspector_name?: string
   company_name?: string
   location_name?: string
-}
-
-export interface CheckinGpsPing {
-  id: string
-  checkin_id: string
-  lat: number
-  lng: number
-  accuracy?: number | null
-  distance_from_location?: number | null
-  within_radius: boolean
-  created_at: string
 }
 
 export interface CreateCheckinInput {
