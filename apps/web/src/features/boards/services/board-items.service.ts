@@ -129,14 +129,20 @@ export const boardItemsService = {
   },
 
   async searchBoardItems(boardId: string, query: string): Promise<BoardItem[]> {
-    const { data, error } = await getSupabase()
+    const tokens = query.trim().split(/\s+/).filter(Boolean)
+    if (tokens.length === 0) return []
+
+    let q = getSupabase()
       .from('board_items')
       .select('*')
       .eq('board_id', boardId)
       .is('deleted_at', null)
-      .ilike('name', `%${query}%`)
-      .order('position', { ascending: true })
-      .limit(50)
+
+    for (const token of tokens) {
+      q = q.ilike('name', `%${token}%`)
+    }
+
+    const { data, error } = await q.order('position', { ascending: true }).limit(50)
 
     if (error) throw error
     return (data || []) as BoardItem[]
