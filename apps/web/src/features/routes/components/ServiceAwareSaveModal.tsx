@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { X, Save, Calendar, Clock, User } from 'lucide-react'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
 import { FeatureGate } from '@/components/FeatureGate'
+import { useToast } from '@/components/ui-monday/Toast'
 
 interface CompanyService {
   id: string
@@ -54,13 +55,15 @@ export function ServiceAwareSaveModal({
   const [startTime, setStartTime] = useState('08:00')
   const [saving, setSaving] = useState(false)
 
+  const { showToast } = useToast()
+
   if (!isOpen) return null
 
   const totalDistance = route.reduce((sum, stop) => sum + (stop.distance || 0), 0)
 
   const handleSave = async () => {
     if (!name.trim()) {
-      alert('გთხოვთ შეიყვანოთ მარშრუტის სახელი')
+      showToast('გთხოვთ შეიყვანოთ მარშრუტის სახელი', 'warning')
       return
     }
 
@@ -100,12 +103,12 @@ export function ServiceAwareSaveModal({
         throw new Error(result.error || 'Failed to save route')
       }
 
-      alert('✅ მარშრუტი წარმატებით შეინახა!\n\nინსპექციის თარიღები განახლდა.')
+      showToast('მარშრუტი წარმატებით შეინახა! ინსპექციის თარიღები განახლდა.', 'success')
       onSaveSuccess()
       onClose()
     } catch (error) {
       console.error('Save error:', error)
-      alert('❌ შეცდომა მარშრუტის შენახვისას')
+      showToast('შეცდომა მარშრუტის შენახვისას', 'error')
     } finally {
       setSaving(false)
     }

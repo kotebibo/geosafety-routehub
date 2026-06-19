@@ -56,7 +56,10 @@ vi.mock('@/lib/supabase/server', () => ({
 
 // --- Helpers ---
 
-function makeRequest(url: string, init?: RequestInit) {
+function makeRequest(
+  url: string,
+  init?: import('next/dist/server/web/spec-extension/request').RequestInit
+) {
   return new NextRequest(new URL(url, 'http://localhost:3000'), init)
 }
 
@@ -175,7 +178,7 @@ describe('Payments API - GET', () => {
     mockFromBuilders['bank_transactions'] = createQueryBuilder({
       data: null,
       error: new Error('DB error'),
-      count: null,
+      count: undefined,
     })
 
     const res = await GET(makeRequest('/api/payments'))

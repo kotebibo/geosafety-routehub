@@ -56,7 +56,10 @@ import { createClient } from '@supabase/supabase-js'
 
 function verifyCronSecret(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
-  if (!secret) return true // Allow in dev
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') return false
+    return true
+  }
   const auth = request.headers.get('authorization')
   if (auth === `Bearer ${secret}`) return true
   const url = new URL(request.url)

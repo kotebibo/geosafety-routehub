@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui-monday/Toast'
 import {
   X,
   Type,
@@ -164,6 +165,7 @@ const COLUMN_TYPES: Array<{
 ]
 
 export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColumnModalProps) {
+  const { showToast } = useToast()
   const [columnName, setColumnName] = useState('')
   const [selectedType, setSelectedType] = useState<ColumnType>('text')
   const [width, setWidth] = useState(180)
@@ -179,7 +181,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
 
     // Validate company_address requires a linked company column
     if (selectedType === 'company_address' && !linkedCompanyColumnId && companyColumns.length > 0) {
-      alert('გთხოვთ აირჩიოთ კომპანიის სვეტი')
+      showToast('გთხოვთ აირჩიოთ კომპანიის სვეტი', 'warning')
       return
     }
 

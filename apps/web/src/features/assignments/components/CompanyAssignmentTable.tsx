@@ -6,6 +6,7 @@ import { DEPLOYMENT_CONFIG } from '@/config/features'
 import { FeatureGate } from '@/components/FeatureGate'
 import { DataTable } from '@/shared/components/ui'
 import type { Column } from '@/shared/components/ui'
+import { useToast } from '@/components/ui-monday/Toast'
 
 interface CompanyAssignment {
   id: string
@@ -38,6 +39,7 @@ export function CompanyAssignmentTable({
   inspectors,
   onBulkAssign,
 }: CompanyAssignmentTableProps) {
+  const { showToast } = useToast()
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState('all')
   const [assigningTo, setAssigningTo] = useState<string>('')
@@ -50,12 +52,12 @@ export function CompanyAssignmentTable({
 
   const handleBulkAssign = async () => {
     if (selected.size === 0) {
-      alert('აირჩიეთ მინიმუმ ერთი კომპანია')
+      showToast('აირჩიეთ მინიმუმ ერთი კომპანია', 'warning')
       return
     }
 
     if (!assigningTo) {
-      alert('აირჩიეთ ინსპექტორი')
+      showToast('აირჩიეთ ინსპექტორი', 'warning')
       return
     }
 
@@ -65,9 +67,9 @@ export function CompanyAssignmentTable({
       await onBulkAssign(Array.from(selected), inspectorId)
       setSelected(new Set())
       setAssigningTo('')
-      alert('წარმატებით დაინიშნა!')
+      showToast('წარმატებით დაინიშნა!', 'success')
     } catch {
-      alert('დაფიქსირდა შეცდომა')
+      showToast('დაფიქსირდა შეცდომა', 'error')
     } finally {
       setIsAssigning(false)
     }

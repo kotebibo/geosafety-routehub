@@ -142,7 +142,7 @@ describe('GET /api/debug/coordinates', () => {
 
   it('limits duplicates output to 10', async () => {
     // Create 15 duplicate coordinate groups
-    const companies = []
+    const companies: Array<{ name: string; address: string; lat: number; lng: number }> = []
     for (let i = 0; i < 15; i++) {
       const lat = 41.7 + i * 0.001
       const lng = 44.8 + i * 0.001

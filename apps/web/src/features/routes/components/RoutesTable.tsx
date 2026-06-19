@@ -1,6 +1,7 @@
 'use client'
 
 import { Calendar, Clock, MapPin, Route as RouteIcon, Trash2, UserCheck } from 'lucide-react'
+import { useToast } from '@/components/ui-monday/Toast'
 
 interface Route {
   id: string
@@ -26,6 +27,8 @@ interface RoutesTableProps {
 }
 
 export function RoutesTable({ routes, inspectors, onDelete, onReassign }: RoutesTableProps) {
+  const { showToast } = useToast()
+
   const statusColors = {
     planned: 'bg-blue-100 text-blue-800',
     in_progress: 'bg-amber-100 text-amber-800',
@@ -44,9 +47,9 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
     if (confirm(`დარწმუნებული ხართ, რომ გსურთ "${name}" მარშრუტის წაშლა?`)) {
       try {
         await onDelete?.(id)
-        alert('მარშრუტი წაიშალა')
+        showToast('მარშრუტი წაიშალა', 'success')
       } catch (error) {
-        alert('წაშლისას დაფიქსირდა შეცდომა')
+        showToast('წაშლისას დაფიქსირდა შეცდომა', 'error')
       }
     }
   }
@@ -57,9 +60,9 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
     if (newInspectorId && newInspectorId !== currentInspectorId) {
       try {
         await onReassign?.(routeId, newInspectorId)
-        alert('მარშრუტი გადაინიშნა')
+        showToast('მარშრუტი გადაინიშნა', 'success')
       } catch (error) {
-        alert('გადანიშვნისას დაფიქსირდა შეცდომა')
+        showToast('გადანიშვნისას დაფიქსირდა შეცდომა', 'error')
       }
     }
   }

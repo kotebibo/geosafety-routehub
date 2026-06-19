@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Save, Loader2, MapPin, Route as RouteIcon } from 'lucide-react'
+import { useToast } from '@/components/ui-monday/Toast'
 
 interface OptimizedRoute {
   stops: Array<{
@@ -38,6 +39,7 @@ export function RouteOptimizationPanel({
   saving,
   hasSelection,
 }: RouteOptimizationPanelProps) {
+  const { showToast } = useToast()
   const [routeName, setRouteName] = useState('')
   const [scheduledDate, setScheduledDate] = useState('')
   const [startTime, setStartTime] = useState('09:00')
@@ -45,7 +47,7 @@ export function RouteOptimizationPanel({
 
   const handleSave = async () => {
     if (!routeName || !scheduledDate) {
-      alert('შეავსეთ მარშრუტის სახელი და თარიღი')
+      showToast('შეავსეთ მარშრუტის სახელი და თარიღი', 'warning')
       return
     }
 
