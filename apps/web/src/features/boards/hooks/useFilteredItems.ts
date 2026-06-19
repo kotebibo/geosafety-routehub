@@ -11,16 +11,16 @@ export function useFilteredItems(
   return useMemo(() => {
     let result = items || []
 
-    // Apply search filter
+    // Apply search filter — split on spaces so each token matches independently
     if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase()
-      result = result.filter(
-        item =>
-          item.name?.toLowerCase().includes(searchLower) ||
-          Object.values(item.data || {}).some(val =>
-            String(val).toLowerCase().includes(searchLower)
-          )
-      )
+      const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean)
+      result = result.filter(item => {
+        const nameLower = item.name?.toLowerCase() ?? ''
+        const dataValues = Object.values(item.data || {}).map(val => String(val).toLowerCase())
+        return tokens.every(
+          token => nameLower.includes(token) || dataValues.some(v => v.includes(token))
+        )
+      })
     }
 
     // Apply column filters
