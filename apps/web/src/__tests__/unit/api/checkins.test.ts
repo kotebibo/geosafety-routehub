@@ -386,33 +386,26 @@ describe('PATCH /api/checkins (check-out)', () => {
       checked_out_at: new Date().toISOString(),
       inspector_id: USER_ID,
       duration_minutes: 30,
+      checkout_distance: 15,
+      location_match: true,
     }
 
-    // location_checkins is called multiple times:
-    // 1. select('*').eq('id', ...).single() - fetch checkin
-    // 2. from('checkin_gps_pings').select(...).eq(...).order(...) - fetch pings
-    // 3. update({...}).eq('id', ...).select().single() - update checkin
-    let selectCallCount = 0
     const locationCheckinsHandler: any = {
       select: vi.fn().mockImplementation(() => {
-        selectCallCount++
-        if (selectCallCount === 1) {
-          // Fetching checkin
-          const chain: any = {}
-          chain.eq = vi.fn().mockReturnValue(chain)
-          chain.single = vi.fn().mockResolvedValue({
-            data: {
-              id: CHECKIN_ID,
-              checked_out_at: null,
-              inspector_id: USER_ID,
-              created_at: new Date(Date.now() - 30 * 60000).toISOString(),
-            },
-            error: null,
-          })
-          return chain
-        }
-        // Shouldn't get here for location_checkins
-        return createChainableMock({ data: [], error: null })
+        const chain: any = {}
+        chain.eq = vi.fn().mockReturnValue(chain)
+        chain.single = vi.fn().mockResolvedValue({
+          data: {
+            id: CHECKIN_ID,
+            checked_out_at: null,
+            inspector_id: USER_ID,
+            lat: 41.7151,
+            lng: 44.8271,
+            created_at: new Date(Date.now() - 30 * 60000).toISOString(),
+          },
+          error: null,
+        })
+        return chain
       }),
       update: vi.fn().mockImplementation(() => {
         const chain: any = {}
@@ -428,10 +421,6 @@ describe('PATCH /api/checkins (check-out)', () => {
     mockFromHandlers['location_checkins'] = locationCheckinsHandler
 
     mockFromHandlers['user_roles'] = createChainableMock({ data: { role: 'admin' }, error: null })
-
-    // Pings query - the API casts to (supabase as any).from('checkin_gps_pings')
-    const pingsChain = createChainableMock({ data: [], error: null })
-    mockFromHandlers['checkin_gps_pings'] = pingsChain
 
     // Boards for sync (empty)
     mockFromHandlers['boards'] = createChainableMock({ data: [], error: null })

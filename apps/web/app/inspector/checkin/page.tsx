@@ -17,7 +17,6 @@ import { DistanceIndicator } from './components/DistanceIndicator'
 import { CheckinHistory } from './components/CheckinHistory'
 
 const RADIUS_METERS = 100
-const PING_INTERVAL_MS = 30000
 
 interface CompanySearchResult {
   id: string
@@ -66,10 +65,7 @@ export default function InspectorCheckinPage() {
 
   // Active checkin tracking
   const [elapsedDisplay, setElapsedDisplay] = useState('')
-  const [pingStatus, setPingStatus] = useState<'ok' | 'warning' | 'error' | null>(null)
-  const [lastPingDistance, setLastPingDistance] = useState<number | null>(null)
   const [checkingOut, setCheckingOut] = useState(false)
-  const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Recent checkins
   const [recentCheckins, setRecentCheckins] = useState<LocationCheckin[]>([])
@@ -167,57 +163,6 @@ export default function InspectorCheckinPage() {
 
     return () => clearInterval(interval)
   }, [activeCheckin])
-
-  // GPS ping during active checkin
-  useEffect(() => {
-    if (!activeCheckin || !gpsCoords) {
-      if (pingIntervalRef.current) {
-        clearInterval(pingIntervalRef.current)
-        pingIntervalRef.current = null
-      }
-      return
-    }
-
-    const sendPing = async () => {
-      if (!gpsCoords) return
-      try {
-        const res = await fetch('/api/checkins/ping', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            checkin_id: activeCheckin.id,
-            lat: gpsCoords.lat,
-            lng: gpsCoords.lng,
-            accuracy: gpsCoords.accuracy,
-          }),
-        })
-
-        if (res.ok) {
-          const data = await res.json()
-          setLastPingDistance(data.distance)
-          setPingStatus(data.within_radius ? 'ok' : 'warning')
-
-          if (!data.within_radius) {
-            showToast(data.warning, 'error')
-          }
-        } else {
-          setPingStatus('error')
-        }
-      } catch {
-        setPingStatus('error')
-      }
-    }
-
-    sendPing()
-    pingIntervalRef.current = setInterval(sendPing, PING_INTERVAL_MS)
-
-    return () => {
-      if (pingIntervalRef.current) {
-        clearInterval(pingIntervalRef.current)
-        pingIntervalRef.current = null
-      }
-    }
-  }, [activeCheckin, gpsCoords, showToast])
 
   // Calculate live distance to selected location
   useEffect(() => {
@@ -386,8 +331,6 @@ export default function InspectorCheckinPage() {
 
       setActiveCheckin(null)
       setPageState('idle')
-      setPingStatus(null)
-      setLastPingDistance(null)
 
       if (inspectorId) {
         const recentRes = await fetch(`/api/checkins?inspector_id=${inspectorId}&limit=5`)
@@ -445,10 +388,7 @@ export default function InspectorCheckinPage() {
         activeCheckin={activeCheckin}
         elapsedDisplay={elapsedDisplay}
         gpsCoords={gpsCoords}
-        pingStatus={pingStatus}
-        lastPingDistance={lastPingDistance}
         checkingOut={checkingOut}
-        radiusMeters={RADIUS_METERS}
         onCheckout={handleCheckout}
       />
     )
