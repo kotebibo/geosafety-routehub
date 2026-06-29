@@ -52,7 +52,7 @@ interface FileAttachment {
   path?: string
 }
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 
 interface MentionSuggestion {
   id: string
@@ -369,7 +369,7 @@ export function UpdatesModal({
       const newFiles: FileAttachment[] = []
       for (const file of Array.from(selectedFiles)) {
         if (file.size > MAX_FILE_SIZE) {
-          console.error(`File ${file.name} is too large (max 20MB)`)
+          console.error(`File ${file.name} is too large (max 100MB)`)
           continue
         }
 
