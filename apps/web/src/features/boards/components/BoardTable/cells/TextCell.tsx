@@ -41,6 +41,7 @@ export const TextCell = memo(function TextCell({
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    e.stopPropagation()
     if (e.key === 'Enter') {
       handleSave()
     } else if (e.key === 'Escape') {
