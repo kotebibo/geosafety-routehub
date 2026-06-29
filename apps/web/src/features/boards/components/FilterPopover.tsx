@@ -25,6 +25,7 @@ import {
   CircleDot,
   Plus,
   Pencil,
+  ClipboardCheck,
 } from 'lucide-react'
 import { useUsers } from '@/hooks/useUsers'
 import { useRoutes } from '@/features/routes/hooks/useRoutes'
@@ -74,6 +75,7 @@ export const COLUMN_TYPE_ICONS: Record<ColumnType, React.ElementType> = {
   files: FileText,
   updates: MessageSquare,
   actions: FileText,
+  checkin: ClipboardCheck,
 }
 
 // Conditions that don't need a value
@@ -166,6 +168,10 @@ const CONDITIONS_BY_TYPE: Record<ColumnType, { value: string; label: string }[]>
   updates: [
     { value: 'is_empty', label: 'has no updates' },
     { value: 'is_not_empty', label: 'has updates' },
+  ],
+  checkin: [
+    { value: 'is_empty', label: 'is empty' },
+    { value: 'is_not_empty', label: 'is not empty' },
   ],
   actions: [],
 }
