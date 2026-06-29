@@ -27,6 +27,7 @@ export type ColumnType =
   | 'email'
   | 'files'
   | 'updates'
+  | 'checkin'
 
 export type SortDirection = 'asc' | 'desc'
 

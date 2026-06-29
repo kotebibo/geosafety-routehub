@@ -389,6 +389,7 @@ export function useBoardHandlers({
           email: 'Email',
           files: 'Files',
           updates: 'Updates',
+          checkin: 'Check-in',
         }
 
         const baseName = typeLabels[columnType] || 'Column'

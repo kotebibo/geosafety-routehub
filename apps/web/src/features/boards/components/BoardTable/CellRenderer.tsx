@@ -14,6 +14,7 @@ import {
   EmailCell,
   FilesCell,
   UpdatesCell,
+  CheckinCell,
 } from './cells'
 import { PersonCell } from './cells/PersonCell'
 import type { CellRendererProps } from './types'
@@ -115,6 +116,9 @@ export const CellRenderer = memo(
             onEditStart={props.onEditStart}
           />
         )
+
+      case 'checkin':
+        return <CheckinCell value={props.value} row={row} />
 
       case 'text':
       default:
