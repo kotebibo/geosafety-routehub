@@ -21,8 +21,6 @@ import {
   flattenGroupsForVirtualization,
   type VirtualRow,
 } from '../../utils/flattenGroupsForVirtualization'
-import { useKeyboardNavigation } from '../../hooks/useKeyboardNavigation'
-import { useToast } from '@/components/ui-monday/Toast'
 import { Tooltip } from '@/shared/components/ui/tooltip'
 import { SubitemRow } from './SubitemRow'
 import type {
@@ -186,12 +184,6 @@ export function VirtualizedBoardTable({
   const editInputRef = useRef<HTMLInputElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Toast for copy feedback
-  const { showToast } = useToast()
-  const handleCopy = useCallback(() => {
-    showToast('Copied to clipboard', 'success', 1500)
-  }, [showToast])
-
   // Column resize tracking
   const [isResizing, setIsResizing] = useState(false)
   const [resizingColumnId, setResizingColumnId] = useState<string | null>(null)
@@ -278,30 +270,6 @@ export function VirtualizedBoardTable({
 
   // Memoize visible columns
   const visibleColumns = useMemo(() => columns, [columns])
-
-  // Keyboard navigation
-  const {
-    tableRef,
-    focusedCell,
-    isEditing: isKeyboardEditing,
-    isCellFocused,
-    isCellEditing,
-    setFocusedCell,
-  } = useKeyboardNavigation({
-    items: data,
-    columns: visibleColumns,
-    onCellEdit,
-    onRowClick,
-    onSelectionChange,
-    selection,
-    enabled: true,
-    onCopy: handleCopy,
-  })
-
-  // Clear focused cell when sort changes to prevent scroll jump
-  useEffect(() => {
-    setFocusedCell(null)
-  }, [sortConfig])
 
   // Get column width
   const getColumnWidth = useCallback(
@@ -671,9 +639,22 @@ export function VirtualizedBoardTable({
   )
 
   const handleRowDragStart = useCallback((e: React.DragEvent, itemId: string) => {
+    const target = e.target as HTMLElement
+    if (!target.closest('[data-drag-handle]')) {
+      e.preventDefault()
+      return
+    }
     e.dataTransfer.setData('text/plain', itemId)
     e.dataTransfer.effectAllowed = 'move'
     setDraggingItemId(itemId)
+  }, [])
+
+  const handleRowDragEnd = useCallback(() => {
+    setDraggingItemId(null)
+    setDragOverGroupId(null)
+    setDragOverItemId(null)
+    setDragOverPosition(null)
+    lastDragStateRef.current = { itemId: null, position: null }
   }, [])
 
   const handleRowDragOver = useCallback(
@@ -1286,6 +1267,7 @@ export function VirtualizedBoardTable({
               <tr
                 draggable={canDrag}
                 onDragStart={e => handleRowDragStart(e, item.id)}
+                onDragEnd={handleRowDragEnd}
                 onDragOver={e => handleRowDragOver(e, item.id, itemGroupId)}
                 onDragLeave={handleRowDragLeave}
                 onDrop={e => handleRowDrop(e, item.id, itemGroupId)}
@@ -1308,23 +1290,34 @@ export function VirtualizedBoardTable({
                   <td
                     className="bg-bg-primary border border-border-medium w-10 h-9 text-center"
                     style={stickyStyle(stickyOffsets.checkbox)}
+                    onClick={e => e.stopPropagation()}
                   >
-                    <input
-                      type="checkbox"
-                      checked={selection.has(item.id)}
-                      onChange={e => {
-                        e.stopPropagation()
-                        const newSelection = new Set(selection)
-                        if (e.target.checked) {
-                          newSelection.add(item.id)
-                        } else {
-                          newSelection.delete(item.id)
-                        }
-                        onSelectionChange(newSelection)
-                      }}
-                      onClick={e => e.stopPropagation()}
-                      className="w-4 h-4 rounded border-border-medium text-monday-primary focus:ring-monday-primary"
-                    />
+                    <div className="flex items-center justify-center h-full relative">
+                      {canDrag && (
+                        <div
+                          data-drag-handle
+                          className="absolute left-0.5 opacity-0 group-hover/row:opacity-100 cursor-grab active:cursor-grabbing"
+                        >
+                          <GripVertical className="w-3 h-3 text-text-tertiary" />
+                        </div>
+                      )}
+                      <input
+                        type="checkbox"
+                        checked={selection.has(item.id)}
+                        onChange={e => {
+                          e.stopPropagation()
+                          const newSelection = new Set(selection)
+                          if (e.target.checked) {
+                            newSelection.add(item.id)
+                          } else {
+                            newSelection.delete(item.id)
+                          }
+                          onSelectionChange(newSelection)
+                        }}
+                        onClick={e => e.stopPropagation()}
+                        className="w-4 h-4 rounded border-border-medium text-monday-primary focus:ring-monday-primary"
+                      />
+                    </div>
                   </td>
                 )}
                 {/* Color bar */}
@@ -1339,9 +1332,7 @@ export function VirtualizedBoardTable({
                 {/* Data columns */}
                 {visibleColumns.map((col, colIndex) => {
                   const cellId = `${item.id}:${col.column_id}`
-                  const rowIndex = data.findIndex(d => d.id === item.id)
-                  const isEditing = editingCellId === cellId || isCellEditing(rowIndex, colIndex)
-                  const isFocused = isCellFocused(rowIndex, colIndex)
+                  const isEditing = editingCellId === cellId
                   const value =
                     col.column_id === 'name'
                       ? item.name
@@ -1359,17 +1350,13 @@ export function VirtualizedBoardTable({
                     <td
                       key={col.id}
                       className={cn(
-                        'bg-bg-primary border border-border-medium px-0 py-0 text-sm h-9 relative',
-                        isFocused && !isEditing && 'ring-2 ring-inset ring-monday-primary'
+                        'bg-bg-primary border border-border-medium px-0 py-0 text-sm h-9 relative'
                       )}
                       style={{
                         width: getColumnWidth(col),
                         ...(colIndex === 0 ? stickyStyle(stickyOffsets.firstCol) : {}),
                       }}
-                      onClick={e => {
-                        e.stopPropagation()
-                        setFocusedCell({ rowIndex, columnIndex: colIndex })
-                      }}
+                      onClick={e => e.stopPropagation()}
                     >
                       <div className="flex items-center h-full">
                         {/* Expand toggle for subitems */}
@@ -1450,10 +1437,6 @@ export function VirtualizedBoardTable({
       handleCellEditStart,
       // Column header (inline uses handleSort only)
       handleSort,
-      // Keyboard navigation
-      isCellFocused,
-      isCellEditing,
-      setFocusedCell,
       // Group editing
       editingGroupId,
       editingGroupName,
@@ -1475,6 +1458,7 @@ export function VirtualizedBoardTable({
       onItemMove,
       onItemReorder,
       handleRowDragStart,
+      handleRowDragEnd,
       handleRowDragOver,
       handleRowDragLeave,
       handleRowDrop,
@@ -1503,7 +1487,7 @@ export function VirtualizedBoardTable({
   }
 
   return (
-    <div ref={tableRef} tabIndex={0} className={containerClassName || 'outline-none h-full'}>
+    <div className={containerClassName || 'h-full'}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
