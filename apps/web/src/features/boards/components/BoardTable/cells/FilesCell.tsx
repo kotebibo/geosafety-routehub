@@ -51,7 +51,7 @@ const ACCEPTED_TYPES = {
   all: ['image/*', 'application/pdf', '.doc', '.docx', '.xls', '.xlsx', '.zip', '.rar', '.7z'],
 }
 
-const MAX_FILE_SIZE = 20 * 1024 * 1024 // 20MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 
 // Parse value to ensure it's always an array of FileAttachment
 function parseFilesValue(value: FileAttachment[] | string | null | undefined): FileAttachment[] {
@@ -164,7 +164,7 @@ export const FilesCell = memo(function FilesCell({
 
       for (const file of Array.from(selectedFiles)) {
         if (file.size > MAX_FILE_SIZE) {
-          console.error(`File ${file.name} is too large (max 20MB)`)
+          console.error(`File ${file.name} is too large (max 100MB)`)
           continue
         }
 
