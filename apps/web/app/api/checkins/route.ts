@@ -216,42 +216,58 @@ async function syncCheckinToBoards(
   const companyName = companyRes.data?.name || 'Unknown'
   const locationName = locationRes.data?.name || ''
 
+  const checkinObj = {
+    checkin_id: checkin.id,
+    inspector: inspectorName,
+    company: companyName,
+    location: locationName,
+    checkin_date: checkin.created_at,
+    coordinates: `${input.lat.toFixed(6)}, ${input.lng.toFixed(6)}`,
+    distance: distanceFromLocation,
+    accuracy: input.accuracy ? Math.round(input.accuracy) : null,
+    gps_updated: locationUpdated,
+    notes: input.notes || '',
+    checkout_date: null,
+    checkout_coordinates: null,
+    duration_minutes: null,
+    checkout_distance: null,
+    location_match: null,
+  }
+
   for (const board of boards) {
-    const { data: groups } = await supabase
-      .from('board_groups')
-      .select('id')
-      .eq('board_id', board.id)
-      .order('position', { ascending: true })
-      .limit(1)
+    const [groupsRes, countRes, columnsRes] = await Promise.all([
+      supabase
+        .from('board_groups')
+        .select('id')
+        .eq('board_id', board.id)
+        .order('position', { ascending: true })
+        .limit(1),
+      supabase
+        .from('board_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('board_id', board.id),
+      supabase
+        .from('board_columns')
+        .select('column_id')
+        .eq('board_id', board.id)
+        .eq('column_type', 'checkin'),
+    ])
 
-    const groupId = groups?.[0]?.id || null
+    const groupId = groupsRes.data?.[0]?.id || null
+    const data: Record<string, any> = { ...checkinObj }
 
-    const { count } = await supabase
-      .from('board_items')
-      .select('*', { count: 'exact', head: true })
-      .eq('board_id', board.id)
+    // Write consolidated checkin data under each checkin-type column's key
+    for (const col of columnsRes.data || []) {
+      data[col.column_id] = checkinObj
+    }
 
     const { error: insertError } = await supabase.from('board_items').insert({
       board_id: board.id,
       group_id: groupId,
-      position: count || 0,
+      position: countRes.count || 0,
       name: `${companyName} — ${inspectorName}`,
       created_by: checkin.inspector_id,
-      data: {
-        checkin_id: checkin.id,
-        inspector: inspectorName,
-        company: companyName,
-        location: locationName,
-        checkin_date: checkin.created_at,
-        coordinates: `${input.lat.toFixed(6)}, ${input.lng.toFixed(6)}`,
-        distance: distanceFromLocation,
-        accuracy: input.accuracy ? Math.round(input.accuracy) : null,
-        gps_updated: locationUpdated,
-        notes: input.notes || '',
-        checkout_date: null,
-        checkout_coordinates: null,
-        duration_minutes: null,
-      },
+      data,
       status: 'active',
     })
 
@@ -279,29 +295,51 @@ async function syncCheckoutToBoards(
   if (!boards || boards.length === 0) return
 
   for (const board of boards) {
-    // Find board items where data->checkin_id matches
-    const { data: items } = await supabase
-      .from('board_items')
-      .select('id, data')
-      .eq('board_id', board.id)
-      .filter('data->>checkin_id', 'eq', checkinId)
+    const [itemsRes, columnsRes] = await Promise.all([
+      supabase
+        .from('board_items')
+        .select('id, data')
+        .eq('board_id', board.id)
+        .filter('data->>checkin_id', 'eq', checkinId),
+      supabase
+        .from('board_columns')
+        .select('column_id')
+        .eq('board_id', board.id)
+        .eq('column_type', 'checkin'),
+    ])
 
-    if (!items || items.length === 0) continue
+    if (!itemsRes.data || itemsRes.data.length === 0) continue
+    const checkinColumns = columnsRes.data || []
 
-    for (const item of items) {
+    for (const item of itemsRes.data) {
+      const existingData = item.data as Record<string, any>
+      const checkoutFields = {
+        checkout_date: checkoutData.checked_out_at,
+        checkout_coordinates: `${checkoutData.lat.toFixed(6)}, ${checkoutData.lng.toFixed(6)}`,
+        duration_minutes: checkoutData.duration_minutes,
+        checkout_distance: checkoutData.checkout_distance,
+        location_match: checkoutData.location_match,
+      }
+
+      const updatedData: Record<string, any> = { ...existingData, ...checkoutFields }
+
+      // Update consolidated checkin data under each checkin-type column's key
+      for (const col of checkinColumns) {
+        updatedData[col.column_id] = {
+          ...(typeof existingData[col.column_id] === 'object' ? existingData[col.column_id] : {}),
+          checkin_id: existingData.checkin_id,
+          inspector: existingData.inspector,
+          company: existingData.company,
+          location: existingData.location,
+          checkin_date: existingData.checkin_date,
+          coordinates: existingData.coordinates,
+          ...checkoutFields,
+        }
+      }
+
       const { error: updateError } = await supabase
         .from('board_items')
-        .update({
-          data: {
-            ...(item.data as Record<string, any>),
-            checkout_date: checkoutData.checked_out_at,
-            checkout_coordinates: `${checkoutData.lat.toFixed(6)}, ${checkoutData.lng.toFixed(6)}`,
-            duration_minutes: checkoutData.duration_minutes,
-            checkout_distance: checkoutData.checkout_distance,
-            location_match: checkoutData.location_match,
-          },
-          status: 'completed',
-        })
+        .update({ data: updatedData, status: 'completed' })
         .eq('id', item.id)
 
       if (updateError) {

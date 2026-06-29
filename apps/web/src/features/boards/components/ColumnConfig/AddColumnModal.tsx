@@ -20,6 +20,7 @@ import {
   MessageSquare,
   Navigation,
   AlertCircle,
+  ClipboardCheck,
 } from 'lucide-react'
 import type { ColumnType, BoardColumn } from '@/types/board'
 
@@ -161,6 +162,14 @@ const COLUMN_TYPES: Array<{
     icon: <MessageSquare className="w-5 h-5" />,
     description: 'Comments and activity log',
     descriptionKa: 'კომენტარები და აქტივობის ჟურნალი',
+  },
+  {
+    type: 'checkin',
+    label: 'Check-in',
+    labelKa: 'ჩეკ-ინი',
+    icon: <ClipboardCheck className="w-5 h-5" />,
+    description: 'Check-in status, duration and location match',
+    descriptionKa: 'ჩეკ-ინის სტატუსი, ხანგრძლივობა და მდებარეობის შედარება',
   },
 ]
 
