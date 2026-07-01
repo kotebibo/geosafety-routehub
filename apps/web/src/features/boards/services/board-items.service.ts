@@ -6,6 +6,10 @@ import type { BoardItem } from '@/types/board'
 
 const getSupabase = () => createClient()
 
+function escapeLikePattern(input: string): string {
+  return input.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_')
+}
+
 export const boardItemsService = {
   async getBoardItems(boardId: string): Promise<BoardItem[]> {
     const { data, error } = await getSupabase()
@@ -139,7 +143,7 @@ export const boardItemsService = {
       .is('deleted_at', null)
 
     for (const token of tokens) {
-      q = q.ilike('name', `%${token}%`)
+      q = q.ilike('name', `%${escapeLikePattern(token)}%`)
     }
 
     const { data, error } = await q.order('position', { ascending: true }).limit(50)

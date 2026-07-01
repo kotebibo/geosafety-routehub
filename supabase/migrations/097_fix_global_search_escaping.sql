@@ -1,13 +1,17 @@
 -- ================================================
--- Migration 094: Tokenized Global Board Search
--- Split search query on spaces so each word matches
--- independently (AND logic across all tokens).
--- "გიორგი თბილისი" now finds items where both words
--- appear anywhere across name + data fields.
---
--- Updated by 097: escape LIKE wildcards, search JSONB
--- field values instead of raw data::text.
+-- Migration 097: Fix Global Search Escaping
+-- 1. Add _escape_like() helper to sanitize LIKE wildcards
+-- 2. Replace data::text with jsonb_each_text to avoid
+--    matching JSON syntax characters ({, }, ", :, ,)
+-- 3. Add ESCAPE '\' to all LIKE/ILIKE operations
 -- ================================================
+
+CREATE OR REPLACE FUNCTION public._escape_like(input TEXT)
+RETURNS TEXT
+LANGUAGE sql IMMUTABLE STRICT PARALLEL SAFE
+AS $$
+  SELECT replace(replace(replace(input, '\', '\\'), '%', '\%'), '_', '\_')
+$$;
 
 CREATE OR REPLACE FUNCTION public.search_board_items_global(
   search_query TEXT,
