@@ -148,6 +148,13 @@ export const queryKeys = {
       [...queryKeys.analytics.all, 'weeklyDistance', weeks] as const,
   },
 
+  // Checkins
+  checkins: {
+    all: ['checkins'] as const,
+    summary: (boardId: string) => ['checkins', 'summary', boardId] as const,
+    byItem: (itemId: string) => ['checkins', 'by-item', itemId] as const,
+  },
+
   // Tracking
   tracking: {
     all: ['tracking'] as const,

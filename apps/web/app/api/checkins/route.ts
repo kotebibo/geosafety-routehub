@@ -1,167 +1,17 @@
-/**
- * @swagger
- * /api/checkins:
- *   get:
- *     summary: List check-ins with optional filters
- *     description: Returns check-ins with joined inspector, company, and location names. Officers see only their own; admins/dispatchers see all.
- *     tags: [Checkins]
- *     security:
- *       - cookieAuth: []
- *     parameters:
- *       - in: query
- *         name: inspector_id
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Filter by inspector
- *       - in: query
- *         name: company_id
- *         schema:
- *           type: string
- *           format: uuid
- *         description: Filter by company
- *       - in: query
- *         name: from_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Start of date range
- *       - in: query
- *         name: to_date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: End of date range
- *       - in: query
- *         name: active
- *         schema:
- *           type: string
- *           enum: ["true", "false"]
- *         description: If "true", return only check-ins without a checkout
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Maximum number of results
- *     responses:
- *       200:
- *         description: Array of check-in records
- *       401:
- *         description: Authentication required
- *       403:
- *         description: User role not found
- *       500:
- *         description: Internal server error
- *   post:
- *     summary: Create a new check-in
- *     description: Records an inspector arriving at a company location. Enforces a 100m radius geofence when the location has GPS coordinates. Prevents double check-ins. Auto-populates location coords if missing. Syncs to checkins boards.
- *     tags: [Checkins]
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [inspector_id, company_id, lat, lng]
- *             properties:
- *               inspector_id:
- *                 type: string
- *                 format: uuid
- *               company_id:
- *                 type: string
- *                 format: uuid
- *               company_location_id:
- *                 type: string
- *                 format: uuid
- *                 nullable: true
- *               route_stop_id:
- *                 type: string
- *                 format: uuid
- *                 nullable: true
- *               lat:
- *                 type: number
- *                 minimum: -90
- *                 maximum: 90
- *               lng:
- *                 type: number
- *                 minimum: -180
- *                 maximum: 180
- *               accuracy:
- *                 type: number
- *               notes:
- *                 type: string
- *                 maxLength: 2000
- *     responses:
- *       201:
- *         description: Check-in created
- *       400:
- *         description: Validation failed
- *       401:
- *         description: Authentication required
- *       403:
- *         description: Cannot check in as another inspector
- *       409:
- *         description: Inspector already has an active check-in
- *       422:
- *         description: Inspector is outside the allowed geofence radius
- *       500:
- *         description: Internal server error
- *   patch:
- *     summary: Check out (close an active check-in)
- *     description: Closes an active check-in by recording checkout coordinates and computing duration. Calculates effective minutes based on GPS ping radius compliance. Syncs checkout to checkins boards.
- *     tags: [Checkins]
- *     security:
- *       - cookieAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [checkin_id, lat, lng]
- *             properties:
- *               checkin_id:
- *                 type: string
- *                 format: uuid
- *               lat:
- *                 type: number
- *                 minimum: -90
- *                 maximum: 90
- *               lng:
- *                 type: number
- *                 minimum: -180
- *                 maximum: 180
- *               accuracy:
- *                 type: number
- *     responses:
- *       200:
- *         description: Check-out completed
- *       400:
- *         description: Validation failed or already checked out
- *       401:
- *         description: Authentication required
- *       403:
- *         description: Cannot check out another inspector
- *       404:
- *         description: Check-in not found
- *       500:
- *         description: Internal server error
- */
-
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth, requireRole } from '@/middleware/auth'
+import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { parseCoordinates, haversineMeters } from '@/lib/geo-utils'
 
 const createCheckinSchema = z.object({
   inspector_id: z.string().uuid(),
-  company_id: z.string().uuid(),
+  company_id: z.string().uuid().nullable().optional(),
   company_location_id: z.string().uuid().nullable().optional(),
   route_stop_id: z.string().uuid().nullable().optional(),
+  board_item_id: z.string().uuid().nullable().optional(),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   accuracy: z.number().optional(),
@@ -175,179 +25,7 @@ const checkoutSchema = z.object({
   accuracy: z.number().optional(),
 })
 
-// Haversine distance in meters
-function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 6371000
-  const toRad = (d: number) => (d * Math.PI) / 180
-  const dLat = toRad(lat2 - lat1)
-  const dLng = toRad(lng2 - lng1)
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-}
-
-// Sync a check-in to all boards of type 'checkins'
-// Uses service client because this writes to boards the user may not own
-async function syncCheckinToBoards(
-  checkin: any,
-  input: { lat: number; lng: number; accuracy?: number; notes?: string },
-  locationUpdated: boolean,
-  distanceFromLocation: number | null
-) {
-  const supabase = createServiceClient()
-  const { data: boards } = await supabase.from('boards').select('id').eq('board_type', 'checkins')
-
-  if (!boards || boards.length === 0) return
-
-  const [inspectorRes, companyRes, locationRes] = await Promise.all([
-    supabase.from('users').select('full_name').eq('id', checkin.inspector_id).single(),
-    supabase.from('companies').select('name').eq('id', checkin.company_id).single(),
-    checkin.company_location_id
-      ? supabase
-          .from('company_locations')
-          .select('name')
-          .eq('id', checkin.company_location_id)
-          .single()
-      : Promise.resolve({ data: null }),
-  ])
-
-  const inspectorName = inspectorRes.data?.full_name || 'Unknown'
-  const companyName = companyRes.data?.name || 'Unknown'
-  const locationName = locationRes.data?.name || ''
-
-  const checkinObj = {
-    checkin_id: checkin.id,
-    inspector: inspectorName,
-    company: companyName,
-    location: locationName,
-    checkin_date: checkin.created_at,
-    coordinates: `${input.lat.toFixed(6)}, ${input.lng.toFixed(6)}`,
-    distance: distanceFromLocation,
-    accuracy: input.accuracy ? Math.round(input.accuracy) : null,
-    gps_updated: locationUpdated,
-    notes: input.notes || '',
-    checkout_date: null,
-    checkout_coordinates: null,
-    duration_minutes: null,
-    checkout_distance: null,
-    location_match: null,
-  }
-
-  for (const board of boards) {
-    const [groupsRes, countRes, columnsRes] = await Promise.all([
-      supabase
-        .from('board_groups')
-        .select('id')
-        .eq('board_id', board.id)
-        .order('position', { ascending: true })
-        .limit(1),
-      supabase
-        .from('board_items')
-        .select('*', { count: 'exact', head: true })
-        .eq('board_id', board.id),
-      supabase
-        .from('board_columns')
-        .select('column_id')
-        .eq('board_id', board.id)
-        .eq('column_type', 'checkin'),
-    ])
-
-    const groupId = groupsRes.data?.[0]?.id || null
-    const data: Record<string, any> = { ...checkinObj }
-
-    // Write consolidated checkin data under each checkin-type column's key
-    for (const col of columnsRes.data || []) {
-      data[col.column_id] = checkinObj
-    }
-
-    const { error: insertError } = await supabase.from('board_items').insert({
-      board_id: board.id,
-      group_id: groupId,
-      position: countRes.count || 0,
-      name: `${companyName} — ${inspectorName}`,
-      created_by: checkin.inspector_id,
-      data,
-      status: 'active',
-    })
-
-    if (insertError) {
-      console.error(`Failed to sync checkin to board ${board.id}:`, insertError)
-    }
-  }
-}
-
-// Sync checkout to matching board items
-async function syncCheckoutToBoards(
-  checkinId: string,
-  checkoutData: {
-    checked_out_at: string
-    lat: number
-    lng: number
-    duration_minutes: number
-    checkout_distance: number
-    location_match: boolean
-  }
-) {
-  const supabase = createServiceClient()
-  const { data: boards } = await supabase.from('boards').select('id').eq('board_type', 'checkins')
-
-  if (!boards || boards.length === 0) return
-
-  for (const board of boards) {
-    const [itemsRes, columnsRes] = await Promise.all([
-      supabase
-        .from('board_items')
-        .select('id, data')
-        .eq('board_id', board.id)
-        .filter('data->>checkin_id', 'eq', checkinId),
-      supabase
-        .from('board_columns')
-        .select('column_id')
-        .eq('board_id', board.id)
-        .eq('column_type', 'checkin'),
-    ])
-
-    if (!itemsRes.data || itemsRes.data.length === 0) continue
-    const checkinColumns = columnsRes.data || []
-
-    for (const item of itemsRes.data) {
-      const existingData = item.data as Record<string, any>
-      const checkoutFields = {
-        checkout_date: checkoutData.checked_out_at,
-        checkout_coordinates: `${checkoutData.lat.toFixed(6)}, ${checkoutData.lng.toFixed(6)}`,
-        duration_minutes: checkoutData.duration_minutes,
-        checkout_distance: checkoutData.checkout_distance,
-        location_match: checkoutData.location_match,
-      }
-
-      const updatedData: Record<string, any> = { ...existingData, ...checkoutFields }
-
-      // Update consolidated checkin data under each checkin-type column's key
-      for (const col of checkinColumns) {
-        updatedData[col.column_id] = {
-          ...(typeof existingData[col.column_id] === 'object' ? existingData[col.column_id] : {}),
-          checkin_id: existingData.checkin_id,
-          inspector: existingData.inspector,
-          company: existingData.company,
-          location: existingData.location,
-          checkin_date: existingData.checkin_date,
-          coordinates: existingData.coordinates,
-          ...checkoutFields,
-        }
-      }
-
-      const { error: updateError } = await supabase
-        .from('board_items')
-        .update({ data: updatedData, status: 'completed' })
-        .eq('id', item.id)
-
-      if (updateError) {
-        console.error(`Failed to sync checkout to board item ${item.id}:`, updateError)
-      }
-    }
-  }
-}
+const CHECKIN_RADIUS_METERS = 100
 
 export async function POST(request: NextRequest) {
   try {
@@ -356,7 +34,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = createCheckinSchema.parse(body)
 
-    // Verify ownership: user must own this inspector_id or be admin/dispatcher
     const { data: userRole } = await supabase
       .from('user_roles')
       .select('role')
@@ -372,7 +49,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot check in as another inspector' }, { status: 403 })
     }
 
-    // Prevent double check-in: inspector must not have an active (unclosed) checkin
+    // Prevent double check-in
     const { data: activeCheckin } = await supabase
       .from('location_checkins')
       .select('id')
@@ -391,10 +68,49 @@ export async function POST(request: NextRequest) {
     let locationUpdated = false
     let distanceFromLocation: number | null = null
 
-    // Check if company location has GPS coords
-    const CHECKIN_RADIUS_METERS = 100
+    // Geofence check: board item path (new) or company location path (legacy)
+    if (validated.board_item_id) {
+      // Item-centric checkin: resolve coordinates from board item data
+      const serviceClient = createServiceClient()
+      const { data: item } = await serviceClient
+        .from('board_items')
+        .select('data, board_id')
+        .eq('id', validated.board_item_id)
+        .single()
 
-    if (validated.company_location_id) {
+      if (item) {
+        // Find checkin column config on this board
+        const { data: checkinCols } = await serviceClient
+          .from('board_columns')
+          .select('config')
+          .eq('board_id', item.board_id)
+          .eq('column_type', 'checkin')
+          .limit(1)
+
+        const coordsColumnId = (checkinCols?.[0]?.config as Record<string, any>)
+          ?.coordinates_column_id
+        if (coordsColumnId && item.data) {
+          const targetCoords = parseCoordinates((item.data as Record<string, any>)[coordsColumnId])
+          if (targetCoords) {
+            distanceFromLocation = Math.round(
+              haversineMeters(validated.lat, validated.lng, targetCoords.lat, targetCoords.lng)
+            )
+            if (distanceFromLocation > CHECKIN_RADIUS_METERS) {
+              return NextResponse.json(
+                {
+                  error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
+                  distance: distanceFromLocation,
+                  max_radius: CHECKIN_RADIUS_METERS,
+                },
+                { status: 422 }
+              )
+            }
+          }
+          // If parseCoordinates returns null: no geofence, GPS-only mode
+        }
+      }
+    } else if (validated.company_location_id) {
+      // Legacy company-based geofence
       const { data: loc } = await supabase
         .from('company_locations')
         .select('lat, lng')
@@ -403,12 +119,9 @@ export async function POST(request: NextRequest) {
 
       if (loc) {
         if (loc.lat != null && loc.lng != null) {
-          // Calculate distance
           distanceFromLocation = Math.round(
             haversineMeters(validated.lat, validated.lng, loc.lat, loc.lng)
           )
-
-          // Enforce radius: inspector must be within 100m to check in
           if (distanceFromLocation > CHECKIN_RADIUS_METERS) {
             return NextResponse.json(
               {
@@ -420,38 +133,35 @@ export async function POST(request: NextRequest) {
             )
           }
         } else {
-          // No GPS coords — auto-populate from check-in
           await supabase
             .from('company_locations')
             .update({ lat: validated.lat, lng: validated.lng })
             .eq('id', validated.company_location_id)
-
           locationUpdated = true
         }
       }
     }
 
-    // Insert check-in
     const { data: checkin, error } = await supabase
       .from('location_checkins')
       .insert({
         inspector_id: validated.inspector_id,
-        company_id: validated.company_id,
+        company_id: validated.company_id || null,
         company_location_id: validated.company_location_id || null,
         route_stop_id: validated.route_stop_id || null,
+        board_item_id: validated.board_item_id || null,
         lat: validated.lat,
         lng: validated.lng,
         accuracy: validated.accuracy || null,
         notes: validated.notes || null,
         location_updated: locationUpdated,
         distance_from_location: distanceFromLocation,
-      })
+      } as any)
       .select()
       .single()
 
     if (error) throw error
 
-    // Update route stop if linked
     if (validated.route_stop_id) {
       await supabase
         .from('route_stops')
@@ -461,11 +171,6 @@ export async function POST(request: NextRequest) {
         })
         .eq('id', validated.route_stop_id)
     }
-
-    // Sync to checkins boards (fire-and-forget, don't block the response)
-    syncCheckinToBoards(checkin, validated, locationUpdated, distanceFromLocation).catch(err =>
-      console.error('Board sync error:', err)
-    )
 
     return NextResponse.json(
       {
@@ -490,7 +195,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// PATCH - Check out (close an active check-in)
 export async function PATCH(request: NextRequest) {
   try {
     const supabase = createServerClient()
@@ -498,7 +202,6 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json()
     const validated = checkoutSchema.parse(body)
 
-    // Get the checkin
     const { data: checkin, error: fetchError } = await supabase
       .from('location_checkins')
       .select('*')
@@ -509,12 +212,10 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Check-in not found' }, { status: 404 })
     }
 
-    // Already checked out
     if ((checkin as any).checked_out_at) {
       return NextResponse.json({ error: 'Already checked out' }, { status: 400 })
     }
 
-    // Verify ownership
     const { data: userRole } = await supabase
       .from('user_roles')
       .select('role')
@@ -530,20 +231,16 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Cannot check out another inspector' }, { status: 403 })
     }
 
-    // Calculate duration in minutes
     const checkinTime = new Date(checkin.created_at!).getTime()
     const now = Date.now()
     const durationMinutes = Math.round((now - checkinTime) / 60000)
     const checkedOutAt = new Date(now).toISOString()
 
-    // Compare checkin vs checkout location
     const checkoutDistance = Math.round(
       haversineMeters(checkin.lat, checkin.lng, validated.lat, validated.lng)
     )
-    const MATCH_RADIUS = 100
-    const locationMatch = checkoutDistance <= MATCH_RADIUS
+    const locationMatch = checkoutDistance <= CHECKIN_RADIUS_METERS
 
-    // Update the checkin
     const { data: updated, error: updateError } = await supabase
       .from('location_checkins')
       .update({
@@ -560,16 +257,6 @@ export async function PATCH(request: NextRequest) {
       .single()
 
     if (updateError) throw updateError
-
-    // Sync checkout to boards (fire-and-forget)
-    syncCheckoutToBoards(validated.checkin_id, {
-      checked_out_at: checkedOutAt,
-      lat: validated.lat,
-      lng: validated.lng,
-      duration_minutes: durationMinutes,
-      checkout_distance: checkoutDistance,
-      location_match: locationMatch,
-    }).catch(err => console.error('Board checkout sync error:', err))
 
     return NextResponse.json(updated)
   } catch (error: any) {
@@ -593,7 +280,6 @@ export async function GET(request: NextRequest) {
     const session = await requireAuth()
     const { searchParams } = new URL(request.url)
 
-    // Get user role
     const { data: userRole } = await supabase
       .from('user_roles')
       .select('role')
@@ -606,17 +292,18 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('location_checkins')
-      .select('*, inspectors(full_name), companies(name), company_locations(name)')
+      .select(
+        '*, inspectors(full_name), companies(name), company_locations(name), board_items(name, boards(name))'
+      )
       .order('created_at', { ascending: false })
 
-    // Officers only see their own
     if (userRole.role === 'officer') {
       query = query.eq('inspector_id', session.user.id)
     }
 
-    // Filters
     const inspectorId = searchParams.get('inspector_id')
     const companyId = searchParams.get('company_id')
+    const boardItemId = searchParams.get('board_item_id')
     const fromDate = searchParams.get('from_date')
     const toDate = searchParams.get('to_date')
     const limit = searchParams.get('limit')
@@ -624,6 +311,7 @@ export async function GET(request: NextRequest) {
 
     if (inspectorId) query = query.eq('inspector_id', inspectorId)
     if (companyId) query = query.eq('company_id', companyId)
+    if (boardItemId) query = query.eq('board_item_id', boardItemId)
     if (fromDate) query = query.gte('created_at', fromDate)
     if (toDate) query = query.lte('created_at', toDate)
     if (activeOnly === 'true') query = query.is('checked_out_at', null)
@@ -633,15 +321,17 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error
 
-    // Flatten joined fields
     const checkins = (data || []).map((c: any) => ({
       ...c,
       inspector_name: c.inspectors?.full_name || 'Unknown',
-      company_name: c.companies?.name || 'Unknown',
+      company_name: c.companies?.name || null,
       location_name: c.company_locations?.name || null,
+      board_item_name: c.board_items?.name || null,
+      board_name: c.board_items?.boards?.name || null,
       inspectors: undefined,
       companies: undefined,
       company_locations: undefined,
+      board_items: undefined,
     }))
 
     return NextResponse.json(checkins)
