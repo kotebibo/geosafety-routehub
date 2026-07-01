@@ -20,8 +20,11 @@ export const HighlightText = memo(function HighlightText({
   const parts = useMemo(() => {
     if (!query || query.length < 2) return [{ text, highlight: false }]
 
-    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    const regex = new RegExp(`(${escaped})`, 'gi')
+    const tokens = query.trim().split(/\s+/).filter(Boolean)
+    if (tokens.length === 0) return [{ text, highlight: false }]
+
+    const escapedTokens = tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    const regex = new RegExp(`(${escapedTokens.join('|')})`, 'gi')
     const segments: { text: string; highlight: boolean }[] = []
     let lastIndex = 0
     let match: RegExpExecArray | null
@@ -45,7 +48,9 @@ export const HighlightText = memo(function HighlightText({
     <span className={className}>
       {parts.map((part, i) =>
         part.highlight ? (
-          <mark key={i} className={highlightClassName}>{part.text}</mark>
+          <mark key={i} className={highlightClassName}>
+            {part.text}
+          </mark>
         ) : (
           <span key={i}>{part.text}</span>
         )
