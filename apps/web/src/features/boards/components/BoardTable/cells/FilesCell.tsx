@@ -54,9 +54,15 @@ const ACCEPTED_TYPES = {
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 
 // Parse value to ensure it's always an array of FileAttachment
+function sortByRecent(files: FileAttachment[]): FileAttachment[] {
+  return [...files].sort(
+    (a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime()
+  )
+}
+
 function parseFilesValue(value: FileAttachment[] | string | null | undefined): FileAttachment[] {
   if (!value) return []
-  if (Array.isArray(value)) return value
+  if (Array.isArray(value)) return sortByRecent(value)
 
   // Handle string values (from imports)
   if (typeof value === 'string') {
@@ -66,7 +72,7 @@ function parseFilesValue(value: FileAttachment[] | string | null | undefined): F
     // Try to parse as JSON array
     try {
       const parsed = JSON.parse(trimmed)
-      if (Array.isArray(parsed)) return parsed
+      if (Array.isArray(parsed)) return sortByRecent(parsed)
     } catch {
       // Not JSON, ignore
     }
@@ -212,7 +218,7 @@ export const FilesCell = memo(function FilesCell({
       }
 
       if (newFiles.length > 0) {
-        const updatedFiles = [...files, ...newFiles]
+        const updatedFiles = sortByRecent([...files, ...newFiles])
         setFiles(updatedFiles)
         onEdit?.(updatedFiles)
       }

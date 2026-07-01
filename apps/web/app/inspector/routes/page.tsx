@@ -18,25 +18,25 @@ interface Route {
 }
 
 export default function InspectorRoutesPage() {
-  const { userRole, loading: authLoading } = useAuth()
+  const { user, userRole, loading: authLoading } = useAuth()
   const router = useRouter()
   const [routes, setRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!authLoading && userRole?.inspector_id) {
+    if (!authLoading && user?.id) {
       fetchRoutes()
     }
-  }, [authLoading, userRole])
+  }, [authLoading, user])
 
   const fetchRoutes = async () => {
-    if (!userRole?.inspector_id) return
+    if (!user?.id) return
 
     try {
       const { data, error } = await supabase
         .from('routes')
         .select('*')
-        .eq('inspector_id', userRole.inspector_id)
+        .eq('inspector_id', user.id)
         .order('scheduled_date', { ascending: true })
 
       if (error) throw error

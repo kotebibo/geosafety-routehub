@@ -1,3 +1,155 @@
+/**
+ * @swagger
+ * /api/checkins:
+ *   get:
+ *     summary: List check-ins with optional filters
+ *     description: Returns check-ins with joined inspector, company, and location names. Officers see only their own; admins/dispatchers see all.
+ *     tags: [Checkins]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: inspector_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by inspector
+ *       - in: query
+ *         name: company_id
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Filter by company
+ *       - in: query
+ *         name: from_date
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Start of date range
+ *       - in: query
+ *         name: to_date
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: End of date range
+ *       - in: query
+ *         name: active
+ *         schema:
+ *           type: string
+ *           enum: ["true", "false"]
+ *         description: If "true", return only check-ins without a checkout
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Maximum number of results
+ *     responses:
+ *       200:
+ *         description: Array of check-in records
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: User role not found
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     summary: Create a new check-in
+ *     description: Records an inspector arriving at a company location. Enforces a 100m radius geofence when the location has GPS coordinates. Prevents double check-ins. Auto-populates location coords if missing. Syncs to checkins boards.
+ *     tags: [Checkins]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [inspector_id, company_id, lat, lng]
+ *             properties:
+ *               inspector_id:
+ *                 type: string
+ *                 format: uuid
+ *               company_id:
+ *                 type: string
+ *                 format: uuid
+ *               company_location_id:
+ *                 type: string
+ *                 format: uuid
+ *                 nullable: true
+ *               route_stop_id:
+ *                 type: string
+ *                 format: uuid
+ *                 nullable: true
+ *               lat:
+ *                 type: number
+ *                 minimum: -90
+ *                 maximum: 90
+ *               lng:
+ *                 type: number
+ *                 minimum: -180
+ *                 maximum: 180
+ *               accuracy:
+ *                 type: number
+ *               notes:
+ *                 type: string
+ *                 maxLength: 2000
+ *     responses:
+ *       201:
+ *         description: Check-in created
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Cannot check in as another inspector
+ *       409:
+ *         description: Inspector already has an active check-in
+ *       422:
+ *         description: Inspector is outside the allowed geofence radius
+ *       500:
+ *         description: Internal server error
+ *   patch:
+ *     summary: Check out (close an active check-in)
+ *     description: Closes an active check-in by recording checkout coordinates and computing duration. Calculates effective minutes based on GPS ping radius compliance. Syncs checkout to checkins boards.
+ *     tags: [Checkins]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [checkin_id, lat, lng]
+ *             properties:
+ *               checkin_id:
+ *                 type: string
+ *                 format: uuid
+ *               lat:
+ *                 type: number
+ *                 minimum: -90
+ *                 maximum: 90
+ *               lng:
+ *                 type: number
+ *                 minimum: -180
+ *                 maximum: 180
+ *               accuracy:
+ *                 type: number
+ *     responses:
+ *       200:
+ *         description: Check-out completed
+ *       400:
+ *         description: Validation failed or already checked out
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Cannot check out another inspector
+ *       404:
+ *         description: Check-in not found
+ *       500:
+ *         description: Internal server error
+ */
+
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -49,7 +201,7 @@ async function syncCheckinToBoards(
   if (!boards || boards.length === 0) return
 
   const [inspectorRes, companyRes, locationRes] = await Promise.all([
-    supabase.from('inspectors').select('full_name').eq('id', checkin.inspector_id).single(),
+    supabase.from('users').select('full_name').eq('id', checkin.inspector_id).single(),
     supabase.from('companies').select('name').eq('id', checkin.company_id).single(),
     checkin.company_location_id
       ? supabase
@@ -204,10 +356,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = createCheckinSchema.parse(body)
 
-    // Verify inspector ownership: user must own this inspector_id or be admin/dispatcher
+    // Verify ownership: user must own this inspector_id or be admin/dispatcher
     const { data: userRole } = await supabase
       .from('user_roles')
-      .select('role, inspector_id')
+      .select('role')
       .eq('user_id', session.user.id)
       .single()
 
@@ -216,7 +368,7 @@ export async function POST(request: NextRequest) {
     }
 
     const isAdminOrDispatcher = userRole.role === 'admin' || userRole.role === 'dispatcher'
-    if (!isAdminOrDispatcher && userRole.inspector_id !== validated.inspector_id) {
+    if (!isAdminOrDispatcher && session.user.id !== validated.inspector_id) {
       return NextResponse.json({ error: 'Cannot check in as another inspector' }, { status: 403 })
     }
 
@@ -365,7 +517,7 @@ export async function PATCH(request: NextRequest) {
     // Verify ownership
     const { data: userRole } = await supabase
       .from('user_roles')
-      .select('role, inspector_id')
+      .select('role')
       .eq('user_id', session.user.id)
       .single()
 
@@ -374,7 +526,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const isAdminOrDispatcher = userRole.role === 'admin' || userRole.role === 'dispatcher'
-    if (!isAdminOrDispatcher && userRole.inspector_id !== checkin.inspector_id) {
+    if (!isAdminOrDispatcher && session.user.id !== checkin.inspector_id) {
       return NextResponse.json({ error: 'Cannot check out another inspector' }, { status: 403 })
     }
 
@@ -444,7 +596,7 @@ export async function GET(request: NextRequest) {
     // Get user role
     const { data: userRole } = await supabase
       .from('user_roles')
-      .select('role, inspector_id')
+      .select('role')
       .eq('user_id', session.user.id)
       .single()
 
@@ -457,12 +609,9 @@ export async function GET(request: NextRequest) {
       .select('*, inspectors(full_name), companies(name), company_locations(name)')
       .order('created_at', { ascending: false })
 
-    // Inspectors only see their own
+    // Officers only see their own
     if (userRole.role === 'officer') {
-      if (!userRole.inspector_id) {
-        return NextResponse.json([])
-      }
-      query = query.eq('inspector_id', userRole.inspector_id)
+      query = query.eq('inspector_id', session.user.id)
     }
 
     // Filters

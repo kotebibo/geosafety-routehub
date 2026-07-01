@@ -6,7 +6,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { screen, fireEvent } from '@testing-library/react'
+import { renderWithProviders } from '../test-utils'
 import { BoardToolbar, SortConfig, FilterConfig } from '@/features/boards/components/BoardToolbar'
 import type { BoardColumn, BoardType } from '@/features/boards/types/board'
 
@@ -99,12 +100,12 @@ describe('BoardToolbar', () => {
 
   describe('Rendering', () => {
     it('renders without crashing', () => {
-      const { container } = render(<BoardToolbar {...defaultProps} />)
+      const { container } = renderWithProviders(<BoardToolbar {...defaultProps} />)
       expect(container).toBeTruthy()
     })
 
     it('renders sort button', () => {
-      render(<BoardToolbar {...defaultProps} />)
+      renderWithProviders(<BoardToolbar {...defaultProps} />)
 
       // Should have a sort button with ArrowUpDown icon or text
       const buttons = screen.getAllByRole('button')
@@ -118,14 +119,14 @@ describe('BoardToolbar', () => {
     })
 
     it('renders group button', () => {
-      render(<BoardToolbar {...defaultProps} />)
+      renderWithProviders(<BoardToolbar {...defaultProps} />)
 
       const buttons = screen.getAllByRole('button')
       expect(buttons.length).toBeGreaterThan(0)
     })
 
     it('renders filter button', () => {
-      render(<BoardToolbar {...defaultProps} />)
+      renderWithProviders(<BoardToolbar {...defaultProps} />)
 
       const buttons = screen.getAllByRole('button')
       expect(buttons.length).toBeGreaterThan(0)
@@ -139,7 +140,9 @@ describe('BoardToolbar', () => {
         direction: 'asc',
       }
 
-      const { container } = render(<BoardToolbar {...defaultProps} sortConfig={sortConfig} />)
+      const { container } = renderWithProviders(
+        <BoardToolbar {...defaultProps} sortConfig={sortConfig} />
+      )
 
       expect(container).toBeTruthy()
     })
@@ -150,7 +153,9 @@ describe('BoardToolbar', () => {
         direction: 'desc',
       }
 
-      const { container } = render(<BoardToolbar {...defaultProps} sortConfig={sortConfig} />)
+      const { container } = renderWithProviders(
+        <BoardToolbar {...defaultProps} sortConfig={sortConfig} />
+      )
 
       expect(container).toBeTruthy()
     })
@@ -158,13 +163,17 @@ describe('BoardToolbar', () => {
 
   describe('Group By Configuration', () => {
     it('renders with active grouping', () => {
-      const { container } = render(<BoardToolbar {...defaultProps} groupByColumn="status" />)
+      const { container } = renderWithProviders(
+        <BoardToolbar {...defaultProps} groupByColumn="status" />
+      )
 
       expect(container).toBeTruthy()
     })
 
     it('handles null groupByColumn', () => {
-      const { container } = render(<BoardToolbar {...defaultProps} groupByColumn={null} />)
+      const { container } = renderWithProviders(
+        <BoardToolbar {...defaultProps} groupByColumn={null} />
+      )
 
       expect(container).toBeTruthy()
     })
@@ -181,7 +190,9 @@ describe('BoardToolbar', () => {
         },
       ]
 
-      const { container } = render(<BoardToolbar {...defaultProps} filters={filters} />)
+      const { container } = renderWithProviders(
+        <BoardToolbar {...defaultProps} filters={filters} />
+      )
 
       expect(container).toBeTruthy()
     })
@@ -202,13 +213,15 @@ describe('BoardToolbar', () => {
         },
       ]
 
-      const { container } = render(<BoardToolbar {...defaultProps} filters={filters} />)
+      const { container } = renderWithProviders(
+        <BoardToolbar {...defaultProps} filters={filters} />
+      )
 
       expect(container).toBeTruthy()
     })
 
     it('renders with empty filters array', () => {
-      const { container } = render(<BoardToolbar {...defaultProps} filters={[]} />)
+      const { container } = renderWithProviders(<BoardToolbar {...defaultProps} filters={[]} />)
 
       expect(container).toBeTruthy()
     })
@@ -223,13 +236,15 @@ describe('BoardToolbar', () => {
         { ...mockColumns[3], column_type: 'person' },
       ]
 
-      const { container } = render(<BoardToolbar {...defaultProps} columns={mixedColumns} />)
+      const { container } = renderWithProviders(
+        <BoardToolbar {...defaultProps} columns={mixedColumns} />
+      )
 
       expect(container).toBeTruthy()
     })
 
     it('handles empty columns array', () => {
-      const { container } = render(<BoardToolbar {...defaultProps} columns={[]} />)
+      const { container } = renderWithProviders(<BoardToolbar {...defaultProps} columns={[]} />)
 
       expect(container).toBeTruthy()
     })
@@ -237,7 +252,7 @@ describe('BoardToolbar', () => {
 
   describe('Button Interactions', () => {
     it('buttons are clickable', () => {
-      render(<BoardToolbar {...defaultProps} />)
+      renderWithProviders(<BoardToolbar {...defaultProps} />)
 
       const buttons = screen.getAllByRole('button')
       buttons.forEach(button => {
@@ -248,7 +263,7 @@ describe('BoardToolbar', () => {
 
   describe('Props Callbacks', () => {
     it('accepts all callback props without errors', () => {
-      const { container } = render(
+      const { container } = renderWithProviders(
         <BoardToolbar
           columns={mockColumns}
           sortConfig={{ column: 'name', direction: 'asc' }}
@@ -268,7 +283,7 @@ describe('BoardToolbar', () => {
 // Snapshot test for regression detection
 describe('BoardToolbar Snapshots', () => {
   it('renders consistently with default props', () => {
-    const { container } = render(
+    const { container } = renderWithProviders(
       <BoardToolbar
         columns={mockColumns}
         sortConfig={null}
@@ -285,7 +300,7 @@ describe('BoardToolbar Snapshots', () => {
   })
 
   it('renders consistently with all features active', () => {
-    const { container } = render(
+    const { container } = renderWithProviders(
       <BoardToolbar
         columns={mockColumns}
         sortConfig={{ column: 'name', direction: 'asc' }}

@@ -1,7 +1,74 @@
 /**
- * Route Optimization API Endpoint
- * POST /api/routes/optimize
- * Protected: Requires authentication (admin/dispatcher)
+ * @swagger
+ * /api/routes/optimize:
+ *   post:
+ *     summary: Optimize a route's stop order
+ *     description: Accepts a list of locations and returns an optimized stop sequence. Uses OSRM real-road routing by default. Requires admin or dispatcher role.
+ *     tags: [Routes]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [locations]
+ *             properties:
+ *               locations:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required: [lat, lng]
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     lat:
+ *                       type: number
+ *                     lng:
+ *                       type: number
+ *               options:
+ *                 type: object
+ *                 properties:
+ *                   useRealRoads:
+ *                     type: boolean
+ *                     description: Use OSRM road routing (default true)
+ *     responses:
+ *       200:
+ *         description: Optimized route with stop order and metadata
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 route:
+ *                   type: object
+ *                 metadata:
+ *                   type: object
+ *                   properties:
+ *                     inputStops:
+ *                       type: integer
+ *                     outputStops:
+ *                       type: integer
+ *                     algorithm:
+ *                       type: string
+ *                     usingRealRoads:
+ *                       type: boolean
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or dispatcher role required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

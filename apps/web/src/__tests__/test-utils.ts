@@ -4,8 +4,9 @@
  * Common utilities for writing tests
  */
 
-import { render, RenderOptions } from '@testing-library/react'
-import { ReactElement } from 'react'
+import { render, RenderOptions, renderHook, RenderHookOptions } from '@testing-library/react'
+import { ReactElement, createElement } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 // Mock data generators
 export const mockCompany = (overrides = {}) => ({
@@ -70,9 +71,37 @@ export const mockSession = (overrides = {}) => ({
   ...overrides,
 })
 
+// Create a fresh QueryClient for tests (no retries, no caching)
+export function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false },
+    },
+  })
+}
+
+// Wrapper component that provides QueryClient
+function TestProviders({ children }: { children: React.ReactNode }) {
+  const queryClient = createTestQueryClient()
+  return createElement(QueryClientProvider, { client: queryClient }, children)
+}
+
 // Custom render function with providers
 export function renderWithProviders(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
   return render(ui, {
+    wrapper: TestProviders,
+    ...options,
+  })
+}
+
+// Custom renderHook with QueryClient
+export function renderHookWithProviders<T>(
+  hook: () => T,
+  options?: Omit<RenderHookOptions<T>, 'wrapper'>
+) {
+  return renderHook(hook, {
+    wrapper: TestProviders,
     ...options,
   })
 }

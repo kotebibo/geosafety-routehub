@@ -1,8 +1,60 @@
 /**
- * Bank Backfill - Fetch historical transactions from BOG
- * Manual trigger only (not scheduled)
- * Usage: GET /api/cron/bank-backfill?from=2025-01-01&to=2026-04-29
- * Protected: CRON_SECRET header or query param
+ * @swagger
+ * /api/cron/bank-backfill:
+ *   get:
+ *     summary: Backfill historical bank transactions from BOG
+ *     description: >
+ *       Fetches historical transactions from the Bank of Georgia API for a given
+ *       date range and ingests them into bank_transactions. Manual trigger only.
+ *     tags: [Cron]
+ *     security:
+ *       - cronSecret: []
+ *     parameters:
+ *       - in: query
+ *         name: from
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date (YYYY-MM-DD)
+ *       - in: query
+ *         name: to
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date (YYYY-MM-DD)
+ *       - in: query
+ *         name: secret
+ *         schema:
+ *           type: string
+ *         description: Alternative to Authorization header for manual testing
+ *     responses:
+ *       200:
+ *         description: Backfill completed (or skipped if BOG not configured)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 range:
+ *                   type: object
+ *                   properties:
+ *                     from:
+ *                       type: string
+ *                     to:
+ *                       type: string
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *       400:
+ *         description: Missing required from/to query params
+ *       401:
+ *         description: Invalid or missing CRON_SECRET
+ *       500:
+ *         description: Backfill processing failed
  */
 
 export const dynamic = 'force-dynamic'

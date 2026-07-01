@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { waitFor } from '@testing-library/react'
+import { renderHookWithProviders } from '../test-utils'
 
 const mockFrom = vi.fn()
 
@@ -23,7 +24,7 @@ describe('useServiceTypes', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockFrom.mockReturnValue({ select: mockSelect })
 
-    const { result } = renderHook(() => useServiceTypes())
+    const { result } = renderHookWithProviders(() => useServiceTypes())
 
     expect(result.current.loading).toBe(true)
     expect(result.current.serviceTypes).toEqual([])
@@ -40,7 +41,7 @@ describe('useServiceTypes', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockFrom.mockReturnValue({ select: mockSelect })
 
-    const { result } = renderHook(() => useServiceTypes())
+    const { result } = renderHookWithProviders(() => useServiceTypes())
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false)
@@ -61,7 +62,7 @@ describe('useServiceTypes', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockFrom.mockReturnValue({ select: mockSelect })
 
-    const { result } = renderHook(() => useServiceTypes())
+    const { result } = renderHookWithProviders(() => useServiceTypes())
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false)
@@ -77,7 +78,7 @@ describe('useServiceTypes', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockFrom.mockReturnValue({ select: mockSelect })
 
-    const { result } = renderHook(() => useServiceTypes())
+    const { result } = renderHookWithProviders(() => useServiceTypes())
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false)
@@ -94,7 +95,7 @@ describe('useServiceTypes', () => {
     const mockSelect = vi.fn().mockReturnValue({ eq: mockEq })
     mockFrom.mockReturnValue({ select: mockSelect })
 
-    const { result } = renderHook(() => useServiceTypes())
+    const { result } = renderHookWithProviders(() => useServiceTypes())
 
     await waitFor(() => {
       expect(result.current.loading).toBe(false)

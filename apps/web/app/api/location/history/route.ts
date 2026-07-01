@@ -1,3 +1,60 @@
+/**
+ * @swagger
+ * /api/location/history:
+ *   get:
+ *     summary: Get location history for an inspector
+ *     description: Returns chronologically ordered GPS location points for a given inspector. Defaults to the last 24 hours if no `since` parameter is provided.
+ *     tags: [Location]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: inspector_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: The inspector whose history to retrieve
+ *       - in: query
+ *         name: since
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: ISO 8601 timestamp to fetch records from (defaults to 24 hours ago)
+ *     responses:
+ *       200:
+ *         description: Array of location points ordered by recorded_at ascending
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   lat:
+ *                     type: number
+ *                   lng:
+ *                     type: number
+ *                   recorded_at:
+ *                     type: string
+ *                     format: date-time
+ *                   accuracy:
+ *                     type: number
+ *                     nullable: true
+ *                   speed:
+ *                     type: number
+ *                     nullable: true
+ *       400:
+ *         description: Missing required inspector_id parameter
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or dispatcher role required
+ *       500:
+ *         description: Internal server error
+ */
+
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

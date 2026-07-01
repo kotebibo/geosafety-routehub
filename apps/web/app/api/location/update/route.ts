@@ -1,3 +1,60 @@
+/**
+ * @swagger
+ * /api/location/update:
+ *   post:
+ *     summary: Submit a GPS location update for an inspector
+ *     description: Updates the inspector's current location, inserts a history record, and broadcasts the update via Ably. The caller must own the inspector_id or hold admin/dispatcher role.
+ *     tags: [Location]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [inspector_id, latitude, longitude]
+ *             properties:
+ *               inspector_id:
+ *                 type: string
+ *                 format: uuid
+ *               latitude:
+ *                 type: number
+ *                 minimum: -90
+ *                 maximum: 90
+ *               longitude:
+ *                 type: number
+ *                 minimum: -180
+ *                 maximum: 180
+ *               accuracy:
+ *                 type: number
+ *               speed:
+ *                 type: number
+ *               heading:
+ *                 type: number
+ *               route_id:
+ *                 type: string
+ *                 format: uuid
+ *     responses:
+ *       200:
+ *         description: Location updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Not authorized for this inspector
+ *       500:
+ *         description: Internal server error
+ */
+
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -23,7 +80,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = locationSchema.parse(body)
 
-    // Verify the inspector belongs to this user (or user is admin/dispatcher)
+    // Verify ownership: user must own this ID or be admin/dispatcher
     const { data: userRole } = await supabase
       .from('user_roles')
       .select('role')
@@ -32,16 +89,8 @@ export async function POST(request: NextRequest) {
 
     const isPrivileged = userRole?.role === 'admin' || userRole?.role === 'dispatcher'
 
-    if (!isPrivileged) {
-      const { data: inspector } = await supabase
-        .from('inspectors')
-        .select('email')
-        .eq('id', validated.inspector_id)
-        .single()
-
-      if (!inspector || inspector.email !== session.user.email) {
-        return NextResponse.json({ error: 'Not authorized for this inspector' }, { status: 403 })
-      }
+    if (!isPrivileged && session.user.id !== validated.inspector_id) {
+      return NextResponse.json({ error: 'Not authorized for this user' }, { status: 403 })
     }
 
     const pointWKT = `POINT(${validated.longitude} ${validated.latitude})`

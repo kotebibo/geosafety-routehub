@@ -160,6 +160,11 @@ function formatServiceType(raw: string | null): string {
   return raw.replace(/_/g, ' ').replace(/და/g, '& ').trim()
 }
 
+function getServiceType(data: Record<string, any> | null): string {
+  if (!data) return 'უცნობი'
+  return formatServiceType(data.status)
+}
+
 function formatPaymentMethod(raw: string | null): string {
   if (!raw) return 'უცნობი'
   return raw.replace(/_/g, ' ').trim()
@@ -249,7 +254,7 @@ export const boardAnalyticsService = {
   getServiceTypeRevenue: (companies: BoardRow[]): ServiceTypeRevenue[] => {
     const map: Record<string, { revenue: number; count: number }> = {}
     for (const c of companies) {
-      const st = formatServiceType(c.data?.status)
+      const st = getServiceType(c.data)
       if (!map[st]) map[st] = { revenue: 0, count: 0 }
       map[st].revenue += c.data?.act_amount || 0
       map[st].count++
@@ -369,7 +374,7 @@ export const boardAnalyticsService = {
           end_date: c.data.end_date,
           days_remaining: days || 0,
           payment_method: formatPaymentMethod(c.data?.payment_method),
-          service_type: formatServiceType(c.data?.status),
+          service_type: getServiceType(c.data),
         }
       })
       .filter(c => c.days_remaining > -90) // Include recently expired + upcoming
@@ -510,7 +515,7 @@ export const boardAnalyticsService = {
       name: c.name,
       locations: 0, // Filled in by caller if needed
       inspector: c.data?.sales_manager || '',
-      service_type: formatServiceType(c.data?.status),
+      service_type: getServiceType(c.data),
       monthly: c.data?.monthly || 0,
       invoice: c.data?.invoice_amount || 0,
       vat: c.data?.vat || 0,

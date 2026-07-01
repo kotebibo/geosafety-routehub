@@ -1,6 +1,55 @@
 /**
- * Debug Coordinates API - Admin only
- * GET /api/debug/coordinates
+ * @swagger
+ * /api/debug/coordinates:
+ *   get:
+ *     summary: Find companies with duplicate GPS coordinates
+ *     description: >
+ *       Scans companies for duplicate lat/lng pairs (6 decimal precision).
+ *       Returns the top 10 duplicate coordinate groups. Admin only.
+ *     tags: [Debug]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Duplicate coordinate analysis
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalCompanies:
+ *                   type: integer
+ *                 duplicateCoordinates:
+ *                   type: integer
+ *                   description: Number of shared coordinate pairs
+ *                 companiesWithDuplicates:
+ *                   type: integer
+ *                 duplicates:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       coordinates:
+ *                         type: string
+ *                       count:
+ *                         type: integer
+ *                       companies:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             name:
+ *                               type: string
+ *                             address:
+ *                               type: string
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'vitest'
 
-describe('API Health Check', () => {
+// Integration test — requires a running dev server
+// Skipped by default; run with INTEGRATION=1 to enable
+const runIntegration = process.env.INTEGRATION === '1'
+
+describe.skipIf(!runIntegration)('API Health Check (integration)', () => {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
   it('should return healthy status', async () => {

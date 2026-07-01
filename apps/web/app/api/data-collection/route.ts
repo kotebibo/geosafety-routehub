@@ -1,3 +1,88 @@
+/**
+ * @swagger
+ * /api/data-collection:
+ *   post:
+ *     summary: Submit a new data collection entry
+ *     description: >
+ *       Creates a board item in all data_collection boards with company info,
+ *       GPS coordinates, and service details. Used by field inspectors.
+ *     tags: [Data Collection]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [sk_code, company_name, services, lat, lng]
+ *             properties:
+ *               sk_code:
+ *                 type: string
+ *                 description: Company registration code
+ *               company_name:
+ *                 type: string
+ *               services:
+ *                 type: string
+ *                 description: Comma-separated service names
+ *               lat:
+ *                 type: number
+ *                 minimum: -90
+ *                 maximum: 90
+ *               lng:
+ *                 type: number
+ *                 minimum: -180
+ *                 maximum: 180
+ *               accuracy:
+ *                 type: number
+ *                 description: GPS accuracy in meters
+ *               notes:
+ *                 type: string
+ *                 maxLength: 2000
+ *     responses:
+ *       201:
+ *         description: Entry created successfully
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       404:
+ *         description: No data collection board found
+ *       500:
+ *         description: Internal server error
+ *   get:
+ *     summary: Get recent data collection entries for the current user
+ *     description: >
+ *       Returns the 20 most recent board items created by the authenticated user
+ *       in data_collection boards.
+ *     tags: [Data Collection]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of data collection entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   data:
+ *                     type: object
+ *                   created_at:
+ *                     type: string
+ *                     format: date-time
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Internal server error
+ */
+
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -22,14 +107,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const validated = createEntrySchema.parse(body)
 
-    // Get user's inspector_id
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('inspector_id')
-      .eq('user_id', session.user.id)
-      .single()
-
-    const createdBy = userRole?.inspector_id || session.user.id
+    const createdBy = session.user.id
 
     // Find all data_collection boards
     const { data: boards } = await supabase
@@ -113,14 +191,7 @@ export async function GET(request: NextRequest) {
     const session = await requireAuth()
     const supabase = createServerClient()
 
-    // Get user's inspector_id
-    const { data: userRole } = await supabase
-      .from('user_roles')
-      .select('inspector_id')
-      .eq('user_id', session.user.id)
-      .single()
-
-    const createdBy = userRole?.inspector_id || session.user.id
+    const createdBy = session.user.id
 
     // Find data_collection boards
     const { data: boards } = await supabase
