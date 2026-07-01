@@ -13,6 +13,7 @@ import { useBoardUndoRedo } from '@/features/boards/hooks/useBoardUndoRedo'
 import { useFilteredItems } from '@/features/boards/hooks/useFilteredItems'
 import { useGroupByColumn } from '@/features/boards/hooks/useGroupByColumn'
 import { useBoardModals } from '@/features/boards/hooks/useBoardModals'
+import { CheckinSummaryProvider } from '@/features/boards/contexts/CheckinSummaryContext'
 import { useBoardViewTabState } from '@/features/boards/hooks/useBoardViewTabState'
 import { useBoardSubitemsState } from '@/features/boards/hooks/useBoardSubitemsState'
 import { VirtualizedBoardTable, ErrorBoundary, BoardToolbar } from '@/features/boards/components'
@@ -609,46 +610,48 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           </div>
         ) : columns && columns.length > 0 ? (
           <ErrorBoundary>
-            <VirtualizedBoardTable
-              boardType={board.board_type}
-              columns={columns.filter(col => col.is_visible)}
-              data={groupedItems || []}
-              groups={effectiveGroups}
-              isLoading={itemsLoading || groupsLoading}
-              onRowClick={(row: BoardItem) => setSelectedItem(row)}
-              onCellEdit={handlers.handleCellEdit}
-              selection={selection}
-              onSelectionChange={setSelection}
-              onAddItem={handlers.handleAddItem}
-              onAddGroup={handlers.handleAddGroup}
-              onGroupRename={handlers.handleGroupRename}
-              onGroupColorChange={handlers.handleGroupColorChange}
-              onGroupCollapseToggle={handlers.handleGroupCollapseToggle}
-              onDeleteGroup={handlers.handleDeleteGroup}
-              onColumnResize={handlers.handleColumnResize}
-              onColumnReorder={cols => handlers.handleTableColumnReorder(cols.map(c => c.id))}
-              onQuickAddColumn={handlers.handleQuickAddColumn}
-              onOpenAddColumnModal={() => openModal('addColumn')}
-              onColumnRename={handlers.handleColumnRename}
-              onColumnConfigUpdate={handlers.handleColumnConfigUpdate}
-              onDeleteColumn={handlers.handleDeleteColumn}
-              onItemMove={handlers.handleItemMove}
-              onItemReorder={handlers.handleItemReorder}
-              presence={presence}
-              onCellEditStart={(itemId, columnId) => setEditing(itemId, columnId)}
-              onCellEditEnd={() => setEditing(null)}
-              sortConfig={viewTabState.sortConfig}
-              onSortChange={viewTabState.onSortChange}
-              expandedItems={subitems.expandedItems}
-              subitemCounts={subitems.subitemCounts}
-              subitemsByParent={subitems.subitemsByParent}
-              subitemColumns={subitems.subitemColumns}
-              onToggleExpandItem={subitems.onToggleExpandItem}
-              onSubitemCellEdit={subitems.onSubitemCellEdit}
-              onAddSubitem={subitems.onAddSubitem}
-              onDeleteSubitem={subitems.onDeleteSubitem}
-              commentCounts={commentCounts}
-            />
+            <CheckinSummaryProvider boardId={board.id}>
+              <VirtualizedBoardTable
+                boardType={board.board_type}
+                columns={columns.filter(col => col.is_visible)}
+                data={groupedItems || []}
+                groups={effectiveGroups}
+                isLoading={itemsLoading || groupsLoading}
+                onRowClick={(row: BoardItem) => setSelectedItem(row)}
+                onCellEdit={handlers.handleCellEdit}
+                selection={selection}
+                onSelectionChange={setSelection}
+                onAddItem={handlers.handleAddItem}
+                onAddGroup={handlers.handleAddGroup}
+                onGroupRename={handlers.handleGroupRename}
+                onGroupColorChange={handlers.handleGroupColorChange}
+                onGroupCollapseToggle={handlers.handleGroupCollapseToggle}
+                onDeleteGroup={handlers.handleDeleteGroup}
+                onColumnResize={handlers.handleColumnResize}
+                onColumnReorder={cols => handlers.handleTableColumnReorder(cols.map(c => c.id))}
+                onQuickAddColumn={handlers.handleQuickAddColumn}
+                onOpenAddColumnModal={() => openModal('addColumn')}
+                onColumnRename={handlers.handleColumnRename}
+                onColumnConfigUpdate={handlers.handleColumnConfigUpdate}
+                onDeleteColumn={handlers.handleDeleteColumn}
+                onItemMove={handlers.handleItemMove}
+                onItemReorder={handlers.handleItemReorder}
+                presence={presence}
+                onCellEditStart={(itemId, columnId) => setEditing(itemId, columnId)}
+                onCellEditEnd={() => setEditing(null)}
+                sortConfig={viewTabState.sortConfig}
+                onSortChange={viewTabState.onSortChange}
+                expandedItems={subitems.expandedItems}
+                subitemCounts={subitems.subitemCounts}
+                subitemsByParent={subitems.subitemsByParent}
+                subitemColumns={subitems.subitemColumns}
+                onToggleExpandItem={subitems.onToggleExpandItem}
+                onSubitemCellEdit={subitems.onSubitemCellEdit}
+                onAddSubitem={subitems.onAddSubitem}
+                onDeleteSubitem={subitems.onDeleteSubitem}
+                commentCounts={commentCounts}
+              />
+            </CheckinSummaryProvider>
           </ErrorBoundary>
         ) : (
           <div className="flex flex-col items-center justify-center py-24 bg-bg-primary rounded-lg border border-border-light">

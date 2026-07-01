@@ -813,13 +813,6 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       permission: 'pages:coordinates_map',
     },
     {
-      href: '/inspector/checkin',
-      label: 'ჩეკ-ინი',
-      labelEn: 'Check-in',
-      icon: MapPinned,
-      permission: 'pages:checkin',
-    },
-    {
       href: '/admin/checkins',
       label: 'ჩეკ-ინები',
       labelEn: 'Check-ins',
