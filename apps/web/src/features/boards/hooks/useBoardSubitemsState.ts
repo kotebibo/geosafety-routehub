@@ -10,7 +10,7 @@ import type { BoardSubitem } from '../types/board'
 export function useBoardSubitemsState(
   boardId: string,
   items: { id: string }[] | undefined,
-  inspectorId: string | null | undefined
+  userId: string | null | undefined
 ) {
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set())
   const [subitemsByParent, setSubitemsByParent] = useState<Map<string, BoardSubitem[]>>(new Map())
@@ -88,7 +88,7 @@ export function useBoardSubitemsState(
           parent_item_id: parentItemId,
           name: '',
           position: nextPosition,
-          created_by: inspectorId || undefined,
+          created_by: userId || undefined,
         },
         {
           onSuccess: newSubitem => {
@@ -102,7 +102,7 @@ export function useBoardSubitemsState(
         }
       )
     },
-    [subitemsByParent, createSubitem, inspectorId]
+    [subitemsByParent, createSubitem, userId]
   )
 
   const handleSubitemCellEdit = useCallback(

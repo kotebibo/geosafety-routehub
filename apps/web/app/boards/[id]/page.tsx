@@ -145,7 +145,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const data = useBoardPageData(params.id)
   const {
     user,
-    inspectorId,
+    userId,
     board,
     items,
     columns,
@@ -214,9 +214,9 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const { presence, isConnected, setEditing, publishItemChange } = useRealtimeBoard({
     boardId: params.id,
     boardType: board?.board_type || 'custom',
-    userId: inspectorId || undefined,
+    userId: userId || undefined,
     userName: user?.email?.split('@')[0] || 'User',
-    enabled: !!board && !!inspectorId,
+    enabled: !!board && !!userId,
   })
 
   // ─── Filtered/sorted items ───
@@ -236,7 +236,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   )
 
   // ─── Subitems ───
-  const subitems = useBoardSubitemsState(params.id, items, inspectorId)
+  const subitems = useBoardSubitemsState(params.id, items, userId)
 
   // ─── All event handlers ───
   const handlers = useBoardHandlers({
@@ -245,7 +245,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     items,
     columns,
     groups,
-    inspectorId,
+    userId,
     createItem,
     updateItem,
     duplicateItems,

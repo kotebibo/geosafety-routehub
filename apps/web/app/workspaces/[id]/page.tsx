@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import {
   useWorkspace,
   useActiveWorkspaceBoards,
@@ -44,7 +43,7 @@ export default function WorkspaceDetailPage() {
   const params = useParams()
   const workspaceId = params.id as string
   const { user } = useAuth()
-  const { data: inspectorId } = useInspectorId(user?.email)
+  const userId = user?.id ?? null
 
   const [isCreateBoardModalOpen, setIsCreateBoardModalOpen] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
