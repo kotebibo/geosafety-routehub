@@ -118,7 +118,14 @@ export const CellRenderer = memo(
         )
 
       case 'checkin':
-        return <CheckinCell value={props.value} row={row} />
+        return (
+          <CheckinCell
+            value={props.value}
+            row={row}
+            column={column}
+            onEditStart={props.onEditStart}
+          />
+        )
 
       case 'text':
       default:

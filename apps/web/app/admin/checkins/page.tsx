@@ -274,7 +274,7 @@ export default function AdminCheckinsPage() {
                       ოფიცერი
                     </th>
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
-                      კომპანია
+                      კომპანია / აითემი
                     </th>
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       ლოკაცია
@@ -349,7 +349,22 @@ export default function AdminCheckinsPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-text-primary">{checkin.company_name}</span>
+                        {checkin.company_name ? (
+                          <span className="text-sm text-text-primary">{checkin.company_name}</span>
+                        ) : (checkin as any).board_item_name ? (
+                          <div>
+                            <span className="text-sm text-text-primary">
+                              {(checkin as any).board_item_name}
+                            </span>
+                            {(checkin as any).board_name && (
+                              <div className="text-xs text-text-tertiary">
+                                {(checkin as any).board_name}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-text-tertiary">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-sm text-text-secondary">

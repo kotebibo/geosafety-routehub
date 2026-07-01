@@ -179,10 +179,20 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
   const [selectedType, setSelectedType] = useState<ColumnType>('text')
   const [width, setWidth] = useState(180)
   const [linkedCompanyColumnId, setLinkedCompanyColumnId] = useState<string>('')
+  const [coordinatesColumnId, setCoordinatesColumnId] = useState<string>('')
   const [nameBlurred, setNameBlurred] = useState(false)
 
   // Get existing company columns for linking
   const companyColumns = existingColumns.filter(col => col.column_type === 'company')
+
+  // Get candidate columns for coordinates (any column that could hold lat/lng)
+  const coordsCandidateColumns = existingColumns.filter(
+    col =>
+      col.column_type !== 'checkin' &&
+      col.column_type !== 'actions' &&
+      col.column_type !== 'updates' &&
+      col.column_type !== 'files'
+  )
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -199,6 +209,11 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
     // Add linked column config for company_address
     if (selectedType === 'company_address' && linkedCompanyColumnId) {
       config.linked_company_column_id = linkedCompanyColumnId
+    }
+
+    // Add coordinates column config for checkin
+    if (selectedType === 'checkin' && coordinatesColumnId) {
+      config.coordinates_column_id = coordinatesColumnId
     }
 
     onAdd({
@@ -331,6 +346,44 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                   </select>
                   <p className="text-xs text-text-secondary mt-2">
                     მისამართი ავტომატურად გამოჩნდება არჩეული კომპანიის ლოკაციიდან
+                  </p>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Checkin Coordinates Configuration */}
+          {selectedType === 'checkin' && (
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                კოორდინატების სვეტი (არასავალდებულო)
+              </label>
+              {coordsCandidateColumns.length === 0 ? (
+                <div className="flex items-start gap-2 text-blue-700">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm">
+                    კოორდინატების სვეტი არ მოიძებნა. ჩეკ-ინი GPS-ის რეჟიმში იმუშავებს — გეოფენსის
+                    შემოწმების გარეშე.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <select
+                    value={coordinatesColumnId}
+                    onChange={e => setCoordinatesColumnId(e.target.value)}
+                    className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+                  >
+                    <option value="">არ არის არჩეული (GPS-ის რეჟიმი)</option>
+                    {coordsCandidateColumns.map(col => (
+                      <option key={col.id} value={col.id}>
+                        {col.column_name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-text-secondary mt-2">
+                    აირჩიეთ სვეტი, რომელიც შეიცავს კოორდინატებს (მაგ: &quot;41.71, 44.82&quot;).
+                    ინსპექტორი ამ კოორდინატების 100მ რადიუსში უნდა იყოს ჩეკ-ინისთვის. თუ სვეტი
+                    წაიშლება, ჩეკ-ინი GPS-ის რეჟიმზე გადავა.
                   </p>
                 </>
               )}
