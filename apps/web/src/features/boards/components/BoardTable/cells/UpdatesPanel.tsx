@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
@@ -30,12 +30,12 @@ import {
   Grid3X3,
   List,
   Search,
+  SmilePlus,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase/client'
 import { activityService } from '@/features/boards/services/activity.service'
 import { formatTimeAgo } from '@/lib/formatTime'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import { useUsers } from '@/hooks/useUsers'
 import { useToast } from '@/components/ui-monday/Toast'
 import { FilePreviewModal } from './FilePreviewModal'
@@ -68,6 +68,17 @@ interface AggregatedFile extends FileAttachment {
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 
+const REACTION_EMOJIS = [
+  { key: 'thumbs_up', emoji: '\uD83D\uDC4D' },
+  { key: 'heart', emoji: '\u2764\uFE0F' },
+  { key: 'fire', emoji: '\uD83D\uDD25' },
+  { key: 'clap', emoji: '\uD83D\uDC4F' },
+  { key: 'eyes', emoji: '\uD83D\uDC40' },
+  { key: 'check', emoji: '\u2705' },
+  { key: 'laugh', emoji: '\uD83D\uDE02' },
+  { key: 'thinking', emoji: '\uD83E\uDD14' },
+]
+
 interface MentionSuggestion {
   id: string
   name: string
@@ -88,7 +99,7 @@ export function UpdatesPanel({
 }: UpdatesPanelProps) {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const { data: inspectorId } = useInspectorId(user?.email ?? undefined)
+  const userId = user?.id ?? null
   const { users } = useUsers()
   const { showToast } = useToast()
 
@@ -122,6 +133,9 @@ export function UpdatesPanel({
   // Files tab state
   const [filesViewMode, setFilesViewMode] = useState<'grid' | 'list'>('grid')
   const [fileSearchQuery, setFileSearchQuery] = useState('')
+
+  // Reaction picker state
+  const [reactionPickerCommentId, setReactionPickerCommentId] = useState<string | null>(null)
 
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const mentionListRef = useRef<HTMLDivElement>(null)
@@ -397,7 +411,7 @@ export function UpdatesPanel({
   }
 
   const handleSubmitComment = async () => {
-    if ((!newComment.trim() && pendingFiles.length === 0) || !itemId || submitting || !inspectorId)
+    if ((!newComment.trim() && pendingFiles.length === 0) || !itemId || submitting || !userId)
       return
 
     setSubmitting(true)
@@ -405,7 +419,7 @@ export function UpdatesPanel({
       await activityService.createComment({
         item_type: itemType,
         item_id: itemId,
-        user_id: inspectorId,
+        user_id: userId,
         content:
           newComment.trim() ||
           (pendingFiles.length > 0 ? `Attached ${pendingFiles.length} file(s)` : ''),
@@ -456,6 +470,32 @@ export function UpdatesPanel({
     } catch (error) {
       console.error('Error deleting comment:', error)
       showToast('Failed to delete comment', 'error')
+    }
+  }
+
+  const handleToggleReaction = async (commentId: string, emojiKey: string) => {
+    if (!userId) return
+    try {
+      const updatedReactions = await activityService.toggleReaction(commentId, userId, emojiKey)
+      // Update local state optimistically
+      setComments(prev =>
+        prev.map(c => {
+          if (c.id === commentId) return { ...c, reactions: updatedReactions }
+          // Check replies
+          if (c.replies?.length) {
+            return {
+              ...c,
+              replies: c.replies.map(r =>
+                r.id === commentId ? { ...r, reactions: updatedReactions } : r
+              ),
+            }
+          }
+          return c
+        })
+      )
+      setReactionPickerCommentId(null)
+    } catch (error) {
+      console.error('Error toggling reaction:', error)
     }
   }
 
@@ -876,7 +916,17 @@ export function UpdatesPanel({
                           <Reply className="w-3.5 h-3.5" />
                           Reply
                         </button>
-                        {comment.user_id === inspectorId && (
+                        <button
+                          onClick={() =>
+                            setReactionPickerCommentId(
+                              reactionPickerCommentId === comment.id ? null : comment.id
+                            )
+                          }
+                          className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-link transition-colors"
+                        >
+                          <SmilePlus className="w-3.5 h-3.5" />
+                        </button>
+                        {comment.user_id === userId && (
                           <>
                             <button
                               onClick={() => {
@@ -896,6 +946,49 @@ export function UpdatesPanel({
                               Delete
                             </button>
                           </>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Emoji Picker */}
+                    {reactionPickerCommentId === comment.id && (
+                      <div className="flex items-center gap-1 mt-2 p-1.5 bg-bg-secondary rounded-lg border border-border-light w-fit">
+                        {REACTION_EMOJIS.map(({ key, emoji }) => (
+                          <button
+                            key={key}
+                            onClick={() => handleToggleReaction(comment.id, key)}
+                            className="w-7 h-7 flex items-center justify-center rounded hover:bg-bg-hover transition-colors text-base"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reactions Display */}
+                    {comment.reactions && Object.keys(comment.reactions).length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {Object.entries(comment.reactions as Record<string, string[]>).map(
+                          ([emojiKey, userIds]) => {
+                            const emojiInfo = REACTION_EMOJIS.find(e => e.key === emojiKey)
+                            if (!emojiInfo || !userIds.length) return null
+                            const hasReacted = userId && userIds.includes(userId)
+                            return (
+                              <button
+                                key={emojiKey}
+                                onClick={() => handleToggleReaction(comment.id, emojiKey)}
+                                className={cn(
+                                  'flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border transition-colors',
+                                  hasReacted
+                                    ? 'bg-monday-primary/10 border-monday-primary/30 text-text-link'
+                                    : 'bg-bg-secondary border-border-light text-text-secondary hover:border-border-medium'
+                                )}
+                              >
+                                <span className="text-sm">{emojiInfo.emoji}</span>
+                                <span className="font-medium">{userIds.length}</span>
+                              </button>
+                            )
+                          }
                         )}
                       </div>
                     )}
@@ -930,8 +1023,18 @@ export function UpdatesPanel({
                           <p className="text-sm text-text-primary whitespace-pre-wrap break-words">
                             {renderContentWithMentions(reply.content)}
                           </p>
-                          {reply.user_id === inspectorId && (
-                            <div className="flex items-center gap-3 mt-2">
+                          <div className="flex items-center gap-3 mt-2">
+                            <button
+                              onClick={() =>
+                                setReactionPickerCommentId(
+                                  reactionPickerCommentId === reply.id ? null : reply.id
+                                )
+                              }
+                              className="flex items-center gap-1 text-xs text-text-secondary hover:text-text-link transition-colors"
+                            >
+                              <SmilePlus className="w-3 h-3" />
+                            </button>
+                            {reply.user_id === userId && (
                               <button
                                 onClick={() => handleDeleteComment(reply.id)}
                                 className="flex items-center gap-1 text-xs text-text-secondary hover:text-red-500 transition-colors"
@@ -939,6 +1042,45 @@ export function UpdatesPanel({
                                 <Trash2 className="w-3 h-3" />
                                 Delete
                               </button>
+                            )}
+                          </div>
+                          {reactionPickerCommentId === reply.id && (
+                            <div className="flex items-center gap-1 mt-1.5 p-1.5 bg-bg-primary rounded-lg border border-border-light w-fit">
+                              {REACTION_EMOJIS.map(({ key, emoji }) => (
+                                <button
+                                  key={key}
+                                  onClick={() => handleToggleReaction(reply.id, key)}
+                                  className="w-6 h-6 flex items-center justify-center rounded hover:bg-bg-hover transition-colors text-sm"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                          {reply.reactions && Object.keys(reply.reactions).length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {Object.entries(reply.reactions as Record<string, string[]>).map(
+                                ([emojiKey, userIds]) => {
+                                  const emojiInfo = REACTION_EMOJIS.find(e => e.key === emojiKey)
+                                  if (!emojiInfo || !userIds.length) return null
+                                  const hasReacted = userId && userIds.includes(userId)
+                                  return (
+                                    <button
+                                      key={emojiKey}
+                                      onClick={() => handleToggleReaction(reply.id, emojiKey)}
+                                      className={cn(
+                                        'flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] border transition-colors',
+                                        hasReacted
+                                          ? 'bg-monday-primary/10 border-monday-primary/30 text-text-link'
+                                          : 'bg-bg-primary border-border-light text-text-secondary hover:border-border-medium'
+                                      )}
+                                    >
+                                      <span className="text-xs">{emojiInfo.emoji}</span>
+                                      <span className="font-medium">{userIds.length}</span>
+                                    </button>
+                                  )
+                                }
+                              )}
                             </div>
                           )}
                         </div>
@@ -1375,11 +1517,11 @@ export function UpdatesPanel({
                 <button
                   onClick={handleSubmitComment}
                   disabled={
-                    (!newComment.trim() && pendingFiles.length === 0) || submitting || !inspectorId
+                    (!newComment.trim() && pendingFiles.length === 0) || submitting || !userId
                   }
                   className={cn(
                     'flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                    (newComment.trim() || pendingFiles.length > 0) && !submitting && inspectorId
+                    (newComment.trim() || pendingFiles.length > 0) && !submitting && userId
                       ? 'bg-monday-primary text-text-inverse hover:bg-[var(--monday-primary-hover)]'
                       : 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   )}

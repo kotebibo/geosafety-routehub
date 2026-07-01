@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import {
   useWorkspacesWithBoardCounts,
   useDeleteWorkspace,
@@ -42,7 +41,7 @@ const WORKSPACE_COLORS: Record<string, string> = {
 export default function WorkspacesPage() {
   const router = useRouter()
   const { user, userRole, loading: authLoading } = useAuth()
-  const { data: inspectorId } = useInspectorId(user?.email)
+  const userId = user?.id ?? null
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   // Only fetch workspaces after auth is complete to avoid race condition
@@ -211,11 +210,11 @@ export default function WorkspacesPage() {
       </div>
 
       {/* Create Workspace Modal */}
-      {inspectorId && (
+      {userId && (
         <CreateWorkspaceModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
-          userId={inspectorId}
+          userId={userId}
           onSuccess={handleWorkspaceCreated}
         />
       )}

@@ -29,7 +29,6 @@ import {
   useItemCommentsSubscription,
 } from '../../hooks/useActivity'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 
 interface ItemDetailDrawerProps {
   item: BoardItem
@@ -86,7 +85,7 @@ export function ItemDetailDrawer({
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
 
   const { user } = useAuth()
-  const { data: inspectorId } = useInspectorId(user?.email)
+  const userId = user?.id ?? null
 
   // Fetch activity and comments
   const { data: updates = [], isLoading: updatesLoading } = useItemUpdates('board_item', item.id)
@@ -120,13 +119,13 @@ export function ItemDetailDrawer({
   }
 
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || !inspectorId) return
+    if (!newComment.trim() || !userId) return
 
     try {
       await createComment.mutateAsync({
         item_type: 'board_item',
         item_id: item.id,
-        user_id: inspectorId,
+        user_id: userId,
         content: newComment.trim(),
       })
       setNewComment('')
@@ -136,13 +135,13 @@ export function ItemDetailDrawer({
   }
 
   const handleSubmitReply = async (parentCommentId: string) => {
-    if (!replyContent.trim() || !inspectorId) return
+    if (!replyContent.trim() || !userId) return
 
     try {
       await createComment.mutateAsync({
         item_type: 'board_item',
         item_id: item.id,
-        user_id: inspectorId,
+        user_id: userId,
         content: replyContent.trim(),
         parent_comment_id: parentCommentId,
       })
@@ -405,7 +404,7 @@ export function ItemDetailDrawer({
                                   <Reply className="w-4 h-4" />
                                 </button>
                               </Tooltip>
-                              {comment.user_id === inspectorId && (
+                              {comment.user_id === userId && (
                                 <Tooltip content="Delete" side="top" delayDuration={200}>
                                   <button
                                     onClick={() => handleDeleteComment(comment.id)}

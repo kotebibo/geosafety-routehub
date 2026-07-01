@@ -30,7 +30,6 @@ import { supabase } from '@/lib/supabase/client'
 import { activityService } from '@/features/boards/services/activity.service'
 import { formatTimeAgo } from '@/lib/formatTime'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import { useUsers } from '@/hooks/useUsers'
 import { useToast } from '@/components/ui-monday/Toast'
 import type { ItemComment, ItemUpdate } from '@/types/board'
@@ -70,7 +69,7 @@ export function UpdatesModal({
   onCommentCountChange,
 }: UpdatesModalProps) {
   const { user } = useAuth()
-  const { data: inspectorId } = useInspectorId(user?.email ?? undefined)
+  const userId = user?.id ?? null
   const { users } = useUsers()
   const { showToast } = useToast()
 
@@ -212,7 +211,7 @@ export function UpdatesModal({
   }
 
   const handleSubmitComment = async () => {
-    if ((!newComment.trim() && pendingFiles.length === 0) || !itemId || submitting || !inspectorId)
+    if ((!newComment.trim() && pendingFiles.length === 0) || !itemId || submitting || !userId)
       return
 
     setSubmitting(true)
@@ -220,7 +219,7 @@ export function UpdatesModal({
       await activityService.createComment({
         item_type: itemType,
         item_id: itemId,
-        user_id: inspectorId,
+        user_id: userId,
         content:
           newComment.trim() ||
           (pendingFiles.length > 0 ? `Attached ${pendingFiles.length} file(s)` : ''),
@@ -643,7 +642,7 @@ export function UpdatesModal({
                           <Reply className="w-3.5 h-3.5" />
                           Reply
                         </button>
-                        {comment.user_id === inspectorId && (
+                        {comment.user_id === userId && (
                           <>
                             <button
                               onClick={() => {
@@ -697,7 +696,7 @@ export function UpdatesModal({
                           <p className="text-sm text-text-primary whitespace-pre-wrap break-words">
                             {renderContentWithMentions(reply.content)}
                           </p>
-                          {reply.user_id === inspectorId && (
+                          {reply.user_id === userId && (
                             <div className="flex items-center gap-3 mt-2">
                               <button
                                 onClick={() => handleDeleteComment(reply.id)}
@@ -913,11 +912,11 @@ export function UpdatesModal({
                 <button
                   onClick={handleSubmitComment}
                   disabled={
-                    (!newComment.trim() && pendingFiles.length === 0) || submitting || !inspectorId
+                    (!newComment.trim() && pendingFiles.length === 0) || submitting || !userId
                   }
                   className={cn(
                     'flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all',
-                    (newComment.trim() || pendingFiles.length > 0) && !submitting && inspectorId
+                    (newComment.trim() || pendingFiles.length > 0) && !submitting && userId
                       ? 'bg-monday-primary text-text-inverse hover:bg-[var(--monday-primary-hover)] shadow-md hover:shadow-lg'
                       : 'bg-bg-tertiary text-text-tertiary cursor-not-allowed'
                   )}

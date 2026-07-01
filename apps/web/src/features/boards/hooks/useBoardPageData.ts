@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/contexts/AuthContext'
-import { useInspectorId } from '@/hooks/useInspectorId'
 import {
   useBoard,
   useBoardItems,
@@ -27,7 +26,7 @@ export function useBoardPageData(boardId: string) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user } = useAuth()
-  const { data: inspectorId } = useInspectorId(user?.email)
+  const userId = user?.id ?? null
 
   // Data queries
   const { data: board, isLoading: boardLoading, error: boardError } = useBoard(boardId)
@@ -141,7 +140,7 @@ export function useBoardPageData(boardId: string) {
   return {
     // Auth
     user,
-    inspectorId,
+    userId,
     // Data
     board,
     items,
