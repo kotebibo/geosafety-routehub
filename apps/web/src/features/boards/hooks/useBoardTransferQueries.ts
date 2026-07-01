@@ -36,6 +36,9 @@ export function useMoveItemToBoard() {
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.routes.all, 'board-items', targetBoardId],
       })
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'global-search'],
+      })
     },
   })
 }
@@ -61,6 +64,9 @@ export function useMoveItemsToBoard() {
       })
       queryClient.invalidateQueries({
         queryKey: [...queryKeys.routes.all, 'board-items', targetBoardId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'global-search'],
       })
     },
   })

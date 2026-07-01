@@ -74,7 +74,8 @@ BEGIN
       ROW_NUMBER() OVER (PARTITION BY bi.board_id ORDER BY bi.position) AS rn
     FROM board_items bi
     JOIN boards b ON bi.board_id = b.id
-    WHERE (
+    WHERE bi.deleted_at IS NULL
+    AND (
       -- Every token must appear somewhere in name or data
       SELECT bool_and(
         lower(bi.name || ' ' || COALESCE(bi.data::text, '')) LIKE '%' || lower(t) || '%'
