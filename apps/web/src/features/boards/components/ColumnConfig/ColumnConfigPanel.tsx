@@ -54,6 +54,24 @@ export function ColumnConfigPanel({
     onUpdateColumn(column.id, { width: Math.max(80, Math.min(500, newWidth)) })
   }
 
+  // Candidate columns that could hold coordinates for a checkin column's geofence
+  const coordsCandidateColumns = columns.filter(
+    col =>
+      col.column_type !== 'checkin' &&
+      col.column_type !== 'actions' &&
+      col.column_type !== 'updates' &&
+      col.column_type !== 'files'
+  )
+
+  const handleCoordinatesColumnChange = (column: BoardColumn, columnId: string) => {
+    onUpdateColumn(column.id, {
+      config: {
+        ...((column.config as Record<string, any>) || {}),
+        coordinates_column_id: columnId || null,
+      },
+    } as Partial<BoardColumn>)
+  }
+
   const getColumnTypeLabel = (type: string) => {
     const typeMap: Record<string, string> = {
       text: 'Text',
@@ -64,6 +82,7 @@ export function ColumnConfigPanel({
       checkbox: 'Checkbox',
       dropdown: 'Dropdown',
       link: 'Link',
+      checkin: 'Check-in',
     }
     return typeMap[type] || type
   }
@@ -139,6 +158,29 @@ export function ColumnConfigPanel({
                         {column.width}px
                       </span>
                     </div>
+
+                    {/* Checkin: coordinates source column */}
+                    {column.column_type === 'checkin' && (
+                      <div className="mt-2 pt-2 border-t border-border-light">
+                        <label className="block text-xs text-text-tertiary mb-1">
+                          კოორდინატების სვეტი (გეოფენსი)
+                        </label>
+                        <select
+                          value={
+                            (column.config as Record<string, any>)?.coordinates_column_id || ''
+                          }
+                          onChange={e => handleCoordinatesColumnChange(column, e.target.value)}
+                          className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+                        >
+                          <option value="">GPS-ის რეჟიმი (გეოფენსის გარეშე)</option>
+                          {coordsCandidateColumns.map(col => (
+                            <option key={col.id} value={col.column_id}>
+                              {col.column_name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
 
                   {/* Actions */}
