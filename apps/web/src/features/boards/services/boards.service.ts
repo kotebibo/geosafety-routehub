@@ -147,6 +147,7 @@ export const boardsService = {
     width: number
     position: number
     is_visible: boolean
+    config?: Record<string, any>
   }): Promise<BoardColumn> {
     const { data, error } = await getSupabase()
       .from('board_columns')

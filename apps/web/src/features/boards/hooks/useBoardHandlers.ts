@@ -265,6 +265,7 @@ export function useBoardHandlers({
           width: columnData.width,
           position: columns?.length || 0,
           is_visible: true,
+          config: columnData.config || {},
         } as any)
         await refetchColumns()
 
