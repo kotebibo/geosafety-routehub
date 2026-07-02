@@ -25,7 +25,7 @@ const checkoutSchema = z.object({
   accuracy: z.number().optional(),
 })
 
-const CHECKIN_RADIUS_METERS = 100
+const CHECKIN_RADIUS_METERS = 200
 
 export async function POST(request: NextRequest) {
   try {

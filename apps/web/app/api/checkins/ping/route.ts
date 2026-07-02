@@ -3,7 +3,7 @@
  * /api/checkins/ping:
  *   post:
  *     summary: Submit a GPS ping during an active check-in
- *     description: Records the inspector's current position while checked in. Computes distance from the reference location (company location or original check-in coords) and flags whether the inspector is within the 100m geofence. Violation counts are aggregated at checkout.
+ *     description: Records the inspector's current position while checked in. Computes distance from the reference location (company location or original check-in coords) and flags whether the inspector is within the 200m geofence. Violation counts are aggregated at checkout.
  *     tags: [Checkins]
  *     security:
  *       - cookieAuth: []
@@ -62,7 +62,7 @@ import { requireAuth } from '@/middleware/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
-const RADIUS_METERS = 100
+const RADIUS_METERS = 200
 
 const pingSchema = z.object({
   checkin_id: z.string().uuid(),

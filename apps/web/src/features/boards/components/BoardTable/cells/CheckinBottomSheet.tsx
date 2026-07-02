@@ -26,7 +26,7 @@ import { useToast } from '@/components/ui-monday/Toast'
 import type { BoardColumn } from '@/types/board'
 import type { LocationCheckin } from '@/types/checkin'
 
-const RADIUS_METERS = 100
+const RADIUS_METERS = 200
 
 interface CheckinBottomSheetProps {
   itemId: string
