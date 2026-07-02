@@ -8,6 +8,8 @@
 
 @layer base {
   :root {
+    color-scheme: light;
+
     /* ========== CORE BRAND COLORS ========== */
     --monday-primary: #6161ff;
     --monday-primary-hover: #5353e0;
@@ -170,6 +172,7 @@
   /* ========== DARK THEME ========== */
   /* Slate-purple dark theme — easy on the eyes */
   .dark {
+    color-scheme: dark;
     --monday-primary: #7c7cff;
     --monday-primary-hover: #6e6ef0;
     --monday-primary-active: #6060e0;
@@ -228,6 +231,7 @@
   /* ========== NIGHT THEME ========== */
   /* Deep navy blue — immersive for focused work */
   .night {
+    color-scheme: dark;
     --monday-primary: #64b5f6;
     --monday-primary-hover: #56a8e8;
     --monday-primary-active: #489ad8;
@@ -286,6 +290,7 @@
   /* ========== ARCTIC THEME ========== */
   /* Cool icy blues — crisp and clean light theme */
   .arctic {
+    color-scheme: light;
     --monday-primary: #0ea5e9;
     --monday-primary-hover: #0284c7;
     --monday-primary-active: #0369a1;
@@ -344,6 +349,7 @@
   /* ========== SUNSET THEME ========== */
   /* Warm amber/orange on dark — evening vibes */
   .sunset {
+    color-scheme: dark;
     --monday-primary: #f59e0b;
     --monday-primary-hover: #d97706;
     --monday-primary-active: #b45309;
@@ -402,6 +408,7 @@
   /* ========== COFFEE THEME ========== */
   /* Warm brown/sepia — cozy dark mode */
   .coffee {
+    color-scheme: dark;
     --monday-primary: #d4a574;
     --monday-primary-hover: #c4915e;
     --monday-primary-active: #b07d4a;
@@ -491,6 +498,21 @@
     font-weight: var(--weight-semibold);
     line-height: 1.2;
     color: var(--text-primary);
+  }
+
+  /* Form controls inherit theme colors — without this, inputs keep the
+     browser's white background while the text color goes light on dark
+     themes, making typed text unreadable */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  textarea,
+  select {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-tertiary);
   }
 
   /* Focus styles for accessibility */
