@@ -5,7 +5,7 @@ import { requireAuth } from '@/middleware/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
-const RADIUS_METERS = 100
+const RADIUS_METERS = 200
 
 const pingSchema = z.object({
   checkin_id: z.string().uuid(),
