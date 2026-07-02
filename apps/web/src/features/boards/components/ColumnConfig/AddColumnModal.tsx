@@ -273,7 +273,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
               className={cn(
                 'w-full px-3 py-2 bg-bg-primary text-text-primary border rounded-md placeholder:text-text-tertiary focus:outline-none focus:border-monday-primary',
                 nameBlurred && !columnName.trim()
-                  ? 'border-red-400 bg-red-50/50'
+                  ? 'border-red-400 bg-red-500/10'
                   : 'border-border-light'
               )}
               autoFocus
@@ -296,7 +296,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                     'flex items-start gap-3 p-3 rounded-lg border-2 transition-all',
                     'hover:border-monday-primary/50',
                     selectedType === type.type
-                      ? 'border-monday-primary bg-blue-50'
+                      ? 'border-monday-primary bg-blue-500/10'
                       : 'border-border-light bg-bg-secondary'
                   )}
                 >
@@ -326,12 +326,12 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
 
           {/* Company Address Configuration */}
           {selectedType === 'company_address' && (
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="mb-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
               <label className="block text-sm font-medium text-text-primary mb-2">
                 დაკავშირებული კომპანიის სვეტი
               </label>
               {companyColumns.length === 0 ? (
-                <div className="flex items-start gap-2 text-amber-700">
+                <div className="flex items-start gap-2 text-amber-500">
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium">კომპანიის სვეტი არ მოიძებნა</p>
@@ -364,12 +364,12 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
 
           {/* Checkin Coordinates Configuration */}
           {selectedType === 'checkin' && (
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="mb-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
               <label className="block text-sm font-medium text-text-primary mb-2">
                 კოორდინატების სვეტი (არასავალდებულო)
               </label>
               {coordsCandidateColumns.length === 0 ? (
-                <div className="flex items-start gap-2 text-blue-700">
+                <div className="flex items-start gap-2 text-blue-500">
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <p className="text-sm">
                     კოორდინატების სვეტი არ მოიძებნა. ჩეკ-ინი GPS-ის რეჟიმში იმუშავებს — გეოფენსის
