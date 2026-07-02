@@ -308,7 +308,11 @@ export async function GET(request: NextRequest) {
 
     let query = client
       .from('location_checkins')
-      .select('*, companies(name), company_locations(name), board_items(name, boards(name))')
+      // boards embed must be disambiguated — board_items has two FKs to boards
+      // (board_id + original_board_id), PostgREST returns 300 otherwise
+      .select(
+        '*, companies(name), company_locations(name), board_items(name, boards!board_items_board_id_fkey(name))'
+      )
       .order('created_at', { ascending: false })
 
     if (userRole.role === 'officer' && !boardItemId) {
