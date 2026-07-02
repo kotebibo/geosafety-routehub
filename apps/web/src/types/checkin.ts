@@ -5,6 +5,10 @@ export interface LocationCheckin {
   company_location_id?: string | null
   route_stop_id?: string | null
   board_item_id?: string | null
+  board_column_id?: string | null
+  // Snapshot of the checkin column's service at check-in time
+  service?: string | null
+  checkin_type?: string | null
   lat: number
   lng: number
   accuracy?: number | null
@@ -49,6 +53,8 @@ export interface CreateCheckinInput {
   company_location_id?: string | null
   route_stop_id?: string | null
   board_item_id?: string | null
+  board_column_id?: string | null
+  checkin_type?: string | null
   lat: number
   lng: number
   accuracy?: number

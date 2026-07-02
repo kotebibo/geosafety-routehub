@@ -43,6 +43,8 @@ export function useCreateItemCheckin(boardId: string) {
     mutationFn: async (input: {
       inspector_id: string
       board_item_id: string
+      board_column_id?: string
+      checkin_type?: string
       lat: number
       lng: number
       accuracy?: number

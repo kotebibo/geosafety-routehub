@@ -22,6 +22,8 @@ import {
   AlertCircle,
   ClipboardCheck,
 } from 'lucide-react'
+import { CHECKIN_SERVICES, CUSTOM_SERVICE } from '@/features/boards/constants/checkin'
+
 import type { ColumnType, BoardColumn } from '@/types/board'
 
 interface AddColumnModalProps {
@@ -180,6 +182,8 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
   const [width, setWidth] = useState(180)
   const [linkedCompanyColumnId, setLinkedCompanyColumnId] = useState<string>('')
   const [coordinatesColumnId, setCoordinatesColumnId] = useState<string>('')
+  const [service, setService] = useState<string>('')
+  const [customService, setCustomService] = useState<string>('')
   const [nameBlurred, setNameBlurred] = useState(false)
 
   // Get existing company columns for linking
@@ -214,6 +218,12 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
     // Add coordinates column config for checkin
     if (selectedType === 'checkin' && coordinatesColumnId) {
       config.coordinates_column_id = coordinatesColumnId
+    }
+
+    // Add service config for checkin
+    if (selectedType === 'checkin') {
+      const resolvedService = service === CUSTOM_SERVICE ? customService.trim() : service
+      if (resolvedService) config.service = resolvedService
     }
 
     onAdd({
@@ -388,6 +398,35 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                   </p>
                 </>
               )}
+
+              <label className="block text-sm font-medium text-text-primary mb-2 mt-4">
+                სერვისი
+              </label>
+              <select
+                value={service}
+                onChange={e => setService(e.target.value)}
+                className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+              >
+                <option value="">არ არის მითითებული</option>
+                {CHECKIN_SERVICES.map(s => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+                <option value={CUSTOM_SERVICE}>სხვა...</option>
+              </select>
+              {service === CUSTOM_SERVICE && (
+                <input
+                  type="text"
+                  value={customService}
+                  onChange={e => setCustomService(e.target.value)}
+                  placeholder="ჩაწერეთ სერვისის სახელი"
+                  className="w-full mt-2 px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+                />
+              )}
+              <p className="text-xs text-text-secondary mt-2">
+                რომელი სერვისისთვის კეთდება ჩეკ-ინები ამ სვეტში. ინახება ყოველ ჩეკ-ინზე.
+              </p>
             </div>
           )}
 

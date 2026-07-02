@@ -4,7 +4,61 @@ import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { X, Eye, EyeOff, GripVertical, Plus, Trash2, Settings as SettingsIcon } from 'lucide-react'
 import { Tooltip } from '@/shared/components/ui/tooltip'
+import { CHECKIN_SERVICES, CUSTOM_SERVICE } from '@/features/boards/constants/checkin'
 import type { BoardColumn } from '@/types/board'
+
+function ServiceSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [customMode, setCustomMode] = useState(false)
+  const [draft, setDraft] = useState('')
+  const isPredefined = (CHECKIN_SERVICES as readonly string[]).includes(value)
+
+  if (customMode) {
+    return (
+      <input
+        autoFocus
+        type="text"
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={() => {
+          setCustomMode(false)
+          if (draft.trim()) onChange(draft.trim())
+        }}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            ;(e.target as HTMLInputElement).blur()
+          }
+        }}
+        placeholder="ჩაწერეთ სერვისის სახელი"
+        className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+      />
+    )
+  }
+
+  return (
+    <select
+      value={value}
+      onChange={e => {
+        if (e.target.value === CUSTOM_SERVICE) {
+          setDraft(!isPredefined ? value : '')
+          setCustomMode(true)
+        } else {
+          onChange(e.target.value)
+        }
+      }}
+      className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+    >
+      <option value="">არ არის მითითებული</option>
+      {CHECKIN_SERVICES.map(s => (
+        <option key={s} value={s}>
+          {s}
+        </option>
+      ))}
+      {value && !isPredefined && <option value={value}>{value}</option>}
+      <option value={CUSTOM_SERVICE}>სხვა...</option>
+    </select>
+  )
+}
 
 interface ColumnConfigPanelProps {
   columns: BoardColumn[]
@@ -63,11 +117,11 @@ export function ColumnConfigPanel({
       col.column_type !== 'files'
   )
 
-  const handleCoordinatesColumnChange = (column: BoardColumn, columnId: string) => {
+  const handleConfigChange = (column: BoardColumn, key: string, value: string | null) => {
     onUpdateColumn(column.id, {
       config: {
         ...((column.config as Record<string, any>) || {}),
-        coordinates_column_id: columnId || null,
+        [key]: value || null,
       },
     } as Partial<BoardColumn>)
   }
@@ -159,26 +213,37 @@ export function ColumnConfigPanel({
                       </span>
                     </div>
 
-                    {/* Checkin: coordinates source column */}
+                    {/* Checkin: coordinates source column + service */}
                     {column.column_type === 'checkin' && (
-                      <div className="mt-2 pt-2 border-t border-border-light">
-                        <label className="block text-xs text-text-tertiary mb-1">
-                          კოორდინატების სვეტი (გეოფენსი)
-                        </label>
-                        <select
-                          value={
-                            (column.config as Record<string, any>)?.coordinates_column_id || ''
-                          }
-                          onChange={e => handleCoordinatesColumnChange(column, e.target.value)}
-                          className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
-                        >
-                          <option value="">GPS-ის რეჟიმი (გეოფენსის გარეშე)</option>
-                          {coordsCandidateColumns.map(col => (
-                            <option key={col.id} value={col.column_id}>
-                              {col.column_name}
-                            </option>
-                          ))}
-                        </select>
+                      <div className="mt-2 pt-2 border-t border-border-light space-y-2">
+                        <div>
+                          <label className="block text-xs text-text-tertiary mb-1">
+                            კოორდინატების სვეტი (გეოფენსი)
+                          </label>
+                          <select
+                            value={
+                              (column.config as Record<string, any>)?.coordinates_column_id || ''
+                            }
+                            onChange={e =>
+                              handleConfigChange(column, 'coordinates_column_id', e.target.value)
+                            }
+                            className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+                          >
+                            <option value="">GPS-ის რეჟიმი (გეოფენსის გარეშე)</option>
+                            {coordsCandidateColumns.map(col => (
+                              <option key={col.id} value={col.column_id}>
+                                {col.column_name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-text-tertiary mb-1">სერვისი</label>
+                          <ServiceSelect
+                            value={(column.config as Record<string, any>)?.service || ''}
+                            onChange={value => handleConfigChange(column, 'service', value)}
+                          />
+                        </div>
                       </div>
                     )}
                   </div>
