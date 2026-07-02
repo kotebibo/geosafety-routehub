@@ -337,7 +337,20 @@ function CheckinTimelineEntry({ checkin }: { checkin: LocationCheckin }) {
                   {formatDuration(checkin.duration_minutes)}
                 </span>
               )}
-              {checkin.checkout_distance != null && <span>{checkin.checkout_distance}მ</span>}
+              {checkin.distance_from_location != null && (
+                <span
+                  className="flex items-center gap-0.5"
+                  title="მანძილი ობიექტის კოორდინატებიდან ჩეკ-ინისას"
+                >
+                  <MapPin className="w-3 h-3" />
+                  {checkin.distance_from_location}მ
+                </span>
+              )}
+              {checkin.checkout_distance != null && (
+                <span title="მანძილი ჩეკ-ინის ადგილიდან ჩეკ-აუთისას">
+                  გადაადგილება: {checkin.checkout_distance}მ
+                </span>
+              )}
             </>
           )}
         </div>
