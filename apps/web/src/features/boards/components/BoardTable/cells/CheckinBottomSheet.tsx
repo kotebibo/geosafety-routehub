@@ -55,9 +55,20 @@ export function CheckinBottomSheet({
   const createCheckin = useCreateItemCheckin(boardId)
   const checkout = useCheckout(boardId)
 
+  // Timeline includes previous inspectors' visits (history follows the item
+  // across board transfers) — only the caller's own active checkin is
+  // checkout-able; someone else's active visit just gets an info banner.
   const activeCheckin = useMemo(
-    () => checkins.find((c: LocationCheckin) => !c.checked_out_at) ?? null,
-    [checkins]
+    () =>
+      checkins.find((c: LocationCheckin) => !c.checked_out_at && c.inspector_id === user?.id) ??
+      null,
+    [checkins, user?.id]
+  )
+  const othersActiveCheckin = useMemo(
+    () =>
+      checkins.find((c: LocationCheckin) => !c.checked_out_at && c.inspector_id !== user?.id) ??
+      null,
+    [checkins, user?.id]
   )
 
   // Resolve target coordinates from column config
@@ -232,6 +243,15 @@ export function CheckinBottomSheet({
             </div>
           ) : (
             <div className="space-y-3">
+              {othersActiveCheckin && (
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-orange-50 border border-orange-200">
+                  <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
+                  <span className="text-sm text-orange-700">
+                    {othersActiveCheckin.inspector_name || 'სხვა ინსპექტორი'} ამჟამად ჩექინშია ამ
+                    ლოკაციაზე
+                  </span>
+                </div>
+              )}
               <textarea
                 value={notes}
                 onChange={e => setNotes(e.target.value)}

@@ -160,6 +160,14 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
 
+    // Partial unique index (one active checkin per inspector) closes the
+    // check-then-insert race — map the violation to the same 409.
+    if (error?.code === '23505') {
+      return NextResponse.json(
+        { error: 'თქვენ უკვე გაქვთ აქტიური ჩეკ-ინი. ჯერ გააკეთეთ ჩეკ-აუთი.' },
+        { status: 409 }
+      )
+    }
     if (error) throw error
 
     if (validated.route_stop_id) {
@@ -290,20 +298,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'User role not found' }, { status: 403 })
     }
 
-    let query = supabase
+    const boardItemId = searchParams.get('board_item_id')
+
+    // Item timeline: checkins are the item's visit history and must survive
+    // transfers between inspectors' boards, so previous inspectors' checkins
+    // stay visible to the item's current owner. RLS would hide them for
+    // officers — use the service client for item-scoped reads.
+    const client = boardItemId ? createServiceClient() : supabase
+
+    let query = client
       .from('location_checkins')
-      .select(
-        '*, inspectors(full_name), companies(name), company_locations(name), board_items(name, boards(name))'
-      )
+      .select('*, companies(name), company_locations(name), board_items(name, boards(name))')
       .order('created_at', { ascending: false })
 
-    if (userRole.role === 'officer') {
+    if (userRole.role === 'officer' && !boardItemId) {
       query = query.eq('inspector_id', session.user.id)
     }
 
     const inspectorId = searchParams.get('inspector_id')
     const companyId = searchParams.get('company_id')
-    const boardItemId = searchParams.get('board_item_id')
     const fromDate = searchParams.get('from_date')
     const toDate = searchParams.get('to_date')
     const limit = searchParams.get('limit')
@@ -321,14 +334,27 @@ export async function GET(request: NextRequest) {
 
     if (error) throw error
 
+    // Resolve inspector names from public.users — location_checkins.inspector_id
+    // holds auth.users ids with no FK to inspectors, so PostgREST can't embed it.
+    const inspectorIds = [...new Set((data || []).map((c: any) => c.inspector_id).filter(Boolean))]
+    let namesById: Record<string, string> = {}
+    if (inspectorIds.length > 0) {
+      const { data: users } = await createServiceClient()
+        .from('users')
+        .select('id, full_name, email')
+        .in('id', inspectorIds)
+      namesById = Object.fromEntries(
+        (users || []).map(u => [u.id, u.full_name || u.email || 'Unknown'])
+      )
+    }
+
     const checkins = (data || []).map((c: any) => ({
       ...c,
-      inspector_name: c.inspectors?.full_name || 'Unknown',
+      inspector_name: namesById[c.inspector_id] || 'Unknown',
       company_name: c.companies?.name || null,
       location_name: c.company_locations?.name || null,
       board_item_name: c.board_items?.name || null,
       board_name: c.board_items?.boards?.name || null,
-      inspectors: undefined,
       companies: undefined,
       company_locations: undefined,
       board_items: undefined,
