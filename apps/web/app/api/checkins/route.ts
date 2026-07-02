@@ -12,6 +12,8 @@ const createCheckinSchema = z.object({
   company_location_id: z.string().uuid().nullable().optional(),
   route_stop_id: z.string().uuid().nullable().optional(),
   board_item_id: z.string().uuid().nullable().optional(),
+  board_column_id: z.string().uuid().nullable().optional(),
+  checkin_type: z.string().max(100).nullable().optional(),
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
   accuracy: z.number().optional(),
@@ -67,6 +69,7 @@ export async function POST(request: NextRequest) {
 
     let locationUpdated = false
     let distanceFromLocation: number | null = null
+    let serviceSnapshot: string | null = null
 
     // Geofence check: board item path (new) or company location path (legacy)
     if (validated.board_item_id) {
@@ -79,16 +82,22 @@ export async function POST(request: NextRequest) {
         .single()
 
       if (item) {
-        // Find checkin column config on this board
-        const { data: checkinCols } = await serviceClient
+        // Config comes from the checkin column the sheet was opened from;
+        // fall back to the board's first checkin column for older clients.
+        let colQuery = serviceClient
           .from('board_columns')
           .select('config')
           .eq('board_id', item.board_id)
           .eq('column_type', 'checkin')
-          .limit(1)
+        if (validated.board_column_id) {
+          colQuery = colQuery.eq('id', validated.board_column_id)
+        }
+        const { data: checkinCols } = await colQuery.limit(1)
 
-        const coordsColumnId = (checkinCols?.[0]?.config as Record<string, any>)
-          ?.coordinates_column_id
+        const colConfig = checkinCols?.[0]?.config as Record<string, any> | undefined
+        // Snapshot the column's service so later config edits can't rewrite history
+        serviceSnapshot = colConfig?.service || null
+        const coordsColumnId = colConfig?.coordinates_column_id
         if (coordsColumnId && item.data) {
           const targetCoords = parseCoordinates((item.data as Record<string, any>)[coordsColumnId])
           if (targetCoords) {
@@ -150,6 +159,9 @@ export async function POST(request: NextRequest) {
         company_location_id: validated.company_location_id || null,
         route_stop_id: validated.route_stop_id || null,
         board_item_id: validated.board_item_id || null,
+        board_column_id: validated.board_column_id || null,
+        checkin_type: validated.checkin_type || null,
+        service: serviceSnapshot,
         lat: validated.lat,
         lng: validated.lng,
         accuracy: validated.accuracy || null,

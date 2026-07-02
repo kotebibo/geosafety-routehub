@@ -101,6 +101,7 @@ export function CheckinBottomSheet({
       await createCheckin.mutateAsync({
         inspector_id: user.id,
         board_item_id: itemId,
+        board_column_id: column.id,
         lat: coords.lat,
         lng: coords.lng,
         accuracy: coords.accuracy,
@@ -140,7 +141,12 @@ export function CheckinBottomSheet({
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-light">
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-text-primary truncate">{itemName}</h3>
-            <p className="text-xs text-text-tertiary">ჩეკ-ინი</p>
+            <p className="text-xs text-text-tertiary">
+              ჩეკ-ინი
+              {(column.config as Record<string, any>)?.service
+                ? ` — ${(column.config as Record<string, any>).service}`
+                : ''}
+            </p>
           </div>
           <button
             type="button"
@@ -327,6 +333,11 @@ function CheckinTimelineEntry({ checkin }: { checkin: LocationCheckin }) {
           <span className="text-xs text-text-tertiary flex-shrink-0">{dateStr}</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-text-secondary">
+          {checkin.checkin_type && (
+            <span className="px-1.5 py-0.5 rounded bg-bg-tertiary text-text-secondary flex-shrink-0">
+              {checkin.checkin_type}
+            </span>
+          )}
           {isActive ? (
             <span className="text-orange-600 font-medium">აქტიური</span>
           ) : (
