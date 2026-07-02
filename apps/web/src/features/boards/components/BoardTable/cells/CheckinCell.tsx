@@ -33,7 +33,7 @@ export function CheckinCell({ row, column, onEditStart }: CheckinCellProps) {
         {!summary ? (
           <span className="text-text-tertiary text-sm">-</span>
         ) : summary.has_active ? (
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200">
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500/10 text-orange-500 border border-orange-500/30">
             <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
             აქტიური
           </span>

@@ -163,7 +163,7 @@ export function CheckinBottomSheet({
             {coords ? (
               <>
                 <Navigation className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-green-700 font-medium">GPS აქტიურია</span>
+                <span className="text-sm text-green-500 font-medium">GPS აქტიურია</span>
                 <span className="text-xs text-text-tertiary ml-auto">±{coords.accuracy}მ</span>
               </>
             ) : gpsError ? (
@@ -182,15 +182,15 @@ export function CheckinBottomSheet({
           {/* Geofence info */}
           {targetCoords && coords && distance !== null && (
             <div
-              className={`flex items-center gap-2 p-3 rounded-lg ${withinRadius ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}
+              className={`flex items-center gap-2 p-3 rounded-lg ${withinRadius ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}
             >
-              <MapPin className={`w-4 h-4 ${withinRadius ? 'text-green-600' : 'text-red-500'}`} />
+              <MapPin className={`w-4 h-4 ${withinRadius ? 'text-green-500' : 'text-red-500'}`} />
               <span
-                className={`text-sm font-medium ${withinRadius ? 'text-green-700' : 'text-red-600'}`}
+                className={`text-sm font-medium ${withinRadius ? 'text-green-500' : 'text-red-500'}`}
               >
                 {distance}მ
               </span>
-              <span className={`text-xs ${withinRadius ? 'text-green-600' : 'text-red-500'}`}>
+              <span className={`text-xs ${withinRadius ? 'text-green-500' : 'text-red-500'}`}>
                 {withinRadius
                   ? `რადიუსში (${RADIUS_METERS}მ)`
                   : `რადიუსის გარეთ (საჭიროა ${RADIUS_METERS}მ)`}
@@ -199,9 +199,9 @@ export function CheckinBottomSheet({
           )}
 
           {!targetCoords && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-50 border border-blue-200">
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
               <Navigation className="w-4 h-4 text-blue-500" />
-              <span className="text-xs text-blue-700">
+              <span className="text-xs text-blue-500">
                 GPS-ის რეჟიმი — კოორდინატების შემოწმების გარეშე
               </span>
             </div>
@@ -210,16 +210,16 @@ export function CheckinBottomSheet({
           {/* Active checkin or Check-in form */}
           {activeCheckin ? (
             <div className="space-y-3">
-              <div className="p-4 rounded-xl bg-orange-50 border border-orange-200">
+              <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/30">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                  <span className="text-sm font-semibold text-orange-800">აქტიური ჩეკ-ინი</span>
+                  <span className="text-sm font-semibold text-orange-500">აქტიური ჩეკ-ინი</span>
                 </div>
-                <div className="text-3xl font-mono font-bold text-orange-700 mb-2">
+                <div className="text-3xl font-mono font-bold text-orange-500 mb-2">
                   {elapsedDisplay}
                 </div>
                 {activeCheckin.inspector_name && (
-                  <div className="flex items-center gap-1.5 text-sm text-orange-600">
+                  <div className="flex items-center gap-1.5 text-sm text-orange-500">
                     <User className="w-3.5 h-3.5" />
                     {activeCheckin.inspector_name}
                   </div>
@@ -250,9 +250,9 @@ export function CheckinBottomSheet({
           ) : (
             <div className="space-y-3">
               {othersActiveCheckin && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-orange-50 border border-orange-200">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
                   <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
-                  <span className="text-sm text-orange-700">
+                  <span className="text-sm text-orange-500">
                     {othersActiveCheckin.inspector_name || 'სხვა ინსპექტორი'} ამჟამად ჩექინშია ამ
                     ლოკაციაზე
                   </span>
