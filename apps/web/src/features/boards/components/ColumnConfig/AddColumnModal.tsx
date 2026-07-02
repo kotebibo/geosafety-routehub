@@ -374,8 +374,9 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                     className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
                   >
                     <option value="">არ არის არჩეული (GPS-ის რეჟიმი)</option>
+                    {/* value must be column_id (the item.data key), not the row UUID */}
                     {coordsCandidateColumns.map(col => (
-                      <option key={col.id} value={col.id}>
+                      <option key={col.id} value={col.column_id}>
                         {col.column_name}
                       </option>
                     ))}
