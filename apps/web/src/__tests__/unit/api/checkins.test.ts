@@ -470,7 +470,6 @@ describe('GET /api/checkins', () => {
       {
         id: 'c1',
         inspector_id: USER_ID,
-        inspectors: { full_name: 'John' },
         companies: { name: 'Acme' },
         company_locations: { name: 'Office' },
       },
@@ -482,6 +481,12 @@ describe('GET /api/checkins', () => {
       }),
     }
     mockFromHandlers['location_checkins'] = checkinsChain
+
+    // Inspector names resolved from public.users (no FK for PostgREST embed)
+    mockFromHandlers['users'] = createChainableMock({
+      data: [{ id: USER_ID, full_name: 'John', email: 'john@example.com' }],
+      error: null,
+    })
 
     const req = makeRequest('GET')
     const res = await GET(req)
