@@ -66,6 +66,10 @@ export function useCreateItemCheckin(boardId: string) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.checkins.byItem(variables.board_item_id),
       })
+      // Stage automation may have updated the item's status column
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.routes.all, 'board-items', boardId],
+      })
     },
   })
 }

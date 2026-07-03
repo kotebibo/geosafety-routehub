@@ -184,6 +184,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
   const [coordinatesColumnId, setCoordinatesColumnId] = useState<string>('')
   const [service, setService] = useState<string>('')
   const [customService, setCustomService] = useState<string>('')
+  const [stageColumnId, setStageColumnId] = useState<string>('')
   const [nameBlurred, setNameBlurred] = useState(false)
 
   // Get existing company columns for linking
@@ -197,6 +198,9 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
       col.column_type !== 'updates' &&
       col.column_type !== 'files'
   )
+
+  // Status columns eligible as auto-updated stage targets
+  const statusColumns = existingColumns.filter(col => col.column_type === 'status')
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -224,6 +228,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
     if (selectedType === 'checkin') {
       const resolvedService = service === CUSTOM_SERVICE ? customService.trim() : service
       if (resolvedService) config.service = resolvedService
+      if (stageColumnId) config.stage_column_id = stageColumnId
     }
 
     onAdd({
@@ -426,6 +431,26 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
               )}
               <p className="text-xs text-text-secondary mt-2">
                 რომელი სერვისისთვის კეთდება ჩეკ-ინები ამ სვეტში. ინახება ყოველ ჩეკ-ინზე.
+              </p>
+
+              <label className="block text-sm font-medium text-text-primary mb-2 mt-4">
+                სტადიის სვეტი (ავტო-განახლება)
+              </label>
+              <select
+                value={stageColumnId}
+                onChange={e => setStageColumnId(e.target.value)}
+                className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+              >
+                <option value="">გამორთული</option>
+                {statusColumns.map(col => (
+                  <option key={col.id} value={col.column_id}>
+                    {col.column_name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-text-secondary mt-2">
+                ჩეკ-ინისას არჩეული ვიზიტის ტიპი ავტომატურად ჩაიწერება ამ სტატუსის სვეტში — კომპანიის
+                მიმდინარე სტადია ყოველთვის განახლებული იქნება.
               </p>
             </div>
           )}
