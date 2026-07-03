@@ -7,5 +7,23 @@ export const CHECKIN_SERVICES = ['შრომის უსაფრთხოე
 export const CUSTOM_SERVICE = '__custom__'
 
 // Per-checkin visit types shown as a dropdown above the notes field in the
-// checkin sheet. Options TBD — populate when the business list is finalized.
-export const CHECKIN_TYPES: string[] = []
+// checkin sheet, keyed by the column's service. The type doubles as the
+// company's stage: when the column has a stage_column_id configured, the
+// server sets that status column to the visit type on every check-in.
+export const CHECKIN_TYPES_BY_SERVICE: Record<string, string[]> = {
+  'პერსონალურ მონაცემთა დაცვა': [
+    'პირველადი მონიტორინგი',
+    'კითხვარის დამუშავება',
+    'დამატებითი დოკუმენტაციის მიწოდება და განხილვა',
+    'პერსონალურ მონაცემთა დაცვის პოლიტიკის შემუშავება და დამტკიცება',
+    'პირველი სწავლება',
+    'დამატებითი პოლიტიკებისა და პროცედურების შემუშავება',
+    'ზეგავლენის დოკუმენტის შემუშავება და დამტკიცება',
+    'მეორე სწავლება',
+    'პერიოდული მონიტორინგები',
+  ],
+}
+
+export function getCheckinTypes(service?: string | null): string[] {
+  return service ? (CHECKIN_TYPES_BY_SERVICE[service] ?? []) : []
+}

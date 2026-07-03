@@ -244,6 +244,27 @@ export function ColumnConfigPanel({
                             onChange={value => handleConfigChange(column, 'service', value)}
                           />
                         </div>
+                        <div>
+                          <label className="block text-xs text-text-tertiary mb-1">
+                            სტადიის სვეტი (ავტო-განახლება)
+                          </label>
+                          <select
+                            value={(column.config as Record<string, any>)?.stage_column_id || ''}
+                            onChange={e =>
+                              handleConfigChange(column, 'stage_column_id', e.target.value)
+                            }
+                            className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+                          >
+                            <option value="">გამორთული</option>
+                            {columns
+                              .filter(col => col.column_type === 'status')
+                              .map(col => (
+                                <option key={col.id} value={col.column_id}>
+                                  {col.column_name}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
                       </div>
                     )}
                   </div>
