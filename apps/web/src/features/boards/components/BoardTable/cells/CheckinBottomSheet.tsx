@@ -22,6 +22,7 @@ import {
   useCheckout,
 } from '@/features/boards/hooks/useCheckinQueries'
 import { parseCoordinates, haversineMeters, formatDuration, formatElapsed } from '@/lib/geo-utils'
+import { getCheckinTypes } from '@/features/boards/constants/checkin'
 import { useToast } from '@/components/ui-monday/Toast'
 import type { BoardColumn } from '@/types/board'
 import type { LocationCheckin } from '@/types/checkin'
@@ -49,7 +50,12 @@ export function CheckinBottomSheet({
   const { coords, error: gpsError } = useGps(true)
   const { showToast } = useToast()
   const [notes, setNotes] = useState('')
+  const [checkinType, setCheckinType] = useState('')
   const [elapsedDisplay, setElapsedDisplay] = useState('')
+
+  // Visit types depend on the column's service; required when the service
+  // defines them, since the stage automation is driven by the selection
+  const visitTypes = getCheckinTypes((column.config as Record<string, any>)?.service)
 
   const { data: checkins = [], isLoading } = useItemCheckins(itemId, true)
   const createCheckin = useCreateItemCheckin(boardId)
@@ -84,7 +90,11 @@ export function CheckinBottomSheet({
   }, [coords, targetCoords])
 
   const withinRadius = distance !== null && distance <= RADIUS_METERS
-  const canCheckin = coords && (distance === null || withinRadius) && !createCheckin.isPending
+  const canCheckin =
+    coords &&
+    (distance === null || withinRadius) &&
+    (visitTypes.length === 0 || checkinType !== '') &&
+    !createCheckin.isPending
 
   // Elapsed timer for active checkin
   useEffect(() => {
@@ -102,12 +112,14 @@ export function CheckinBottomSheet({
         inspector_id: user.id,
         board_item_id: itemId,
         board_column_id: column.id,
+        checkin_type: checkinType || undefined,
         lat: coords.lat,
         lng: coords.lng,
         accuracy: coords.accuracy,
         notes: notes.trim() || undefined,
       })
       setNotes('')
+      setCheckinType('')
       showToast('ჩეკ-ინი წარმატებით შესრულდა', 'success')
     } catch (err: any) {
       showToast(err.error || 'ჩეკ-ინი ვერ შესრულდა', 'error')
@@ -256,6 +268,25 @@ export function CheckinBottomSheet({
                     {othersActiveCheckin.inspector_name || 'სხვა ინსპექტორი'} ამჟამად ჩექინშია ამ
                     ლოკაციაზე
                   </span>
+                </div>
+              )}
+              {visitTypes.length > 0 && (
+                <div>
+                  <label className="block text-xs font-medium text-text-secondary mb-1">
+                    ვიზიტის ტიპი <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={checkinType}
+                    onChange={e => setCheckinType(e.target.value)}
+                    className="w-full px-3 py-2.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-lg focus:outline-none focus:border-monday-primary"
+                  >
+                    <option value="">აირჩიეთ ვიზიტის ტიპი...</option>
+                    {visitTypes.map(t => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
               <textarea

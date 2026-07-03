@@ -70,6 +70,8 @@ export async function POST(request: NextRequest) {
     let locationUpdated = false
     let distanceFromLocation: number | null = null
     let serviceSnapshot: string | null = null
+    let stageColumnId: string | null = null
+    let itemBoardId: string | null = null
 
     // Geofence check: board item path (new) or company location path (legacy)
     if (validated.board_item_id) {
@@ -97,6 +99,8 @@ export async function POST(request: NextRequest) {
         const colConfig = checkinCols?.[0]?.config as Record<string, any> | undefined
         // Snapshot the column's service so later config edits can't rewrite history
         serviceSnapshot = colConfig?.service || null
+        stageColumnId = colConfig?.stage_column_id || null
+        itemBoardId = item.board_id
         const coordsColumnId = colConfig?.coordinates_column_id
         if (coordsColumnId && item.data) {
           const targetCoords = parseCoordinates((item.data as Record<string, any>)[coordsColumnId])
@@ -190,6 +194,70 @@ export async function POST(request: NextRequest) {
           actual_arrival_time: new Date().toTimeString().slice(0, 8),
         })
         .eq('id', validated.route_stop_id)
+    }
+
+    // Stage automation: the visit type doubles as the company's stage.
+    // When the checkin column has stage_column_id configured, set that
+    // status column on the item to the visit type. Never fails the checkin.
+    if (validated.board_item_id && validated.checkin_type && stageColumnId && itemBoardId) {
+      try {
+        const sc = createServiceClient()
+        // Status cells store the option KEY (label with spaces → underscores)
+        const optionKey = validated.checkin_type.toLowerCase().replace(/\s+/g, '_')
+
+        // Re-fetch item data right before writing to narrow the race window
+        const { data: freshItem } = await sc
+          .from('board_items')
+          .select('data')
+          .eq('id', validated.board_item_id)
+          .single()
+        const newData = {
+          ...((freshItem?.data as Record<string, any>) || {}),
+          [stageColumnId]: optionKey,
+        }
+        await sc
+          .from('board_items')
+          .update({ data: newData, updated_at: new Date().toISOString() })
+          .eq('id', validated.board_item_id)
+
+        // Ensure the status column has an option for this stage so the cell
+        // renders with a label and color instead of falling back to default
+        const { data: stageCols } = await sc
+          .from('board_columns')
+          .select('id, config')
+          .eq('board_id', itemBoardId)
+          .eq('column_id', stageColumnId)
+          .limit(1)
+        const stageCol = stageCols?.[0]
+        if (stageCol) {
+          const cfg = (stageCol.config as Record<string, any>) || {}
+          const options: any[] = Array.isArray(cfg.options) ? [...cfg.options] : []
+          if (!options.some(o => o.key === optionKey)) {
+            const palette = [
+              'bright_blue',
+              'working_orange',
+              'purple',
+              'aquamarine',
+              'egg_yolk',
+              'dark_blue',
+              'sunset',
+              'indigo',
+              'grass_green',
+            ]
+            options.push({
+              key: optionKey,
+              label: validated.checkin_type,
+              color: palette[options.length % palette.length],
+            })
+            await sc
+              .from('board_columns')
+              .update({ config: { ...cfg, options } })
+              .eq('id', stageCol.id)
+          }
+        }
+      } catch (automationError) {
+        console.error('Checkin stage automation failed:', automationError)
+      }
     }
 
     return NextResponse.json(
