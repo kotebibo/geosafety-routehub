@@ -13,6 +13,7 @@ import {
   Navigation,
   Loader2,
   AlertCircle,
+  Trash2,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useGps } from '@/hooks/useGps'
@@ -20,6 +21,7 @@ import {
   useItemCheckins,
   useCreateItemCheckin,
   useCheckout,
+  useDeleteCheckin,
 } from '@/features/boards/hooks/useCheckinQueries'
 import { parseCoordinates, haversineMeters, formatDuration, formatElapsed } from '@/lib/geo-utils'
 import { getCheckinTypes } from '@/features/boards/constants/checkin'
@@ -46,12 +48,13 @@ export function CheckinBottomSheet({
   row,
   onClose,
 }: CheckinBottomSheetProps) {
-  const { user } = useAuth()
+  const { user, userRole } = useAuth()
   const { coords, error: gpsError } = useGps(true)
   const { showToast } = useToast()
   const [notes, setNotes] = useState('')
   const [checkinType, setCheckinType] = useState('')
   const [elapsedDisplay, setElapsedDisplay] = useState('')
+  const isAdmin = userRole?.role === 'admin'
 
   // Visit types depend on the column's service; required when the service
   // defines them, since the stage automation is driven by the selection
@@ -60,6 +63,17 @@ export function CheckinBottomSheet({
   const { data: checkins = [], isLoading } = useItemCheckins(itemId, true)
   const createCheckin = useCreateItemCheckin(boardId)
   const checkout = useCheckout(boardId)
+  const deleteCheckin = useDeleteCheckin(boardId)
+
+  const handleDelete = async (checkinId: string) => {
+    if (!confirm('წაიშალოს ეს ჩეკ-ინი? მოქმედება შეუქცევადია.')) return
+    try {
+      await deleteCheckin.mutateAsync({ checkin_id: checkinId, board_item_id: itemId })
+      showToast('ჩეკ-ინი წაიშალა', 'success')
+    } catch (err: any) {
+      showToast(err.error || 'წაშლა ვერ მოხერხდა', 'error')
+    }
+  }
 
   // Timeline includes previous inspectors' visits (history follows the item
   // across board transfers) — only the caller's own active checkin is
@@ -326,7 +340,11 @@ export function CheckinBottomSheet({
                 ისტორია ({checkins.length})
               </h4>
               {checkins.map((c: LocationCheckin) => (
-                <CheckinTimelineEntry key={c.id} checkin={c} />
+                <CheckinTimelineEntry
+                  key={c.id}
+                  checkin={c}
+                  onDelete={isAdmin ? () => handleDelete(c.id) : undefined}
+                />
               ))}
             </div>
           ) : null}
@@ -338,13 +356,19 @@ export function CheckinBottomSheet({
   return createPortal(content, document.body)
 }
 
-function CheckinTimelineEntry({ checkin }: { checkin: LocationCheckin }) {
+function CheckinTimelineEntry({
+  checkin,
+  onDelete,
+}: {
+  checkin: LocationCheckin
+  onDelete?: () => void
+}) {
   const isActive = !checkin.checked_out_at
   const d = new Date(checkin.created_at)
   const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 
   return (
-    <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-hover transition-colors">
+    <div className="group flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-hover transition-colors">
       <div className="flex-shrink-0">
         {isActive ? (
           <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse block" />
@@ -397,6 +421,16 @@ function CheckinTimelineEntry({ checkin }: { checkin: LocationCheckin }) {
           )}
         </div>
       </div>
+      {onDelete && (
+        <button
+          type="button"
+          onClick={onDelete}
+          title="ჩეკ-ინის წაშლა (ადმინი)"
+          className="flex-shrink-0 p-1.5 rounded-md md:opacity-0 md:group-hover:opacity-100 hover:bg-red-500/10 transition-all"
+        >
+          <Trash2 className="w-3.5 h-3.5 text-red-500" />
+        </button>
+      )}
     </div>
   )
 }

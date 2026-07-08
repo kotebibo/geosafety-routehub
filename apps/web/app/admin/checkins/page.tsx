@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Timer,
   Clock,
+  Trash2,
 } from 'lucide-react'
 import type { LocationCheckin } from '@/types/checkin'
 
@@ -78,6 +79,22 @@ export default function AdminCheckinsPage() {
       loadCheckins()
     }
   }, [isAllowed, loadCheckins])
+
+  const isAdmin = userRole?.role === 'admin'
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('წაიშალოს ეს ჩეკ-ინი? მოქმედება შეუქცევადია.')) return
+    try {
+      const res = await fetch(`/api/checkins?id=${id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setCheckins(prev => prev.filter(c => c.id !== id))
+      } else {
+        alert('წაშლა ვერ მოხერხდა')
+      }
+    } catch {
+      alert('წაშლა ვერ მოხერხდა')
+    }
+  }
 
   if (authLoading) {
     return (
@@ -285,6 +302,7 @@ export default function AdminCheckinsPage() {
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
                       სტატუსი
                     </th>
+                    {isAdmin && <th className="w-10 px-2 py-3" />}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-light">
@@ -408,6 +426,18 @@ export default function AdminCheckinsPage() {
                           </span>
                         )}
                       </td>
+                      {isAdmin && (
+                        <td className="px-2 py-3">
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(checkin.id)}
+                            title="ჩეკ-ინის წაშლა"
+                            className="p-1.5 rounded-md hover:bg-red-500/10 transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
