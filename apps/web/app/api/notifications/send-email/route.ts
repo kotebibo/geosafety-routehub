@@ -25,11 +25,15 @@ export async function POST(request: NextRequest) {
 
   // If no internal secret, verify user is authenticated
   if (!hasInternalSecret) {
-    await requireAuth()
+    try {
+      await requireAuth()
+    } catch {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
   }
 
   try {
-    const { user_id, type, title, message, data } = await request.json()
+    const { user_id, type, title, message, data = {} } = await request.json()
 
     if (!user_id || !type || !title) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })

@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/react-query'
 import { boardsService, userBoardsService } from '../services'
+import { buildStageOptions } from '../constants/checkin'
 import type { BoardItem, BoardColumn, BoardGroup, ColumnType } from '../types/board'
 import type { ExportLookups } from '../utils/exportBoard'
 
@@ -267,6 +268,26 @@ export function useBoardHandlers({
           is_visible: true,
           config: columnData.config || {},
         } as any)
+
+        // Checkin column linked to a stage status column: seed the status
+        // column with the service's full stage list so every stage is
+        // visible immediately
+        const stageColId = columnData.config?.stage_column_id
+        const stageOptions = buildStageOptions(columnData.config?.service)
+        if (stageColId && stageOptions.length > 0) {
+          const statusCol = columns?.find(
+            c => c.column_id === stageColId && c.column_type === 'status'
+          )
+          if (statusCol) {
+            await boardsService.updateColumn(statusCol.id, {
+              config: {
+                ...((statusCol.config as Record<string, any>) || {}),
+                options: stageOptions,
+              },
+            } as any)
+          }
+        }
+
         await refetchColumns()
 
         if (userId) {

@@ -4,7 +4,11 @@ import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { X, Eye, EyeOff, GripVertical, Plus, Trash2, Settings as SettingsIcon } from 'lucide-react'
 import { Tooltip } from '@/shared/components/ui/tooltip'
-import { CHECKIN_SERVICES, CUSTOM_SERVICE } from '@/features/boards/constants/checkin'
+import {
+  CHECKIN_SERVICES,
+  CUSTOM_SERVICE,
+  buildStageOptions,
+} from '@/features/boards/constants/checkin'
 import type { BoardColumn } from '@/types/board'
 
 function ServiceSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -126,6 +130,20 @@ export function ColumnConfigPanel({
     } as Partial<BoardColumn>)
   }
 
+  // Overwrite the linked status column's options with the service's full
+  // stage list, so all stages are visible immediately after linking
+  const seedStageOptions = (service: string | null | undefined, stageColumnId: string | null) => {
+    if (!stageColumnId) return
+    const options = buildStageOptions(service)
+    if (options.length === 0) return
+    const statusCol = columns.find(c => c.column_id === stageColumnId && c.column_type === 'status')
+    if (statusCol) {
+      onUpdateColumn(statusCol.id, {
+        config: { ...((statusCol.config as Record<string, any>) || {}), options },
+      } as Partial<BoardColumn>)
+    }
+  }
+
   const getColumnTypeLabel = (type: string) => {
     const typeMap: Record<string, string> = {
       text: 'Text',
@@ -241,7 +259,13 @@ export function ColumnConfigPanel({
                           <label className="block text-xs text-text-tertiary mb-1">სერვისი</label>
                           <ServiceSelect
                             value={(column.config as Record<string, any>)?.service || ''}
-                            onChange={value => handleConfigChange(column, 'service', value)}
+                            onChange={value => {
+                              handleConfigChange(column, 'service', value)
+                              seedStageOptions(
+                                value,
+                                (column.config as Record<string, any>)?.stage_column_id || null
+                              )
+                            }}
                           />
                         </div>
                         <div>
@@ -250,9 +274,13 @@ export function ColumnConfigPanel({
                           </label>
                           <select
                             value={(column.config as Record<string, any>)?.stage_column_id || ''}
-                            onChange={e =>
+                            onChange={e => {
                               handleConfigChange(column, 'stage_column_id', e.target.value)
-                            }
+                              seedStageOptions(
+                                (column.config as Record<string, any>)?.service,
+                                e.target.value || null
+                              )
+                            }}
                             className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
                           >
                             <option value="">გამორთული</option>
