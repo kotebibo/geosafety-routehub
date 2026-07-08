@@ -27,3 +27,34 @@ export const CHECKIN_TYPES_BY_SERVICE: Record<string, string[]> = {
 export function getCheckinTypes(service?: string | null): string[] {
   return service ? (CHECKIN_TYPES_BY_SERVICE[service] ?? []) : []
 }
+
+// Distinct colors assigned to stages in order (keys from MONDAY_COLORS)
+export const STAGE_COLOR_SEQUENCE = [
+  'bright_blue',
+  'working_orange',
+  'purple',
+  'aquamarine',
+  'egg_yolk',
+  'dark_blue',
+  'sunset',
+  'indigo',
+  'grass_green',
+]
+
+// Status cells store the option KEY (label with spaces → underscores)
+export function statusOptionKey(label: string): string {
+  return label.toLowerCase().replace(/\s+/g, '_')
+}
+
+// Full option set for a stage status column — seeded onto the linked status
+// column when stage_column_id is configured, so every stage is visible and
+// pickable immediately instead of appearing one-by-one as checkins happen
+export function buildStageOptions(
+  service?: string | null
+): Array<{ key: string; label: string; color: string }> {
+  return getCheckinTypes(service).map((label, i) => ({
+    key: statusOptionKey(label),
+    label,
+    color: STAGE_COLOR_SEQUENCE[i % STAGE_COLOR_SEQUENCE.length],
+  }))
+}
