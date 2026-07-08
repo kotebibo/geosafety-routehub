@@ -38,7 +38,7 @@ export interface NotificationEmailData {
   type: string
   title: string
   message: string
-  data: Record<string, any>
+  data?: Record<string, any>
 }
 
 export function generateNotificationEmail(notification: NotificationEmailData): {
@@ -46,7 +46,7 @@ export function generateNotificationEmail(notification: NotificationEmailData): 
   text: string
   html: string
 } {
-  const { type, title, message, data } = notification
+  const { type, title, message, data = {} } = notification
 
   switch (type) {
     case 'item_mention': {

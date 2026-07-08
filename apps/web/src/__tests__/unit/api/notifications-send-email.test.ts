@@ -63,9 +63,10 @@ describe('POST /api/notifications/send-email', () => {
       title: 'Test',
     })
 
-    // The route calls requireAuth which throws, and since there's no try/catch
-    // around the auth part outside the main try, it will propagate
-    await expect(POST(request)).rejects.toThrow()
+    const res = await POST(request)
+    expect(res.status).toBe(401)
+    const json = await res.json()
+    expect(json.error).toBe('Authentication required')
   })
 
   it('should bypass auth when internal secret header is provided', async () => {
