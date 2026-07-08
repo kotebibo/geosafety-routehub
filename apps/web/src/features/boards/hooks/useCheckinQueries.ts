@@ -74,6 +74,27 @@ export function useCreateItemCheckin(boardId: string) {
   })
 }
 
+export function useDeleteCheckin(boardId: string) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: { checkin_id: string; board_item_id: string }) => {
+      const res = await fetch(`/api/checkins?id=${input.checkin_id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json()
+        throw { ...err, status: res.status }
+      }
+      return res.json()
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.checkins.summary(boardId) })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.checkins.byItem(variables.board_item_id),
+      })
+    },
+  })
+}
+
 export function useCheckout(boardId: string) {
   const queryClient = useQueryClient()
 
