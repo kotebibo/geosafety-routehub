@@ -6,9 +6,12 @@ on:
     branches: [master]
 
 env:
-  # Placeholders — tests mock Supabase and the build does no data fetching;
-  # these only satisfy module-scope client construction.
-  NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+  # Some component tests fire real fetches through hooks. A fast-refusing
+  # local address makes those reject while components are still mounted, so
+  # the hooks' error handling runs normally — an unresolvable hostname makes
+  # rejections land after jsdom teardown and crash the run as unhandled
+  # errors ("window is not defined").
+  NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:9
   NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
   SUPABASE_SERVICE_KEY: placeholder-service-key
 
