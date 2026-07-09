@@ -68,6 +68,7 @@ nul
 # Local utility scripts
 apps/web/scripts/
 scripts/_*
+scripts/instances.json
 scripts/*.js
 
 # Local docs / research

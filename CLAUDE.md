@@ -34,10 +34,15 @@ in env vars (each points at its own Supabase instance):
 
 The three Supabase instances share a schema but hold separate data.
 **Every migration must be applied to all three.** Add the SQL file to
-`supabase/migrations/`, then apply via the Supabase Management API
-(`POST /v1/projects/{ref}/database/query`) — see the `scripts/_run-migration-*.js`
-pattern. A migration applied to only one instance is a production bug on the
-other two.
+`supabase/migrations/`, then:
+
+```
+node scripts/run-migration.mjs <migration-file>.sql
+```
+
+(Requires `scripts/instances.json` — copy `instances.example.json` and fill
+in Supabase Management API tokens.) A migration applied to only one instance
+is a production bug on the other two.
 
 ## Multi-Instance Gotchas (these have caused real bugs)
 
