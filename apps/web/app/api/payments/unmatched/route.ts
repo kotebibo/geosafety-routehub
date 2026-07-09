@@ -1,7 +1,57 @@
 /**
- * Unmatched Payments API
- * Returns unmatched transactions with suggested company matches
- * Protected: Admin or Dispatcher
+ * @swagger
+ * /api/payments/unmatched:
+ *   get:
+ *     summary: List unmatched transactions with suggestions
+ *     description: Returns up to 100 unmatched bank transactions, each enriched with suggested company matches based on tax ID exact match or name similarity (bigram Jaccard index).
+ *     tags: [Payments]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Array of unmatched transactions with suggested companies
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                     format: uuid
+ *                   sender_name:
+ *                     type: string
+ *                   sender_inn:
+ *                     type: string
+ *                   amount:
+ *                     type: number
+ *                   entry_date:
+ *                     type: string
+ *                     format: date
+ *                   suggested_companies:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         company_id:
+ *                           type: string
+ *                           format: uuid
+ *                         company_name:
+ *                           type: string
+ *                         tax_id:
+ *                           type: string
+ *                           nullable: true
+ *                         confidence:
+ *                           type: number
+ *                         reason:
+ *                           type: string
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or dispatcher access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

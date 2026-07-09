@@ -1,7 +1,51 @@
 /**
- * Keepalive Cron - Prevents Supabase cold starts
- * Pings all configured Supabase instances every 4 minutes.
- * GET /api/cron/keepalive
+ * @swagger
+ * /api/cron/keepalive:
+ *   get:
+ *     summary: Ping all Supabase instances to prevent cold starts
+ *     description: >
+ *       Pings team1, team2, and team3 Supabase instances in parallel to keep
+ *       connections warm. Reports per-instance latency and overall health status.
+ *       Runs every 4 minutes via Vercel Cron.
+ *     tags: [Cron]
+ *     security:
+ *       - cronSecret: []
+ *     parameters:
+ *       - in: query
+ *         name: secret
+ *         schema:
+ *           type: string
+ *         description: Alternative to Authorization header for manual testing
+ *     responses:
+ *       200:
+ *         description: Ping results for all instances
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [ok, degraded]
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 results:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       instance:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [ok, error]
+ *                       time_ms:
+ *                         type: integer
+ *                       error:
+ *                         type: string
+ *       401:
+ *         description: Invalid or missing CRON_SECRET
  */
 
 export const dynamic = 'force-dynamic'

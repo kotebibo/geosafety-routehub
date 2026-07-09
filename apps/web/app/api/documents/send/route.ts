@@ -1,3 +1,62 @@
+/**
+ * @swagger
+ * /api/documents/send:
+ *   post:
+ *     summary: Send a generated document via email
+ *     tags: [Documents]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - documentId
+ *               - to
+ *               - subject
+ *             properties:
+ *               documentId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: ID of the generated document to send
+ *               to:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: email
+ *                 minItems: 1
+ *                 description: Recipient email addresses
+ *               subject:
+ *                 type: string
+ *                 maxLength: 200
+ *                 description: Email subject line
+ *               message:
+ *                 type: string
+ *                 maxLength: 2000
+ *                 description: Optional email body message
+ *     responses:
+ *       200:
+ *         description: Email sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       404:
+ *         description: Document not found
+ *       500:
+ *         description: Failed to send email
+ *       503:
+ *         description: Email service not configured (RESEND_API_KEY missing)
+ */
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

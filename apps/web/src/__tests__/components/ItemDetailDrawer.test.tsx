@@ -73,14 +73,6 @@ vi.mock('@/contexts/AuthContext', () => ({
   }),
 }))
 
-// Mock useInspectorId hook
-vi.mock('@/hooks/useInspectorId', () => ({
-  useInspectorId: () => ({
-    data: 'inspector-1',
-    isLoading: false,
-  }),
-}))
-
 // Mock activity hooks
 vi.mock('@/features/boards/hooks/useActivity', () => ({
   useItemUpdates: () => ({

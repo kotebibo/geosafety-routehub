@@ -1,8 +1,79 @@
 /**
- * Payment Contracts API
- * Fetches contract terms from the ხელშეკრულებები board to enrich payment data.
- * Discovers columns dynamically by name (not hardcoded IDs) to work across instances.
- * Protected: Admin or Dispatcher
+ * @swagger
+ * /api/payments/contracts:
+ *   get:
+ *     summary: Get contract terms grouped by tax ID
+ *     description: Fetches contract data from contract-related boards (active, one-time, paused, ended) using dynamic column discovery by name. Returns contracts keyed by tax ID, enriched with the earliest bank transaction date per tax ID. Response is cached for 5 minutes.
+ *     tags: [Payments]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Contracts grouped by tax ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 contracts:
+ *                   type: object
+ *                   additionalProperties:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         item_id:
+ *                           type: string
+ *                         board_id:
+ *                           type: string
+ *                         contract_source:
+ *                           type: string
+ *                           enum: [active, one_time, paused, ended]
+ *                         company_name:
+ *                           type: string
+ *                         tax_id:
+ *                           type: string
+ *                         monthly_amount:
+ *                           type: number
+ *                           nullable: true
+ *                         frequency:
+ *                           type: string
+ *                           nullable: true
+ *                         invoice_amount:
+ *                           type: number
+ *                           nullable: true
+ *                         status:
+ *                           type: string
+ *                           nullable: true
+ *                         start_date:
+ *                           type: string
+ *                           nullable: true
+ *                         end_date:
+ *                           type: string
+ *                           nullable: true
+ *                         payment_method:
+ *                           type: string
+ *                           nullable: true
+ *                         first_payment_date:
+ *                           type: string
+ *                           nullable: true
+ *                 boards_found:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       count:
+ *                         type: integer
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or dispatcher access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

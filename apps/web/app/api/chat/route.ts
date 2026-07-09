@@ -1,3 +1,40 @@
+/**
+ * @swagger
+ * /api/chat:
+ *   post:
+ *     summary: Chat with the RouteHub AI assistant
+ *     description: >
+ *       Streams an AI-powered conversation using Claude. The assistant has
+ *       tools to query companies, boards, bank transactions, inspectors, and
+ *       workspaces. Requires admin or dispatcher role.
+ *     tags: [Chat]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [messages]
+ *             properties:
+ *               messages:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     role:
+ *                       type: string
+ *                       enum: [user, assistant]
+ *                     content:
+ *                       type: string
+ *     responses:
+ *       200:
+ *         description: Streamed AI response (text/event-stream)
+ *       401:
+ *         description: Admin or dispatcher access required
+ */
+
 import { anthropic } from '@ai-sdk/anthropic'
 import { streamText, tool, stepCountIs } from 'ai'
 import { z } from 'zod'

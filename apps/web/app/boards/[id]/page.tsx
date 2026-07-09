@@ -98,6 +98,13 @@ const MoveToGroupModal = dynamic(
     })),
   { ssr: false }
 )
+const UpdatesPanel = dynamic(
+  () =>
+    import('@/features/boards/components/BoardTable/cells/UpdatesPanel').then(m => ({
+      default: m.UpdatesPanel,
+    })),
+  { ssr: false }
+)
 const GenerateDocumentModal = dynamic(
   () =>
     import('@/features/documents/components/GenerateDocumentModal').then(m => ({
@@ -170,12 +177,25 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
     commentCounts,
   } = data
 
-  // ─── Deep-link: open item from URL ?item=...&tab=... ───
+  // ─── Deep-link: open item from URL ?item=...&tab=... or ?updates=... ───
   const [initialTab, setInitialTab] = useState<string | null>(null)
+  const [updatesItem, setUpdatesItem] = useState<BoardItem | null>(null)
   const deepLinkHandled = useRef(false)
 
   useEffect(() => {
     if (deepLinkHandled.current || !items || items.length === 0) return
+
+    const updatesItemId = searchParams.get('updates')
+    if (updatesItemId) {
+      const found = items.find(i => i.id === updatesItemId)
+      if (found) {
+        setUpdatesItem(found)
+        deepLinkHandled.current = true
+        window.history.replaceState(null, '', `/boards/${params.id}`)
+      }
+      return
+    }
+
     const itemId = searchParams.get('item')
     const tab = searchParams.get('tab')
     if (!itemId) return
@@ -185,7 +205,6 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
       setSelectedItem(found)
       if (tab) setInitialTab(tab)
       deepLinkHandled.current = true
-      // Clean URL without triggering navigation
       window.history.replaceState(null, '', `/boards/${params.id}`)
     }
   }, [items, searchParams, setSelectedItem, params.id])
@@ -698,6 +717,17 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           onUpdate={async (itemId, updates) => {
             await updateItem.mutateAsync({ itemId, updates })
           }}
+        />
+      )}
+
+      {updatesItem && (
+        <UpdatesPanel
+          isOpen={true}
+          onClose={() => setUpdatesItem(null)}
+          itemId={updatesItem.id}
+          itemName={updatesItem.name}
+          itemType="board_item"
+          allColumns={columns}
         />
       )}
 

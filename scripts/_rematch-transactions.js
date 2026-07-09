@@ -44,11 +44,12 @@ async function rematch(inst) {
     .from('bank_transactions')
     .select('id', { count: 'exact', head: true })
     .eq('status', 'matched')
-    .neq('match_method', 'manual');
+    .neq('match_method', 'manual')
+    .neq('match_method', 'inn_board');
 
-  console.log(`  ${inst.name}: ${autoMatchedCount || 0} auto-matched transactions to reset`);
+  console.log(`  ${inst.name}: ${autoMatchedCount || 0} old auto-matched transactions to reset`);
 
-  // 2. Reset all auto-matched to unmatched (preserve manual matches)
+  // 2. Reset old auto-matched to unmatched (preserve manual + inn_board matches)
   let resetCount = 0;
   let page = 0;
   const PAGE = 500;
@@ -58,6 +59,7 @@ async function rematch(inst) {
       .select('id')
       .eq('status', 'matched')
       .neq('match_method', 'manual')
+      .neq('match_method', 'inn_board')
       .range(page, page + PAGE - 1);
 
     if (!batch || batch.length === 0) break;

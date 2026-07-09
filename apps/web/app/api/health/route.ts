@@ -1,9 +1,54 @@
 /**
- * Health Check API - Admin only
- * GET /api/health
- *
- * Runs parallel checks against Supabase and returns timed results.
- * Includes: DB ping, table counts, auth latency, RLS performance, storage.
+ * @swagger
+ * /api/health:
+ *   get:
+ *     summary: System health check
+ *     description: Runs parallel checks against Supabase (DB ping, table counts, auth latency, RLS query, storage) and returns timed results with an overall status. Results are persisted to health_check_logs.
+ *     tags: [Health]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Health check results
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   enum: [healthy, degraded, unhealthy]
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 checks:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       name:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [ok, slow, error]
+ *                       time_ms:
+ *                         type: integer
+ *                       result:
+ *                         description: Check-specific result value
+ *                       error:
+ *                         type: string
+ *                 summary:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                     ok:
+ *                       type: integer
+ *                     slow:
+ *                       type: integer
+ *                     failed:
+ *                       type: integer
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'
@@ -164,7 +209,7 @@ export async function GET() {
     if (failed > 0) status = 'unhealthy'
     else if (slow > 0) status = 'degraded'
 
-    return NextResponse.json({
+    const response = {
       status,
       timestamp: new Date().toISOString(),
       checks: allChecks,
@@ -174,7 +219,28 @@ export async function GET() {
         slow,
         failed,
       },
-    })
+    }
+
+    // Persist to health_check_logs (fire-and-forget, don't block response)
+    const avgMs =
+      allChecks.length > 0
+        ? Math.round(allChecks.reduce((s, c) => s + c.time_ms, 0) / allChecks.length)
+        : 0
+    const maxMs = allChecks.length > 0 ? Math.max(...allChecks.map(c => c.time_ms)) : 0
+    supabase
+      .from('health_check_logs')
+      .insert({
+        status,
+        avg_ms: avgMs,
+        max_ms: maxMs,
+        checks: allChecks.map(c => ({ name: c.name, status: c.status, time_ms: c.time_ms })),
+        region: process.env.VERCEL_REGION || 'local',
+      })
+      .then(({ error: logErr }: { error: any }) => {
+        if (logErr) console.warn('Failed to log health check:', logErr.message)
+      })
+
+    return NextResponse.json(response)
   } catch (error: any) {
     if (error?.name === 'UnauthorizedError') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })

@@ -1,9 +1,62 @@
 /**
- * Payment Stats API
- * Returns summary statistics for the payments dashboard
- * Uses DB-side aggregation (RPC) for performance
- * Supports date range filtering (from/to query params)
- * Protected: Admin or Dispatcher
+ * @swagger
+ * /api/payments/stats:
+ *   get:
+ *     summary: Get payment statistics
+ *     description: Returns aggregated payment statistics including totals, match rates, and amounts. Uses a DB-side RPC for performance with a client-side fallback.
+ *     tags: [Payments]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: from
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for date range filter
+ *       - name: to
+ *         in: query
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for date range filter
+ *       - name: matchSource
+ *         in: query
+ *         schema:
+ *           type: string
+ *           enum: [active, paused, ended, one_time]
+ *         description: Filter by contract match source
+ *     responses:
+ *       200:
+ *         description: Payment statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 total_transactions:
+ *                   type: integer
+ *                 total_amount:
+ *                   type: number
+ *                 matched_count:
+ *                   type: integer
+ *                 matched_amount:
+ *                   type: number
+ *                 unmatched_count:
+ *                   type: integer
+ *                 unmatched_amount:
+ *                   type: number
+ *                 ignored_count:
+ *                   type: integer
+ *                 match_rate:
+ *                   type: integer
+ *                   description: Percentage of matched transactions (0-100)
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin or dispatcher access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

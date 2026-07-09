@@ -1,20 +1,43 @@
+/**
+ * @swagger
+ * /api/cron/contract-expiry-alerts:
+ *   get:
+ *     summary: Send contract expiry alert notifications
+ *     description: >
+ *       Checks all board items in the "კომპანიები" board for contracts hitting
+ *       expiry thresholds (30, 14, 7, 0 days). Creates in-app notifications for
+ *       admin/dispatcher users and sends a summary email. Runs daily via Vercel Cron.
+ *     tags: [Cron]
+ *     security:
+ *       - cronSecret: []
+ *     responses:
+ *       200:
+ *         description: Alerts processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 alerts:
+ *                   type: integer
+ *                   description: Number of contracts hitting thresholds
+ *                 notifications:
+ *                   type: integer
+ *                   description: In-app notifications created
+ *                 emails_sent_to:
+ *                   type: integer
+ *                   description: Number of email recipients
+ *       401:
+ *         description: Invalid or missing CRON_SECRET
+ *       500:
+ *         description: Alert processing failed
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email'
-
-/**
- * Cron endpoint: checks for expiring contracts and sends alerts.
- *
- * Thresholds:
- *   - 30 days: first warning
- *   - 14 days: urgent warning
- *   - 7 days: critical warning
- *   - 0 days (expired): expiry notice
- *
- * Runs daily via Vercel Cron. Protected by CRON_SECRET.
- *
- * GET /api/cron/contract-expiry-alerts
- */
 
 const ALERT_THRESHOLDS = [
   { days: 30, label: '30 დღე', urgency: 'warning' as const },

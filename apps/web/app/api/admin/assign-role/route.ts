@@ -1,7 +1,50 @@
 /**
- * Admin Assign Role API
- * Assigns a role to a user (server-side protected)
- * Protected: Admin only
+ * @swagger
+ * /api/admin/assign-role:
+ *   post:
+ *     summary: Assign or update a user's role
+ *     description: Upserts a role for a given user. If the user already has a role, it is updated; otherwise a new role assignment is created.
+ *     tags: [Admin]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [userId, roleName]
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 format: uuid
+ *               roleName:
+ *                 type: string
+ *                 minLength: 1
+ *     responses:
+ *       200:
+ *         description: The created or updated role assignment
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                   format: uuid
+ *                 user_id:
+ *                   type: string
+ *                   format: uuid
+ *                 role:
+ *                   type: string
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'
@@ -14,7 +57,6 @@ import { requireAdmin } from '@/middleware/auth'
 const assignRoleSchema = z.object({
   userId: z.string().uuid('userId must be a valid UUID'),
   roleName: z.string().min(1, 'roleName must be a non-empty string'),
-  inspectorId: z.string().uuid().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -23,7 +65,7 @@ export async function POST(request: NextRequest) {
     const supabase = createServerClient()
 
     const body = await request.json()
-    const { userId, roleName, inspectorId } = assignRoleSchema.parse(body)
+    const { userId, roleName } = assignRoleSchema.parse(body)
 
     // Check if user already has a role
     const { data: existing } = await supabase
@@ -40,7 +82,6 @@ export async function POST(request: NextRequest) {
         .from('user_roles')
         .update({
           role: roleName,
-          inspector_id: inspectorId || null,
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId)
@@ -56,7 +97,6 @@ export async function POST(request: NextRequest) {
         .insert({
           user_id: userId,
           role: roleName,
-          inspector_id: inspectorId || null,
         })
         .select()
         .single()

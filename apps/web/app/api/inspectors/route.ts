@@ -1,11 +1,136 @@
 /**
- * Inspectors API
- * Get list of inspectors and create new ones
- * Protected: Requires authentication
- * - GET: All authenticated users
- * - POST: Admin only
- * - PUT: Admin only
- * - DELETE: Admin only
+ * @swagger
+ * /api/inspectors:
+ *   get:
+ *     summary: List inspectors
+ *     description: Returns all inspectors ordered by name. Optionally filter by status. Requires authentication.
+ *     tags: [Inspectors]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [active, inactive, all]
+ *         description: Filter by status (omit or "all" to return every status)
+ *     responses:
+ *       200:
+ *         description: Array of inspector records
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     summary: Create an inspector
+ *     description: Creates a new inspector record. Admin only.
+ *     tags: [Inspectors]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               phone:
+ *                 type: string
+ *               is_active:
+ *                 type: boolean
+ *               vehicle_type:
+ *                 type: string
+ *               license_plate:
+ *                 type: string
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Inspector created
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       409:
+ *         description: Inspector with this email already exists
+ *       500:
+ *         description: Internal server error
+ *   put:
+ *     summary: Update an inspector
+ *     description: Updates an existing inspector by ID. Admin only.
+ *     tags: [Inspectors]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [id]
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 format: uuid
+ *               full_name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               phone:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *               vehicle_type:
+ *                 type: string
+ *               license_plate:
+ *                 type: string
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Inspector updated
+ *       400:
+ *         description: Validation failed or missing ID
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ *   delete:
+ *     summary: Delete an inspector
+ *     description: Permanently deletes an inspector by ID. Admin only.
+ *     tags: [Inspectors]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Inspector ID to delete
+ *     responses:
+ *       200:
+ *         description: Inspector deleted
+ *       400:
+ *         description: Missing inspector ID
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
  */
 
 export const dynamic = 'force-dynamic'

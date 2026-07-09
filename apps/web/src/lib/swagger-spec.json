@@ -1,0 +1,3585 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "RouteHub API",
+    "version": "1.0.0",
+    "description": "API documentation for RouteHub — fleet management, payments, documents, and inspections."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    },
+    {
+      "url": "https://geosafety.routehub.ge",
+      "description": "Production (master)"
+    },
+    {
+      "url": "https://team2.routehub.ge",
+      "description": "Team 2"
+    },
+    {
+      "url": "https://team3.routehub.ge",
+      "description": "Team 3"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sb-access-token",
+        "description": "Supabase session cookie (set automatically after login)"
+      },
+      "cronSecret": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "authorization",
+        "description": "Bearer token matching CRON_SECRET env var (for scheduled jobs)"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "cookieAuth": []
+    }
+  ],
+  "paths": {
+    "/api/service-types": {
+      "get": {
+        "summary": "List all service types",
+        "description": "Returns all service types ordered by name. Cached for 5 minutes.",
+        "tags": ["Services"],
+        "responses": {
+          "200": {
+            "description": "Array of service type objects",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "name_ka": {
+                        "type": "string"
+                      },
+                      "is_active": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new service type",
+        "description": "Admin only. Validates input with Zod schema.",
+        "tags": ["Services"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "name_ka": {
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created service type object"
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a service type",
+        "description": "Admin only. Requires id in the request body.",
+        "tags": ["Services"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "name_ka": {
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated service type object"
+          },
+          "400": {
+            "description": "Missing id or validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a service type",
+        "description": "Admin only. Pass id as query parameter.",
+        "tags": ["Services"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Service type ID to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deletion successful"
+          },
+          "400": {
+            "description": "Missing id parameter"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/routes/save": {
+      "post": {
+        "summary": "Save a planned route with stops",
+        "description": "Creates a route record and its stops. When a service type and inspector are specified, updates company_services inspection dates and creates inspection_history records. Requires admin or dispatcher role.",
+        "tags": ["Routes"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "date", "stops"],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "inspectorId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "serviceTypeId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "startTime": {
+                    "type": "string"
+                  },
+                  "totalDistance": {
+                    "type": "number",
+                    "description": "Total route distance in km"
+                  },
+                  "totalDuration": {
+                    "type": "number",
+                    "description": "Total route duration in minutes"
+                  },
+                  "optimizationType": {
+                    "type": "string",
+                    "enum": ["distance", "duration"]
+                  },
+                  "routeGeometry": {
+                    "type": "object",
+                    "description": "GeoJSON route geometry from OSRM"
+                  },
+                  "stops": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["companyId", "position"],
+                      "properties": {
+                        "companyId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "companyServiceId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "position": {
+                          "type": "integer"
+                        },
+                        "distanceFromPrevious": {
+                          "type": "number"
+                        },
+                        "durationFromPrevious": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Route saved with inspection dates updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "route": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "date": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "serviceTypeId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "totalStops": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin or dispatcher role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/routes/optimize": {
+      "post": {
+        "summary": "Optimize a route's stop order",
+        "description": "Accepts a list of locations and returns an optimized stop sequence. Uses OSRM real-road routing by default. Requires admin or dispatcher role.",
+        "tags": ["Routes"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["locations"],
+                "properties": {
+                  "locations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["lat", "lng"],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "lat": {
+                          "type": "number"
+                        },
+                        "lng": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "useRealRoads": {
+                        "type": "boolean",
+                        "description": "Use OSRM road routing (default true)"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Optimized route with stop order and metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "route": {
+                      "type": "object"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "inputStops": {
+                          "type": "integer"
+                        },
+                        "outputStops": {
+                          "type": "integer"
+                        },
+                        "algorithm": {
+                          "type": "string"
+                        },
+                        "usingRealRoads": {
+                          "type": "boolean"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin or dispatcher role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/payments": {
+      "get": {
+        "summary": "List bank transactions",
+        "description": "Returns paginated bank transactions with optional filters for status, company, date range, and text search.",
+        "tags": ["Payments"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["matched", "unmatched", "ignored"]
+            },
+            "description": "Filter by transaction status"
+          },
+          {
+            "name": "companyId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by matched company ID"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Start date for date range filter"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "End date for date range filter"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Free-text search across sender name, tax ID, purpose, and doc key"
+          },
+          {
+            "name": "matchSource",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "paused", "ended", "one_time"]
+            },
+            "description": "Filter by contract match source"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "description": "Page number (1-based)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 50
+            },
+            "description": "Number of results per page"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated list of transactions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "transactions": {
+                      "type": "array"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin or dispatcher access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Manually match or ignore a transaction",
+        "description": "Admin-only action to manually match a transaction to a company or mark it as ignored. Creates an audit trail for matches.",
+        "tags": ["Payments"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["action", "transactionId"],
+                "properties": {
+                  "action": {
+                    "type": "string",
+                    "enum": ["match", "ignore"]
+                  },
+                  "transactionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "companyId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Required when action is \"match\""
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Action completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "action": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed or missing companyId for match action"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/payments/unmatched": {
+      "get": {
+        "summary": "List unmatched transactions with suggestions",
+        "description": "Returns up to 100 unmatched bank transactions, each enriched with suggested company matches based on tax ID exact match or name similarity (bigram Jaccard index).",
+        "tags": ["Payments"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of unmatched transactions with suggested companies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "sender_name": {
+                        "type": "string"
+                      },
+                      "sender_inn": {
+                        "type": "string"
+                      },
+                      "amount": {
+                        "type": "number"
+                      },
+                      "entry_date": {
+                        "type": "string",
+                        "format": "date"
+                      },
+                      "suggested_companies": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "company_id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "company_name": {
+                              "type": "string"
+                            },
+                            "tax_id": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "confidence": {
+                              "type": "number"
+                            },
+                            "reason": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin or dispatcher access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/payments/stats": {
+      "get": {
+        "summary": "Get payment statistics",
+        "description": "Returns aggregated payment statistics including totals, match rates, and amounts. Uses a DB-side RPC for performance with a client-side fallback.",
+        "tags": ["Payments"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Start date for date range filter"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "End date for date range filter"
+          },
+          {
+            "name": "matchSource",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "paused", "ended", "one_time"]
+            },
+            "description": "Filter by contract match source"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Payment statistics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total_transactions": {
+                      "type": "integer"
+                    },
+                    "total_amount": {
+                      "type": "number"
+                    },
+                    "matched_count": {
+                      "type": "integer"
+                    },
+                    "matched_amount": {
+                      "type": "number"
+                    },
+                    "unmatched_count": {
+                      "type": "integer"
+                    },
+                    "unmatched_amount": {
+                      "type": "number"
+                    },
+                    "ignored_count": {
+                      "type": "integer"
+                    },
+                    "match_rate": {
+                      "type": "integer",
+                      "description": "Percentage of matched transactions (0-100)"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin or dispatcher access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/payments/contracts": {
+      "get": {
+        "summary": "Get contract terms grouped by tax ID",
+        "description": "Fetches contract data from contract-related boards (active, one-time, paused, ended) using dynamic column discovery by name. Returns contracts keyed by tax ID, enriched with the earliest bank transaction date per tax ID. Response is cached for 5 minutes.",
+        "tags": ["Payments"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contracts grouped by tax ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "contracts": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "item_id": {
+                              "type": "string"
+                            },
+                            "board_id": {
+                              "type": "string"
+                            },
+                            "contract_source": {
+                              "type": "string",
+                              "enum": ["active", "one_time", "paused", "ended"]
+                            },
+                            "company_name": {
+                              "type": "string"
+                            },
+                            "tax_id": {
+                              "type": "string"
+                            },
+                            "monthly_amount": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "frequency": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "invoice_amount": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "status": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "start_date": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "end_date": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "payment_method": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "first_payment_date": {
+                              "type": "string",
+                              "nullable": true
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "boards_found": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin or dispatcher access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/notifications/send-email": {
+      "post": {
+        "summary": "Send an email notification to a user",
+        "description": "Looks up the user's email by user_id, generates an email from the notification type/title/message, and sends it via Resend. Accepts either a user session cookie or an x-internal-secret header (for server-side callers like cron jobs).\n",
+        "tags": ["Notifications"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id", "type", "title"],
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": {
+                    "type": "string",
+                    "description": "Notification type (e.g. item_overdue)"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "object",
+                    "description": "Additional context passed to email template"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "sent": {
+                      "type": "boolean"
+                    },
+                    "email": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required fields (user_id, type, or title)"
+          },
+          "401": {
+            "description": "Authentication required (no session or internal secret)"
+          },
+          "404": {
+            "description": "User email not found"
+          },
+          "500": {
+            "description": "Failed to send email"
+          }
+        }
+      }
+    },
+    "/api/location/update": {
+      "post": {
+        "summary": "Submit a GPS location update for an inspector",
+        "description": "Updates the inspector's current location, inserts a history record, and broadcasts the update via Ably. The caller must own the inspector_id or hold admin/dispatcher role.",
+        "tags": ["Location"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["inspector_id", "latitude", "longitude"],
+                "properties": {
+                  "inspector_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "latitude": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "longitude": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "accuracy": {
+                    "type": "number"
+                  },
+                  "speed": {
+                    "type": "number"
+                  },
+                  "heading": {
+                    "type": "number"
+                  },
+                  "route_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Location updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Not authorized for this inspector"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/location/history": {
+      "get": {
+        "summary": "Get location history for an inspector",
+        "description": "Returns chronologically ordered GPS location points for a given inspector. Defaults to the last 24 hours if no `since` parameter is provided.",
+        "tags": ["Location"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "inspector_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The inspector whose history to retrieve"
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "ISO 8601 timestamp to fetch records from (defaults to 24 hours ago)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of location points ordered by recorded_at ascending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "lat": {
+                        "type": "number"
+                      },
+                      "lng": {
+                        "type": "number"
+                      },
+                      "recorded_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "accuracy": {
+                        "type": "number",
+                        "nullable": true
+                      },
+                      "speed": {
+                        "type": "number",
+                        "nullable": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required inspector_id parameter"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin or dispatcher role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/location/active": {
+      "get": {
+        "summary": "Get currently active inspectors with live locations",
+        "description": "Returns inspectors who reported a location within the last 30 minutes, including their latest coordinates and today's active route progress.",
+        "tags": ["Location"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of active inspectors with location and route data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "full_name": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string"
+                      },
+                      "lat": {
+                        "type": "number"
+                      },
+                      "lng": {
+                        "type": "number"
+                      },
+                      "last_location_update": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "active_route": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "total_stops": {
+                            "type": "integer"
+                          },
+                          "completed_stops": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin or dispatcher role required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/inspectors": {
+      "get": {
+        "summary": "List inspectors",
+        "description": "Returns all inspectors ordered by name. Optionally filter by status. Requires authentication.",
+        "tags": ["Inspectors"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": ["active", "inactive", "all"]
+            },
+            "description": "Filter by status (omit or \"all\" to return every status)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of inspector records"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an inspector",
+        "description": "Creates a new inspector record. Admin only.",
+        "tags": ["Inspectors"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name"],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "vehicle_type": {
+                    "type": "string"
+                  },
+                  "license_plate": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Inspector created"
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "409": {
+            "description": "Inspector with this email already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update an inspector",
+        "description": "Updates an existing inspector by ID. Admin only.",
+        "tags": ["Inspectors"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["id"],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "vehicle_type": {
+                    "type": "string"
+                  },
+                  "license_plate": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Inspector updated"
+          },
+          "400": {
+            "description": "Validation failed or missing ID"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an inspector",
+        "description": "Permanently deletes an inspector by ID. Admin only.",
+        "tags": ["Inspectors"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Inspector ID to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inspector deleted"
+          },
+          "400": {
+            "description": "Missing inspector ID"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/health": {
+      "get": {
+        "summary": "System health check",
+        "description": "Runs parallel checks against Supabase (DB ping, table counts, auth latency, RLS query, storage) and returns timed results with an overall status. Results are persisted to health_check_logs.",
+        "tags": ["Health"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Health check results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": ["healthy", "degraded", "unhealthy"]
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "checks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["ok", "slow", "error"]
+                          },
+                          "time_ms": {
+                            "type": "integer"
+                          },
+                          "result": {
+                            "description": "Check-specific result value"
+                          },
+                          "error": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "summary": {
+                      "type": "object",
+                      "properties": {
+                        "total": {
+                          "type": "integer"
+                        },
+                        "ok": {
+                          "type": "integer"
+                        },
+                        "slow": {
+                          "type": "integer"
+                        },
+                        "failed": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/documents/templates": {
+      "get": {
+        "summary": "List document templates for a board",
+        "tags": ["Documents"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "boardId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Board ID to fetch templates for (also returns global templates with null board_id)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of active document templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing boardId parameter"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Upload a new document template",
+        "tags": ["Documents"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file", "name"],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Template file (.docx, .xlsx, or .xls)"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Display name for the template"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Optional template description"
+                  },
+                  "boardId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Board to associate template with (null for global)"
+                  },
+                  "workspaceId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Workspace ID for storage path"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Template created successfully (may include warning about tag parsing)"
+          },
+          "400": {
+            "description": "Missing file/name or unsupported file type"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/documents/templates/{id}": {
+      "get": {
+        "summary": "Get a single document template by ID",
+        "tags": ["Documents"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Template ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template object"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a document template",
+        "tags": ["Documents"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Template ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "tag_mapping": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Mapping of template tags to column IDs or computed fields"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated template object"
+          },
+          "400": {
+            "description": "No valid fields to update"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a document template and its storage file",
+        "tags": ["Documents"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Template ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/documents/send": {
+      "post": {
+        "summary": "Send a generated document via email",
+        "tags": ["Documents"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["documentId", "to", "subject"],
+                "properties": {
+                  "documentId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the generated document to send"
+                  },
+                  "to": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "minItems": 1,
+                    "description": "Recipient email addresses"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "Email subject line"
+                  },
+                  "message": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "description": "Optional email body message"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Document not found"
+          },
+          "500": {
+            "description": "Failed to send email"
+          },
+          "503": {
+            "description": "Email service not configured (RESEND_API_KEY missing)"
+          }
+        }
+      }
+    },
+    "/api/documents/generate": {
+      "post": {
+        "summary": "Generate a document from a template and board item data",
+        "tags": ["Documents"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["templateId", "itemId", "boardId"],
+                "properties": {
+                  "templateId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the document template to use"
+                  },
+                  "itemId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the board item to pull data from"
+                  },
+                  "boardId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the board (used to fetch columns)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Document generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "documentId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "downloadUrl": {
+                      "type": "string"
+                    },
+                    "previewHtml": {
+                      "type": "string"
+                    },
+                    "fileName": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed (invalid UUIDs)"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Template or board item not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/documents/download": {
+      "get": {
+        "summary": "Download a generated document as a binary file",
+        "tags": ["Documents"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Generated document ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Binary file download (.docx, .xlsx, or .xls)",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/vnd.ms-excel": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing document ID"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Document not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/debug/coordinates": {
+      "get": {
+        "summary": "Find companies with duplicate GPS coordinates",
+        "description": "Scans companies for duplicate lat/lng pairs (6 decimal precision). Returns the top 10 duplicate coordinate groups. Admin only.\n",
+        "tags": ["Debug"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Duplicate coordinate analysis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalCompanies": {
+                      "type": "integer"
+                    },
+                    "duplicateCoordinates": {
+                      "type": "integer",
+                      "description": "Number of shared coordinate pairs"
+                    },
+                    "companiesWithDuplicates": {
+                      "type": "integer"
+                    },
+                    "duplicates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "coordinates": {
+                            "type": "string"
+                          },
+                          "count": {
+                            "type": "integer"
+                          },
+                          "companies": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                },
+                                "address": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/data-collection": {
+      "post": {
+        "summary": "Submit a new data collection entry",
+        "description": "Creates a board item in all data_collection boards with company info, GPS coordinates, and service details. Used by field inspectors.\n",
+        "tags": ["Data Collection"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["sk_code", "company_name", "services", "lat", "lng"],
+                "properties": {
+                  "sk_code": {
+                    "type": "string",
+                    "description": "Company registration code"
+                  },
+                  "company_name": {
+                    "type": "string"
+                  },
+                  "services": {
+                    "type": "string",
+                    "description": "Comma-separated service names"
+                  },
+                  "lat": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "lng": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "accuracy": {
+                    "type": "number",
+                    "description": "GPS accuracy in meters"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Entry created successfully"
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "No data collection board found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get recent data collection entries for the current user",
+        "description": "Returns the 20 most recent board items created by the authenticated user in data_collection boards.\n",
+        "tags": ["Data Collection"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of data collection entries",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "data": {
+                        "type": "object"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/cron/keepalive": {
+      "get": {
+        "summary": "Ping all Supabase instances to prevent cold starts",
+        "description": "Pings team1, team2, and team3 Supabase instances in parallel to keep connections warm. Reports per-instance latency and overall health status. Runs every 4 minutes via Vercel Cron.\n",
+        "tags": ["Cron"],
+        "security": [
+          {
+            "cronSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "secret",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Alternative to Authorization header for manual testing"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ping results for all instances",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": ["ok", "degraded"]
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "instance": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["ok", "error"]
+                          },
+                          "time_ms": {
+                            "type": "integer"
+                          },
+                          "error": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing CRON_SECRET"
+          }
+        }
+      }
+    },
+    "/api/cron/contract-expiry-alerts": {
+      "get": {
+        "summary": "Send contract expiry alert notifications",
+        "description": "Checks all board items in the \"კომპანიები\" board for contracts hitting expiry thresholds (30, 14, 7, 0 days). Creates in-app notifications for admin/dispatcher users and sends a summary email. Runs daily via Vercel Cron.\n",
+        "tags": ["Cron"],
+        "security": [
+          {
+            "cronSecret": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alerts processed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "alerts": {
+                      "type": "integer",
+                      "description": "Number of contracts hitting thresholds"
+                    },
+                    "notifications": {
+                      "type": "integer",
+                      "description": "In-app notifications created"
+                    },
+                    "emails_sent_to": {
+                      "type": "integer",
+                      "description": "Number of email recipients"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing CRON_SECRET"
+          },
+          "500": {
+            "description": "Alert processing failed"
+          }
+        }
+      }
+    },
+    "/api/cron/bank-reconcile": {
+      "get": {
+        "summary": "Reconcile unmatched bank transactions",
+        "description": "Re-runs the matching algorithm on all unmatched bank transactions. Scheduled nightly at 02:00 via Vercel Cron to catch newly added companies or updated tax IDs.\n",
+        "tags": ["Cron"],
+        "security": [
+          {
+            "cronSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "secret",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Alternative to Authorization header for manual testing"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reconciliation completed (or skipped if BOG not configured)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing CRON_SECRET"
+          },
+          "500": {
+            "description": "Reconciliation processing failed"
+          }
+        }
+      }
+    },
+    "/api/cron/bank-poll": {
+      "get": {
+        "summary": "Poll today's bank transactions from BOG",
+        "description": "Fetches today's transactions from the Bank of Georgia API and runs auto-matching against known companies by tax ID. Scheduled every 30 minutes during business hours via Vercel Cron.\n",
+        "tags": ["Cron"],
+        "security": [
+          {
+            "cronSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "secret",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Alternative to Authorization header for manual testing"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Poll completed (or skipped if BOG not configured)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or missing CRON_SECRET"
+          },
+          "500": {
+            "description": "Bank poll processing failed"
+          }
+        }
+      }
+    },
+    "/api/cron/bank-backfill": {
+      "get": {
+        "summary": "Backfill historical bank transactions from BOG",
+        "description": "Fetches historical transactions from the Bank of Georgia API for a given date range and ingests them into bank_transactions. Manual trigger only.\n",
+        "tags": ["Cron"],
+        "security": [
+          {
+            "cronSecret": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "from",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Start date (YYYY-MM-DD)"
+          },
+          {
+            "in": "query",
+            "name": "to",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "End date (YYYY-MM-DD)"
+          },
+          {
+            "in": "query",
+            "name": "secret",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Alternative to Authorization header for manual testing"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Backfill completed (or skipped if BOG not configured)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "range": {
+                      "type": "object",
+                      "properties": {
+                        "from": {
+                          "type": "string"
+                        },
+                        "to": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing required from/to query params"
+          },
+          "401": {
+            "description": "Invalid or missing CRON_SECRET"
+          },
+          "500": {
+            "description": "Backfill processing failed"
+          }
+        }
+      }
+    },
+    "/api/company-services": {
+      "get": {
+        "summary": "List company services with optional filters",
+        "description": "Returns company services joined with company and service_type data, ordered by next_inspection_date ascending. Supports filtering by inspector, service type, and status.\n",
+        "tags": ["Services"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "service_type_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by service type"
+          },
+          {
+            "in": "query",
+            "name": "inspector_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by assigned inspector"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by service status"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of company service objects with joined company and service_type"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/companies/services": {
+      "post": {
+        "summary": "Save or update services for a company",
+        "description": "Syncs the full list of services for a company. Inserts new services, updates existing ones, and deletes any that are no longer in the list. Requires admin or dispatcher role.\n",
+        "tags": ["Services"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["companyId", "services"],
+                "properties": {
+                  "companyId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "services": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "service_type_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "next_inspection_date": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "priority": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "assigned_inspector_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Services synced successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "inserted": {
+                      "type": "integer"
+                    },
+                    "updated": {
+                      "type": "integer"
+                    },
+                    "deleted": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin or dispatcher access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/checkins": {
+      "get": {
+        "summary": "List check-ins with optional filters",
+        "description": "Returns check-ins with joined inspector, company, and location names. Officers see only their own; admins/dispatchers see all.",
+        "tags": ["Checkins"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "inspector_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by inspector"
+          },
+          {
+            "in": "query",
+            "name": "company_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by company"
+          },
+          {
+            "in": "query",
+            "name": "from_date",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Start of date range"
+          },
+          {
+            "in": "query",
+            "name": "to_date",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "End of date range"
+          },
+          {
+            "in": "query",
+            "name": "active",
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "description": "If \"true\", return only check-ins without a checkout"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Maximum number of results"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of check-in records"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "User role not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new check-in",
+        "description": "Records an inspector arriving at a company location. Enforces a 100m radius geofence when the location has GPS coordinates. Prevents double check-ins. Auto-populates location coords if missing. Syncs to checkins boards.",
+        "tags": ["Checkins"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["inspector_id", "company_id", "lat", "lng"],
+                "properties": {
+                  "inspector_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "company_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "company_location_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "route_stop_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "lat": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "lng": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "accuracy": {
+                    "type": "number"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Check-in created"
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Cannot check in as another inspector"
+          },
+          "409": {
+            "description": "Inspector already has an active check-in"
+          },
+          "422": {
+            "description": "Inspector is outside the allowed geofence radius"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Check out (close an active check-in)",
+        "description": "Closes an active check-in by recording checkout coordinates and computing duration. Calculates effective minutes based on GPS ping radius compliance. Syncs checkout to checkins boards.",
+        "tags": ["Checkins"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["checkin_id", "lat", "lng"],
+                "properties": {
+                  "checkin_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "lat": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "lng": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "accuracy": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Check-out completed"
+          },
+          "400": {
+            "description": "Validation failed or already checked out"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Cannot check out another inspector"
+          },
+          "404": {
+            "description": "Check-in not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/checkins/ping": {
+      "post": {
+        "summary": "Submit a GPS ping during an active check-in",
+        "description": "Records the inspector's current position while checked in. Computes distance from the reference location (company location or original check-in coords) and flags whether the inspector is within the 100m geofence. Violation counts are aggregated at checkout.",
+        "tags": ["Checkins"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["checkin_id", "lat", "lng"],
+                "properties": {
+                  "checkin_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "lat": {
+                    "type": "number",
+                    "minimum": -90,
+                    "maximum": 90
+                  },
+                  "lng": {
+                    "type": "number",
+                    "minimum": -180,
+                    "maximum": 180
+                  },
+                  "accuracy": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ping recorded with distance result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "distance": {
+                      "type": "integer",
+                      "description": "Distance in meters from reference location"
+                    },
+                    "within_radius": {
+                      "type": "boolean"
+                    },
+                    "warning": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Warning message when outside radius"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed or check-in already closed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Check-in not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/chat": {
+      "post": {
+        "summary": "Chat with the RouteHub AI assistant",
+        "description": "Streams an AI-powered conversation using Claude. The assistant has tools to query companies, boards, bank transactions, inspectors, and workspaces. Requires admin or dispatcher role.\n",
+        "tags": ["Chat"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["messages"],
+                "properties": {
+                  "messages": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "enum": ["user", "assistant"]
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Streamed AI response (text/event-stream)"
+          },
+          "401": {
+            "description": "Admin or dispatcher access required"
+          }
+        }
+      }
+    },
+    "/api/announcements": {
+      "get": {
+        "summary": "List all published announcements",
+        "tags": ["Announcements"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of published announcements ordered by creation date descending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new announcement and notify all active users",
+        "tags": ["Announcements"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "content"],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["normal", "important", "urgent"],
+                    "default": "normal"
+                  },
+                  "is_published": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "If true, in-app notifications and emails are sent to all active users"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Announcement created successfully"
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/announcements/{id}": {
+      "get": {
+        "summary": "Get a single announcement by ID",
+        "tags": ["Announcements"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Announcement ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Announcement object"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "404": {
+            "description": "Announcement not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update an announcement",
+        "tags": ["Announcements"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Announcement ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": ["normal", "important", "urgent"]
+                  },
+                  "is_published": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated announcement object"
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "404": {
+            "description": "Announcement not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an announcement",
+        "tags": ["Announcements"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Announcement ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Announcement deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/announcements/{id}/read": {
+      "post": {
+        "summary": "Mark an announcement as read by the current user",
+        "tags": ["Announcements"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Announcement ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Announcement marked as read (upsert on announcement_id + user_id)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "summary": "List all users with roles",
+        "description": "Returns all users ordered by creation date, each merged with their role from user_roles.",
+        "tags": ["Admin"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Array of users with their assigned roles",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "full_name": {
+                        "type": "string"
+                      },
+                      "phone": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "is_active": {
+                        "type": "boolean"
+                      },
+                      "role": {
+                        "type": "object",
+                        "nullable": true,
+                        "properties": {
+                          "role": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new user account",
+        "description": "Creates a user in Supabase Auth (auto-confirmed), inserts a profile in the users table, and optionally assigns a role.",
+        "tags": ["Admin"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "full_name"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 6
+                  },
+                  "full_name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "userId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "409": {
+            "description": "User with this email already exists"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a user profile",
+        "description": "Updates user fields (full_name, phone, is_active) by user ID.",
+        "tags": ["Admin"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId"],
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user object",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/admin/assign-role": {
+      "post": {
+        "summary": "Assign or update a user's role",
+        "description": "Upserts a role for a given user. If the user already has a role, it is updated; otherwise a new role assignment is created.",
+        "tags": ["Admin"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["userId", "roleName"],
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "roleName": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The created or updated role assignment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "role": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          },
+          "401": {
+            "description": "Authentication required"
+          },
+          "403": {
+            "description": "Admin access required"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}

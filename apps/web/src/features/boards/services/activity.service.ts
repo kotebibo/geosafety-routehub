@@ -619,6 +619,27 @@ export const activityService = {
     return counts
   },
 
+  // ==================== REACTIONS ====================
+
+  /**
+   * Toggle a reaction on a comment (add if not present, remove if already reacted)
+   * Uses RPC to bypass RLS (UPDATE policy restricts to comment owner)
+   */
+  async toggleReaction(
+    commentId: string,
+    _userId: string,
+    emoji: string
+  ): Promise<Record<string, string[]>> {
+    const { data, error } = await (getSupabase() as any).rpc('toggle_comment_reaction', {
+      p_comment_id: commentId,
+      p_emoji: emoji,
+    })
+
+    if (error) throw error
+
+    return (data as Record<string, string[]>) || {}
+  },
+
   // ==================== REAL-TIME SUBSCRIPTIONS ====================
 
   /**

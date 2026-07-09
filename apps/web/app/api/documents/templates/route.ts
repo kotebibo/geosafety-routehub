@@ -1,3 +1,79 @@
+/**
+ * @swagger
+ * /api/documents/templates:
+ *   get:
+ *     summary: List document templates for a board
+ *     tags: [Documents]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: boardId
+ *         in: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Board ID to fetch templates for (also returns global templates with null board_id)
+ *     responses:
+ *       200:
+ *         description: Array of active document templates
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *       400:
+ *         description: Missing boardId parameter
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Internal server error
+ *   post:
+ *     summary: Upload a new document template
+ *     tags: [Documents]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *               - name
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: Template file (.docx, .xlsx, or .xls)
+ *               name:
+ *                 type: string
+ *                 description: Display name for the template
+ *               description:
+ *                 type: string
+ *                 description: Optional template description
+ *               boardId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Board to associate template with (null for global)
+ *               workspaceId:
+ *                 type: string
+ *                 format: uuid
+ *                 description: Workspace ID for storage path
+ *     responses:
+ *       201:
+ *         description: Template created successfully (may include warning about tag parsing)
+ *       400:
+ *         description: Missing file/name or unsupported file type
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

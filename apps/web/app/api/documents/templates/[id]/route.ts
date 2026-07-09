@@ -1,3 +1,98 @@
+/**
+ * @swagger
+ * /api/documents/templates/{id}:
+ *   get:
+ *     summary: Get a single document template by ID
+ *     tags: [Documents]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Template ID
+ *     responses:
+ *       200:
+ *         description: Template object
+ *       401:
+ *         description: Authentication required
+ *       500:
+ *         description: Internal server error
+ *   put:
+ *     summary: Update a document template
+ *     tags: [Documents]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Template ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               tag_mapping:
+ *                 type: object
+ *                 additionalProperties:
+ *                   type: string
+ *                 description: Mapping of template tags to column IDs or computed fields
+ *               is_active:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Updated template object
+ *       400:
+ *         description: No valid fields to update
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ *   delete:
+ *     summary: Delete a document template and its storage file
+ *     tags: [Documents]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Template ID
+ *     responses:
+ *       200:
+ *         description: Template deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

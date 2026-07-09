@@ -1,3 +1,102 @@
+/**
+ * @swagger
+ * /api/announcements/{id}:
+ *   get:
+ *     summary: Get a single announcement by ID
+ *     tags: [Announcements]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Announcement ID
+ *     responses:
+ *       200:
+ *         description: Announcement object
+ *       401:
+ *         description: Authentication required
+ *       404:
+ *         description: Announcement not found
+ *       500:
+ *         description: Internal server error
+ *   put:
+ *     summary: Update an announcement
+ *     tags: [Announcements]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Announcement ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 maxLength: 200
+ *               content:
+ *                 type: string
+ *                 maxLength: 5000
+ *               priority:
+ *                 type: string
+ *                 enum: [normal, important, urgent]
+ *               is_published:
+ *                 type: boolean
+ *     responses:
+ *       200:
+ *         description: Updated announcement object
+ *       400:
+ *         description: Validation failed
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: Announcement not found
+ *       500:
+ *         description: Internal server error
+ *   delete:
+ *     summary: Delete an announcement
+ *     tags: [Announcements]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Announcement ID
+ *     responses:
+ *       200:
+ *         description: Announcement deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *       401:
+ *         description: Authentication required
+ *       403:
+ *         description: Admin access required
+ *       500:
+ *         description: Internal server error
+ */
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'

@@ -247,6 +247,7 @@ export interface ItemComment {
   content: string
   mentions: string[]
   attachments: string[]
+  reactions?: Record<string, string[]>
   is_edited: boolean
   created_at: string | null
   updated_at: string | null
