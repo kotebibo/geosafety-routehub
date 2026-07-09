@@ -24,12 +24,12 @@ import {
   useDeleteCheckin,
 } from '@/features/boards/hooks/useCheckinQueries'
 import { parseCoordinates, haversineMeters, formatDuration, formatElapsed } from '@/lib/geo-utils'
-import { getCheckinTypes } from '@/features/boards/constants/checkin'
+import { getCheckinTypes, OTHER_VISIT_TYPE } from '@/features/boards/constants/checkin'
 import { useToast } from '@/components/ui-monday/Toast'
 import type { BoardColumn } from '@/types/board'
 import type { LocationCheckin } from '@/types/checkin'
 
-const RADIUS_METERS = 200
+const RADIUS_METERS = 150
 
 interface CheckinBottomSheetProps {
   itemId: string
@@ -57,8 +57,10 @@ export function CheckinBottomSheet({
   const isAdmin = userRole?.role === 'admin'
 
   // Visit types depend on the column's service; required when the service
-  // defines them, since the stage automation is driven by the selection
-  const visitTypes = getCheckinTypes((column.config as Record<string, any>)?.service)
+  // defines them, since the stage automation is driven by the selection.
+  // "სხვა" is always available but never updates the stage.
+  const stageTypes = getCheckinTypes((column.config as Record<string, any>)?.service)
+  const visitTypes = stageTypes.length > 0 ? [...stageTypes, OTHER_VISIT_TYPE] : []
 
   const { data: checkins = [], isLoading } = useItemCheckins(itemId, true)
   const createCheckin = useCreateItemCheckin(boardId)

@@ -28,6 +28,15 @@ export function getCheckinTypes(service?: string | null): string[] {
   return service ? (CHECKIN_TYPES_BY_SERVICE[service] ?? []) : []
 }
 
+// Catch-all visit type appended to every service's dropdown. Deliberately
+// NOT a stage: the stage automation skips it so an "other" visit never
+// overwrites the company's pipeline stage.
+export const OTHER_VISIT_TYPE = 'სხვა'
+
+// An item is flagged overdue (red border on the checkin cell) when its
+// latest visit is older than this many days
+export const OVERDUE_VISIT_DAYS = 35
+
 // Distinct colors assigned to stages in order (keys from MONDAY_COLORS)
 export const STAGE_COLOR_SEQUENCE = [
   'bright_blue',

@@ -5,6 +5,7 @@ import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { parseCoordinates, haversineMeters } from '@/lib/geo-utils'
+import { getCheckinTypes } from '@/features/boards/constants/checkin'
 
 const createCheckinSchema = z.object({
   inspector_id: z.string().uuid(),
@@ -27,7 +28,7 @@ const checkoutSchema = z.object({
   accuracy: z.number().optional(),
 })
 
-const CHECKIN_RADIUS_METERS = 200
+const CHECKIN_RADIUS_METERS = 150
 
 export async function POST(request: NextRequest) {
   try {
@@ -199,7 +200,16 @@ export async function POST(request: NextRequest) {
     // Stage automation: the visit type doubles as the company's stage.
     // When the checkin column has stage_column_id configured, set that
     // status column on the item to the visit type. Never fails the checkin.
-    if (validated.board_item_id && validated.checkin_type && stageColumnId && itemBoardId) {
+    // Only real stage types update the stage — "სხვა" (or any unknown type)
+    // is recorded on the checkin but leaves the company's stage untouched.
+    const isStageType = getCheckinTypes(serviceSnapshot).includes(validated.checkin_type || '')
+    if (
+      validated.board_item_id &&
+      validated.checkin_type &&
+      isStageType &&
+      stageColumnId &&
+      itemBoardId
+    ) {
       try {
         const sc = createServiceClient()
         // Status cells store the option KEY (label with spaces → underscores)

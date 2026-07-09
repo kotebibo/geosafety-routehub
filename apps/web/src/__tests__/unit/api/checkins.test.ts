@@ -194,7 +194,7 @@ describe('POST /api/checkins (check-in)', () => {
     expect(res.status).toBe(422)
     const json = await res.json()
     expect(json.distance).toBeDefined()
-    expect(json.max_radius).toBe(200)
+    expect(json.max_radius).toBe(150)
   })
 
   it('should return 201 on successful check-in (location has no GPS)', async () => {
