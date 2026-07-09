@@ -25,6 +25,13 @@ import {
 } from '@/features/boards/hooks/useCheckinQueries'
 import { parseCoordinates, haversineMeters, formatDuration, formatElapsed } from '@/lib/geo-utils'
 import { getCheckinTypes, OTHER_VISIT_TYPE } from '@/features/boards/constants/checkin'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select'
 import { useToast } from '@/components/ui-monday/Toast'
 import type { BoardColumn } from '@/types/board'
 import type { LocationCheckin } from '@/types/checkin'
@@ -291,18 +298,18 @@ export function CheckinBottomSheet({
                   <label className="block text-xs font-medium text-text-secondary mb-1">
                     ვიზიტის ტიპი <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    value={checkinType}
-                    onChange={e => setCheckinType(e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-lg focus:outline-none focus:border-monday-primary"
-                  >
-                    <option value="">აირჩიეთ ვიზიტის ტიპი...</option>
-                    {visitTypes.map(t => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
+                  <Select value={checkinType || undefined} onValueChange={setCheckinType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="აირჩიეთ ვიზიტის ტიპი..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {visitTypes.map(t => (
+                        <SelectItem key={t} value={t}>
+                          {t}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               )}
               <textarea
