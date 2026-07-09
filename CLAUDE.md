@@ -13,6 +13,61 @@ Be direct and honest. No fluff, no excessive praise, no sugar-coating:
 - When something is overkill for the current scale, say so
 - Recommend skipping unnecessary complexity for MVP
 
+## Deployment & Workflow
+
+**One branch: `master`.** Three Vercel projects deploy from it, differing only
+in env vars (each points at its own Supabase instance):
+
+| Domain                | Vercel project         | Supabase          |
+| --------------------- | ---------------------- | ----------------- |
+| geosafety.routehub.ge | geosafety-routehub-web | Team1             |
+| team2.routehub.ge     | routehub-web-2         | Team2 (Frankfurt) |
+| team3.routehub.ge     | routehub-web-3         | Team3             |
+
+- Work on feature branches, PR into `master`. Never hardcode anything
+  instance-specific — it belongs in Vercel env vars.
+- **Before every commit/push** (from `apps/web`): `npx vitest run`,
+  `npx tsc --noEmit`, `npx next build` — all three must pass.
+- Cron schedules live in the root `vercel.json` (UTC — Georgia is UTC+4).
+
+### Database migrations
+
+The three Supabase instances share a schema but hold separate data.
+**Every migration must be applied to all three.** Add the SQL file to
+`supabase/migrations/`, then apply via the Supabase Management API
+(`POST /v1/projects/{ref}/database/query`) — see the `scripts/_run-migration-*.js`
+pattern. A migration applied to only one instance is a production bug on the
+other two.
+
+## Multi-Instance Gotchas (these have caused real bugs)
+
+- **Board column IDs differ per instance.** The same logical column has a
+  different `column_id` on each instance's boards. Match columns by
+  name/type or store the id in column `config` — never hardcode.
+- **`inspector_id` columns hold `auth.users` ids** (FKs to the old
+  `inspectors` table were dropped). Never use a PostgREST embed like
+  `inspectors(full_name)` — it fails with PGRST200. Resolve display names
+  from `public.users` (never from `auth.users` — the `authenticated` role
+  has no grant there).
+- **DB functions with Georgian string literals** were once mangled to `???`
+  by an encoding-unsafe copy. If a function silently matches nothing,
+  check `prosrc` for `???` and re-apply the migration.
+- UI text is Georgian; code, comments, and commit messages are English.
+
+## Theming
+
+There are 6 themes driven by CSS variables on the root element
+(`app/globals.css`) — 4 dark, 2 light. There are **no `dark:` variants**.
+
+- Use theme tokens: `bg-bg-primary`, `text-text-secondary`,
+  `border-border-light`, etc.
+- Never use light-only Tailwind tints (`bg-blue-50`, `text-blue-700`,
+  `bg-orange-100`) — they break on dark themes. For colored
+  banners/badges use opacity tints of solid colors:
+  `bg-orange-500/10 text-orange-500 border-orange-500/30`.
+- Form controls inherit themed bg/text from a base-layer rule in
+  `globals.css`; utility classes on a specific input still override it.
+
 ## Project Structure
 
 ```
