@@ -103,15 +103,26 @@ export interface BoardTemplate {
   name: string
   name_ka: string | null
   description: string | null
-  board_type: string
+  board_type: BoardType
   icon: string | null
   color: string | null
   category: string | null
-  default_columns: any // Json from DB
-  default_items: any | null
+  default_columns: BoardColumnConfig[]
+  default_items: any[] | null
   is_featured: boolean | null
   created_at: string | null
   updated_at: string | null
+}
+
+// Board Group (for organizing items like Monday.com)
+export interface BoardGroup {
+  id: string
+  board_id: string
+  name: string
+  color: string
+  position: number
+  is_collapsed?: boolean
+  created_at?: string
 }
 
 export interface BoardColumnConfig {
@@ -143,16 +154,69 @@ export interface BoardColumn {
   updated_at: string | null
 }
 
-// Board View (Saved filters/sorts)
+// View Tab Types
+export type ViewType = 'table' | 'kanban' | 'calendar' | 'chart' | 'timeline'
+
+// Board View Tab (per-board view with independent state)
+export interface BoardViewTab {
+  id: string
+  board_id: string
+  view_name: string
+  view_name_ka: string | null
+  view_type: ViewType
+  icon: string | null
+  position: number
+  is_default: boolean
+  filters: BoardFilter[] | null
+  sort_config: SortConfig | null
+  group_by_column: string | null
+  created_by: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+// Board Subitem (child row under a parent item)
+export interface BoardSubitem {
+  id: string
+  parent_item_id: string
+  board_id: string
+  position: number
+  name: string
+  data: Record<string, any>
+  status: StatusType
+  assigned_to: string | null
+  due_date: string | null
+  created_by: string | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+// Board Subitem Column (column schema for subitems, shared per board)
+export interface BoardSubitemColumn {
+  id: string
+  board_id: string
+  column_id: string
+  column_name: string
+  column_name_ka: string | null
+  column_type: ColumnType
+  is_visible: boolean
+  position: number
+  width: number
+  config: Record<string, any>
+  created_at: string | null
+  updated_at: string | null
+}
+
+// Board View (Saved filters/sorts) - legacy per-user views
 export interface BoardView {
   id: string
   user_id: string
   board_type: BoardType
   view_name: string
   view_name_ka: string | null
-  filters: BoardFilter[]
-  sort_config: SortConfig
-  column_config: ColumnConfig[]
+  filters: BoardFilter[] | null
+  sort_config: SortConfig | null
+  column_config: ColumnConfig[] | null
   is_default: boolean | null
   is_shared: boolean | null
   created_at: string | null

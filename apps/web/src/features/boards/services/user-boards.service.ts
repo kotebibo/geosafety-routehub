@@ -236,6 +236,6 @@ export const userBoardsService = {
       .single()
 
     if (error) throw error
-    return data as BoardTemplate
+    return data as unknown as BoardTemplate
   },
 }

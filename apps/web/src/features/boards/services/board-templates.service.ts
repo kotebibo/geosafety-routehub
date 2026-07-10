@@ -15,7 +15,7 @@ export const boardTemplatesService = {
       .order('name', { ascending: true })
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as BoardTemplate[]
   },
 
   async getTemplatesByCategory(category: string): Promise<BoardTemplate[]> {
@@ -26,7 +26,7 @@ export const boardTemplatesService = {
       .order('name', { ascending: true })
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as BoardTemplate[]
   },
 
   async getFeaturedTemplates(): Promise<BoardTemplate[]> {
@@ -37,7 +37,7 @@ export const boardTemplatesService = {
       .order('name', { ascending: true })
 
     if (error) throw error
-    return data || []
+    return (data || []) as unknown as BoardTemplate[]
   },
 
   async getTemplate(templateId: string): Promise<BoardTemplate> {
@@ -48,6 +48,6 @@ export const boardTemplatesService = {
       .single()
 
     if (error) throw error
-    return data
+    return data as unknown as BoardTemplate
   },
 }
