@@ -3,7 +3,7 @@ import { Poppins, Figtree } from 'next/font/google'
 import localFont from 'next/font/local'
 import './globals.css'
 import { Providers } from '@/components/providers'
-import { Toaster, MondayLayout, TooltipProvider } from '@/shared/components/ui'
+import { MondayLayout, TooltipProvider } from '@/shared/components/ui'
 import { ErrorBoundary } from '@/shared/components/feedback'
 import { PWARegister } from '@/shared/components/PWARegister'
 // import { WebVitalsTracker } from '@/components/WebVitalsTracker' // Temporarily disabled
@@ -62,7 +62,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <TooltipProvider>
               <MondayLayout>
                 {children}
-                <Toaster />
                 <PWARegister />
                 {/* <WebVitalsTracker /> */}
               </MondayLayout>

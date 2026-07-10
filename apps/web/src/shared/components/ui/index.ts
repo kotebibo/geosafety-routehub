@@ -12,7 +12,6 @@ export {
 } from './StatusPill'
 export { MondayLayout } from './MondayLayout'
 // NOTE: useToast and ToastProvider should be imported from '@/components/ui-monday/Toast'
-// The toast.tsx in this folder is a shadcn primitive, not the app's toast system
 export { Header } from './Header'
 export { Sidebar } from './Sidebar'
 
@@ -26,7 +25,6 @@ export * from './select'
 export { Tooltip, TooltipProvider } from './tooltip'
 
 // Feedback
-export { Toaster } from './toaster'
 export { LoadingSpinner } from './LoadingSpinner'
 
 // Display
