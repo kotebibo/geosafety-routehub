@@ -21,14 +21,8 @@ import {
   Clock,
   Trash2,
 } from 'lucide-react'
+import { formatDuration } from '@/lib/geo-utils'
 import type { LocationCheckin } from '@/types/checkin'
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes}წთ`
-  const h = Math.floor(minutes / 60)
-  const m = minutes % 60
-  return m > 0 ? `${h}სთ ${m}წთ` : `${h}სთ`
-}
 
 export default function AdminCheckinsPage() {
   const { userRole, loading: authLoading } = useAuth()
