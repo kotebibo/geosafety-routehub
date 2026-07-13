@@ -71,8 +71,13 @@ scripts/_*
 scripts/instances.json
 scripts/*.js
 
-# Local docs / research
-docs/
+
+# Local-only research notes (superseded plans; kept out of the repo)
+docs/board-kompanibi-audit.md
+docs/board-kompanibi-rebuild-v2.md
+docs/board-kompanibi-rebuild-v3.md
+docs/bog-payment-tracking-plan.md
+docs/chatbot-research-prompt.md
 
 # Data exports (Monday.com, geocoding, etc.)
 apps/web/*.json
