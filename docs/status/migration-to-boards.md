@@ -29,6 +29,11 @@ around. Migration is therefore mostly _deletion_, not data movement.
 - **Routes / task assignment** → replaced by a **visit schedule derived
   from checkin recency**: an item whose last visit is older than the
   threshold IS the task. No separate planning artifact.
+- **Fuel optimization** → the existing route-optimizer package (NN + 2-opt
+  - OSRM road distances) is KEPT and re-mounted as a one-tap "day route"
+    on the visits page: select today's companies → optimized driving order
+  - distance/fuel estimate → hand off to Google Maps for navigation.
+    Routes become ephemeral answers, not managed artifacts (issue #15).
 
 ## Phase 1 — build the replacement (issue #10, #11)
 
@@ -60,7 +65,8 @@ around. Migration is therefore mostly _deletion_, not data movement.
   `/api/data-collection`; decide `/api/checkins/ping` (wire up or delete —
   see tracking.md)
 - Services/features: companies, inspectors, routes, tracking, assignments,
-  compliance (pending PDP decision), `packages/route-optimizer`
+  compliance (pending PDP decision). **KEEP `packages/route-optimizer`** —
+  reused by the day-route feature (#15)
 - Tables (migration to all 3 instances, **archive exports first**):
   `routes`, `route_stops`, `inspections`, `inspection_history`,
   `inspector_location_history`, `checkin_gps_pings` (if unwired),
