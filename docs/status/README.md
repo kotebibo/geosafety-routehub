@@ -39,7 +39,7 @@ July was an infrastructure and field-operations month. The checkin system was re
 
 ## Decisions needed (blocking clarity, not code)
 
-1. **Legacy surface strategy** — **DECIDED 2026-07-13: migrate entirely to boards.** Usage data showed zero routes ever created and zero tracking pings in 30 days. Phase 1 shipped (visits page from checkin data, legacy nav removed); plan and phases in [migration-to-boards.md](migration-to-boards.md).
+1. **Legacy surface strategy** — companies/inspectors/routes/tracking pages all work but sit on the pre-boards data model. Keep both systems? Migrate? Sunset? This is the #1 source of confusion for incoming developers. See [companies.md](companies.md) and [routes.md](routes.md).
 2. **PDP compliance vs. checkin stages** — two parallel stage models exist (pdp_compliance_phases table vs. checkin visit-type stage automation). They don't talk to each other. Pick one as source of truth or bridge them. See [pdp-compliance.md](pdp-compliance.md).
 3. **Team3 Supabase plan** — file uploads capped at 50MB (free plan); either upgrade the org (~$25/mo) or lower the app's advertised limit on that instance.
 4. **Labor safety visit types** — checkin stage automation for შრომის უსაფრთხოება awaits the business's list of visit types (5-minute change once provided).
