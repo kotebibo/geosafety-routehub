@@ -799,11 +799,11 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       permission: 'pages:analytics',
     },
     {
-      href: '/tracking',
-      label: 'ტრეკინგი',
-      labelEn: 'Live Tracking',
-      icon: Navigation,
-      permission: 'pages:tracking',
+      href: '/visits',
+      label: 'ვიზიტები',
+      labelEn: 'Visits',
+      icon: Route,
+      permission: 'pages:my_work',
     },
     {
       href: '/coordinates-map',
@@ -819,41 +819,10 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       icon: MapPinned,
       permission: 'pages:checkins_admin',
     },
-    {
-      href: '/companies',
-      label: 'კომპანიები',
-      labelEn: 'Companies',
-      icon: Building2,
-      permission: 'pages:companies',
-    },
-    {
-      href: '/inspectors',
-      label: 'ოფიცრები',
-      labelEn: 'Officers',
-      icon: Users,
-      permission: 'pages:officers',
-    },
-    {
-      href: '/routes/manage',
-      label: 'მარშრუტები',
-      labelEn: 'Routes',
-      icon: Route,
-      permission: 'pages:routes',
-    },
-    {
-      href: '/routes/builder',
-      label: 'მარშრუტის შექმნა',
-      labelEn: 'Route Builder',
-      icon: MapIcon,
-      permission: 'pages:route_builder',
-    },
-    {
-      href: '/admin/assignments',
-      label: 'დანიშვნები',
-      labelEn: 'Assignments',
-      icon: UserCog,
-      permission: 'pages:assignments',
-    },
+    // Legacy pages (companies/inspectors/routes/tracking/assignments) removed
+    // from navigation 2026-07-13 — boards are the data model. Pages remain
+    // URL-accessible during the migration grace period; deletion is tracked
+    // in docs/status/migration-to-boards.md
     {
       href: '/payments',
       label: 'გადახდები',
