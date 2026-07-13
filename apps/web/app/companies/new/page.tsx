@@ -10,6 +10,13 @@ import { useRouter } from 'next/navigation'
 import { Save, X } from 'lucide-react'
 import { companiesService } from '@/services/companies.service'
 import { LocationManager } from '@/features/companies/components/LocationManager'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select'
 import type { LocationFormData, CompanyLocationInput } from '@/types/company'
 
 export default function NewCompanyPage() {
@@ -112,32 +119,40 @@ export default function NewCompanyPage() {
 
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">ტიპი</label>
-                <select
+                <Select
                   value={formData.type}
-                  onChange={e => setFormData({ ...formData, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary"
+                  onValueChange={v => setFormData({ ...formData, type: v })}
                 >
-                  <option value="commercial">კომერციული</option>
-                  <option value="residential">საცხოვრებელი</option>
-                  <option value="industrial">ინდუსტრიული</option>
-                  <option value="healthcare">ჯანდაცვა</option>
-                  <option value="education">განათლება</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="commercial">კომერციული</SelectItem>
+                    <SelectItem value="residential">საცხოვრებელი</SelectItem>
+                    <SelectItem value="industrial">ინდუსტრიული</SelectItem>
+                    <SelectItem value="healthcare">ჯანდაცვა</SelectItem>
+                    <SelectItem value="education">განათლება</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
                   პრიორიტეტი
                 </label>
-                <select
+                <Select
                   value={formData.priority}
-                  onChange={e => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary"
+                  onValueChange={v => setFormData({ ...formData, priority: v })}
                 >
-                  <option value="low">დაბალი</option>
-                  <option value="medium">საშუალო</option>
-                  <option value="high">მაღალი</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">დაბალი</SelectItem>
+                    <SelectItem value="medium">საშუალო</SelectItem>
+                    <SelectItem value="high">მაღალი</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

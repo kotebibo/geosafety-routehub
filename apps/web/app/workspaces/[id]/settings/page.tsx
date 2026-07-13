@@ -20,6 +20,13 @@ import {
 } from '@/features/workspaces/hooks'
 import { Button } from '@/shared/components/ui'
 import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select'
+import {
   ArrowLeft,
   Save,
   Trash2,
@@ -497,19 +504,23 @@ export default function WorkspaceSettingsPage() {
                         </span>
                       ) : canManageMembers ? (
                         <>
-                          <select
+                          <Select
                             value={member.role}
-                            onChange={e =>
-                              handleUpdateRole(member.user_id, e.target.value as WorkspaceRole)
+                            onValueChange={v =>
+                              handleUpdateRole(member.user_id, v as WorkspaceRole)
                             }
-                            className="px-2 py-1 border border-border-default rounded text-sm"
                           >
-                            {ROLE_OPTIONS.map(role => (
-                              <option key={role.value} value={role.value}>
-                                {role.label}
-                              </option>
-                            ))}
-                          </select>
+                            <SelectTrigger className="w-32 min-h-0 px-2 py-1 text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {ROLE_OPTIONS.map(role => (
+                                <SelectItem key={role.value} value={role.value}>
+                                  {role.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <button
                             onClick={() => handleRemoveMember(member.user_id)}
                             className="p-1 text-text-tertiary hover:text-status-stuck rounded"

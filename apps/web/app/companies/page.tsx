@@ -4,6 +4,13 @@ import { useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { PageHeader, LoadingSpinner, StatCard, EmptyState, DataTable } from '@/shared/components/ui'
 import { ComponentErrorBoundary } from '@/shared/components/feedback'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select'
 import type { Column } from '@/shared/components/ui'
 import { useCompanies } from '@/features/companies/hooks'
 import { Building2, Plus, Search, MapPin, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -198,15 +205,19 @@ export default function CompaniesPage() {
                 {/* Page size selector */}
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-text-secondary">გვერდზე:</span>
-                  <select
-                    value={pagination.pageSize}
-                    onChange={e => setPageSize(Number(e.target.value))}
-                    className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                  <Select
+                    value={String(pagination.pageSize)}
+                    onValueChange={v => setPageSize(Number(v))}
                   >
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+                    <SelectTrigger className="w-20 min-h-0 py-1.5 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Page info */}

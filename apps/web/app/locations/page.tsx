@@ -8,6 +8,13 @@
 import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select'
 
 // Import map dynamically (client-side only)
 const LocationsMap = dynamic(
@@ -587,29 +594,33 @@ export default function LocationsMapPage() {
           {/* Region Filter */}
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">რეგიონი</label>
-            <select
+            <Select
               value={selectedRegion}
-              onChange={e => {
-                setSelectedRegion(e.target.value)
+              onValueChange={v => {
+                setSelectedRegion(v)
                 setSelectedDistrict('all') // Reset district when region changes
               }}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             >
-              <option value="all">ყველა რეგიონი</option>
-              {availableFilters.regions.map(region => {
-                const count = filterCounts.regionCounts[region] || 0
-                return (
-                  <option key={region} value={region}>
-                    {region} ({count})
-                  </option>
-                )
-              })}
-              {availableFilters.unknownRegionCount > 0 && (
-                <option value="unknown" className="text-red-600">
-                  უცნობი რეგიონი ({availableFilters.unknownRegionCount})
-                </option>
-              )}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ყველა რეგიონი</SelectItem>
+                {availableFilters.regions.map(region => {
+                  const count = filterCounts.regionCounts[region] || 0
+                  return (
+                    <SelectItem key={region} value={region}>
+                      {region} ({count})
+                    </SelectItem>
+                  )
+                })}
+                {availableFilters.unknownRegionCount > 0 && (
+                  <SelectItem value="unknown" className="text-red-600">
+                    უცნობი რეგიონი ({availableFilters.unknownRegionCount})
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* District Filter */}
@@ -617,21 +628,22 @@ export default function LocationsMapPage() {
             <label className="block text-sm font-medium text-text-primary mb-1">
               რაიონი / ქალაქი
             </label>
-            <select
-              value={selectedDistrict}
-              onChange={e => setSelectedDistrict(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
-            >
-              <option value="all">ყველა რაიონი</option>
-              {availableDistrictsForRegion.map(district => {
-                const count = districtCountsForSelectedRegion[district] || 0
-                return (
-                  <option key={district} value={district}>
-                    {district} ({count})
-                  </option>
-                )
-              })}
-            </select>
+            <Select value={selectedDistrict} onValueChange={v => setSelectedDistrict(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ყველა რაიონი</SelectItem>
+                {availableDistrictsForRegion.map(district => {
+                  const count = districtCountsForSelectedRegion[district] || 0
+                  return (
+                    <SelectItem key={district} value={district}>
+                      {district} ({count})
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Company Type Filter */}
@@ -639,41 +651,43 @@ export default function LocationsMapPage() {
             <label className="block text-sm font-medium text-text-primary mb-1">
               ობიექტის ტიპი
             </label>
-            <select
-              value={selectedCompanyType}
-              onChange={e => setSelectedCompanyType(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
-            >
-              <option value="all">ყველა ტიპი</option>
-              {availableFilters.companyTypes.map(type => {
-                const count = filterCounts.companyTypeCounts[type] || 0
-                return (
-                  <option key={type} value={type}>
-                    {COMPANY_TYPE_LABELS[type] || type} ({count})
-                  </option>
-                )
-              })}
-            </select>
+            <Select value={selectedCompanyType} onValueChange={v => setSelectedCompanyType(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ყველა ტიპი</SelectItem>
+                {availableFilters.companyTypes.map(type => {
+                  const count = filterCounts.companyTypeCounts[type] || 0
+                  return (
+                    <SelectItem key={type} value={type}>
+                      {COMPANY_TYPE_LABELS[type] || type} ({count})
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Inspector Filter */}
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">ოფიცერი</label>
-            <select
-              value={selectedInspector}
-              onChange={e => setSelectedInspector(e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
-            >
-              <option value="all">ყველა ოფიცერი</option>
-              {inspectors.map(inspector => {
-                const count = filterCounts.inspectorCounts[inspector.id] || 0
-                return (
-                  <option key={inspector.id} value={inspector.id}>
-                    {inspector.full_name} ({count})
-                  </option>
-                )
-              })}
-            </select>
+            <Select value={selectedInspector} onValueChange={v => setSelectedInspector(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">ყველა ოფიცერი</SelectItem>
+                {inspectors.map(inspector => {
+                  const count = filterCounts.inspectorCounts[inspector.id] || 0
+                  return (
+                    <SelectItem key={inspector.id} value={inspector.id}>
+                      {inspector.full_name} ({count})
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

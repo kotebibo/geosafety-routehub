@@ -11,6 +11,13 @@ import { useAuth } from '@/contexts/AuthContext'
 import { usersService, CustomRole, Permission } from '@/services/users.service'
 import { Shield, Plus, ArrowLeft, RefreshCw, Search, Lock, Settings, Key } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select'
 
 import { RolesList } from './components/RolesList'
 import { RoleEditor } from './components/RoleEditor'
@@ -373,21 +380,25 @@ export default function RoleManagementPage() {
                 className="w-full pl-10 pr-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
               />
             </div>
-            <select
+            <Select
               value={typeFilter}
-              onChange={e => setTypeFilter(e.target.value as 'all' | 'system' | 'custom')}
-              className="px-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
+              onValueChange={v => setTypeFilter(v as 'all' | 'system' | 'custom')}
             >
-              <option value="all">
-                {'\u10E7\u10D5\u10D4\u10DA\u10D0 \u10E2\u10D8\u10DE\u10D8'}
-              </option>
-              <option value="system">
-                {'\u10E1\u10D8\u10E1\u10E2\u10D4\u10DB\u10E3\u10E0\u10D8'}
-              </option>
-              <option value="custom">
-                {'\u10DB\u10DD\u10E0\u10D2\u10D4\u10D1\u10E3\u10DA\u10D8'}
-              </option>
-            </select>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {'\u10E7\u10D5\u10D4\u10DA\u10D0 \u10E2\u10D8\u10DE\u10D8'}
+                </SelectItem>
+                <SelectItem value="system">
+                  {'\u10E1\u10D8\u10E1\u10E2\u10D4\u10DB\u10E3\u10E0\u10D8'}
+                </SelectItem>
+                <SelectItem value="custom">
+                  {'\u10DB\u10DD\u10E0\u10D2\u10D4\u10D1\u10E3\u10DA\u10D8'}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

@@ -10,6 +10,13 @@ import { supabase } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
 import { useRouter } from 'next/navigation'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select'
 
 interface ServiceType {
   id: string
@@ -216,19 +223,21 @@ export default function ServiceTypesPage() {
               <label className="block text-sm font-medium text-text-primary mb-1">
                 საჭირო ოფიცრის ტიპი
               </label>
-              <select
+              <Select
                 value={formData.required_inspector_type || 'general'}
-                onChange={e =>
-                  setFormData({ ...formData, required_inspector_type: e.target.value })
-                }
-                className="w-full px-3 py-2 border border-border-medium rounded-lg"
+                onValueChange={v => setFormData({ ...formData, required_inspector_type: v })}
               >
-                {INSPECTOR_TYPES.map(type => (
-                  <option key={type.value} value={type.value}>
-                    {type.label_ka}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {INSPECTOR_TYPES.map(type => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label_ka}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">

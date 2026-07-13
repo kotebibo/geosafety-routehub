@@ -4,6 +4,13 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select'
 
 export default function NewInspectorPage() {
   const router = useRouter()
@@ -132,37 +139,44 @@ export default function NewInspectorPage() {
                 <label className="block text-sm font-medium text-text-primary mb-1">
                   სპეციალობა *
                 </label>
-                <select
+                <Select
                   required
-                  value={formData.specialty}
-                  onChange={e => setFormData({ ...formData, specialty: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
+                  value={formData.specialty || undefined}
+                  onValueChange={v => setFormData({ ...formData, specialty: v })}
                 >
-                  <option value="">აირჩიეთ სპეციალობა</option>
-                  <option value="fire_safety">სახანძრო უსაფრთხოება</option>
-                  <option value="health">ჯანდაცვა</option>
-                  <option value="building_code">სამშენებლო კოდექსი</option>
-                  <option value="electrical">ელექტრო უსაფრთხოება</option>
-                  <option value="environmental">გარემოსდაცვა</option>
-                  <option value="plumbing">სანტექნიკა</option>
-                  <option value="hvac">ვენტილაცია</option>
-                  <option value="general">ზოგადი</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="აირჩიეთ სპეციალობა" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fire_safety">სახანძრო უსაფრთხოება</SelectItem>
+                    <SelectItem value="health">ჯანდაცვა</SelectItem>
+                    <SelectItem value="building_code">სამშენებლო კოდექსი</SelectItem>
+                    <SelectItem value="electrical">ელექტრო უსაფრთხოება</SelectItem>
+                    <SelectItem value="environmental">გარემოსდაცვა</SelectItem>
+                    <SelectItem value="plumbing">სანტექნიკა</SelectItem>
+                    <SelectItem value="hvac">ვენტილაცია</SelectItem>
+                    <SelectItem value="general">ზოგადი</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">როლი *</label>
-                <select
+                <Select
                   required
                   value={formData.role}
-                  onChange={e => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
+                  onValueChange={v => setFormData({ ...formData, role: v })}
                 >
-                  <option value="officer">ოფიცერი</option>
-                  <option value="dispatcher">დისპეტჩერი</option>
-                  <option value="manager">მენეჯერი</option>
-                  <option value="admin">ადმინისტრატორი</option>
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="officer">ოფიცერი</SelectItem>
+                    <SelectItem value="dispatcher">დისპეტჩერი</SelectItem>
+                    <SelectItem value="manager">მენეჯერი</SelectItem>
+                    <SelectItem value="admin">ადმინისტრატორი</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -202,15 +216,19 @@ export default function NewInspectorPage() {
           {/* Status */}
           <div className="mb-6">
             <h2 className="text-lg font-semibold text-text-primary mb-4">სტატუსი</h2>
-            <select
+            <Select
               value={formData.status}
-              onChange={e => setFormData({ ...formData, status: e.target.value })}
-              className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
+              onValueChange={v => setFormData({ ...formData, status: v })}
             >
-              <option value="active">აქტიური</option>
-              <option value="inactive">არააქტიური</option>
-              <option value="on_leave">შვებულებაში</option>
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">აქტიური</SelectItem>
+                <SelectItem value="inactive">არააქტიური</SelectItem>
+                <SelectItem value="on_leave">შვებულებაში</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Actions */}

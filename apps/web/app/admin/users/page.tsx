@@ -31,6 +31,13 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui-monday/Toast'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/shared/components/ui/select'
 
 export default function UserManagementPage() {
   const router = useRouter()
@@ -388,18 +395,24 @@ export default function UserManagementPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">Role</label>
-                  <select
-                    value={createForm.role}
-                    onChange={e => setCreateForm({ ...createForm, role: e.target.value })}
-                    className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
+                  <Select
+                    value={createForm.role === '' ? '__none__' : createForm.role}
+                    onValueChange={v =>
+                      setCreateForm({ ...createForm, role: v === '__none__' ? '' : v })
+                    }
                   >
-                    <option value="">No Role</option>
-                    {roles.map(role => (
-                      <option key={role.name} value={role.name}>
-                        {role.display_name}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">No Role</SelectItem>
+                      {roles.map(role => (
+                        <SelectItem key={role.name} value={role.name}>
+                          {role.display_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -495,30 +508,32 @@ export default function UserManagementPage() {
             </div>
 
             {/* Role Filter */}
-            <select
-              value={filterRole}
-              onChange={e => setFilterRole(e.target.value)}
-              className="px-4 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
-            >
-              <option value="all">All Roles</option>
-              <option value="none">No Role</option>
-              {roles.map(role => (
-                <option key={role.name} value={role.name}>
-                  {role.display_name}
-                </option>
-              ))}
-            </select>
+            <Select value={filterRole} onValueChange={v => setFilterRole(v)}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="none">No Role</SelectItem>
+                {roles.map(role => (
+                  <SelectItem key={role.name} value={role.name}>
+                    {role.display_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
             {/* Status Filter */}
-            <select
-              value={filterStatus}
-              onChange={e => setFilterStatus(e.target.value)}
-              className="px-4 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
-            >
-              <option value="all">All Status</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
+            <Select value={filterStatus} onValueChange={v => setFilterStatus(v)}>
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -606,18 +621,24 @@ export default function UserManagementPage() {
                     </td>
                     <td className="px-6 py-4">
                       {editingUserId === user.id ? (
-                        <select
-                          value={editForm.role}
-                          onChange={e => setEditForm({ ...editForm, role: e.target.value })}
-                          className="px-3 py-1.5 border border-border-medium rounded text-sm"
+                        <Select
+                          value={editForm.role === '' ? '__none__' : editForm.role}
+                          onValueChange={v =>
+                            setEditForm({ ...editForm, role: v === '__none__' ? '' : v })
+                          }
                         >
-                          <option value="">No Role</option>
-                          {roles.map(role => (
-                            <option key={role.name} value={role.name}>
-                              {role.display_name}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger className="w-40 min-h-0 py-1.5 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">No Role</SelectItem>
+                            {roles.map(role => (
+                              <SelectItem key={role.name} value={role.name}>
+                                {role.display_name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       ) : (
                         <span
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
