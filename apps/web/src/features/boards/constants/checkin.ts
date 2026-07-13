@@ -28,6 +28,16 @@ export function getCheckinTypes(service?: string | null): string[] {
   return service ? (CHECKIN_TYPES_BY_SERVICE[service] ?? []) : []
 }
 
+// Effective visit types for a checkin column: an explicit per-column list
+// (config.visit_types, editable in Column Settings) overrides the service
+// defaults above. Used by the sheet dropdown, the server-side stage
+// automation, and stage-option seeding — keep them consistent.
+export function getEffectiveVisitTypes(config?: Record<string, any> | null): string[] {
+  const custom = config?.visit_types
+  if (Array.isArray(custom) && custom.length > 0) return custom.filter(t => typeof t === 'string')
+  return getCheckinTypes(config?.service)
+}
+
 // Catch-all visit type appended to every service's dropdown. Deliberately
 // NOT a stage: the stage automation skips it so an "other" visit never
 // overwrites the company's pipeline stage.
@@ -58,12 +68,18 @@ export function statusOptionKey(label: string): string {
 // Full option set for a stage status column — seeded onto the linked status
 // column when stage_column_id is configured, so every stage is visible and
 // pickable immediately instead of appearing one-by-one as checkins happen
-export function buildStageOptions(
-  service?: string | null
+export function buildStageOptionsFromTypes(
+  types: string[]
 ): Array<{ key: string; label: string; color: string }> {
-  return getCheckinTypes(service).map((label, i) => ({
+  return types.map((label, i) => ({
     key: statusOptionKey(label),
     label,
     color: STAGE_COLOR_SEQUENCE[i % STAGE_COLOR_SEQUENCE.length],
   }))
+}
+
+export function buildStageOptions(
+  service?: string | null
+): Array<{ key: string; label: string; color: string }> {
+  return buildStageOptionsFromTypes(getCheckinTypes(service))
 }

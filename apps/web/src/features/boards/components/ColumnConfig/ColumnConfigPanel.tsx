@@ -7,7 +7,9 @@ import { Tooltip } from '@/shared/components/ui/tooltip'
 import {
   CHECKIN_SERVICES,
   CUSTOM_SERVICE,
-  buildStageOptions,
+  buildStageOptionsFromTypes,
+  getCheckinTypes,
+  getEffectiveVisitTypes,
 } from '@/features/boards/constants/checkin'
 import type { BoardColumn } from '@/types/board'
 
@@ -61,6 +63,96 @@ function ServiceSelect({ value, onChange }: { value: string; onChange: (v: strin
       {value && !isPredefined && <option value={value}>{value}</option>}
       <option value={CUSTOM_SERVICE}>სხვა...</option>
     </select>
+  )
+}
+
+interface VisitTypesEditorProps {
+  config: Record<string, any>
+  // null = revert to the service defaults
+  onSave: (types: string[] | null) => void
+}
+
+function VisitTypesEditor({ config, onSave }: VisitTypesEditorProps) {
+  const [draft, setDraft] = useState('')
+  const types = getEffectiveVisitTypes(config)
+  const isCustomized = Array.isArray(config.visit_types) && config.visit_types.length > 0
+  const hasDefaults = getCheckinTypes(config.service).length > 0
+
+  const addType = () => {
+    const value = draft.trim()
+    if (!value || types.includes(value)) return
+    onSave([...types, value])
+    setDraft('')
+  }
+
+  const removeType = (t: string) => {
+    const next = types.filter(x => x !== t)
+    // Removing the last type reverts to defaults rather than leaving an
+    // empty list (an empty custom list would disable the dropdown entirely)
+    onSave(next.length > 0 ? next : null)
+  }
+
+  if (!hasDefaults && types.length === 0) {
+    return (
+      <p className="text-xs text-text-tertiary">
+        ამ სერვისს ნაგულისხმევი ტიპები არ აქვს — დაამატეთ ქვემოთ, ან ჯერ აირჩიეთ სერვისი.
+      </p>
+    )
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <ul className="space-y-1">
+        {types.map(t => (
+          <li
+            key={t}
+            className="group flex items-start justify-between gap-2 px-2 py-1.5 rounded-md bg-bg-primary border border-border-light text-xs text-text-primary leading-snug"
+          >
+            <span className="min-w-0 break-words">{t}</span>
+            <button
+              type="button"
+              title="წაშლა"
+              onClick={() => removeType(t)}
+              className="flex-shrink-0 p-0.5 rounded hover:bg-red-500/10 md:opacity-0 md:group-hover:opacity-100 transition-all"
+            >
+              <X className="w-3.5 h-3.5 text-red-500" />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <div className="flex gap-1.5">
+        <input
+          type="text"
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              addType()
+            }
+          }}
+          placeholder="ახალი ტიპი..."
+          className="flex-1 min-w-0 px-2 py-1.5 text-xs bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
+        />
+        <button
+          type="button"
+          onClick={addType}
+          disabled={!draft.trim()}
+          className="flex-shrink-0 px-2 py-1.5 rounded-md bg-monday-primary text-white disabled:opacity-40 hover:bg-monday-primary-hover transition-colors"
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </button>
+      </div>
+      {isCustomized && hasDefaults && (
+        <button
+          type="button"
+          onClick={() => onSave(null)}
+          className="text-xs text-text-tertiary hover:text-monday-primary transition-colors"
+        >
+          ↺ ნაგულისხმევ ტიპებზე დაბრუნება
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -121,20 +213,31 @@ export function ColumnConfigPanel({
       col.column_type !== 'files'
   )
 
-  const handleConfigChange = (column: BoardColumn, key: string, value: string | null) => {
+  const handleConfigChange = (
+    column: BoardColumn,
+    key: string,
+    value: string | string[] | null
+  ) => {
     onUpdateColumn(column.id, {
       config: {
         ...((column.config as Record<string, any>) || {}),
-        [key]: value || null,
+        [key]: value && (!Array.isArray(value) || value.length > 0) ? value : null,
       },
     } as Partial<BoardColumn>)
   }
 
-  // Overwrite the linked status column's options with the service's full
-  // stage list, so all stages are visible immediately after linking
-  const seedStageOptions = (service: string | null | undefined, stageColumnId: string | null) => {
+  // Overwrite the linked status column's options with the full stage list
+  // (custom visit types when provided, else the service defaults), so all
+  // stages are visible immediately after linking
+  const seedStageOptions = (
+    service: string | null | undefined,
+    stageColumnId: string | null,
+    explicitTypes?: string[]
+  ) => {
     if (!stageColumnId) return
-    const options = buildStageOptions(service)
+    const types =
+      explicitTypes && explicitTypes.length > 0 ? explicitTypes : getCheckinTypes(service)
+    const options = buildStageOptionsFromTypes(types)
     if (options.length === 0) return
     const statusCol = columns.find(c => c.column_id === stageColumnId && c.column_type === 'status')
     if (statusCol) {
@@ -292,6 +395,22 @@ export function ColumnConfigPanel({
                                 </option>
                               ))}
                           </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-text-tertiary mb-1">
+                            ვიზიტის ტიპები
+                          </label>
+                          <VisitTypesEditor
+                            config={(column.config as Record<string, any>) || {}}
+                            onSave={types => {
+                              handleConfigChange(column, 'visit_types', types)
+                              seedStageOptions(
+                                (column.config as Record<string, any>)?.service,
+                                (column.config as Record<string, any>)?.stage_column_id || null,
+                                types || undefined
+                              )
+                            }}
+                          />
                         </div>
                       </div>
                     )}

@@ -5,7 +5,7 @@ import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { parseCoordinates, haversineMeters } from '@/lib/geo-utils'
-import { getCheckinTypes } from '@/features/boards/constants/checkin'
+import { getEffectiveVisitTypes } from '@/features/boards/constants/checkin'
 
 const createCheckinSchema = z.object({
   inspector_id: z.string().uuid(),
@@ -72,6 +72,7 @@ export async function POST(request: NextRequest) {
     let distanceFromLocation: number | null = null
     let serviceSnapshot: string | null = null
     let stageColumnId: string | null = null
+    let stageTypes: string[] = []
     let itemBoardId: string | null = null
 
     // Geofence check: board item path (new) or company location path (legacy)
@@ -101,6 +102,7 @@ export async function POST(request: NextRequest) {
         // Snapshot the column's service so later config edits can't rewrite history
         serviceSnapshot = colConfig?.service || null
         stageColumnId = colConfig?.stage_column_id || null
+        stageTypes = getEffectiveVisitTypes(colConfig)
         itemBoardId = item.board_id
         const coordsColumnId = colConfig?.coordinates_column_id
         if (coordsColumnId && item.data) {
@@ -202,7 +204,7 @@ export async function POST(request: NextRequest) {
     // status column on the item to the visit type. Never fails the checkin.
     // Only real stage types update the stage — "სხვა" (or any unknown type)
     // is recorded on the checkin but leaves the company's stage untouched.
-    const isStageType = getCheckinTypes(serviceSnapshot).includes(validated.checkin_type || '')
+    const isStageType = stageTypes.includes(validated.checkin_type || '')
     if (
       validated.board_item_id &&
       validated.checkin_type &&

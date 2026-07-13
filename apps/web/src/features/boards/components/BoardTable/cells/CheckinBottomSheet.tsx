@@ -24,7 +24,7 @@ import {
   useDeleteCheckin,
 } from '@/features/boards/hooks/useCheckinQueries'
 import { parseCoordinates, haversineMeters, formatDuration, formatElapsed } from '@/lib/geo-utils'
-import { getCheckinTypes, OTHER_VISIT_TYPE } from '@/features/boards/constants/checkin'
+import { getEffectiveVisitTypes, OTHER_VISIT_TYPE } from '@/features/boards/constants/checkin'
 import {
   Select,
   SelectTrigger,
@@ -63,10 +63,11 @@ export function CheckinBottomSheet({
   const [elapsedDisplay, setElapsedDisplay] = useState('')
   const isAdmin = userRole?.role === 'admin'
 
-  // Visit types depend on the column's service; required when the service
-  // defines them, since the stage automation is driven by the selection.
+  // Visit types come from the column config (custom list editable in Column
+  // Settings, falling back to the service defaults); required when present,
+  // since the stage automation is driven by the selection.
   // "სხვა" is always available but never updates the stage.
-  const stageTypes = getCheckinTypes((column.config as Record<string, any>)?.service)
+  const stageTypes = getEffectiveVisitTypes(column.config as Record<string, any>)
   const visitTypes = stageTypes.length > 0 ? [...stageTypes, OTHER_VISIT_TYPE] : []
 
   const { data: checkins = [], isLoading } = useItemCheckins(itemId, true)
