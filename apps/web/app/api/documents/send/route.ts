@@ -148,11 +148,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Documents go out from the instance's company sender (e.g. the
+    // director's address on the company's Resend-verified domain).
+    // Notifications and other system emails keep the RouteHub default.
     const sent = await sendEmail({
       to,
       subject,
       text,
       html,
+      from: process.env.DOCUMENT_EMAIL_FROM || undefined,
       attachments: [
         {
           filename: doc.file_name,

@@ -10,6 +10,11 @@ export interface EmailOptions {
   text: string
   html?: string
   attachments?: { filename: string; content: Buffer; contentType?: string }[]
+  /**
+   * Sender override — must be an address on a domain verified in Resend.
+   * Omit for the default RouteHub sender (notifications, mentions, etc.).
+   */
+  from?: string
 }
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
@@ -20,7 +25,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
 
   try {
     const { error } = await resend.emails.send({
-      from: FROM_EMAIL,
+      from: options.from || FROM_EMAIL,
       to: Array.isArray(options.to) ? options.to : [options.to],
       subject: options.subject,
       text: options.text,
