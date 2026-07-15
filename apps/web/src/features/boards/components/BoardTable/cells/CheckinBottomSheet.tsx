@@ -15,7 +15,9 @@ import {
   AlertCircle,
   Trash2,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { useGps } from '@/hooks/useGps'
 import {
   useItemCheckins,
@@ -55,6 +57,8 @@ export function CheckinBottomSheet({
   row,
   onClose,
 }: CheckinBottomSheetProps) {
+  const t = useTranslations()
+  const { language } = useLanguage()
   const { user, userRole } = useAuth()
   const { coords, error: gpsError } = useGps(true)
   const { showToast } = useToast()
@@ -76,12 +80,12 @@ export function CheckinBottomSheet({
   const deleteCheckin = useDeleteCheckin(boardId)
 
   const handleDelete = async (checkinId: string) => {
-    if (!confirm('წაიშალოს ეს ჩეკ-ინი? მოქმედება შეუქცევადია.')) return
+    if (!confirm(t('checkin.confirmDelete'))) return
     try {
       await deleteCheckin.mutateAsync({ checkin_id: checkinId, board_item_id: itemId })
-      showToast('ჩეკ-ინი წაიშალა', 'success')
+      showToast(t('checkin.deletedSuccess'), 'success')
     } catch (err: any) {
-      showToast(err.error || 'წაშლა ვერ მოხერხდა', 'error')
+      showToast(err.error || t('checkin.deleteFailed'), 'error')
     }
   }
 
@@ -144,9 +148,9 @@ export function CheckinBottomSheet({
       })
       setNotes('')
       setCheckinType('')
-      showToast('ჩეკ-ინი წარმატებით შესრულდა', 'success')
+      showToast(t('checkin.checkinSuccess'), 'success')
     } catch (err: any) {
-      showToast(err.error || 'ჩეკ-ინი ვერ შესრულდა', 'error')
+      showToast(err.error || t('checkin.checkinFailed'), 'error')
     }
   }
 
@@ -160,9 +164,9 @@ export function CheckinBottomSheet({
         lng: coords.lng,
         accuracy: coords.accuracy,
       })
-      showToast('ჩეკ-აუთი წარმატებით შესრულდა', 'success')
+      showToast(t('checkin.checkoutSuccess'), 'success')
     } catch (err: any) {
-      showToast(err.error || 'ჩეკ-აუთი ვერ შესრულდა', 'error')
+      showToast(err.error || t('checkin.checkoutFailed'), 'error')
     }
   }
 
@@ -178,7 +182,7 @@ export function CheckinBottomSheet({
           <div className="min-w-0">
             <h3 className="text-base font-semibold text-text-primary truncate">{itemName}</h3>
             <p className="text-xs text-text-tertiary">
-              ჩეკ-ინი
+              {t('checkin.title')}
               {(column.config as Record<string, any>)?.service
                 ? ` — ${(column.config as Record<string, any>).service}`
                 : ''}
@@ -199,8 +203,11 @@ export function CheckinBottomSheet({
             {coords ? (
               <>
                 <Navigation className="w-4 h-4 text-green-600" />
-                <span className="text-sm text-green-500 font-medium">GPS აქტიურია</span>
-                <span className="text-xs text-text-tertiary ml-auto">±{coords.accuracy}მ</span>
+                <span className="text-sm text-green-500 font-medium">{t('checkin.gpsActive')}</span>
+                <span className="text-xs text-text-tertiary ml-auto">
+                  ±{coords.accuracy}
+                  {t('checkin.meters')}
+                </span>
               </>
             ) : gpsError ? (
               <>
@@ -210,7 +217,7 @@ export function CheckinBottomSheet({
             ) : (
               <>
                 <Loader2 className="w-4 h-4 text-text-tertiary animate-spin" />
-                <span className="text-sm text-text-secondary">GPS სიგნალის მოლოდინში...</span>
+                <span className="text-sm text-text-secondary">{t('checkin.gpsWaiting')}</span>
               </>
             )}
           </div>
@@ -224,12 +231,13 @@ export function CheckinBottomSheet({
               <span
                 className={`text-sm font-medium ${withinRadius ? 'text-green-500' : 'text-red-500'}`}
               >
-                {distance}მ
+                {distance}
+                {t('checkin.meters')}
               </span>
               <span className={`text-xs ${withinRadius ? 'text-green-500' : 'text-red-500'}`}>
                 {withinRadius
-                  ? `რადიუსში (${RADIUS_METERS}მ)`
-                  : `რადიუსის გარეთ (საჭიროა ${RADIUS_METERS}მ)`}
+                  ? t('checkin.withinRadius', { radius: RADIUS_METERS })
+                  : t('checkin.outsideRadius', { radius: RADIUS_METERS })}
               </span>
             </div>
           )}
@@ -237,9 +245,7 @@ export function CheckinBottomSheet({
           {!targetCoords && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
               <Navigation className="w-4 h-4 text-blue-500" />
-              <span className="text-xs text-blue-500">
-                GPS-ის რეჟიმი — კოორდინატების შემოწმების გარეშე
-              </span>
+              <span className="text-xs text-blue-500">{t('checkin.noCoordsMode')}</span>
             </div>
           )}
 
@@ -249,7 +255,9 @@ export function CheckinBottomSheet({
               <div className="p-4 rounded-xl bg-orange-500/10 border border-orange-500/30">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
-                  <span className="text-sm font-semibold text-orange-500">აქტიური ჩეკ-ინი</span>
+                  <span className="text-sm font-semibold text-orange-500">
+                    {t('checkin.activeCheckin')}
+                  </span>
                 </div>
                 <div className="text-3xl font-mono font-bold text-orange-500 mb-2">
                   {elapsedDisplay}
@@ -273,13 +281,13 @@ export function CheckinBottomSheet({
                 ) : (
                   <>
                     <XCircle className="w-5 h-5" />
-                    ჩეკ-აუთი
+                    {t('checkin.checkout')}
                   </>
                 )}
               </button>
               {!coords && (
                 <p className="text-xs text-text-tertiary text-center">
-                  GPS სიგნალის მოლოდინში ჩეკ-აუთისთვის...
+                  {t('checkin.waitingForGpsCheckout')}
                 </p>
               )}
             </div>
@@ -289,19 +297,20 @@ export function CheckinBottomSheet({
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-orange-500/10 border border-orange-500/30">
                   <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
                   <span className="text-sm text-orange-500">
-                    {othersActiveCheckin.inspector_name || 'სხვა ინსპექტორი'} ამჟამად ჩექინშია ამ
-                    ლოკაციაზე
+                    {t('checkin.othersActive', {
+                      name: othersActiveCheckin.inspector_name || t('checkin.otherInspector'),
+                    })}
                   </span>
                 </div>
               )}
               {visitTypes.length > 0 && (
                 <div>
                   <label className="block text-xs font-medium text-text-secondary mb-1">
-                    ვიზიტის ტიპი <span className="text-red-500">*</span>
+                    {t('checkin.visitType')} <span className="text-red-500">*</span>
                   </label>
                   <Select value={checkinType || undefined} onValueChange={setCheckinType}>
                     <SelectTrigger>
-                      <SelectValue placeholder="აირჩიეთ ვიზიტის ტიპი..." />
+                      <SelectValue placeholder={t('checkin.selectVisitType')} />
                     </SelectTrigger>
                     <SelectContent>
                       {visitTypes.map(t => (
@@ -316,7 +325,7 @@ export function CheckinBottomSheet({
               <textarea
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                placeholder="შენიშვნა (არასავალდებულო)"
+                placeholder={t('checkin.notesPlaceholder')}
                 maxLength={2000}
                 rows={2}
                 className="w-full px-3 py-2 text-sm bg-bg-primary border border-border-light rounded-lg resize-none focus:outline-none focus:border-monday-primary text-text-primary placeholder-text-tertiary"
@@ -332,7 +341,7 @@ export function CheckinBottomSheet({
                 ) : (
                   <>
                     <CheckCircle2 className="w-5 h-5" />
-                    ჩეკ-ინი
+                    {t('checkin.title')}
                   </>
                 )}
               </button>
@@ -347,7 +356,7 @@ export function CheckinBottomSheet({
           ) : checkins.length > 0 ? (
             <div className="space-y-1">
               <h4 className="text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2">
-                ისტორია ({checkins.length})
+                {t('checkin.history', { count: checkins.length })}
               </h4>
               {checkins.map((c: LocationCheckin) => (
                 <CheckinTimelineEntry
@@ -373,6 +382,8 @@ function CheckinTimelineEntry({
   checkin: LocationCheckin
   onDelete?: () => void
 }) {
+  const t = useTranslations()
+  const { language } = useLanguage()
   const isActive = !checkin.checked_out_at
   const d = new Date(checkin.created_at)
   const dateStr = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
@@ -393,7 +404,7 @@ function CheckinTimelineEntry({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm text-text-primary font-medium truncate">
-            {checkin.inspector_name || 'Unknown'}
+            {checkin.inspector_name || t('checkin.unknown')}
           </span>
           <span className="text-xs text-text-tertiary flex-shrink-0">{dateStr}</span>
         </div>
@@ -404,27 +415,28 @@ function CheckinTimelineEntry({
             </span>
           )}
           {isActive ? (
-            <span className="text-orange-600 font-medium">აქტიური</span>
+            <span className="text-orange-600 font-medium">{t('checkin.active')}</span>
           ) : (
             <>
               {checkin.duration_minutes != null && (
                 <span className="flex items-center gap-0.5">
                   <Timer className="w-3 h-3" />
-                  {formatDuration(checkin.duration_minutes)}
+                  {formatDuration(checkin.duration_minutes, language)}
                 </span>
               )}
               {checkin.distance_from_location != null && (
                 <span
                   className="flex items-center gap-0.5"
-                  title="მანძილი ობიექტის კოორდინატებიდან ჩეკ-ინისას"
+                  title={t('checkin.distanceFromLocationTooltip')}
                 >
                   <MapPin className="w-3 h-3" />
-                  {checkin.distance_from_location}მ
+                  {checkin.distance_from_location}
+                  {t('checkin.meters')}
                 </span>
               )}
               {checkin.checkout_distance != null && (
-                <span title="მანძილი ჩეკ-ინის ადგილიდან ჩეკ-აუთისას">
-                  გადაადგილება: {checkin.checkout_distance}მ
+                <span title={t('checkin.checkoutDistanceTooltip')}>
+                  {t('checkin.movedDistance', { distance: checkin.checkout_distance })}
                 </span>
               )}
             </>
@@ -435,7 +447,7 @@ function CheckinTimelineEntry({
         <button
           type="button"
           onClick={onDelete}
-          title="ჩეკ-ინის წაშლა (ადმინი)"
+          title={t('checkin.deleteTooltip')}
           className="flex-shrink-0 p-1.5 rounded-md md:opacity-0 md:group-hover:opacity-100 hover:bg-red-500/10 transition-all"
         >
           <Trash2 className="w-3.5 h-3.5 text-red-500" />

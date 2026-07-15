@@ -9,11 +9,12 @@ export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-export function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes}წთ`
+export function formatDuration(minutes: number, language: 'ka' | 'en' = 'ka'): string {
+  const [hUnit, mUnit] = language === 'en' ? ['h', 'm'] : ['სთ', 'წთ']
+  if (minutes < 60) return `${minutes}${mUnit}`
   const h = Math.floor(minutes / 60)
   const m = minutes % 60
-  return m > 0 ? `${h}სთ ${m}წთ` : `${h}სთ`
+  return m > 0 ? `${h}${hUnit} ${m}${mUnit}` : `${h}${hUnit}`
 }
 
 export function formatElapsed(startTime: string): string {

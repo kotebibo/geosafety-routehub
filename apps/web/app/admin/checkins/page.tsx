@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader } from '@/shared/components/ui/PageHeader'
 import {
   MapPinned,
@@ -22,9 +24,20 @@ import {
   Trash2,
 } from 'lucide-react'
 import { formatDuration } from '@/lib/geo-utils'
+import { formatDate, formatTime } from '@/shared/utils/formatDate'
+import { useUsers } from '@/hooks/useUsers'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/components/ui/select'
 import type { LocationCheckin } from '@/types/checkin'
 
 export default function AdminCheckinsPage() {
+  const t = useTranslations()
+  const { language } = useLanguage()
   const { userRole, loading: authLoading } = useAuth()
   const router = useRouter()
 
@@ -36,7 +49,9 @@ export default function AdminCheckinsPage() {
     companyId: '',
     inspectorId: '',
   })
+  const [search, setSearch] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const { users } = useUsers()
 
   const isAllowed = userRole?.role === 'admin' || userRole?.role === 'dispatcher'
 
@@ -77,16 +92,16 @@ export default function AdminCheckinsPage() {
   const isAdmin = userRole?.role === 'admin'
 
   const handleDelete = async (id: string) => {
-    if (!confirm('წაიშალოს ეს ჩეკ-ინი? მოქმედება შეუქცევადია.')) return
+    if (!confirm(t('checkin.confirmDelete'))) return
     try {
       const res = await fetch(`/api/checkins?id=${id}`, { method: 'DELETE' })
       if (res.ok) {
         setCheckins(prev => prev.filter(c => c.id !== id))
       } else {
-        alert('წაშლა ვერ მოხერხდა')
+        alert(t('checkin.deleteFailed'))
       }
     } catch {
-      alert('წაშლა ვერ მოხერხდა')
+      alert(t('checkin.deleteFailed'))
     }
   }
 
@@ -98,14 +113,31 @@ export default function AdminCheckinsPage() {
     )
   }
 
-  const todayCount = checkins.filter(c => {
+  const visibleCheckins = search.trim()
+    ? checkins.filter(c => {
+        const q = search.trim().toLowerCase()
+        const c2 = c as any
+        return [
+          c.inspector_name,
+          c.service,
+          c.checkin_type,
+          c.company_name,
+          c2.board_item_name,
+          c2.board_name,
+          c.location_name,
+          c.notes,
+        ].some(field => field?.toLowerCase().includes(q))
+      })
+    : checkins
+
+  const todayCount = visibleCheckins.filter(c => {
     const today = new Date().toISOString().slice(0, 10)
     return c.created_at.startsWith(today)
   }).length
 
-  const locationUpdatedCount = checkins.filter(c => c.location_updated).length
-  const activeCount = checkins.filter(c => !c.checked_out_at).length
-  const completedWithDuration = checkins.filter(
+  const locationUpdatedCount = visibleCheckins.filter(c => c.location_updated).length
+  const activeCount = visibleCheckins.filter(c => !c.checked_out_at).length
+  const completedWithDuration = visibleCheckins.filter(
     c => c.duration_minutes != null && c.duration_minutes > 0
   )
   const avgDuration =
@@ -118,7 +150,7 @@ export default function AdminCheckinsPage() {
 
   return (
     <div className="min-h-screen bg-bg-secondary">
-      <PageHeader title="ჩეკ-ინების ისტორია" description="ოფიცრების ლოკაციის ჩეკ-ინები" />
+      <PageHeader title={t('checkin.page.title')} description={t('checkin.page.description')} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Stats */}
@@ -129,8 +161,8 @@ export default function AdminCheckinsPage() {
                 <MapPinned className="w-5 h-5 text-monday-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-text-primary">{checkins.length}</p>
-                <p className="text-xs text-text-secondary">სულ ჩეკ-ინი</p>
+                <p className="text-2xl font-bold text-text-primary">{visibleCheckins.length}</p>
+                <p className="text-xs text-text-secondary">{t('checkin.page.totalCheckins')}</p>
               </div>
             </div>
           </div>
@@ -141,7 +173,7 @@ export default function AdminCheckinsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-text-primary">{todayCount}</p>
-                <p className="text-xs text-text-secondary">დღეს</p>
+                <p className="text-xs text-text-secondary">{t('checkin.page.today')}</p>
               </div>
             </div>
           </div>
@@ -152,7 +184,7 @@ export default function AdminCheckinsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-text-primary">{activeCount}</p>
-                <p className="text-xs text-text-secondary">აქტიური</p>
+                <p className="text-xs text-text-secondary">{t('checkin.active')}</p>
               </div>
             </div>
           </div>
@@ -163,9 +195,9 @@ export default function AdminCheckinsPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold text-text-primary">
-                  {avgDuration != null ? formatDuration(avgDuration) : '—'}
+                  {avgDuration != null ? formatDuration(avgDuration, language) : '—'}
                 </p>
-                <p className="text-xs text-text-secondary">საშ. ხანგრძლივობა</p>
+                <p className="text-xs text-text-secondary">{t('checkin.page.avgDuration')}</p>
               </div>
             </div>
           </div>
@@ -179,7 +211,7 @@ export default function AdminCheckinsPage() {
             className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary bg-bg-primary border border-border-light rounded-lg hover:bg-bg-secondary transition-colors"
           >
             <Filter className="w-4 h-4" />
-            <span>ფილტრები</span>
+            <span>{t('checkin.page.filters')}</span>
           </button>
           <button
             type="button"
@@ -188,7 +220,7 @@ export default function AdminCheckinsPage() {
             className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary bg-bg-primary border border-border-light rounded-lg hover:bg-bg-secondary transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>განახლება</span>
+            <span>{t('checkin.page.refresh')}</span>
           </button>
         </div>
 
@@ -198,7 +230,7 @@ export default function AdminCheckinsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
                 <label className="block text-xs font-medium text-text-secondary mb-1">
-                  თარიღიდან
+                  {t('checkin.page.fromDate')}
                 </label>
                 <input
                   type="date"
@@ -209,7 +241,7 @@ export default function AdminCheckinsPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-text-secondary mb-1">
-                  თარიღამდე
+                  {t('checkin.page.toDate')}
                 </label>
                 <input
                   type="date"
@@ -218,23 +250,67 @@ export default function AdminCheckinsPage() {
                   className="w-full px-3 py-2 text-sm border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary/30"
                 />
               </div>
+              <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  {t('checkin.page.officer')}
+                </label>
+                <Select
+                  value={filters.inspectorId || 'all'}
+                  onValueChange={v =>
+                    setFilters(f => ({ ...f, inspectorId: v === 'all' ? '' : v }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t('checkin.page.allOfficers')}</SelectItem>
+                    {users.map(u => (
+                      <SelectItem key={u.id} value={u.id}>
+                        {u.full_name || u.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  {t('checkin.page.search')}
+                </label>
+                <div className="relative">
+                  <Search className="w-4 h-4 text-text-tertiary absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder={t('checkin.page.searchPlaceholder')}
+                    className="w-full pl-9 pr-3 py-2 text-sm border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary/30"
+                  />
+                </div>
+              </div>
             </div>
             <div className="flex justify-end mt-3">
               <button
                 type="button"
-                onClick={() =>
-                  setFilters({ fromDate: '', toDate: '', companyId: '', inspectorId: '' })
-                }
+                onClick={() => {
+                  setFilters({
+                    fromDate: '',
+                    toDate: '',
+                    companyId: '',
+                    inspectorId: '',
+                  })
+                  setSearch('')
+                }}
                 className="text-sm text-text-secondary hover:text-text-primary mr-3"
               >
-                გასუფთავება
+                {t('checkin.page.clear')}
               </button>
               <button
                 type="button"
                 onClick={loadCheckins}
                 className="px-4 py-1.5 text-sm bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
               >
-                ძებნა
+                {t('common.search')}
               </button>
             </div>
           </div>
@@ -257,15 +333,15 @@ export default function AdminCheckinsPage() {
                 ))}
               </div>
             </div>
-          ) : checkins.length === 0 ? (
+          ) : visibleCheckins.length === 0 ? (
             <div className="py-16 text-center">
               <div className="w-14 h-14 rounded-2xl bg-bg-tertiary flex items-center justify-center mx-auto mb-3">
                 <MapPinned className="w-7 h-7 text-text-tertiary" />
               </div>
               <h3 className="text-base font-semibold text-text-primary mb-1">
-                ჩეკ-ინები არ მოიძებნა
+                {t('checkin.page.noCheckinsFound')}
               </h3>
-              <p className="text-sm text-text-secondary">ოფიცრების ჩეკ-ინები გამოჩნდება აქ</p>
+              <p className="text-sm text-text-secondary">{t('checkin.page.noCheckinsHint')}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -273,41 +349,47 @@ export default function AdminCheckinsPage() {
                 <thead>
                   <tr className="border-b border-border-light bg-bg-secondary/50">
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
-                      ჩეკ-ინი
+                      {t('checkin.page.columnCheckin')}
                     </th>
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
-                      ჩეკ-აუთი
+                      {t('checkin.page.columnCheckout')}
                     </th>
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
-                      ხანგრძლივობა
+                      {t('checkin.page.columnDuration')}
                     </th>
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
-                      ოფიცერი
+                      {t('checkin.page.columnOfficer')}
                     </th>
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
-                      კომპანია / აითემი
+                      {t('checkin.page.columnService')}
                     </th>
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
-                      ლოკაცია
+                      {t('checkin.page.columnVisitType')}
                     </th>
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
-                      მანძილი
+                      {t('checkin.page.columnCompanyItem')}
                     </th>
                     <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
-                      სტატუსი
+                      {t('checkin.page.columnLocation')}
+                    </th>
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
+                      {t('checkin.page.columnDistance')}
+                    </th>
+                    <th className="text-left text-xs font-medium text-text-secondary px-4 py-3">
+                      {t('checkin.page.columnStatus')}
                     </th>
                     {isAdmin && <th className="w-10 px-2 py-3" />}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border-light">
-                  {checkins.map(checkin => (
+                  {visibleCheckins.map(checkin => (
                     <tr key={checkin.id} className="hover:bg-bg-secondary/50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="text-sm text-text-primary">
-                          {new Date(checkin.created_at).toLocaleDateString('ka-GE')}
+                          {formatDate(checkin.created_at, language)}
                         </div>
                         <div className="text-xs text-text-tertiary">
-                          {new Date(checkin.created_at).toLocaleTimeString('ka-GE', {
+                          {formatTime(checkin.created_at, language, {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
@@ -317,10 +399,10 @@ export default function AdminCheckinsPage() {
                         {checkin.checked_out_at ? (
                           <div>
                             <div className="text-sm text-text-primary">
-                              {new Date(checkin.checked_out_at).toLocaleDateString('ka-GE')}
+                              {formatDate(checkin.checked_out_at, language)}
                             </div>
                             <div className="text-xs text-text-tertiary">
-                              {new Date(checkin.checked_out_at).toLocaleTimeString('ka-GE', {
+                              {formatTime(checkin.checked_out_at, language, {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
@@ -329,7 +411,7 @@ export default function AdminCheckinsPage() {
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-color-warning/10 text-color-warning rounded-full">
                             <Timer className="w-3 h-3" />
-                            აქტიური
+                            {t('checkin.active')}
                           </span>
                         )}
                       </td>
@@ -344,7 +426,7 @@ export default function AdminCheckinsPage() {
                                   : 'text-color-error'
                             }`}
                           >
-                            {formatDuration(checkin.duration_minutes)}
+                            {formatDuration(checkin.duration_minutes, language)}
                           </span>
                         ) : (
                           <span className="text-sm text-text-tertiary">—</span>
@@ -359,6 +441,16 @@ export default function AdminCheckinsPage() {
                             {checkin.inspector_name}
                           </span>
                         </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-text-secondary">
+                          {checkin.service || '—'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-sm text-text-secondary">
+                          {checkin.checkin_type || '—'}
+                        </span>
                       </td>
                       <td className="px-4 py-3">
                         {checkin.company_name ? (
@@ -394,7 +486,8 @@ export default function AdminCheckinsPage() {
                                   : 'text-color-error'
                             }`}
                           >
-                            {checkin.distance_from_location}მ
+                            {checkin.distance_from_location}
+                            {t('checkin.meters')}
                           </span>
                         ) : (
                           <span className="text-sm text-text-tertiary">—</span>
@@ -404,7 +497,7 @@ export default function AdminCheckinsPage() {
                         {checkin.location_updated ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-color-success/10 text-color-success rounded-full">
                             <Navigation className="w-3 h-3" />
-                            GPS განახლდა
+                            {t('checkin.page.gpsUpdated')}
                           </span>
                         ) : checkin.notes ? (
                           <span
@@ -416,7 +509,7 @@ export default function AdminCheckinsPage() {
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-bg-tertiary text-text-secondary rounded-full">
                             <Check className="w-3 h-3" />
-                            ჩეკ-ინი
+                            {t('checkin.title')}
                           </span>
                         )}
                       </td>
@@ -425,7 +518,7 @@ export default function AdminCheckinsPage() {
                           <button
                             type="button"
                             onClick={() => handleDelete(checkin.id)}
-                            title="ჩეკ-ინის წაშლა"
+                            title={t('checkin.page.deleteCheckinTooltip')}
                             className="p-1.5 rounded-md hover:bg-color-error/10 transition-colors"
                           >
                             <Trash2 className="w-4 h-4 text-color-error" />

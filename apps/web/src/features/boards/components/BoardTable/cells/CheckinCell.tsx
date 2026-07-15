@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react'
 import { CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { useCheckinSummary } from '@/features/boards/contexts/CheckinSummaryContext'
 import { formatDuration } from '@/lib/geo-utils'
 import { OVERDUE_VISIT_DAYS } from '@/features/boards/constants/checkin'
@@ -16,6 +18,8 @@ interface CheckinCellProps {
 }
 
 export function CheckinCell({ row, column, onEditStart }: CheckinCellProps) {
+  const t = useTranslations()
+  const { language } = useLanguage()
   const [sheetOpen, setSheetOpen] = useState(false)
   const summary = useCheckinSummary(row?.id ?? '')
 
@@ -38,9 +42,7 @@ export function CheckinCell({ row, column, onEditStart }: CheckinCellProps) {
       <button
         type="button"
         onClick={handleClick}
-        title={
-          isOverdue ? `ვადაგადაცილებული — ბოლო ვიზიტიდან ${daysSinceVisit} დღე გავიდა` : undefined
-        }
+        title={isOverdue ? t('checkin.overdueTooltip', { days: daysSinceVisit }) : undefined}
         className={`h-full min-h-[36px] w-full flex items-center gap-2 px-3 hover:bg-bg-hover transition-colors cursor-pointer ${
           isOverdue ? 'border-2 border-red-500 rounded-md bg-red-500/5' : ''
         }`}
@@ -50,7 +52,7 @@ export function CheckinCell({ row, column, onEditStart }: CheckinCellProps) {
         ) : summary.has_active ? (
           <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500/10 text-orange-500 border border-orange-500/30">
             <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" />
-            აქტიური
+            {t('checkin.active')}
           </span>
         ) : (
           <>
@@ -63,12 +65,12 @@ export function CheckinCell({ row, column, onEditStart }: CheckinCellProps) {
             )}
             {isOverdue ? (
               <span className="text-sm text-red-500 font-medium truncate">
-                {daysSinceVisit} დღე
+                {t('checkin.daysAgo', { days: daysSinceVisit })}
               </span>
             ) : (
               summary.latest_duration_minutes != null && (
                 <span className="text-sm text-text-primary truncate">
-                  {formatDuration(summary.latest_duration_minutes)}
+                  {formatDuration(summary.latest_duration_minutes, language)}
                 </span>
               )
             )}
