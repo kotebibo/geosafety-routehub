@@ -26,6 +26,8 @@ in env vars (each points at its own Supabase instance):
 
 - Work on feature branches, PR into `master`. Never hardcode anything
   instance-specific — it belongs in Vercel env vars.
+- **Before every commit**: `git pull --rebase origin master` first — others
+  push to master too; committing on a stale base invites conflicts.
 - **Before every commit/push** (from `apps/web`): `npx vitest run`,
   `npx tsc --noEmit`, `npx next build` — all three must pass.
 - Cron schedules live in the root `vercel.json` (UTC — Georgia is UTC+4).
