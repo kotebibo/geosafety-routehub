@@ -140,6 +140,9 @@ const translations: Record<Language, Record<string, string>> = {
     'reset.mismatch': 'პაროლები არ ემთხვევა',
     'reset.tooShort': 'პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო',
     'reset.goToLogin': 'შესვლის გვერდზე გადასვლა',
+    'reset.invalidLink':
+      'ბმული არასწორია ან ვადაგასულია. გთხოვთ, თავიდან მოითხოვოთ პაროლის აღდგენა შესვლის გვერდიდან.',
+    'reset.samePassword': 'ახალი პაროლი უნდა განსხვავდებოდეს ძველი პაროლისგან',
 
     // Walkthrough
     'walkthrough.welcome.title': 'მოგესალმებით RouteHub-ში!',
@@ -350,6 +353,9 @@ const translations: Record<Language, Record<string, string>> = {
     'reset.mismatch': 'Passwords do not match',
     'reset.tooShort': 'Password must be at least 6 characters',
     'reset.goToLogin': 'Go to login',
+    'reset.invalidLink':
+      'This link is invalid or has expired. Please request a new password reset from the login page.',
+    'reset.samePassword': 'New password must be different from your old password',
 
     // Walkthrough
     'walkthrough.welcome.title': 'Welcome to RouteHub!',

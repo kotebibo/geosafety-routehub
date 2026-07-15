@@ -1,15 +1,16 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { createClient } from '@/lib/supabase'
-import { Lock, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
+import { getSupabase } from '@/lib/supabase'
+import { Lock, AlertCircle, CheckCircle, Globe, Eye, EyeOff, Loader2 } from 'lucide-react'
+
+type SessionState = 'checking' | 'ready' | 'missing'
 
 export default function ResetPasswordPage() {
-  const router = useRouter()
   const { t, language, setLanguage } = useLanguage()
+  const [sessionState, setSessionState] = useState<SessionState>('checking')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -17,6 +18,24 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  // The form is useless without a recovery session — verify we have one.
+  // Session sources: /auth/confirm (token_hash, cookie session) or the
+  // legacy ?code= PKCE param (only works in the browser that requested
+  // the reset — exchange it here as a fallback).
+  useEffect(() => {
+    const supabase = getSupabase()
+    ;(async () => {
+      const code = new URLSearchParams(window.location.search).get('code')
+      if (code) {
+        await supabase.auth.exchangeCodeForSession(code).catch(() => {})
+      }
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      setSessionState(session ? 'ready' : 'missing')
+    })()
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,13 +53,20 @@ export default function ResetPasswordPage() {
 
     setLoading(true)
     try {
-      const supabase = createClient()
+      const supabase = getSupabase()
       const { error } = await supabase.auth.updateUser({ password })
 
       if (error) throw error
       setSuccess(true)
-    } catch (err) {
-      setError(t('reset.error'))
+    } catch (err: any) {
+      const msg = String(err?.message || '')
+      if (msg.includes('different from the old password')) {
+        setError(t('reset.samePassword'))
+      } else if (msg.includes('session missing') || msg.includes('not authenticated')) {
+        setError(t('reset.invalidLink'))
+      } else {
+        setError(t('reset.error'))
+      }
     } finally {
       setLoading(false)
     }
@@ -68,7 +94,24 @@ export default function ResetPasswordPage() {
           <h2 className="text-3xl font-bold text-text-primary">{t('reset.title')}</h2>
         </div>
 
-        {success ? (
+        {sessionState === 'checking' ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-monday-primary" />
+          </div>
+        ) : sessionState === 'missing' ? (
+          <div className="space-y-6">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{t('reset.invalidLink')}</p>
+            </div>
+            <Link
+              href="/auth/login"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-monday-primary text-white font-medium rounded-lg hover:bg-monday-primary-hover transition-colors"
+            >
+              {t('reset.goToLogin')}
+            </Link>
+          </div>
+        ) : success ? (
           <div className="space-y-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
