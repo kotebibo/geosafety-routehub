@@ -209,6 +209,10 @@ export function VirtualizedBoardTable({
     itemId: null,
     position: null,
   })
+  // Whether the current mouse press started on a drag handle. dragstart's
+  // e.target is the draggable <tr> (not the inner handle), so the handle
+  // check must happen at mousedown time where the deep target is reported.
+  const dragFromHandleRef = useRef(false)
 
   // Ensure we have at least one default group
   const effectiveGroups = useMemo(() => {
@@ -639,8 +643,7 @@ export function VirtualizedBoardTable({
   )
 
   const handleRowDragStart = useCallback((e: React.DragEvent, itemId: string) => {
-    const target = e.target as HTMLElement
-    if (!target.closest('[data-drag-handle]')) {
+    if (!dragFromHandleRef.current) {
       e.preventDefault()
       return
     }
@@ -650,6 +653,7 @@ export function VirtualizedBoardTable({
   }, [])
 
   const handleRowDragEnd = useCallback(() => {
+    dragFromHandleRef.current = false
     setDraggingItemId(null)
     setDragOverGroupId(null)
     setDragOverItemId(null)
@@ -1276,6 +1280,11 @@ export function VirtualizedBoardTable({
             <tbody>
               <tr
                 draggable={canDrag}
+                onMouseDown={e => {
+                  dragFromHandleRef.current = !!(e.target as HTMLElement).closest(
+                    '[data-drag-handle]'
+                  )
+                }}
                 onDragStart={e => handleRowDragStart(e, item.id)}
                 onDragEnd={handleRowDragEnd}
                 onDragOver={e => handleRowDragOver(e, item.id, itemGroupId)}
