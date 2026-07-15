@@ -1,0 +1,17 @@
+[
+  {
+    "name": "team2-contracts",
+    "comment": "Monday ხელშეკრულებები (second Monday instance) → Team2 ხელშეკრულებები board. matchColumns text__1 = tax id (ს/კ). saqmianoba is computed locally from კომპანიები — never overwrite.",
+    "monday": {
+      "tokenEnv": "MONDAY_API_TOKEN_TEAM2_CONTRACTS",
+      "boardId": "1730166206"
+    },
+    "supabase": {
+      "urlEnv": "NEXT_PUBLIC_SUPABASE_URL_TEAM2",
+      "keyEnv": "SUPABASE_SERVICE_ROLE_KEY_TEAM2",
+      "boardId": "ceba6a9c-c9c2-4d96-abea-2252d4f83a96"
+    },
+    "matchColumns": ["text__1", "date__1", "date1__1", "numeric__1"],
+    "protectedKeys": ["saqmianoba"]
+  }
+]

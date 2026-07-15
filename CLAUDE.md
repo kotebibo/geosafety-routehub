@@ -44,6 +44,29 @@ node scripts/run-migration.mjs <migration-file>.sql
 in Supabase Management API tokens.) A migration applied to only one instance
 is a production bug on the other two.
 
+### Monday.com → RouteHub tools (`scripts/monday/`)
+
+Full docs: `scripts/monday/README.md`. Tokens/keys come from
+`apps/web/.env.local` by env-var name.
+
+```
+node scripts/monday/sync-from-monday.mjs                    # dry-run all jobs in sync-jobs.json
+node scripts/monday/sync-from-monday.mjs --job=X --apply    # write; --columns=a,b for subset sync
+node scripts/monday/sync-from-monday.mjs --list-boards=<TOKEN_ENV>
+node scripts/monday/create-board-from-monday.mjs --token-env=... --monday-board=... \
+  --instance=team2 --owner=<email> [--workspace="..."] [--apply]   # new board from Monday
+```
+
+- **Sync upserts in place** (items matched via `data.__monday_id`, then
+  name+matchColumns) — item ids are stable, so checkin history, updates and
+  files survive. The old `scripts/sync-contracts-from-monday.js` /
+  `rebuild-*.js` scripts delete+reinsert and must never be used again on
+  boards with checkins.
+- **Owner's run policy:** every run against a production board needs the
+  owner's explicit go-ahead — Claude must not run these itself, not even dry
+  runs. Test engine changes only on throwaway boards in a separate workspace.
+  Only approved production job: `team2-contracts`. Never schedule `--prune`.
+
 ## Multi-Instance Gotchas (these have caused real bugs)
 
 - **Board column IDs differ per instance.** The same logical column has a
