@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase'
 import { LogIn, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
 
@@ -26,7 +27,8 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get('from') || '/'
   const { signIn } = useAuth()
-  const { t, language, setLanguage } = useLanguage()
+  const t = useTranslations()
+  const { language, setLanguage } = useLanguage()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')

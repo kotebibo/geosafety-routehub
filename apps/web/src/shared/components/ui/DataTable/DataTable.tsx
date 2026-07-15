@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { useState, useMemo, useCallback } from 'react'
 import { ChevronUp, ChevronDown, Square, CheckSquare, Minus } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import type { Column, DataTableProps, SortState, CellProps } from './types'
 
@@ -109,6 +110,7 @@ export function DataTable<T>({
   emptyState,
   caption,
 }: DataTableProps<T>) {
+  const t = useTranslations()
   const [sort, setSort] = useState<SortState>({
     column: defaultSort?.column ?? null,
     direction: defaultSort?.direction ?? null,
@@ -272,7 +274,7 @@ export function DataTable<T>({
             <tr>
               <td colSpan={selectable ? columns.length + 1 : columns.length} className="px-4 py-12">
                 {emptyState || (
-                  <div className="text-center text-text-secondary">მონაცემები არ მოიძებნა</div>
+                  <div className="text-center text-text-secondary">{t('dataTable.noResults')}</div>
                 )}
               </td>
             </tr>

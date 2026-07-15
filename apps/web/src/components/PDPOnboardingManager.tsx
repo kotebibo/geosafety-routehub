@@ -6,6 +6,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { supabase } from '@/lib/supabase/client'
 
 // Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
@@ -41,6 +43,8 @@ const PHASE_DEFINITIONS = [
 ]
 
 export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboardingManagerProps) {
+  const t = useTranslations()
+  const { language } = useLanguage()
   const [currentPhase, setCurrentPhase] = useState<number>(1)
   const [phases, setPhases] = useState<PDPPhase[]>([])
   const [inspectors, setInspectors] = useState<Inspector[]>([])
@@ -126,29 +130,28 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
       {/* Current Phase Selector */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <label className="block text-sm font-medium text-text-primary mb-2">
-          მიმდინარე ფაზა (Current Onboarding Phase)
+          {t('pdpOnboarding.currentPhase')}
         </label>
         <select
           value={currentPhase}
           onChange={e => setCurrentPhase(Number(e.target.value))}
           className="w-full px-4 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500"
         >
-          <option value={0}>არ დაწყებულა (Not Started)</option>
+          <option value={0}>{t('pdpOnboarding.notStarted')}</option>
           {PHASE_DEFINITIONS.map(def => (
             <option key={def.phase} value={def.phase}>
-              ფაზა {def.phase}: {def.name_ka} ({def.name})
+              {t('pdpOnboarding.phaseWord')} {def.phase}:{' '}
+              {language === 'ka' ? def.name_ka : def.name}
             </option>
           ))}
-          <option value={6}>დასრულებული (Completed)</option>
+          <option value={6}>{t('pdpOnboarding.completed')}</option>
         </select>
-        <p className="text-xs text-text-secondary mt-2">
-          * აირჩიეთ ფაზა, რომელზეც ამჟამად მუშაობთ ამ კომპანიასთან
-        </p>
+        <p className="text-xs text-text-secondary mt-2">* {t('pdpOnboarding.selectPhaseHint')}</p>
       </div>
 
       {/* Phase Schedule Grid */}
       <div className="bg-bg-primary border border-border-light rounded-lg p-4">
-        <h3 className="font-semibold text-text-primary mb-4">ფაზების განრიგი (Phase Schedule)</h3>
+        <h3 className="font-semibold text-text-primary mb-4">{t('pdpOnboarding.scheduleTitle')}</h3>
 
         <div className="space-y-3">
           {phases.map(phase => {
@@ -182,8 +185,9 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
                       {phase.phase}
                     </div>
                     <div>
-                      <div className="font-medium text-text-primary">{phase.name_ka}</div>
-                      <div className="text-sm text-text-secondary">{phase.name}</div>
+                      <div className="font-medium text-text-primary">
+                        {language === 'ka' ? phase.name_ka : phase.name}
+                      </div>
                     </div>
                   </div>
 
@@ -199,7 +203,7 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
                   {/* Scheduled Date */}
                   <div>
                     <label className="block text-xs font-medium text-text-secondary mb-1">
-                      დაგეგმილი თარიღი
+                      {t('pdpOnboarding.scheduledDate')}
                     </label>
                     <input
                       type="date"
@@ -213,14 +217,14 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
                   {/* Inspector */}
                   <div>
                     <label className="block text-xs font-medium text-text-secondary mb-1">
-                      ინსპექტორი
+                      {t('pdpOnboarding.inspector')}
                     </label>
                     <select
                       value={phase.inspector_id || ''}
                       onChange={e => updatePhase(phase.phase, { inspector_id: e.target.value })}
                       className="w-full px-3 py-1.5 text-sm border border-border-medium rounded focus:ring-1 focus:ring-blue-500"
                     >
-                      <option value="">აირჩიეთ</option>
+                      <option value="">{t('common.select')}</option>
                       {inspectors.map(inspector => (
                         <option key={inspector.id} value={inspector.id}>
                           {inspector.full_name}
@@ -232,7 +236,7 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
                   {/* Completion Date */}
                   <div>
                     <label className="block text-xs font-medium text-text-secondary mb-1">
-                      დასრულების თარიღი
+                      {t('pdpOnboarding.completionDate')}
                     </label>
                     <input
                       type="date"
@@ -248,7 +252,7 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
                 <div className="mt-2">
                   <input
                     type="text"
-                    placeholder="შენიშვნები..."
+                    placeholder={t('pdpOnboarding.notesPlaceholder')}
                     value={phase.notes || ''}
                     onChange={e => updatePhase(phase.phase, { notes: e.target.value })}
                     className="w-full px-3 py-1.5 text-sm border border-border-light rounded focus:ring-1 focus:ring-blue-500"
@@ -267,19 +271,19 @@ export function PDPOnboardingManager({ companyId, onPhaseChange }: PDPOnboarding
             <div className="text-2xl font-bold text-green-600">
               {phases.filter(p => p.completed_date).length}
             </div>
-            <div className="text-xs text-text-secondary">დასრულებული</div>
+            <div className="text-xs text-text-secondary">{t('pdpOnboarding.completed')}</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-blue-600">
               {currentPhase > 0 && currentPhase <= 5 ? 1 : 0}
             </div>
-            <div className="text-xs text-text-secondary">მიმდინარე</div>
+            <div className="text-xs text-text-secondary">{t('pdpOnboarding.statCurrent')}</div>
           </div>
           <div>
             <div className="text-2xl font-bold text-text-tertiary">
               {5 - phases.filter(p => p.completed_date).length}
             </div>
-            <div className="text-xs text-text-secondary">დარჩენილი</div>
+            <div className="text-xs text-text-secondary">{t('pdpOnboarding.statRemaining')}</div>
           </div>
         </div>
       </div>

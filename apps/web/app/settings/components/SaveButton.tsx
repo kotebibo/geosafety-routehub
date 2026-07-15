@@ -2,7 +2,7 @@
 
 import { Check, Save } from 'lucide-react'
 import { Button } from '@/shared/components/ui'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 
 interface SaveButtonProps {
   onClick: () => void
@@ -11,7 +11,7 @@ interface SaveButtonProps {
 }
 
 export function SaveButton({ onClick, isSaving, saveSuccess }: SaveButtonProps) {
-  const { t } = useLanguage()
+  const t = useTranslations()
 
   return (
     <div className="pt-4 border-t border-border-light">

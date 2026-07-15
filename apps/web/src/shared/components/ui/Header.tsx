@@ -4,7 +4,7 @@ import * as React from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { LogOut, User, ChevronDown, Search, Menu } from 'lucide-react'
 import { GlobalSearchModal } from '@/features/boards/components/GlobalSearch'
 
@@ -19,7 +19,7 @@ export function Header({ className, onMenuToggle }: HeaderProps) {
   const { user, userRole, signOut } = useAuth()
   const [showUserMenu, setShowUserMenu] = React.useState(false)
   const [isSearchOpen, setIsSearchOpen] = React.useState(false)
-  const { t } = useLanguage()
+  const t = useTranslations()
 
   // Detect Mac for keyboard shortcut display
   const [isMac, setIsMac] = React.useState(false)

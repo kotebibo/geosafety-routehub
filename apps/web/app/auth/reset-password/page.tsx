@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { getSupabase } from '@/lib/supabase'
 import { Lock, AlertCircle, CheckCircle, Globe, Eye, EyeOff, Loader2 } from 'lucide-react'
 
 type SessionState = 'checking' | 'ready' | 'missing'
 
 export default function ResetPasswordPage() {
-  const { t, language, setLanguage } = useLanguage()
+  const t = useTranslations()
+  const { language, setLanguage } = useLanguage()
   const [sessionState, setSessionState] = useState<SessionState>('checking')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createPortal } from 'react-dom'
 import { useQueries } from '@tanstack/react-query'
 import { Search, X, Loader2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { useGlobalSearch } from '../../hooks/useGlobalSearch'
 import { boardsService } from '../../services/boards.service'
@@ -25,6 +26,7 @@ interface GlobalSearchModalProps {
 }
 
 export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
+  const t = useTranslations()
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
@@ -108,7 +110,7 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
           <input
             ref={inputRef}
             type="text"
-            placeholder="Search across all boards..."
+            placeholder={t('globalSearch.placeholder')}
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="flex-1 bg-transparent text-text-primary text-sm outline-none placeholder:text-text-tertiary"
@@ -119,8 +121,12 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
           )}
           {totalCount > 0 && (
             <span className="text-xs text-text-tertiary flex-shrink-0">
-              {totalCount} result{totalCount !== 1 ? 's' : ''} in {groupedResults.length} board
-              {groupedResults.length !== 1 ? 's' : ''}
+              {t('globalSearch.resultsCount', {
+                count: totalCount,
+                plural: totalCount !== 1 ? 's' : '',
+                boardCount: groupedResults.length,
+                boardPlural: groupedResults.length !== 1 ? 's' : '',
+              })}
             </span>
           )}
           <button
@@ -134,9 +140,9 @@ export function GlobalSearchModal({ isOpen, onClose }: GlobalSearchModalProps) {
         {/* Results Area */}
         <div className="flex-1 overflow-y-auto">
           {!debouncedQuery || debouncedQuery.length < 2 ? (
-            <EmptyState message="Type at least 2 characters to search..." />
+            <EmptyState message={t('globalSearch.typeToSearch')} />
           ) : groupedResults.length === 0 && !isLoading ? (
-            <EmptyState message={`No results found for "${debouncedQuery}"`} />
+            <EmptyState message={t('globalSearch.noResultsFor', { query: debouncedQuery })} />
           ) : (
             groupedResults.map(group => {
               const columns = columnsByBoard.get(group.boardId) || []

@@ -1,0 +1,329 @@
+{
+  "404": {
+    "title": "Page Not Found",
+    "description": "The page you're looking for doesn't exist or has been moved.",
+    "goHome": "Go Home"
+  },
+  "nav": {
+    "home": "Home",
+    "boards": "Boards",
+    "companies": "Companies",
+    "officers": "Officers",
+    "locations": "Locations",
+    "routes": "Routes",
+    "routeBuilder": "Route Builder",
+    "assignments": "Assignments",
+    "settings": "Settings",
+    "collapse": "Collapse",
+    "expand": "Expand"
+  },
+  "header": {
+    "search": "Search...",
+    "help": "Help",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "signOut": "Sign Out"
+  },
+  "breadcrumb": {
+    "home": "Home",
+    "companies": "Companies",
+    "inspectors": "Officers",
+    "locations": "Locations",
+    "routes": "Routes",
+    "builder": "Route Builder",
+    "manage": "Manage",
+    "admin": "Admin",
+    "assignments": "Assignments",
+    "inspector": "Officer",
+    "settings": "Settings",
+    "boards": "Boards"
+  },
+  "role": {
+    "admin": "Administrator",
+    "dispatcher": "Dispatcher",
+    "officer": "Officer"
+  },
+  "home": {
+    "title": "RouteHub",
+    "subtitle": "Route optimization and management platform",
+    "greeting": "Hello",
+    "quickActions": "Quick Actions",
+    "companyManagement": "Company Management",
+    "officers": "Officers",
+    "teamManagement": "Team Management",
+    "assignments": "Assignments",
+    "workDistribution": "Work Distribution",
+    "createRoute": "Create Route",
+    "optimization": "Optimization",
+    "manageRoutes": "Manage Routes",
+    "allRoutes": "All Routes",
+    "myRoutes": "My Routes",
+    "boardsDescription": "Work Boards",
+    "todaysPlan": "Today's Plan",
+    "readyToStart": "Ready to get started?",
+    "joinCompanies": "Join hundreds of companies already using RouteHub",
+    "signIn": "Sign In",
+    "register": "Register",
+    "copyright": "© 2025 RouteHub. All rights reserved.",
+    "about": "About",
+    "documentation": "Documentation",
+    "support": "Support",
+    "contact": "Contact"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "confirm": "Confirm",
+    "close": "Close",
+    "language": "Language",
+    "select": "Select"
+  },
+  "login": {
+    "title": "RouteHub",
+    "subtitle": "Route Management Platform",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "forgotPassword": "Forgot password?",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign Up",
+    "signingUp": "Signing up...",
+    "loginToSystem": "Sign in to your account",
+    "createAccount": "Create a new account",
+    "fullName": "Full Name",
+    "fullNamePlaceholder": "Your name",
+    "confirmPassword": "Confirm Password",
+    "minChars": "Minimum 6 characters",
+    "registerNow": "Register",
+    "alreadyHaveAccount": "Already have an account?",
+    "passwordsMismatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "alreadyRegistered": "This email is already registered",
+    "registrationSuccess": "Registration successful! Check your email to confirm.",
+    "invalidCredentials": "Invalid email or password",
+    "emailNotConfirmed": "Please confirm your email before signing in",
+    "signupError": "Registration error. Please try again.",
+    "signinError": "Sign in error. Please try again.",
+    "enterEmailFirst": "Please enter your email first",
+    "resetEmailSent": "Password reset link has been sent to your email",
+    "resetError": "Password reset failed. Please try again."
+  },
+  "reset": {
+    "title": "Reset Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm Password",
+    "submit": "Reset Password",
+    "submitting": "Resetting...",
+    "success": "Password changed successfully!",
+    "error": "Failed to reset password. Please try again.",
+    "mismatch": "Passwords do not match",
+    "tooShort": "Password must be at least 6 characters",
+    "goToLogin": "Go to login",
+    "invalidLink": "This link is invalid or has expired. Please request a new password reset from the login page.",
+    "samePassword": "New password must be different from your old password"
+  },
+  "walkthrough": {
+    "welcome": {
+      "title": "Welcome to RouteHub!",
+      "description": "Let us show you the key features of the platform. This will only take a few seconds."
+    },
+    "sidebar": {
+      "title": "Navigation",
+      "description": "The sidebar is your main navigation. Use it to access any page in the app."
+    },
+    "boards": {
+      "title": "Boards",
+      "description": "Boards are your workspace. Create boards to manage projects, tasks, and data."
+    },
+    "companies": {
+      "title": "Companies",
+      "description": "Manage companies here — add new ones, edit information, and assign officers."
+    },
+    "routes": {
+      "title": "Routes",
+      "description": "Plan and optimize routes. The system automatically finds the optimal order."
+    },
+    "language": {
+      "title": "Change Language",
+      "description": "You can switch between Georgian and English at any time using this button."
+    },
+    "done": {
+      "title": "You're all set!",
+      "description": "Those are the key features. You can restart this tour anytime from Settings."
+    },
+    "finish": "Finish"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "User settings and preferences",
+    "tab": {
+      "profile": "Profile",
+      "notifications": "Notifications",
+      "language": "Language",
+      "security": "Security",
+      "appearance": "Appearance"
+    },
+    "profile": {
+      "title": "Profile Information",
+      "name": "Full Name",
+      "namePlaceholder": "Enter your full name",
+      "email": "Email",
+      "emailReadonly": "Email cannot be changed",
+      "phone": "Phone",
+      "user": "User"
+    },
+    "notifications": {
+      "title": "Notification Settings",
+      "email": "Email Notifications",
+      "emailDesc": "Receive notifications via email",
+      "assignments": "Assignment Alerts",
+      "assignmentsDesc": "Get notified about new assignments",
+      "routes": "Route Updates",
+      "routesDesc": "Get notified about route changes"
+    },
+    "language": {
+      "title": "Language Settings",
+      "interface": "Interface Language"
+    },
+    "security": {
+      "title": "Security",
+      "changePassword": "Change Password",
+      "changePasswordDesc": "Password is changed via email. Click the button to receive a reset link.",
+      "passwordSent": "Password reset link has been sent to your email",
+      "sessions": "Active Sessions",
+      "sessionsDesc": "Sign out from all other devices",
+      "signOutAll": "Sign Out All"
+    },
+    "saved": "Saved",
+    "saving": "Saving...",
+    "walkthrough": {
+      "title": "Interactive Tour",
+      "description": "Restart the platform walkthrough tour",
+      "restart": "Start Tour"
+    },
+    "appearance": {
+      "title": "Appearance Settings",
+      "theme": "Theme",
+      "themeDesc": "Choose your preferred color scheme"
+    },
+    "theme": {
+      "light": "Light",
+      "lightDesc": "Classic light interface",
+      "dark": "Dark",
+      "darkDesc": "Dark colors, easy on the eyes",
+      "night": "Night",
+      "nightDesc": "Deep blue, for focused work",
+      "arctic": "Arctic",
+      "arcticDesc": "Cool icy blues, crisp and clean",
+      "sunset": "Sunset",
+      "sunsetDesc": "Warm amber on dark background",
+      "coffee": "Coffee",
+      "coffeeDesc": "Warm brown, cozy dark mode"
+    }
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "message": "Sorry, an unexpected error occurred. Please try again.",
+    "retry": "Try again",
+    "goHome": "Go to home page",
+    "pageMessage": "An error occurred while loading the page",
+    "componentError": "Component error",
+    "componentErrorNamed": "{name} - Error",
+    "componentErrorMessage": "This component failed to load. Please refresh the page."
+  },
+  "dataTable": {
+    "noResults": "No data found"
+  },
+  "notificationBell": {
+    "markAllRead": "Mark all as read",
+    "empty": "No notifications",
+    "viewAll": "View all notifications",
+    "markAsRead": "Mark as read",
+    "delete": "Delete"
+  },
+  "navigation": {
+    "locationsMap": "Locations Map"
+  },
+  "pdpOnboarding": {
+    "currentPhase": "Current Phase",
+    "notStarted": "Not Started",
+    "completed": "Completed",
+    "selectPhaseHint": "Select the phase you are currently working on with this company",
+    "scheduleTitle": "Phase Schedule",
+    "scheduledDate": "Scheduled Date",
+    "inspector": "Inspector",
+    "completionDate": "Completion Date",
+    "notesPlaceholder": "Notes...",
+    "statCurrent": "Current",
+    "statRemaining": "Remaining",
+    "phaseWord": "Phase"
+  },
+  "sidebar": {
+    "boardNamePlaceholder": "Board name",
+    "workspaceNamePlaceholder": "Workspace name"
+  },
+  "globalSearch": {
+    "placeholder": "Search across all boards...",
+    "typeToSearch": "Type at least 2 characters to search...",
+    "noResultsFor": "No results found for \"{query}\"",
+    "resultsCount": "{count} result{plural} in {boardCount} board{boardPlural}"
+  },
+  "assignments": {
+    "loadingCompanies": "Loading companies...",
+    "errorOccurred": "An error occurred",
+    "tryAgain": "Try again",
+    "pageTitle": "Company Assignments",
+    "pageDescription": "Assign companies to officers",
+    "notAvailable": "N/A",
+    "selectAtLeastOneCompany": "Select at least one company",
+    "selectInspector": "Select an inspector",
+    "assignedSuccess": "Assigned successfully!",
+    "company": "Company",
+    "address": "Address",
+    "service": "Service",
+    "inspector": "Officer",
+    "unassigned": "Unassigned",
+    "filter": "Filter:",
+    "allServices": "All services",
+    "selectedCount": "{count} selected",
+    "selectInspectorEllipsis": "Select an inspector...",
+    "unassign": "Unassign",
+    "assigning": "Assigning...",
+    "assign": "Assign",
+    "noCompaniesFound": "No companies found",
+    "tableCaption": "List of company assignments",
+    "inspectorWorkload": "Inspector Workload",
+    "noInspectors": "No inspectors",
+    "totalCompanies": "Total Companies",
+    "assigned": "Assigned"
+  },
+  "myWork": {
+    "title": "My Work",
+    "loading": "Loading...",
+    "noItems": "No items assigned to you",
+    "itemsCount": "{count} item{plural} assigned to you",
+    "emptyTitle": "No work assigned",
+    "emptyDescription": "Items will appear here when you are assigned to them via a person column on any board.",
+    "noStatus": "No status",
+    "noDate": "No date",
+    "group": {
+      "overdue": "Past Due",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "nextWeek": "Next Week",
+      "later": "Later",
+      "noDate": "No Date"
+    }
+  }
+}

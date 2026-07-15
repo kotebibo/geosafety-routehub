@@ -1,4 +1,5 @@
 import { User, TrendingUp } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface InspectorWorkload {
   id: string
@@ -12,6 +13,7 @@ interface InspectorWorkloadPanelProps {
 }
 
 export function InspectorWorkloadPanel({ inspectors }: InspectorWorkloadPanelProps) {
+  const t = useTranslations()
   const maxAssignments = Math.max(...inspectors.map(i => i.assignedCount), 1)
 
   return (
@@ -19,13 +21,13 @@ export function InspectorWorkloadPanel({ inspectors }: InspectorWorkloadPanelPro
       <div className="p-4 border-b">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-blue-600" />
-          ინსპექტორების დატვირთვა
+          {t('assignments.inspectorWorkload')}
         </h3>
       </div>
 
       <div className="p-4 space-y-4">
         {inspectors.length === 0 ? (
-          <p className="text-text-secondary text-center py-8">ინსპექტორები არ არის</p>
+          <p className="text-text-secondary text-center py-8">{t('assignments.noInspectors')}</p>
         ) : (
           inspectors.map(inspector => {
             const percentage = (inspector.assignedCount / maxAssignments) * 100

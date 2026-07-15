@@ -9,6 +9,16 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react'
 import { logger } from '@/lib/monitoring/logger'
+import kaMessages from '../../../../messages/ka.json'
+import enMessages from '../../../../messages/en.json'
+
+// Class components can't use hooks, and this boundary must keep working even if
+// something above it (including the i18n provider) throws — so it reads the
+// persisted language preference directly instead of going through useTranslations().
+function getErrorBoundaryMessages() {
+  const stored = typeof window !== 'undefined' ? localStorage.getItem('routehub-language') : null
+  return stored === 'en' ? enMessages.errorBoundary : kaMessages.errorBoundary
+}
 
 interface ErrorBoundaryProps {
   children: ReactNode
@@ -58,6 +68,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
         return this.props.fallback
       }
 
+      const messages = getErrorBoundaryMessages()
+
       // Default fallback UI
       return (
         <div className="min-h-screen flex items-center justify-center bg-bg-secondary px-4">
@@ -79,12 +91,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </div>
 
             <h2 className="text-2xl font-bold text-center text-text-primary mb-2">
-              რაღაც შეცდომა მოხდა
+              {messages.title}
             </h2>
 
-            <p className="text-center text-text-secondary mb-6">
-              ვწუხვართ, მოხდა მოულოდნელი შეცდომა. გთხოვთ სცადოთ თავიდან.
-            </p>
+            <p className="text-center text-text-secondary mb-6">{messages.message}</p>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <div className="mb-6 p-4 bg-bg-tertiary rounded-lg overflow-auto max-h-48">
@@ -102,13 +112,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 onClick={this.handleReset}
                 className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                თავიდან ცდა
+                {messages.retry}
               </button>
               <button
                 onClick={() => (window.location.href = '/')}
                 className="flex-1 px-4 py-2 bg-bg-tertiary text-text-secondary rounded-lg hover:bg-bg-hover transition-colors"
               >
-                მთავარ გვერდზე დაბრუნება
+                {messages.goHome}
               </button>
             </div>
           </div>
@@ -124,18 +134,19 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
  * Page-level error boundary with custom styling
  */
 export function PageErrorBoundary({ children }: { children: ReactNode }) {
+  const messages = getErrorBoundaryMessages()
   return (
     <ErrorBoundary
       fallback={
         <div className="min-h-screen flex items-center justify-center bg-bg-secondary">
           <div className="text-center">
-            <h1 className="text-4xl font-bold text-text-primary mb-4">რაღაც შეცდომა მოხდა</h1>
-            <p className="text-text-secondary mb-6">გვერდის ჩატვირთვისას მოხდა შეცდომა</p>
+            <h1 className="text-4xl font-bold text-text-primary mb-4">{messages.title}</h1>
+            <p className="text-text-secondary mb-6">{messages.pageMessage}</p>
             <button
               onClick={() => window.location.reload()}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
-              თავიდან ცდა
+              {messages.retry}
             </button>
           </div>
         </div>
@@ -156,16 +167,17 @@ export function ComponentErrorBoundary({
   children: ReactNode
   componentName?: string
 }) {
+  const messages = getErrorBoundaryMessages()
   return (
     <ErrorBoundary
       fallback={
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
           <p className="text-red-800 font-medium mb-2">
-            {componentName ? `${componentName} - შეცდომა` : 'კომპონენტის შეცდომა'}
+            {componentName
+              ? messages.componentErrorNamed.replace('{name}', componentName)
+              : messages.componentError}
           </p>
-          <p className="text-red-600 text-sm">
-            ამ კომპონენტის ჩატვირთვა ვერ მოხერხდა. გთხოვთ განაახლოთ გვერდი.
-          </p>
+          <p className="text-red-600 text-sm">{messages.componentErrorMessage}</p>
         </div>
       }
     >

@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation'
 import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react'
 import { useNotifications } from '@/hooks/useNotifications'
 import { formatDistanceToNow } from 'date-fns'
-import { ka } from 'date-fns/locale'
+import { ka, enUS } from 'date-fns/locale'
+import { useTranslations } from 'next-intl'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { cn } from '@/lib/utils'
 import { Tooltip } from '@/shared/components/ui/tooltip'
 import type { Notification, NotificationType } from '@/types/notification'
@@ -33,6 +35,8 @@ interface NotificationBellProps {
 
 export function NotificationBell({ className }: NotificationBellProps) {
   const router = useRouter()
+  const t = useTranslations()
+  const { language } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -135,7 +139,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
         ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className={cn('relative p-2 rounded-lg hover:bg-bg-hover transition-colors', className)}
-        aria-label="Notifications"
+        aria-label={t('header.notifications')}
       >
         <Bell className="w-5 h-5 text-text-secondary" />
         {unreadCount > 0 && (
@@ -159,7 +163,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b bg-bg-secondary">
-              <h3 className="font-semibold text-text-primary">შეტყობინებები</h3>
+              <h3 className="font-semibold text-text-primary">{t('header.notifications')}</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={() => markAllAsRead()}
@@ -167,7 +171,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
                 >
                   <CheckCheck className="w-4 h-4" />
-                  ყველას წაკითხვა
+                  {t('notificationBell.markAllRead')}
                 </button>
               )}
             </div>
@@ -181,7 +185,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
               ) : notifications.length === 0 ? (
                 <div className="py-12 text-center text-text-tertiary">
                   <Bell className="w-10 h-10 mx-auto mb-3 text-text-disabled" />
-                  <p>შეტყობინებები არ არის</p>
+                  <p>{t('notificationBell.empty')}</p>
                 </div>
               ) : (
                 notifications.map(notification => (
@@ -214,7 +218,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
                       <p className="text-xs text-text-tertiary mt-1">
                         {formatDistanceToNow(new Date(notification.created_at), {
                           addSuffix: true,
-                          locale: ka,
+                          locale: language === 'ka' ? ka : enUS,
                         })}
                       </p>
                     </div>
@@ -222,7 +226,11 @@ export function NotificationBell({ className }: NotificationBellProps) {
                     {/* Actions */}
                     <div className="flex-shrink-0 flex items-center gap-1">
                       {!notification.is_read && (
-                        <Tooltip content="Mark as read" side="bottom" delayDuration={200}>
+                        <Tooltip
+                          content={t('notificationBell.markAsRead')}
+                          side="bottom"
+                          delayDuration={200}
+                        >
                           <button
                             onClick={e => {
                               e.stopPropagation()
@@ -234,7 +242,11 @@ export function NotificationBell({ className }: NotificationBellProps) {
                           </button>
                         </Tooltip>
                       )}
-                      <Tooltip content="Delete" side="bottom" delayDuration={200}>
+                      <Tooltip
+                        content={t('notificationBell.delete')}
+                        side="bottom"
+                        delayDuration={200}
+                      >
                         <button
                           onClick={e => {
                             e.stopPropagation()
@@ -261,7 +273,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   }}
                   className="text-sm text-blue-600 hover:text-blue-700"
                 >
-                  ყველა შეტყობინების ნახვა
+                  {t('notificationBell.viewAll')}
                 </button>
               </div>
             )}

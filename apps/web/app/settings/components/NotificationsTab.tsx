@@ -1,6 +1,6 @@
 'use client'
 
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { SaveButton } from './SaveButton'
 
@@ -47,7 +47,7 @@ export function NotificationsTab({
   isSaving,
   saveSuccess,
 }: NotificationsTabProps) {
-  const { t } = useLanguage()
+  const t = useTranslations()
 
   return (
     <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">

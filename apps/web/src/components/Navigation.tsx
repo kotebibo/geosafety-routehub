@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useTranslations } from 'next-intl'
 import {
   Home,
   Building2,
@@ -18,6 +19,7 @@ import {
 export function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
+  const t = useTranslations()
   const { user, userRole, signOut, loading } = useAuth()
 
   // Don't show navigation on login page or while loading
@@ -31,24 +33,39 @@ export function Navigation() {
   }
 
   const navItems = [
-    { href: '/', label: 'მთავარი', icon: Home, roles: ['admin', 'dispatcher', 'officer'] },
-    { href: '/companies', label: 'კომპანიები', icon: Building2, roles: ['admin', 'dispatcher'] },
-    { href: '/inspectors', label: 'ოფიცრები', icon: Users, roles: ['admin', 'dispatcher'] },
-    { href: '/locations', label: 'ლოკაციების რუკა', icon: MapPin, roles: ['admin', 'dispatcher'] },
+    { href: '/', label: t('nav.home'), icon: Home, roles: ['admin', 'dispatcher', 'officer'] },
+    {
+      href: '/companies',
+      label: t('nav.companies'),
+      icon: Building2,
+      roles: ['admin', 'dispatcher'],
+    },
+    { href: '/inspectors', label: t('nav.officers'), icon: Users, roles: ['admin', 'dispatcher'] },
+    {
+      href: '/locations',
+      label: t('navigation.locationsMap'),
+      icon: MapPin,
+      roles: ['admin', 'dispatcher'],
+    },
     {
       href: '/admin/assignments',
-      label: 'დანიშვნები',
+      label: t('nav.assignments'),
       icon: UserCog,
       roles: ['admin', 'dispatcher'],
     },
     {
       href: '/routes/builder',
-      label: 'მარშრუტის შექმნა',
+      label: t('nav.routeBuilder'),
       icon: MapIcon,
       roles: ['admin', 'dispatcher'],
     },
-    { href: '/routes/manage', label: 'მარშრუტები', icon: Route, roles: ['admin', 'dispatcher'] },
-    { href: '/inspector/routes', label: 'ჩემი მარშრუტები', icon: Route, roles: ['officer'] },
+    {
+      href: '/routes/manage',
+      label: t('nav.routes'),
+      icon: Route,
+      roles: ['admin', 'dispatcher'],
+    },
+    { href: '/inspector/routes', label: t('home.myRoutes'), icon: Route, roles: ['officer'] },
   ]
 
   // Filter nav items based on user role
@@ -98,9 +115,9 @@ export function Navigation() {
                   <div className="font-medium text-text-primary">{user.email}</div>
                   {userRole && (
                     <div className="text-xs text-text-tertiary">
-                      {userRole.role === 'admin' && '👑 ადმინისტრატორი'}
-                      {userRole.role === 'dispatcher' && '📋 დისპეტჩერი'}
-                      {userRole.role === 'officer' && '🔍 ოფიცერი'}
+                      {userRole.role === 'admin' && `👑 ${t('role.admin')}`}
+                      {userRole.role === 'dispatcher' && `📋 ${t('role.dispatcher')}`}
+                      {userRole.role === 'officer' && `🔍 ${t('role.officer')}`}
                     </div>
                   )}
                 </div>
@@ -109,7 +126,7 @@ export function Navigation() {
                   className="inline-flex items-center px-3 py-2 border border-border-medium rounded-md text-sm font-medium text-text-secondary bg-bg-primary hover:bg-bg-hover transition-colors"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  გასვლა
+                  {t('header.signOut')}
                 </button>
               </>
             ) : (
@@ -117,7 +134,7 @@ export function Navigation() {
                 href="/auth/login"
                 className="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
               >
-                შესვლა
+                {t('home.signIn')}
               </Link>
             )}
           </div>

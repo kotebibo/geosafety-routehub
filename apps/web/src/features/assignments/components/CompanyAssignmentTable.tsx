@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { Filter, Users } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
 import { FeatureGate } from '@/components/FeatureGate'
 import { DataTable } from '@/shared/components/ui'
@@ -39,6 +40,7 @@ export function CompanyAssignmentTable({
   inspectors,
   onBulkAssign,
 }: CompanyAssignmentTableProps) {
+  const t = useTranslations()
   const { showToast } = useToast()
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [filter, setFilter] = useState('all')
@@ -52,12 +54,12 @@ export function CompanyAssignmentTable({
 
   const handleBulkAssign = async () => {
     if (selected.size === 0) {
-      showToast('აირჩიეთ მინიმუმ ერთი კომპანია', 'warning')
+      showToast(t('assignments.selectAtLeastOneCompany'), 'warning')
       return
     }
 
     if (!assigningTo) {
-      showToast('აირჩიეთ ინსპექტორი', 'warning')
+      showToast(t('assignments.selectInspector'), 'warning')
       return
     }
 
@@ -67,9 +69,9 @@ export function CompanyAssignmentTable({
       await onBulkAssign(Array.from(selected), inspectorId)
       setSelected(new Set())
       setAssigningTo('')
-      showToast('წარმატებით დაინიშნა!', 'success')
+      showToast(t('assignments.assignedSuccess'), 'success')
     } catch {
-      showToast('დაფიქსირდა შეცდომა', 'error')
+      showToast(t('assignments.errorOccurred'), 'error')
     } finally {
       setIsAssigning(false)
     }
@@ -79,7 +81,7 @@ export function CompanyAssignmentTable({
     () => [
       {
         id: 'company',
-        header: 'კომპანია',
+        header: t('assignments.company'),
         accessorFn: row => row.company?.name,
         sortable: true,
         cell: ({ value }) => (
@@ -88,23 +90,25 @@ export function CompanyAssignmentTable({
       },
       {
         id: 'address',
-        header: 'მისამართი',
+        header: t('assignments.address'),
         accessorFn: row => row.company?.address,
         sortable: true,
         cell: ({ value }) => <span className="text-text-secondary">{value as string}</span>,
       },
       {
         id: 'service',
-        header: 'სერვისი',
+        header: t('assignments.service'),
         accessorFn: row => row.service_type?.name_ka,
         sortable: true,
         cell: ({ value }) => (
-          <span className="text-text-secondary">{(value as string) || 'N/A'}</span>
+          <span className="text-text-secondary">
+            {(value as string) || t('assignments.notAvailable')}
+          </span>
         ),
       },
       {
         id: 'inspector',
-        header: 'ოფიცერი',
+        header: t('assignments.inspector'),
         accessorFn: row => row.assigned_inspector?.full_name,
         sortable: true,
         cell: ({ row }) =>
@@ -114,12 +118,12 @@ export function CompanyAssignmentTable({
             </span>
           ) : (
             <span className="px-2 py-1 bg-bg-tertiary text-text-secondary rounded-full text-xs">
-              არადანიშნული
+              {t('assignments.unassigned')}
             </span>
           ),
       },
     ],
-    []
+    [t]
   )
 
   return (
@@ -130,13 +134,13 @@ export function CompanyAssignmentTable({
           <FeatureGate feature="ENABLE_SERVICE_FILTERING">
             <div className="flex items-center gap-2">
               <Filter className="w-5 h-5 text-text-tertiary" />
-              <span className="font-medium">ფილტრი:</span>
+              <span className="font-medium">{t('assignments.filter')}</span>
               <select
                 value={filter}
                 onChange={e => setFilter(e.target.value)}
                 className="px-3 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">ყველა სერვისი</option>
+                <option value="all">{t('assignments.allServices')}</option>
                 {serviceTypes.map(st => (
                   <option key={st.id} value={st.id}>
                     {st.name_ka}
@@ -148,7 +152,9 @@ export function CompanyAssignmentTable({
 
           <div className="text-sm text-text-secondary">
             {selected.size > 0 && (
-              <span className="font-medium text-blue-600">{selected.size} არჩეული</span>
+              <span className="font-medium text-blue-600">
+                {t('assignments.selectedCount', { count: selected.size })}
+              </span>
             )}
           </div>
         </div>
@@ -162,8 +168,8 @@ export function CompanyAssignmentTable({
               onChange={e => setAssigningTo(e.target.value)}
               className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">აირჩიეთ ინსპექტორი...</option>
-              <option value="unassign">გაუქმება</option>
+              <option value="">{t('assignments.selectInspectorEllipsis')}</option>
+              <option value="unassign">{t('assignments.unassign')}</option>
               {inspectors.map(inspector => (
                 <option key={inspector.id} value={inspector.id}>
                   {inspector.full_name}
@@ -175,7 +181,7 @@ export function CompanyAssignmentTable({
               disabled={isAssigning || !assigningTo}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-bg-tertiary disabled:cursor-not-allowed transition-colors"
             >
-              {isAssigning ? 'ინიშნება...' : 'დანიშვნა'}
+              {isAssigning ? t('assignments.assigning') : t('assignments.assign')}
             </button>
           </div>
         )}
@@ -189,8 +195,10 @@ export function CompanyAssignmentTable({
         selectedRows={selected}
         onSelectionChange={setSelected}
         getRowId={row => row.id}
-        emptyState={<div className="text-center text-text-secondary">კომპანიები არ მოიძებნა</div>}
-        caption="კომპანიების დანიშვნების სია"
+        emptyState={
+          <div className="text-center text-text-secondary">{t('assignments.noCompaniesFound')}</div>
+        }
+        caption={t('assignments.tableCaption')}
         className="rounded-t-none border-t-0"
       />
     </div>

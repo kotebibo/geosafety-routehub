@@ -2,7 +2,7 @@
 
 import { PlayCircle } from 'lucide-react'
 import { Button } from '@/shared/components/ui'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { SaveButton } from './SaveButton'
 
@@ -29,7 +29,7 @@ export function ProfileTab({
   saveSuccess,
   onRestartWalkthrough,
 }: ProfileTabProps) {
-  const { t } = useLanguage()
+  const t = useTranslations()
 
   return (
     <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">

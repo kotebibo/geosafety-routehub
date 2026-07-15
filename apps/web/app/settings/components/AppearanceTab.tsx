@@ -1,7 +1,7 @@
 'use client'
 
 import { Check, Sun, Moon, Star, Snowflake, Sunset, Coffee } from 'lucide-react'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { SaveButton } from './SaveButton'
 import type { Theme } from '@/contexts/ThemeContext'
@@ -117,7 +117,7 @@ export function AppearanceTab({
   isSaving,
   saveSuccess,
 }: AppearanceTabProps) {
-  const { t } = useLanguage()
+  const t = useTranslations()
 
   return (
     <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">

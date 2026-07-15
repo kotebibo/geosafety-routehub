@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { useWalkthrough } from '@/components/Walkthrough'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/shared/components/ui'
@@ -55,7 +56,8 @@ const TABS: { id: TabType; icon: React.ComponentType<{ className?: string }>; la
 export default function SettingsPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const { t } = useLanguage()
+  const t = useTranslations()
+  const { language: currentLanguage, setLanguage } = useLanguage()
   const { theme: currentTheme, setTheme } = useTheme()
   const { restartWalkthrough } = useWalkthrough()
   const [activeTab, setActiveTab] = useState<TabType>('profile')
@@ -114,7 +116,10 @@ export default function SettingsPage() {
         const savedTheme = (userSettings.theme as Theme) || 'light'
         setSettings({
           theme: savedTheme,
-          language: (userSettings.language as UserSettings['language']) || 'ka',
+          // The live UI language is sourced from LanguageContext (localStorage), not this
+          // DB-persisted mirror — reading it back here would fight with whatever the user
+          // already toggled via the Header/Sidebar and cause the tab to show a stale value.
+          language: currentLanguage,
           notification_settings:
             userSettings.notification_settings || defaultSettings.notification_settings,
         })
@@ -281,7 +286,10 @@ export default function SettingsPage() {
         {activeTab === 'language' && (
           <LanguageTab
             language={settings.language}
-            onLanguageChange={lang => setSettings(s => ({ ...s, language: lang }))}
+            onLanguageChange={lang => {
+              setLanguage(lang)
+              setSettings(s => ({ ...s, language: lang }))
+            }}
             onSave={handleSaveSettings}
             isSaving={isSaving}
             saveSuccess={saveSuccess}

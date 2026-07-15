@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 
 export default function NotFound() {
-  const { t } = useLanguage()
+  const t = useTranslations()
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-bg-primary">

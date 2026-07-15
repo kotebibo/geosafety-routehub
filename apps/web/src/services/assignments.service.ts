@@ -14,11 +14,13 @@ export const assignmentsService = {
   },
 
   getByServiceType: async (serviceTypeId?: string) => {
+    // `company_services.assigned_inspector_id` no longer has a PostgREST-visible FK
+    // to `inspectors`, so an embedded select (`assigned_inspector:inspectors(...)`)
+    // fails with PGRST200. Fetch inspectors separately and join client-side instead.
     let query = getDb().from('company_services').select(`
         *,
         company:companies(id, name, address, lat, lng),
-        service_type:service_types(id, name, name_ka),
-        assigned_inspector:inspectors(id, full_name)
+        service_type:service_types(id, name, name_ka)
       `)
 
     if (serviceTypeId && serviceTypeId !== 'all') {
@@ -49,7 +51,29 @@ export const assignmentsService = {
     const { data, error } = await query.order('company(name)')
 
     if (error) throw error
-    return data || []
+    const rows = data || []
+
+    const inspectorIds = [
+      ...new Set(rows.map((row: any) => row.assigned_inspector_id).filter(Boolean)),
+    ]
+
+    let inspectorsById: Record<string, { id: string; full_name: string }> = {}
+    if (inspectorIds.length > 0) {
+      const { data: inspectors, error: inspError } = await getDb()
+        .from('inspectors')
+        .select('id, full_name')
+        .in('id', inspectorIds)
+
+      if (inspError) throw inspError
+      inspectorsById = Object.fromEntries((inspectors || []).map((i: any) => [i.id, i]))
+    }
+
+    return rows.map((row: any) => ({
+      ...row,
+      assigned_inspector: row.assigned_inspector_id
+        ? inspectorsById[row.assigned_inspector_id] || null
+        : null,
+    }))
   },
 
   getStatistics: async () => {

@@ -4,6 +4,8 @@ import { useState, memo } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Calendar, AlertCircle, Clock, ExternalLink } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useLanguage } from '@/contexts/LanguageContext'
 import {
   getColorInfo,
   DEFAULT_STATUS_OPTIONS,
@@ -31,9 +33,9 @@ function getDateStatus(dateStr: string | null): DateStatus {
   return 'future'
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, locale: string): string {
   const date = new Date(dateStr)
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(locale, {
     month: 'short',
     day: 'numeric',
   }).format(date)
@@ -44,6 +46,8 @@ export const MyWorkItemRow = memo(function MyWorkItemRow({
   onStatusChange,
   onDateChange,
 }: MyWorkItemProps) {
+  const t = useTranslations()
+  const { language } = useLanguage()
   const [showStatusDropdown, setShowStatusDropdown] = useState(false)
   const [editingDate, setEditingDate] = useState(false)
 
@@ -111,7 +115,7 @@ export const MyWorkItemRow = memo(function MyWorkItemRow({
             color: statusColor?.text || '#323338',
           }}
         >
-          {statusOption?.label || item.item_status || 'No status'}
+          {statusOption?.label || item.item_status || t('myWork.noStatus')}
         </button>
 
         {showStatusDropdown && (
@@ -170,7 +174,11 @@ export const MyWorkItemRow = memo(function MyWorkItemRow({
             )}
           >
             {dateIcons[dateStatus]}
-            <span>{item.item_due_date ? formatDate(item.item_due_date) : 'No date'}</span>
+            <span>
+              {item.item_due_date
+                ? formatDate(item.item_due_date, language === 'ka' ? 'ka-GE' : 'en-US')
+                : t('myWork.noDate')}
+            </span>
           </button>
         )}
       </div>

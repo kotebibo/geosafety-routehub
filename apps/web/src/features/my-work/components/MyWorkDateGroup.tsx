@@ -3,6 +3,7 @@
 import { useState, memo } from 'react'
 import { cn } from '@/lib/utils'
 import { ChevronDown, ChevronRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { MyWorkItemRow } from './MyWorkItem'
 import type { MyWorkItem } from '@/services/my-work.service'
 import type { DateGroup } from '../hooks/useMyWork'
@@ -14,13 +15,13 @@ interface MyWorkDateGroupProps {
   onDateChange: (itemId: string, dateColumnId: string | null, date: string | null) => void
 }
 
-const GROUP_CONFIG: Record<DateGroup, { label: string; labelKa: string; color: string }> = {
-  overdue: { label: 'Past Due', labelKa: 'ვადაგასული', color: 'bg-red-500' },
-  today: { label: 'Today', labelKa: 'დღეს', color: 'bg-yellow-500' },
-  this_week: { label: 'This Week', labelKa: 'ამ კვირაში', color: 'bg-blue-500' },
-  next_week: { label: 'Next Week', labelKa: 'მომავალ კვირაში', color: 'bg-indigo-500' },
-  later: { label: 'Later', labelKa: 'მოგვიანებით', color: 'bg-gray-400' },
-  no_date: { label: 'No Date', labelKa: 'თარიღის გარეშე', color: 'bg-gray-300' },
+const GROUP_CONFIG: Record<DateGroup, { labelKey: string; color: string }> = {
+  overdue: { labelKey: 'myWork.group.overdue', color: 'bg-red-500' },
+  today: { labelKey: 'myWork.group.today', color: 'bg-yellow-500' },
+  this_week: { labelKey: 'myWork.group.thisWeek', color: 'bg-blue-500' },
+  next_week: { labelKey: 'myWork.group.nextWeek', color: 'bg-indigo-500' },
+  later: { labelKey: 'myWork.group.later', color: 'bg-gray-400' },
+  no_date: { labelKey: 'myWork.group.noDate', color: 'bg-gray-300' },
 }
 
 export const MyWorkDateGroup = memo(function MyWorkDateGroup({
@@ -29,6 +30,7 @@ export const MyWorkDateGroup = memo(function MyWorkDateGroup({
   onStatusChange,
   onDateChange,
 }: MyWorkDateGroupProps) {
+  const t = useTranslations()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const config = GROUP_CONFIG[group]
 
@@ -46,7 +48,7 @@ export const MyWorkDateGroup = memo(function MyWorkDateGroup({
           <ChevronDown className="w-4 h-4 text-text-secondary" />
         )}
         <div className={cn('w-2 h-2 rounded-full', config.color)} />
-        <span className="text-sm font-semibold text-text-primary">{config.label}</span>
+        <span className="text-sm font-semibold text-text-primary">{t(config.labelKey)}</span>
         <span className="text-xs text-text-tertiary ml-1">({items.length})</span>
       </button>
 

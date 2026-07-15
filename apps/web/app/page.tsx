@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import {
@@ -17,7 +17,7 @@ import {
 
 export default function HomePage() {
   const { user, userRole, loading } = useAuth()
-  const { t } = useLanguage()
+  const t = useTranslations()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {

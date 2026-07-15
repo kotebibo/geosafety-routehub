@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { X, ChevronRight, ChevronLeft, Sparkles } from 'lucide-react'
 
@@ -64,7 +64,7 @@ interface WalkthroughProps {
 }
 
 export function Walkthrough({ onComplete }: WalkthroughProps) {
-  const { t } = useLanguage()
+  const t = useTranslations()
   const { userRole } = useAuth()
   const [currentStep, setCurrentStep] = useState(0)
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null)

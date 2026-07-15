@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui-monday/Toast'
 import { createClient } from '@/lib/supabase'
 import { Button } from '@/shared/components/ui'
@@ -12,7 +12,7 @@ interface SecurityTabProps {
 
 export function SecurityTab({ userEmail }: SecurityTabProps) {
   const router = useRouter()
-  const { t } = useLanguage()
+  const t = useTranslations()
   const { showToast } = useToast()
 
   return (

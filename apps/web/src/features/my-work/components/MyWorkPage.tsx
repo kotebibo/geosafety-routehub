@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { ClipboardCheck, Loader2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import {
   useMyWorkItems,
   useGroupedMyWork,
@@ -21,6 +22,7 @@ const DATE_GROUP_ORDER: DateGroup[] = [
 ]
 
 export function MyWorkPage() {
+  const t = useTranslations()
   const { user, loading: authLoading } = useAuth()
   const { data: items, isLoading } = useMyWorkItems(authLoading ? '' : user?.id || '')
   const grouped = useGroupedMyWork(items)
@@ -47,13 +49,16 @@ export function MyWorkPage() {
             <ClipboardCheck className="w-5 h-5 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-text-primary">My Work</h1>
+            <h1 className="text-xl font-bold text-text-primary">{t('myWork.title')}</h1>
             <p className="text-sm text-text-secondary">
               {loading
-                ? 'Loading...'
+                ? t('myWork.loading')
                 : totalItems === 0
-                  ? 'No items assigned to you'
-                  : `${totalItems} item${totalItems !== 1 ? 's' : ''} assigned to you`}
+                  ? t('myWork.noItems')
+                  : t('myWork.itemsCount', {
+                      count: totalItems,
+                      plural: totalItems !== 1 ? 's' : '',
+                    })}
             </p>
           </div>
         </div>
@@ -71,10 +76,8 @@ export function MyWorkPage() {
             <div className="w-16 h-16 rounded-full bg-bg-secondary flex items-center justify-center mb-4">
               <ClipboardCheck className="w-8 h-8 text-text-tertiary" />
             </div>
-            <h3 className="text-lg font-medium text-text-primary mb-2">No work assigned</h3>
-            <p className="text-sm text-text-secondary max-w-md">
-              Items will appear here when you are assigned to them via a person column on any board.
-            </p>
+            <h3 className="text-lg font-medium text-text-primary mb-2">{t('myWork.emptyTitle')}</h3>
+            <p className="text-sm text-text-secondary max-w-md">{t('myWork.emptyDescription')}</p>
           </div>
         )}
 

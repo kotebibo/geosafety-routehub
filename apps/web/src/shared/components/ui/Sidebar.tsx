@@ -70,6 +70,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { NotificationBell } from '@/shared/components/notifications'
 import { useAnnouncements } from '@/hooks/useAnnouncements'
 import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { Tooltip } from '@/shared/components/ui/tooltip'
 
 interface SidebarProps {
@@ -272,7 +273,8 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
   const userId = user?.id || ''
 
   const { unreadCount: unreadNews } = useAnnouncements()
-  const { language, setLanguage, t } = useLanguage()
+  const { language, setLanguage } = useLanguage()
+  const t = useTranslations()
 
   const menuRef = React.useRef<HTMLDivElement>(null)
   const renameInputRef = React.useRef<HTMLInputElement>(null)
@@ -1481,7 +1483,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                       </Tooltip>
                     ))
                   ) : (
-                    <Tooltip content="Boards" side="right">
+                    <Tooltip content={t('nav.boards')} side="right">
                       <Link
                         href="/boards"
                         className={cn(
@@ -1504,7 +1506,9 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
         <div className="flex-shrink-0 border-t border-border-light p-2 space-y-1">
           {/* Language Toggle */}
           {(() => {
-            const langLabel = language === 'ka' ? 'English' : 'ქართული'
+            // Shows the currently active language, not the one you'd switch to —
+            // showing the target language read as "you're using English" while on Georgian.
+            const langLabel = language === 'ka' ? 'ქართული' : 'English'
             const langBtn = (
               <button
                 onClick={() => setLanguage(language === 'ka' ? 'en' : 'ka')}
@@ -1587,7 +1591,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                       if (e.key === 'Escape') setRenameMode(false)
                     }}
                     className="flex-1 px-2 py-1 text-sm bg-bg-primary text-text-primary border border-border-light rounded focus:outline-none focus:border-monday-primary"
-                    placeholder="Board name"
+                    placeholder={t('sidebar.boardNamePlaceholder')}
                   />
                   <button
                     onClick={handleRename}
@@ -1825,6 +1829,7 @@ function WorkspaceActionsMenu({
   setActionLoading,
   router,
 }: WorkspaceActionsMenuProps) {
+  const t = useTranslations()
   const updateMutation = useUpdateWorkspace(menuState.workspaceId)
   const deleteMutation = useDeleteWorkspace()
 
@@ -1891,7 +1896,7 @@ function WorkspaceActionsMenu({
                 if (e.key === 'Escape') onCancelRename()
               }}
               className="flex-1 px-2 py-1 text-sm bg-bg-primary text-text-primary border border-border-light rounded focus:outline-none focus:border-monday-primary"
-              placeholder="Workspace name"
+              placeholder={t('sidebar.workspaceNamePlaceholder')}
             />
             <button
               onClick={handleRename}

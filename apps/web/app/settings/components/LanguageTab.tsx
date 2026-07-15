@@ -1,7 +1,7 @@
 'use client'
 
 import { Check } from 'lucide-react'
-import { useLanguage } from '@/contexts/LanguageContext'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { SaveButton } from './SaveButton'
 
@@ -20,7 +20,7 @@ export function LanguageTab({
   isSaving,
   saveSuccess,
 }: LanguageTabProps) {
-  const { t } = useLanguage()
+  const t = useTranslations()
 
   return (
     <div className="bg-bg-primary rounded-lg border border-border-light p-6 space-y-6">
