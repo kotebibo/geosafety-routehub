@@ -39,6 +39,11 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return
 
+  // Skip non-http(s) schemes (chrome-extension://, etc.) — browser
+  // extensions inject requests through the page, and Cache.put throws
+  // on anything that isn't http(s)
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') return
+
   // Skip API routes, Supabase, Ably, and external tile servers — always go to network
   if (
     url.pathname.startsWith('/api/') ||
@@ -62,7 +67,10 @@ self.addEventListener('fetch', (event) => {
         return fetch(request).then((response) => {
           if (response.ok) {
             const clone = response.clone()
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+            caches
+              .open(CACHE_NAME)
+              .then((cache) => cache.put(request, clone))
+              .catch(() => {}) // cache quota/scheme errors must never surface
           }
           return response
         })
@@ -77,7 +85,10 @@ self.addEventListener('fetch', (event) => {
       .then((response) => {
         if (response.ok) {
           const clone = response.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+          caches
+            .open(CACHE_NAME)
+            .then((cache) => cache.put(request, clone))
+            .catch(() => {}) // cache quota/scheme errors must never surface
         }
         return response
       })
