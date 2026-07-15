@@ -142,8 +142,8 @@ export default function SetupPDPServicesPage() {
           <div
             className={`mt-4 p-4 rounded-lg ${
               message.includes('Error') || message.includes('Failed')
-                ? 'bg-red-50 text-red-700'
-                : 'bg-green-50 text-green-700'
+                ? 'bg-color-error/10 text-color-error'
+                : 'bg-color-success/10 text-color-success'
             }`}
           >
             {message}

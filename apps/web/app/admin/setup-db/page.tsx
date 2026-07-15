@@ -18,9 +18,9 @@ export default function SetupPDPDatabasePage() {
           </div>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <h2 className="font-semibold text-green-800 mb-2">✅ Migration File Created</h2>
-          <p className="text-sm text-green-700">
+        <div className="bg-color-success/10 border border-color-success/30 rounded-lg p-4">
+          <h2 className="font-semibold text-color-success mb-2">✅ Migration File Created</h2>
+          <p className="text-sm text-color-success">
             Run this SQL migration in your Supabase dashboard:
           </p>
           <code className="block mt-2 p-2 bg-bg-primary rounded text-xs">

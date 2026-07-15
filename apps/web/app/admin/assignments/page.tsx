@@ -26,7 +26,7 @@ export default function AssignmentsPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">დაფიქსირდა შეცდომა</p>
+          <p className="text-color-error mb-4">დაფიქსირდა შეცდომა</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover"

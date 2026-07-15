@@ -88,16 +88,16 @@ export function RoleEditor({
         </button>
 
         {/* System roles info */}
-        <div className="mt-8 p-4 bg-amber-50 border border-amber-200 rounded-lg text-left">
+        <div className="mt-8 p-4 bg-color-warning/10 border border-color-warning/30 rounded-lg text-left">
           <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-color-warning flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-medium text-amber-800">
+              <h4 className="font-medium text-color-warning">
                 {
                   '\u10E1\u10D8\u10E1\u10E2\u10D4\u10DB\u10E3\u10E0\u10D8 \u10E0\u10DD\u10DA\u10D4\u10D1\u10D8'
                 }
               </h4>
-              <p className="text-sm text-amber-700 mt-1">
+              <p className="text-sm text-color-warning mt-1">
                 <strong>{'\u10D0\u10D3\u10DB\u10D8\u10DC\u10D8'}</strong>,{' '}
                 <strong>{'\u10D3\u10D8\u10E1\u10DE\u10D4\u10E2\u10E9\u10D4\u10E0\u10D8'}</strong>{' '}
                 {'\u10D3\u10D0'} <strong>{'\u10DD\u10E4\u10D8\u10EA\u10D4\u10E0\u10D8'}</strong>{' '}

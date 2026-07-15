@@ -147,8 +147,8 @@ export default function AdminCheckinsPage() {
           </div>
           <div className="bg-bg-primary rounded-xl border border-border-light p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                <Timer className="w-5 h-5 text-orange-600" />
+              <div className="w-10 h-10 rounded-lg bg-color-warning/10 flex items-center justify-center">
+                <Timer className="w-5 h-5 text-color-warning" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-text-primary">{activeCount}</p>
@@ -158,8 +158,8 @@ export default function AdminCheckinsPage() {
           </div>
           <div className="bg-bg-primary rounded-xl border border-border-light p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-green-600" />
+              <div className="w-10 h-10 rounded-lg bg-color-success/10 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-color-success" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-text-primary">
@@ -327,7 +327,7 @@ export default function AdminCheckinsPage() {
                             </div>
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 rounded-full">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-color-warning/10 text-color-warning rounded-full">
                             <Timer className="w-3 h-3" />
                             აქტიური
                           </span>
@@ -338,10 +338,10 @@ export default function AdminCheckinsPage() {
                           <span
                             className={`text-sm font-medium ${
                               checkin.duration_minutes < 60
-                                ? 'text-green-600'
+                                ? 'text-color-success'
                                 : checkin.duration_minutes < 180
-                                  ? 'text-amber-600'
-                                  : 'text-red-600'
+                                  ? 'text-color-warning'
+                                  : 'text-color-error'
                             }`}
                           >
                             {formatDuration(checkin.duration_minutes)}
@@ -388,10 +388,10 @@ export default function AdminCheckinsPage() {
                           <span
                             className={`text-sm font-medium ${
                               checkin.distance_from_location < 100
-                                ? 'text-green-600'
+                                ? 'text-color-success'
                                 : checkin.distance_from_location < 500
-                                  ? 'text-amber-600'
-                                  : 'text-red-600'
+                                  ? 'text-color-warning'
+                                  : 'text-color-error'
                             }`}
                           >
                             {checkin.distance_from_location}მ
@@ -402,7 +402,7 @@ export default function AdminCheckinsPage() {
                       </td>
                       <td className="px-4 py-3">
                         {checkin.location_updated ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium bg-color-success/10 text-color-success rounded-full">
                             <Navigation className="w-3 h-3" />
                             GPS განახლდა
                           </span>
@@ -426,9 +426,9 @@ export default function AdminCheckinsPage() {
                             type="button"
                             onClick={() => handleDelete(checkin.id)}
                             title="ჩეკ-ინის წაშლა"
-                            className="p-1.5 rounded-md hover:bg-red-500/10 transition-colors"
+                            className="p-1.5 rounded-md hover:bg-color-error/10 transition-colors"
                           >
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                            <Trash2 className="w-4 h-4 text-color-error" />
                           </button>
                         </td>
                       )}

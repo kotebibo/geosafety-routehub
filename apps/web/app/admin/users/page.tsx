@@ -317,7 +317,7 @@ export default function UserManagementPage() {
             </div>
 
             {createError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800">
+              <div className="mb-4 p-3 bg-color-error/10 border border-color-error/30 rounded-lg text-sm text-color-error">
                 {createError}
               </div>
             )}
@@ -459,8 +459,8 @@ export default function UserManagementPage() {
           </div>
           <div className="bg-bg-primary rounded-lg border border-border-light p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <UserCheck className="w-5 h-5 text-green-600" />
+              <div className="p-2 bg-color-success/10 rounded-lg">
+                <UserCheck className="w-5 h-5 text-color-success" />
               </div>
               <div>
                 <p className="text-sm text-text-secondary">Active</p>
@@ -470,8 +470,8 @@ export default function UserManagementPage() {
           </div>
           <div className="bg-bg-primary rounded-lg border border-border-light p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <UserX className="w-5 h-5 text-red-600" />
+              <div className="p-2 bg-color-error/10 rounded-lg">
+                <UserX className="w-5 h-5 text-color-error" />
               </div>
               <div>
                 <p className="text-sm text-text-secondary">Inactive</p>
@@ -481,8 +481,8 @@ export default function UserManagementPage() {
           </div>
           <div className="bg-bg-primary rounded-lg border border-border-light p-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Shield className="w-5 h-5 text-purple-600" />
+              <div className="p-2 bg-purple/10 rounded-lg">
+                <Shield className="w-5 h-5 text-purple" />
               </div>
               <div>
                 <p className="text-sm text-text-secondary">Roles</p>
@@ -655,7 +655,9 @@ export default function UserManagementPage() {
                       <span
                         className={cn(
                           'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium',
-                          user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                          user.is_active
+                            ? 'bg-color-success/10 text-color-success'
+                            : 'bg-color-error/10 text-color-error'
                         )}
                       >
                         {user.is_active ? 'Active' : 'Inactive'}
@@ -673,7 +675,7 @@ export default function UserManagementPage() {
                           <>
                             <button
                               onClick={handleSaveUser}
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded"
+                              className="p-1.5 text-color-success hover:bg-color-success/10 rounded"
                             >
                               <Check className="w-4 h-4" />
                             </button>
@@ -698,8 +700,8 @@ export default function UserManagementPage() {
                               className={cn(
                                 'p-1.5 rounded',
                                 user.is_active
-                                  ? 'text-text-tertiary hover:text-red-600 hover:bg-red-50'
-                                  : 'text-text-tertiary hover:text-green-600 hover:bg-green-50'
+                                  ? 'text-text-tertiary hover:text-color-error hover:bg-color-error/10'
+                                  : 'text-text-tertiary hover:text-color-success hover:bg-color-success/10'
                               )}
                               title={user.is_active ? 'Deactivate user' : 'Activate user'}
                             >

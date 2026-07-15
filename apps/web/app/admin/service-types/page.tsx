@@ -325,11 +325,11 @@ export default function ServiceTypesPage() {
                 <td className="px-6 py-4 text-sm">{st.default_frequency_days} დღე</td>
                 <td className="px-6 py-4">
                   {st.is_active ? (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-color-success/10 text-color-success">
                       აქტიური
                     </span>
                   ) : (
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-bg-tertiary text-text-secondary">
                       არააქტიური
                     </span>
                   )}
@@ -344,7 +344,7 @@ export default function ServiceTypesPage() {
                     </button>
                     <button
                       onClick={() => handleDelete(st.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-color-error hover:opacity-80"
                     >
                       <Trash2 size={18} />
                     </button>

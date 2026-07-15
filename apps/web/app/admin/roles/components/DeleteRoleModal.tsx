@@ -25,8 +25,8 @@ export function DeleteRoleModal({
       <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
       <div className="relative bg-bg-primary rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-2 bg-red-100 rounded-full">
-            <Trash2 className="w-6 h-6 text-red-600" />
+          <div className="p-2 bg-color-error/10 rounded-full">
+            <Trash2 className="w-6 h-6 text-color-error" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-text-primary">
@@ -50,8 +50,8 @@ export function DeleteRoleModal({
           </p>
 
           {userCount && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-3">
-              <div className="flex items-center gap-2 text-amber-800">
+            <div className="p-3 bg-color-warning/10 border border-color-warning/30 rounded-lg mb-3">
+              <div className="flex items-center gap-2 text-color-warning">
                 <AlertTriangle className="w-4 h-4" />
                 <span className="text-sm font-medium">
                   {userCount}{' '}

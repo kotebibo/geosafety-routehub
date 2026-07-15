@@ -44,7 +44,7 @@ export function PermissionsGrid({
           {'\u10D0\u10E0\u10E9\u10D4\u10E3\u10DA\u10D8'})
         </label>
         {isAdminRole && (
-          <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+          <span className="text-xs text-color-warning bg-color-warning/10 px-2 py-1 rounded">
             {
               '\u10D0\u10D3\u10DB\u10D8\u10DC\u10E1 \u10D0\u10E5\u10D5\u10E1 \u10E7\u10D5\u10D4\u10DA\u10D0 \u10E3\u10E4\u10DA\u10D4\u10D1\u10D0'
             }

@@ -108,7 +108,7 @@ export function RolesList({
                         e.stopPropagation()
                         onDeleteRole(role)
                       }}
-                      className="p-1.5 text-text-tertiary hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      className="p-1.5 text-text-tertiary hover:text-color-error hover:bg-color-error/10 rounded transition-colors"
                       title={'\u10EC\u10D0\u10E8\u10DA\u10D0'}
                     >
                       <Trash2 className="w-4 h-4" />
