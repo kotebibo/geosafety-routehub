@@ -6,6 +6,7 @@ import { X, ArrowLeft, ArrowRight, Loader2, CheckCircle, FileText } from 'lucide
 import { Button } from '@/shared/components/ui'
 import { useDocumentTemplates } from '../hooks/useDocumentTemplates'
 import { useGenerateDocument } from '../hooks/useGenerateDocument'
+import { useBoardColumns } from '@/features/boards/hooks/useBoardColumns'
 import { TemplateSelector } from './TemplateSelector'
 import { EmailStep } from './EmailStep'
 import { FilePreviewModal } from '@/features/boards/components/BoardTable/cells/FilePreviewModal'
@@ -36,6 +37,7 @@ export function GenerateDocumentModal({
 
   const { templates, loading: templatesLoading } = useDocumentTemplates(boardId)
   const { generate, send, reset, generating, sending, result, error } = useGenerateDocument()
+  const { data: boardColumns = [] } = useBoardColumns('custom', boardId)
 
   const currentItem = items[currentItemIndex]
 
@@ -253,6 +255,8 @@ export function GenerateDocumentModal({
               sending={sending}
               onSend={handleSendEmail}
               onSkip={handleSkipEmail}
+              columns={boardColumns}
+              item={currentItem}
             />
           )}
 
