@@ -26,13 +26,7 @@ import {
 import { formatDuration } from '@/lib/geo-utils'
 import { formatDate, formatTime } from '@/shared/utils/formatDate'
 import { useUsers } from '@/hooks/useUsers'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/components/ui/select'
+import { MultiUserPicker } from '@/features/boards/components'
 import type { LocationCheckin } from '@/types/checkin'
 
 export default function AdminCheckinsPage() {
@@ -47,10 +41,11 @@ export default function AdminCheckinsPage() {
     fromDate: '',
     toDate: '',
     companyId: '',
-    inspectorId: '',
+    inspectorIds: [] as string[],
   })
   const [search, setSearch] = useState('')
   const [showFilters, setShowFilters] = useState(false)
+  const [officerPickerOpen, setOfficerPickerOpen] = useState(false)
   const { users } = useUsers()
 
   const isAllowed = userRole?.role === 'admin' || userRole?.role === 'dispatcher'
@@ -70,7 +65,7 @@ export default function AdminCheckinsPage() {
       if (filters.fromDate) params.set('from_date', filters.fromDate)
       if (filters.toDate) params.set('to_date', filters.toDate)
       if (filters.companyId) params.set('company_id', filters.companyId)
-      if (filters.inspectorId) params.set('inspector_id', filters.inspectorId)
+      if (filters.inspectorIds.length) params.set('inspector_id', filters.inspectorIds.join(','))
 
       const res = await fetch(`/api/checkins?${params.toString()}`)
       if (res.ok) {
@@ -250,28 +245,43 @@ export default function AdminCheckinsPage() {
                   className="w-full px-3 py-2 text-sm border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary/30"
                 />
               </div>
-              <div>
+              <div className="relative">
                 <label className="block text-xs font-medium text-text-secondary mb-1">
                   {t('checkin.page.officer')}
                 </label>
-                <Select
-                  value={filters.inspectorId || 'all'}
-                  onValueChange={v =>
-                    setFilters(f => ({ ...f, inspectorId: v === 'all' ? '' : v }))
-                  }
+                <button
+                  type="button"
+                  onClick={() => setOfficerPickerOpen(o => !o)}
+                  className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm text-left border border-border-light rounded-lg bg-bg-primary hover:border-border-medium focus:outline-none focus:ring-2 focus:ring-monday-primary/30"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('checkin.page.allOfficers')}</SelectItem>
-                    {users.map(u => (
-                      <SelectItem key={u.id} value={u.id}>
-                        {u.full_name || u.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <span
+                    className={
+                      filters.inspectorIds.length
+                        ? 'text-text-primary truncate'
+                        : 'text-text-tertiary'
+                    }
+                  >
+                    {filters.inspectorIds.length === 0
+                      ? t('checkin.page.allOfficers')
+                      : filters.inspectorIds.length === 1
+                        ? users.find(u => u.id === filters.inspectorIds[0])?.full_name ||
+                          t('checkin.page.officersSelected', { count: 1 })
+                        : t('checkin.page.officersSelected', {
+                            count: filters.inspectorIds.length,
+                          })}
+                  </span>
+                  <Search className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+                </button>
+                {officerPickerOpen && (
+                  <div className="absolute top-full left-0 mt-1 z-50">
+                    <MultiUserPicker
+                      value={filters.inspectorIds}
+                      onChange={ids => setFilters(f => ({ ...f, inspectorIds: ids }))}
+                      onClose={() => setOfficerPickerOpen(false)}
+                      placeholder={t('checkin.page.searchOfficers')}
+                    />
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-medium text-text-secondary mb-1">
@@ -297,7 +307,7 @@ export default function AdminCheckinsPage() {
                     fromDate: '',
                     toDate: '',
                     companyId: '',
-                    inspectorId: '',
+                    inspectorIds: [],
                   })
                   setSearch('')
                 }}

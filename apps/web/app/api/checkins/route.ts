@@ -447,13 +447,15 @@ export async function GET(request: NextRequest) {
     }
 
     const inspectorId = searchParams.get('inspector_id')
+    const inspectorIdList = inspectorId ? inspectorId.split(',').filter(Boolean) : []
     const companyId = searchParams.get('company_id')
     const fromDate = searchParams.get('from_date')
     const toDate = searchParams.get('to_date')
     const limit = searchParams.get('limit')
     const activeOnly = searchParams.get('active')
 
-    if (inspectorId) query = query.eq('inspector_id', inspectorId)
+    if (inspectorIdList.length === 1) query = query.eq('inspector_id', inspectorIdList[0])
+    else if (inspectorIdList.length > 1) query = query.in('inspector_id', inspectorIdList)
     if (companyId) query = query.eq('company_id', companyId)
     if (boardItemId) query = query.eq('board_item_id', boardItemId)
     if (fromDate) query = query.gte('created_at', fromDate)
