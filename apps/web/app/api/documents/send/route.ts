@@ -112,33 +112,19 @@ export async function POST(request: NextRequest) {
       CONTENT_TYPES[ext] ||
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 
-    // Build email HTML
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://routehub.vercel.app'
-    const messageHtml = message
-      ? `<p style="color:#374151;line-height:1.6;white-space:pre-wrap;">${message}</p>`
-      : ''
+    // Plain, personal-looking email — documents go out from a real person
+    // (DOCUMENT_EMAIL_FROM), so no app branding, banners or footers.
+    const bodyText = message?.trim() || 'დოკუმენტი თანდართულია ამ წერილზე.'
+    const escapeHtml = (s: string) =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
     const html = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"></head>
-<body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f3f4f6;">
-  <div style="max-width:600px;margin:0 auto;padding:24px;">
-    <div style="background:#6161FF;color:white;padding:24px;border-radius:12px 12px 0 0;">
-      <h1 style="margin:0;font-size:20px;">RouteHub</h1>
-    </div>
-    <div style="background:white;padding:24px;border:1px solid #e5e7eb;border-top:none;">
-      <h2 style="margin:0 0 16px;color:#111;">${subject}</h2>
-      ${messageHtml}
-      <p style="color:#6b7280;font-size:14px;margin-top:16px;">
-        დოკუმენტი თანდართულია ამ წერილზე.
-      </p>
-    </div>
-    <div style="padding:16px;text-align:center;font-size:12px;color:#9ca3af;">
-      <p>RouteHub</p>
-    </div>
-  </div>
+<body>
+  <div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#222222;line-height:1.6;white-space:pre-wrap;">${escapeHtml(bodyText)}</div>
 </body></html>`
 
-    const text = [subject, '', message || '', '', 'დოკუმენტი თანდართულია ამ წერილზე.'].join('\n')
+    const text = bodyText
 
     // Send email with attachment via Resend
     if (!process.env.RESEND_API_KEY) {
