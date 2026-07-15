@@ -706,8 +706,17 @@ export function VirtualizedBoardTable({
         return
       }
 
+      // Ignore foreign drags (text/files dropped from outside the board)
       const sourceItem = data.find(item => item.id === sourceItemId)
-      const sourceGroupId = sourceItem ? getItemGroupId(sourceItem) : null
+      if (!sourceItem) {
+        setDraggingItemId(null)
+        setDragOverGroupId(null)
+        setDragOverItemId(null)
+        setDragOverPosition(null)
+        lastDragStateRef.current = { itemId: null, position: null }
+        return
+      }
+      const sourceGroupId = getItemGroupId(sourceItem)
 
       if (sourceGroupId === targetGroupId && onItemReorder && dragOverPosition) {
         onItemReorder(sourceItemId, targetItemId, dragOverPosition)
@@ -737,7 +746,8 @@ export function VirtualizedBoardTable({
     (e: React.DragEvent, groupId: string) => {
       e.preventDefault()
       const itemId = e.dataTransfer.getData('text/plain')
-      if (itemId && onItemMove) {
+      // Only move ids that belong to this board (ignore foreign drags)
+      if (itemId && onItemMove && data.some(item => item.id === itemId)) {
         onItemMove(itemId, groupId)
       }
       setDraggingItemId(null)
@@ -745,7 +755,7 @@ export function VirtualizedBoardTable({
       setDragOverItemId(null)
       setDragOverPosition(null)
     },
-    [onItemMove]
+    [onItemMove, data]
   )
 
   // Render a virtual row based on its type
@@ -1292,13 +1302,19 @@ export function VirtualizedBoardTable({
                     style={stickyStyle(stickyOffsets.checkbox)}
                     onClick={e => e.stopPropagation()}
                   >
-                    <div className="flex items-center justify-center h-full relative">
+                    <div
+                      className={cn(
+                        'flex items-center justify-center h-full relative',
+                        canDrag && 'pl-2'
+                      )}
+                    >
                       {canDrag && (
                         <div
                           data-drag-handle
-                          className="absolute left-0.5 opacity-0 group-hover/row:opacity-100 cursor-grab active:cursor-grabbing"
+                          title="გადაათრიეთ გადასატანად"
+                          className="absolute left-0 top-0 bottom-0 w-4 flex items-center justify-center opacity-0 group-hover/row:opacity-100 hover:bg-bg-hover cursor-grab active:cursor-grabbing"
                         >
-                          <GripVertical className="w-3 h-3 text-text-tertiary" />
+                          <GripVertical className="w-3.5 h-3.5 text-text-tertiary" />
                         </div>
                       )}
                       <input
