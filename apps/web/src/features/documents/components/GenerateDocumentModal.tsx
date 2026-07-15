@@ -77,25 +77,48 @@ export function GenerateDocumentModal({
     document.body.removeChild(a)
   }, [result])
 
+  // After finishing one item (sent or skipped), move on to the next
+  // selected item and regenerate — or finish when all are done.
+  const advanceOrComplete = useCallback(async () => {
+    const nextIndex = currentItemIndex + 1
+    if (nextIndex < items.length && selectedTemplateId) {
+      setCurrentItemIndex(nextIndex)
+      reset()
+      setStep('generating')
+      try {
+        await generate({
+          templateId: selectedTemplateId,
+          itemId: items[nextIndex].id,
+          boardId,
+        })
+        setStep('preview')
+      } catch {
+        setStep('template')
+      }
+    } else {
+      setStep('complete')
+    }
+  }, [currentItemIndex, items, selectedTemplateId, boardId, generate, reset])
+
   const handleSendEmail = useCallback(
     async (to: string[], subject: string, message?: string) => {
       if (!result?.documentId) return
       try {
         await send({ documentId: result.documentId, to, subject, message })
-        setStep('complete')
         onSuccess?.()
+        await advanceOrComplete()
       } catch {
         // error state is handled by the hook
       }
     },
-    [result, send, onSuccess]
+    [result, send, onSuccess, advanceOrComplete]
   )
 
   const handleSkipEmail = useCallback(() => {
     handleDownload()
-    setStep('complete')
     onSuccess?.()
-  }, [handleDownload, onSuccess])
+    void advanceOrComplete()
+  }, [handleDownload, onSuccess, advanceOrComplete])
 
   if (!isOpen) return null
 
@@ -265,9 +288,13 @@ export function GenerateDocumentModal({
               <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-4">
                 <CheckCircle className="w-8 h-8 text-green-500" />
               </div>
-              <h3 className="text-lg font-semibold text-text-primary mb-1">Document Generated</h3>
+              <h3 className="text-lg font-semibold text-text-primary mb-1">
+                {items.length > 1 ? `${items.length} Documents Processed` : 'Document Generated'}
+              </h3>
               <p className="text-sm text-text-secondary text-center">
-                Your document has been saved and is ready for download.
+                {items.length > 1
+                  ? 'All selected items have been processed.'
+                  : 'Your document has been saved and is ready for download.'}
               </p>
               {result && (
                 <Button variant="secondary" size="sm" className="mt-4" onClick={handleDownload}>
