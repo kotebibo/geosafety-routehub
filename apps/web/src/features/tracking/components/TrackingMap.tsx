@@ -11,7 +11,12 @@ interface TrackingMapProps {
   locationTrail?: { lat: number; lng: number }[]
 }
 
-export function TrackingMap({ inspectors, selectedInspectorId, onSelectInspector, locationTrail }: TrackingMapProps) {
+export function TrackingMap({
+  inspectors,
+  selectedInspectorId,
+  onSelectInspector,
+  locationTrail,
+}: TrackingMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<Map<string, any>>(new Map())
@@ -74,7 +79,9 @@ export function TrackingMap({ inspectors, selectedInspectorId, onSelectInspector
       inspectors.forEach(inspector => {
         const existing = markersRef.current.get(inspector.id)
 
-        const minutesAgo = Math.floor((Date.now() - new Date(inspector.last_location_update).getTime()) / 60000)
+        const minutesAgo = Math.floor(
+          (Date.now() - new Date(inspector.last_location_update).getTime()) / 60000
+        )
         const color = minutesAgo <= 2 ? '#00C875' : minutesAgo <= 10 ? '#FDAB3D' : '#C3C6D4'
         const isSelected = inspector.id === selectedInspectorId
 
@@ -156,7 +163,5 @@ export function TrackingMap({ inspectors, selectedInspectorId, onSelectInspector
     drawTrail()
   }, [locationTrail])
 
-  return (
-    <div ref={mapRef} className="w-full h-full min-h-[400px]" />
-  )
+  return <div ref={mapRef} className="relative isolate w-full h-full min-h-[400px]" />
 }

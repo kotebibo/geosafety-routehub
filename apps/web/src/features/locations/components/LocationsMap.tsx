@@ -281,7 +281,7 @@ export function LocationsMap({ companies }: LocationsMapProps) {
   }, [companies, isMapReady])
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div className="isolate" style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div ref={mapContainer} style={{ width: '100%', height: '100%' }} />
 
       <style>{`

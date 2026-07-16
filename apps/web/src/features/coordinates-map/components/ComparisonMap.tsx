@@ -187,7 +187,7 @@ export function ComparisonMap({ items }: ComparisonMapProps) {
   }, [filteredItems, isMapReady, showLines])
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative isolate w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
 
       {/* Controls overlay */}

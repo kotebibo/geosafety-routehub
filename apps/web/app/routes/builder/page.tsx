@@ -302,7 +302,7 @@ export default function RouteBuilderPage() {
         </div>
 
         {/* Center - Map */}
-        <div className="flex-1 relative h-full">
+        <div className="flex-1 relative isolate h-full">
           <RouteMap
             key={`map-${mapKey}`}
             companies={selectedCompanies as any}

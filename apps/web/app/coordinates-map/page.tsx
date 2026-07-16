@@ -125,7 +125,7 @@ export default function CoordinatesMapPage() {
         </div>
 
         {/* Map area */}
-        <div className="flex-1 relative">
+        <div className="flex-1 relative isolate">
           {activeView === 'coordinates' && (
             <>
               <CoordinatesMap items={items} inspectors={inspectors} />

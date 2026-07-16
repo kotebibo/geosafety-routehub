@@ -115,7 +115,7 @@ export function MapView({ selectedRoute, onMarkerClick }: MapViewProps) {
   }
 
   return (
-    <div className="relative flex-1">
+    <div className="relative isolate flex-1">
       <div ref={mapContainer} className="absolute inset-0" />
     </div>
   )
