@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { cn } from '@/lib/utils'
 import { File, FileText, Download, Eye, FolderOpen, Grid3X3, List, Search } from 'lucide-react'
@@ -16,6 +17,7 @@ interface FilesTabProps {
 }
 
 export function FilesTab({ loading, aggregatedFiles, onOpenPreview }: FilesTabProps) {
+  const t = useTranslations()
   const [filesViewMode, setFilesViewMode] = useState<'grid' | 'list'>('grid')
   const [fileSearchQuery, setFileSearchQuery] = useState('')
 
@@ -47,8 +49,12 @@ export function FilesTab({ loading, aggregatedFiles, onOpenPreview }: FilesTabPr
         <div className="w-16 h-16 rounded-full bg-border-light flex items-center justify-center mb-3">
           <FolderOpen className="w-8 h-8 text-border-medium" />
         </div>
-        <span className="text-base font-medium text-text-primary mb-1">ფაილები არ არის</span>
-        <span className="text-sm text-text-secondary">ამ ჩანაწერს ფაილები არ აქვს</span>
+        <span className="text-base font-medium text-text-primary mb-1">
+          {t('boards.updates.files.emptyTitle')}
+        </span>
+        <span className="text-sm text-text-secondary">
+          {t('boards.updates.files.emptyDescription')}
+        </span>
       </div>
     )
   }
@@ -63,7 +69,7 @@ export function FilesTab({ loading, aggregatedFiles, onOpenPreview }: FilesTabPr
             type="text"
             value={fileSearchQuery}
             onChange={e => setFileSearchQuery(e.target.value)}
-            placeholder="ძიება..."
+            placeholder={t('boards.updates.files.searchPlaceholder')}
             className="w-full pl-8 pr-3 py-1.5 text-xs bg-bg-secondary border border-border-light rounded-md text-text-primary placeholder:text-text-tertiary focus:outline-none focus:border-monday-primary"
           />
         </div>
@@ -95,7 +101,9 @@ export function FilesTab({ loading, aggregatedFiles, onOpenPreview }: FilesTabPr
 
       <div className="flex-1 overflow-y-auto p-4">
         {filteredFiles.length === 0 ? (
-          <div className="text-center py-8 text-sm text-text-tertiary">ფაილი ვერ მოიძებნა</div>
+          <div className="text-center py-8 text-sm text-text-tertiary">
+            {t('boards.updates.files.noFilesFound')}
+          </div>
         ) : filesViewMode === 'grid' ? (
           /* Grid gallery view */
           <div className="space-y-4">

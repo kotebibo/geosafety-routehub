@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 
 export default function RouteBuilderError({
   error,
@@ -9,6 +10,8 @@ export default function RouteBuilderError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const t = useTranslations()
+
   useEffect(() => {
     console.error('Route builder error:', error)
   }, [error])
@@ -18,16 +21,14 @@ export default function RouteBuilderError({
       <div className="text-center max-w-md">
         <div className="text-5xl mb-4">🗺️</div>
         <h2 className="text-xl font-semibold text-text-primary mb-2">
-          მარშრუტის შემქმნელის ჩატვირთვა ვერ მოხერხდა
+          {t('errorPage.routeBuilderTitle')}
         </h2>
-        <p className="text-text-secondary mb-6">
-          მოხდა შეცდომა მარშრუტის შემქმნელის ჩატვირთვისას. გთხოვთ სცადოთ თავიდან.
-        </p>
+        <p className="text-text-secondary mb-6">{t('errorPage.routeBuilderDescription')}</p>
         <button
           onClick={reset}
           className="px-6 py-2.5 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
         >
-          თავიდან ცდა
+          {t('errorBoundary.retry')}
         </button>
       </div>
     </div>

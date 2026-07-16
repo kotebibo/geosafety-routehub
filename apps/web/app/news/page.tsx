@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAnnouncements } from '@/hooks/useAnnouncements'
 import { useToast } from '@/components/ui-monday/Toast'
@@ -15,6 +16,7 @@ import { Megaphone, Plus, AlertTriangle } from 'lucide-react'
 import type { Announcement } from '@/types/announcement'
 
 export default function NewsPage() {
+  const t = useTranslations()
   const { isAdmin, loading: authLoading } = useAuth()
   const { announcements, isLoading, markAsRead, refetch } = useAnnouncements()
   const { showToast } = useToast()
@@ -34,11 +36,11 @@ export default function NewsPage() {
         const err = await res.json()
         throw new Error(err.error || 'Delete failed')
       }
-      showToast('განცხადება წაშლილია', 'success')
+      showToast(t('news.toast.deleteSuccess'), 'success')
       setDeleteTarget(null)
       refetch()
     } catch (error: any) {
-      showToast(error.message || 'შეცდომა წაშლისას', 'error')
+      showToast(error.message || t('news.toast.deleteError'), 'error')
     } finally {
       setDeleting(false)
     }
@@ -84,12 +86,12 @@ export default function NewsPage() {
   return (
     <div className="min-h-screen bg-bg-secondary">
       <PageHeader
-        title="სიახლეები და განცხადებები"
-        description="კომპანიის მნიშვნელოვანი სიახლეები და შეტყობინებები"
+        title={t('news.pageTitle')}
+        description={t('news.pageDescription')}
         action={
           isAdmin
             ? {
-                label: 'ახალი განცხადება',
+                label: t('news.newAnnouncement'),
                 onClick: () => setShowCreateModal(true),
                 icon: <Plus className="w-5 h-5" />,
               }
@@ -103,11 +105,11 @@ export default function NewsPage() {
             <div className="w-16 h-16 rounded-2xl bg-bg-tertiary flex items-center justify-center mx-auto mb-4">
               <Megaphone className="w-8 h-8 text-text-tertiary" />
             </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-1">განცხადებები არ არის</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-1">
+              {t('news.empty.title')}
+            </h3>
             <p className="text-sm text-text-secondary max-w-sm mx-auto">
-              {isAdmin
-                ? 'შექმენით პირველი განცხადება ზემოთ "ახალი განცხადება" ღილაკით'
-                : 'ახალი განცხადებები და სიახლეები გამოჩნდება აქ'}
+              {isAdmin ? t('news.empty.adminHint') : t('news.empty.userHint')}
             </p>
           </div>
         ) : (
@@ -155,8 +157,10 @@ export default function NewsPage() {
                   <AlertTriangle className="w-5 h-5 text-red-600" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-text-primary">განცხადების წაშლა</h3>
-                  <p className="text-sm text-text-secondary">ეს მოქმედება შეუქცევადია</p>
+                  <h3 className="text-base font-semibold text-text-primary">
+                    {t('news.deleteModal.title')}
+                  </h3>
+                  <p className="text-sm text-text-secondary">{t('news.deleteModal.warning')}</p>
                 </div>
               </div>
               <div className="flex justify-end gap-3">
@@ -165,14 +169,14 @@ export default function NewsPage() {
                   disabled={deleting}
                   className="px-4 py-2 text-sm text-text-secondary hover:bg-bg-tertiary rounded-lg transition-colors"
                 >
-                  გაუქმება
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={handleDelete}
                   disabled={deleting}
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {deleting ? 'იშლება...' : 'წაშლა'}
+                  {deleting ? t('news.deleteModal.deleting') : t('common.delete')}
                 </button>
               </div>
             </div>

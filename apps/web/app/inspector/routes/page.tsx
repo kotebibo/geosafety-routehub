@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
@@ -20,6 +21,7 @@ interface Route {
 export default function InspectorRoutesPage() {
   const { user, userRole, loading: authLoading } = useAuth()
   const router = useRouter()
+  const t = useTranslations()
   const [routes, setRoutes] = useState<Route[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -49,7 +51,7 @@ export default function InspectorRoutesPage() {
   }
 
   if (authLoading || loading) {
-    return <LoadingSpinner message="მარშრუტების ჩატვირთვა..." />
+    return <LoadingSpinner message={t('inspectorRoutes.loading')} />
   }
 
   const plannedRoutes = routes.filter(r => r.status === 'planned')
@@ -58,16 +60,34 @@ export default function InspectorRoutesPage() {
 
   return (
     <div className="min-h-screen bg-bg-secondary">
-      <PageHeader title="ჩემი მარშრუტები" description="თქვენზე დანიშნული მარშრუტები" />
+      <PageHeader
+        title={t('inspectorRoutes.title')}
+        description={t('inspectorRoutes.description')}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <StatCard label="სულ მარშრუტები" value={routes.length} icon={RouteIcon} color="blue" />
-          <StatCard label="დაგეგმილი" value={plannedRoutes.length} icon={Calendar} color="purple" />
-          <StatCard label="მიმდინარე" value={inProgressRoutes.length} icon={Clock} color="amber" />
           <StatCard
-            label="დასრულებული"
+            label={t('inspectorRoutes.totalRoutes')}
+            value={routes.length}
+            icon={RouteIcon}
+            color="blue"
+          />
+          <StatCard
+            label={t('inspectorRoutes.planned')}
+            value={plannedRoutes.length}
+            icon={Calendar}
+            color="purple"
+          />
+          <StatCard
+            label={t('inspectorRoutes.inProgress')}
+            value={inProgressRoutes.length}
+            icon={Clock}
+            color="amber"
+          />
+          <StatCard
+            label={t('inspectorRoutes.completed')}
             value={completedRoutes.length}
             icon={MapPin}
             color="green"
@@ -78,8 +98,8 @@ export default function InspectorRoutesPage() {
         {routes.length === 0 ? (
           <EmptyState
             icon={<RouteIcon className="w-16 h-16" />}
-            title="მარშრუტები არ არის"
-            description="თქვენზე ჯერ არ არის დანიშნული მარშრუტები"
+            title={t('inspectorRoutes.emptyTitle')}
+            description={t('inspectorRoutes.emptyDescription')}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -94,6 +114,7 @@ export default function InspectorRoutesPage() {
 }
 
 function RouteCard({ route }: { route: Route }) {
+  const t = useTranslations()
   const statusColors = {
     planned: 'bg-blue-100 text-blue-800',
     in_progress: 'bg-amber-100 text-amber-800',
@@ -102,10 +123,10 @@ function RouteCard({ route }: { route: Route }) {
   }
 
   const statusLabels = {
-    planned: 'დაგეგმილი',
-    in_progress: 'მიმდინარე',
-    completed: 'დასრულებული',
-    cancelled: 'გაუქმებული',
+    planned: t('inspectorRoutes.status.planned'),
+    in_progress: t('inspectorRoutes.status.inProgress'),
+    completed: t('inspectorRoutes.status.completed'),
+    cancelled: t('inspectorRoutes.status.cancelled'),
   }
 
   return (
@@ -132,17 +153,21 @@ function RouteCard({ route }: { route: Route }) {
 
         <div className="flex items-center gap-2 text-sm text-text-secondary">
           <MapPin className="w-4 h-4" />
-          <span>{route.stops?.length || 0} გაჩერება</span>
+          <span>
+            {route.stops?.length || 0} {t('inspectorRoutes.stops')}
+          </span>
         </div>
 
         <div className="flex items-center gap-2 text-sm text-text-secondary">
           <RouteIcon className="w-4 h-4" />
-          <span>{route.total_distance_km?.toFixed(1) || '0.0'} კმ</span>
+          <span>
+            {route.total_distance_km?.toFixed(1) || '0.0'} {t('inspectorRoutes.km')}
+          </span>
         </div>
       </div>
 
       <button className="mt-4 w-full px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors">
-        ნახვა
+        {t('inspectorRoutes.view')}
       </button>
     </div>
   )

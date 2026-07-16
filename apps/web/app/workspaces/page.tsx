@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
@@ -39,6 +40,7 @@ const WORKSPACE_COLORS: Record<string, string> = {
 }
 
 export default function WorkspacesPage() {
+  const t = useTranslations()
   const router = useRouter()
   const { user, userRole, loading: authLoading } = useAuth()
   const userId = user?.id ?? null
@@ -104,7 +106,7 @@ export default function WorkspacesPage() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">Loading workspaces...</span>
+          <span className="text-text-secondary">{t('workspaces.list.loading')}</span>
         </div>
       </div>
     )
@@ -116,13 +118,15 @@ export default function WorkspacesPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-h1 font-bold text-text-primary mb-2">Workspaces</h1>
-            <p className="text-text-secondary">Organize your boards into workspaces</p>
+            <h1 className="text-h1 font-bold text-text-primary mb-2">
+              {t('workspaces.list.title')}
+            </h1>
+            <p className="text-text-secondary">{t('workspaces.list.subtitle')}</p>
           </div>
 
           <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="w-5 h-5 mr-2" />
-            Create Workspace
+            {t('workspaces.list.createWorkspace')}
           </Button>
         </div>
 
@@ -133,13 +137,15 @@ export default function WorkspacesPage() {
             <div className="w-24 h-24 rounded-full bg-bg-primary border-2 border-border-light flex items-center justify-center mb-6">
               <Folder className="w-12 h-12 text-text-tertiary" />
             </div>
-            <h2 className="text-h3 font-semibold text-text-primary mb-2">No workspaces yet</h2>
+            <h2 className="text-h3 font-semibold text-text-primary mb-2">
+              {t('workspaces.list.emptyTitle')}
+            </h2>
             <p className="text-text-secondary text-center max-w-md mb-6">
-              Create your first workspace to start organizing your boards by team or project.
+              {t('workspaces.list.emptyDescription')}
             </p>
             <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="w-5 h-5 mr-2" />
-              Create Your First Workspace
+              {t('workspaces.list.createFirstWorkspace')}
             </Button>
           </div>
         ) : (
@@ -178,7 +184,7 @@ export default function WorkspacesPage() {
                 <Plus className="w-8 h-8 text-text-tertiary group-hover:text-monday-primary transition-colors" />
               </div>
               <span className="text-text-secondary group-hover:text-text-primary font-medium transition-colors">
-                Create New Workspace
+                {t('workspaces.list.createNewWorkspace')}
               </span>
             </button>
           </div>
@@ -189,21 +195,23 @@ export default function WorkspacesPage() {
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">{workspaces.length}</div>
-              <div className="text-text-secondary text-sm">Total Workspaces</div>
+              <div className="text-text-secondary text-sm">
+                {t('workspaces.list.totalWorkspaces')}
+              </div>
             </div>
 
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">
                 {workspaces.reduce((acc, w) => acc + (w.board_count || 0), 0)}
               </div>
-              <div className="text-text-secondary text-sm">Total Boards</div>
+              <div className="text-text-secondary text-sm">{t('workspaces.list.totalBoards')}</div>
             </div>
 
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">
                 {workspaces.filter(w => w.owner_id === user?.id).length}
               </div>
-              <div className="text-text-secondary text-sm">Owned by You</div>
+              <div className="text-text-secondary text-sm">{t('workspaces.list.ownedByYou')}</div>
             </div>
           </div>
         )}
@@ -241,19 +249,19 @@ export default function WorkspacesPage() {
       {deleteWorkspace && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-bg-primary rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Delete Workspace</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">
+              {t('workspaces.list.deleteModal.title')}
+            </h3>
+            <p className="text-text-secondary mb-4">{t('workspaces.list.deleteModal.warning')}</p>
             <p className="text-text-secondary mb-4">
-              This action cannot be undone. All boards in this workspace will be permanently
-              deleted.
-            </p>
-            <p className="text-text-secondary mb-4">
-              Please type <strong>{deleteWorkspace.name}</strong> to confirm.
+              {t('workspaces.list.deleteModal.typeToConfirm')}{' '}
+              <strong>{deleteWorkspace.name}</strong>
             </p>
             <input
               type="text"
               value={deleteConfirmText}
               onChange={e => setDeleteConfirmText(e.target.value)}
-              placeholder="Type workspace name"
+              placeholder={t('workspaces.list.deleteModal.placeholder')}
               className="w-full px-3 py-2 border border-border-default rounded-lg mb-4"
             />
             <div className="flex gap-3">
@@ -265,7 +273,7 @@ export default function WorkspacesPage() {
                 }}
                 className="flex-1"
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 variant="destructive"
@@ -273,7 +281,9 @@ export default function WorkspacesPage() {
                 disabled={deleteConfirmText !== deleteWorkspace.name || deleteMutation.isPending}
                 className="flex-1"
               >
-                {deleteMutation.isPending ? 'Deleting...' : 'Delete Workspace'}
+                {deleteMutation.isPending
+                  ? t('workspaces.list.deleteModal.deleting')
+                  : t('workspaces.list.deleteModal.confirmButton')}
               </Button>
             </div>
           </div>
@@ -305,6 +315,7 @@ function WorkspaceCard({
   onDuplicate: () => void
   onDelete: () => void
 }) {
+  const t = useTranslations()
   const [showMenu, setShowMenu] = useState(false)
 
   const handleOpenInNewTab = (e: React.MouseEvent) => {
@@ -364,7 +375,7 @@ function WorkspaceCard({
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <LayoutDashboard className="w-3 h-3" />
-              <span>{workspace.board_count || 0} boards</span>
+              <span>{t('workspaces.list.boardsCount', { count: workspace.board_count || 0 })}</span>
             </div>
           </div>
 
@@ -383,14 +394,14 @@ function WorkspaceCard({
             className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
           >
             <Folder className="w-4 h-4" />
-            Open Workspace
+            {t('workspaces.list.openWorkspace')}
           </Link>
           <button
             onClick={handleOpenInNewTab}
             className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
           >
             <ExternalLink className="w-4 h-4" />
-            Open in New Tab
+            {t('workspaces.list.openInNewTab')}
           </button>
           <button
             onClick={e => {
@@ -401,7 +412,7 @@ function WorkspaceCard({
             className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
           >
             <Copy className="w-4 h-4" />
-            Duplicate
+            {t('workspaces.list.duplicate')}
           </button>
           {canEdit && (
             <button
@@ -413,7 +424,7 @@ function WorkspaceCard({
               className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
             >
               <Pencil className="w-4 h-4" />
-              Rename
+              {t('workspaces.list.rename')}
             </button>
           )}
           <Link
@@ -421,7 +432,7 @@ function WorkspaceCard({
             className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
           >
             <Settings className="w-4 h-4" />
-            Settings
+            {t('workspaces.list.settings')}
           </Link>
           {canEdit && (
             <>
@@ -435,7 +446,7 @@ function WorkspaceCard({
                 className="w-full px-4 py-2 text-left text-sm text-status-stuck hover:bg-bg-hover flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete
+                {t('workspaces.list.delete')}
               </button>
             </>
           )}
@@ -459,6 +470,7 @@ function RenameWorkspaceModal({
   onClose: () => void
   onSuccess: () => void
 }) {
+  const t = useTranslations()
   const updateMutation = useUpdateWorkspace(workspace.id)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -475,19 +487,21 @@ function RenameWorkspaceModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-bg-primary rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Rename Workspace</h3>
+        <h3 className="text-lg font-semibold text-text-primary mb-4">
+          {t('workspaces.list.renameModal.title')}
+        </h3>
         <form onSubmit={handleSubmit}>
           <input
             type="text"
             value={value}
             onChange={e => onChange(e.target.value)}
-            placeholder="Workspace name"
+            placeholder={t('workspaces.list.renameModal.placeholder')}
             className="w-full px-3 py-2 border border-border-default rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary"
             autoFocus
           />
           <div className="flex gap-3">
             <Button type="button" variant="ghost" onClick={onClose} className="flex-1">
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               type="submit"
@@ -495,7 +509,9 @@ function RenameWorkspaceModal({
               disabled={!value.trim() || value === workspace.name || updateMutation.isPending}
               className="flex-1"
             >
-              {updateMutation.isPending ? 'Saving...' : 'Save'}
+              {updateMutation.isPending
+                ? t('workspaces.list.renameModal.saving')
+                : t('workspaces.list.renameModal.save')}
             </Button>
           </div>
         </form>

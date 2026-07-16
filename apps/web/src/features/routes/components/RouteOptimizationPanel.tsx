@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Save, Loader2, MapPin, Route as RouteIcon } from 'lucide-react'
 import { useToast } from '@/components/ui-monday/Toast'
 
@@ -39,6 +40,7 @@ export function RouteOptimizationPanel({
   saving,
   hasSelection,
 }: RouteOptimizationPanelProps) {
+  const t = useTranslations()
   const { showToast } = useToast()
   const [routeName, setRouteName] = useState('')
   const [scheduledDate, setScheduledDate] = useState('')
@@ -47,7 +49,7 @@ export function RouteOptimizationPanel({
 
   const handleSave = async () => {
     if (!routeName || !scheduledDate) {
-      showToast('შეავსეთ მარშრუტის სახელი და თარიღი', 'warning')
+      showToast(t('routes.optimizationPanel.fillNameAndDate'), 'warning')
       return
     }
 
@@ -68,7 +70,7 @@ export function RouteOptimizationPanel({
   return (
     <div className="w-96 bg-bg-primary border-l h-screen overflow-y-auto">
       <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">მარშრუტის დეტალები</h2>
+        <h2 className="text-lg font-semibold">{t('routes.optimizationPanel.title')}</h2>
       </div>
 
       <div className="p-4 space-y-6">
@@ -82,12 +84,12 @@ export function RouteOptimizationPanel({
             {optimizing ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                ოპტიმიზაცია...
+                {t('routes.optimizationPanel.optimizing')}
               </>
             ) : (
               <>
                 <RouteIcon className="w-5 h-5" />
-                მარშრუტის ოპტიმიზაცია
+                {t('routes.optimizationPanel.optimizeButton')}
               </>
             )}
           </button>
@@ -99,15 +101,21 @@ export function RouteOptimizationPanel({
             <div className="space-y-4">
               <div className="p-4 bg-green-50 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-green-900">სულ გაჩერება</span>
+                  <span className="text-sm font-medium text-green-900">
+                    {t('routes.optimizationPanel.totalStops')}
+                  </span>
                   <span className="text-lg font-bold text-green-900">
                     {optimizedRoute.stops.length}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-green-900">სულ მანძილი</span>
+                  <span className="text-sm font-medium text-green-900">
+                    {t('routes.optimizationPanel.totalDistance')}
+                  </span>
                   <span className="text-lg font-bold text-green-900">
-                    {optimizedRoute.totalDistance.toFixed(1)} კმ
+                    {t('routes.optimizationPanel.distanceKm', {
+                      distance: optimizedRoute.totalDistance.toFixed(1),
+                    })}
                   </span>
                 </div>
               </div>
@@ -116,7 +124,7 @@ export function RouteOptimizationPanel({
               <div className="space-y-2">
                 <h3 className="text-sm font-medium text-text-primary flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
-                  მარშრუტის თანმიმდევრობა
+                  {t('routes.optimizationPanel.stopOrder')}
                 </h3>
                 <div className="space-y-2 max-h-60 overflow-y-auto">
                   {optimizedRoute.stops.map((stop, index) => (
@@ -136,7 +144,9 @@ export function RouteOptimizationPanel({
                         </p>
                         {stop.distance > 0 && (
                           <p className="text-xs text-text-secondary mt-1">
-                            +{stop.distance.toFixed(1)} კმ
+                            {t('routes.optimizationPanel.legDistance', {
+                              distance: stop.distance.toFixed(1),
+                            })}
                           </p>
                         )}
                       </div>
@@ -148,21 +158,27 @@ export function RouteOptimizationPanel({
 
             {/* Save Form */}
             <div className="space-y-4 pt-4 border-t">
-              <h3 className="text-sm font-medium text-text-primary">მარშრუტის შენახვა</h3>
+              <h3 className="text-sm font-medium text-text-primary">
+                {t('routes.optimizationPanel.saveTitle')}
+              </h3>
 
               <div>
-                <label className="text-xs text-text-secondary mb-1 block">მარშრუტის სახელი *</label>
+                <label className="text-xs text-text-secondary mb-1 block">
+                  {t('routes.optimizationPanel.nameLabel')}
+                </label>
                 <input
                   type="text"
                   value={routeName}
                   onChange={e => setRouteName(e.target.value)}
-                  placeholder="მაგ: დილის მარშრუტი"
+                  placeholder={t('routes.optimizationPanel.namePlaceholder')}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-text-secondary mb-1 block">თარიღი *</label>
+                <label className="text-xs text-text-secondary mb-1 block">
+                  {t('routes.optimizationPanel.dateLabel')}
+                </label>
                 <input
                   type="date"
                   value={scheduledDate}
@@ -172,7 +188,9 @@ export function RouteOptimizationPanel({
               </div>
 
               <div>
-                <label className="text-xs text-text-secondary mb-1 block">დაწყების დრო</label>
+                <label className="text-xs text-text-secondary mb-1 block">
+                  {t('routes.optimizationPanel.startTimeLabel')}
+                </label>
                 <input
                   type="time"
                   value={startTime}
@@ -182,11 +200,13 @@ export function RouteOptimizationPanel({
               </div>
 
               <div>
-                <label className="text-xs text-text-secondary mb-1 block">შენიშვნა</label>
+                <label className="text-xs text-text-secondary mb-1 block">
+                  {t('routes.optimizationPanel.notesLabel')}
+                </label>
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  placeholder="დამატებითი ინფორმაცია..."
+                  placeholder={t('routes.optimizationPanel.notesPlaceholder')}
                   rows={3}
                   className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
@@ -200,12 +220,12 @@ export function RouteOptimizationPanel({
                 {saving ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    შენახვა...
+                    {t('routes.optimizationPanel.saving')}
                   </>
                 ) : (
                   <>
                     <Save className="w-5 h-5" />
-                    მარშრუტის შენახვა
+                    {t('routes.optimizationPanel.saveButton')}
                   </>
                 )}
               </button>

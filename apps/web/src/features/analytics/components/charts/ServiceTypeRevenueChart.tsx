@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import type { ServiceTypeRevenue } from '@/services/board-analytics.service'
 
@@ -23,11 +24,14 @@ interface ServiceTypeRevenueChartProps {
 }
 
 export function ServiceTypeRevenueChart({ data }: ServiceTypeRevenueChartProps) {
+  const t = useTranslations()
   const total = data.reduce((s, d) => s + d.revenue, 0)
 
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">შემოსავალი სერვისის ტიპით</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">
+        {t('analytics.charts.serviceTypeRevenue.title')}
+      </h3>
       <div className="flex items-center gap-6">
         <div className="flex-shrink-0">
           <ResponsiveContainer width={220} height={220} minWidth={0}>
@@ -48,7 +52,10 @@ export function ServiceTypeRevenueChart({ data }: ServiceTypeRevenueChartProps) 
                 ))}
               </Pie>
               <Tooltip
-                formatter={(value: any) => [`₾${value.toLocaleString()}`, 'შემოსავალი']}
+                formatter={(value: any) => [
+                  `₾${value.toLocaleString()}`,
+                  t('analytics.charts.common.revenue'),
+                ]}
                 contentStyle={{
                   backgroundColor: 'var(--bg-secondary)',
                   border: '1px solid var(--border-primary)',

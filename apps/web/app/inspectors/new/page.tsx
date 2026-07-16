@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { ArrowLeft, Save } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -14,6 +15,7 @@ import {
 
 export default function NewInspectorPage() {
   const router = useRouter()
+  const t = useTranslations()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     full_name: '',
@@ -48,11 +50,11 @@ export default function NewInspectorPage() {
 
       if (!response.ok) throw new Error('Failed to create inspector')
 
-      alert('ოფიცერი წარმატებით შეიქმნა!')
+      alert(t('inspectors.new.createSuccess'))
       router.push('/inspectors')
     } catch (error) {
       console.error('Error creating inspector:', error)
-      alert('შეცდომა ოფიცრის შექმნისას')
+      alert(t('inspectors.new.createError'))
     } finally {
       setLoading(false)
     }
@@ -68,20 +70,22 @@ export default function NewInspectorPage() {
             className="inline-flex items-center text-monday-primary hover:text-monday-primary-hover mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            უკან ოფიცრებზე
+            {t('inspectors.new.backToInspectors')}
           </Link>
-          <h1 className="text-3xl font-bold text-text-primary">ახალი ოფიცერი</h1>
+          <h1 className="text-3xl font-bold text-text-primary">{t('inspectors.new.title')}</h1>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="bg-bg-primary rounded-lg shadow-sm p-6">
           {/* Basic Information */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">ძირითადი ინფორმაცია</h2>
+            <h2 className="text-lg font-semibold text-text-primary mb-4">
+              {t('inspectors.new.basicInfo')}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  სახელი და გვარი *
+                  {t('inspectors.new.fullNameLabel')}
                 </label>
                 <input
                   type="text"
@@ -89,13 +93,13 @@ export default function NewInspectorPage() {
                   value={formData.full_name}
                   onChange={e => setFormData({ ...formData, full_name: e.target.value })}
                   className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
-                  placeholder="მაგ: გიორგი მელაძე"
+                  placeholder={t('inspectors.new.fullNamePlaceholder')}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  ელ-ფოსტა *
+                  {t('inspectors.new.emailLabel')}
                 </label>
                 <input
                   type="email"
@@ -108,7 +112,9 @@ export default function NewInspectorPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">ტელეფონი</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  {t('inspectors.new.phoneLabel')}
+                </label>
                 <input
                   type="tel"
                   value={formData.phone}
@@ -119,13 +125,15 @@ export default function NewInspectorPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">ზონა</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  {t('inspectors.new.zoneLabel')}
+                </label>
                 <input
                   type="text"
                   value={formData.zone}
                   onChange={e => setFormData({ ...formData, zone: e.target.value })}
                   className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
-                  placeholder="მაგ: ვაკე-საბურთალო"
+                  placeholder={t('inspectors.new.zonePlaceholder')}
                 />
               </div>
             </div>
@@ -133,11 +141,13 @@ export default function NewInspectorPage() {
 
           {/* Specialty & Role */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">სპეციალობა და როლი</h2>
+            <h2 className="text-lg font-semibold text-text-primary mb-4">
+              {t('inspectors.new.specialtyAndRole')}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  სპეციალობა *
+                  {t('inspectors.new.specialtyLabel')}
                 </label>
                 <Select
                   required
@@ -145,23 +155,35 @@ export default function NewInspectorPage() {
                   onValueChange={v => setFormData({ ...formData, specialty: v })}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="აირჩიეთ სპეციალობა" />
+                    <SelectValue placeholder={t('inspectors.new.specialtyPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="fire_safety">სახანძრო უსაფრთხოება</SelectItem>
-                    <SelectItem value="health">ჯანდაცვა</SelectItem>
-                    <SelectItem value="building_code">სამშენებლო კოდექსი</SelectItem>
-                    <SelectItem value="electrical">ელექტრო უსაფრთხოება</SelectItem>
-                    <SelectItem value="environmental">გარემოსდაცვა</SelectItem>
-                    <SelectItem value="plumbing">სანტექნიკა</SelectItem>
-                    <SelectItem value="hvac">ვენტილაცია</SelectItem>
-                    <SelectItem value="general">ზოგადი</SelectItem>
+                    <SelectItem value="fire_safety">
+                      {t('inspectors.new.specialty.fireSafety')}
+                    </SelectItem>
+                    <SelectItem value="health">{t('inspectors.new.specialty.health')}</SelectItem>
+                    <SelectItem value="building_code">
+                      {t('inspectors.new.specialty.buildingCode')}
+                    </SelectItem>
+                    <SelectItem value="electrical">
+                      {t('inspectors.new.specialty.electrical')}
+                    </SelectItem>
+                    <SelectItem value="environmental">
+                      {t('inspectors.new.specialty.environmental')}
+                    </SelectItem>
+                    <SelectItem value="plumbing">
+                      {t('inspectors.new.specialty.plumbing')}
+                    </SelectItem>
+                    <SelectItem value="hvac">{t('inspectors.new.specialty.hvac')}</SelectItem>
+                    <SelectItem value="general">{t('inspectors.new.specialty.general')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">როლი *</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  {t('inspectors.new.roleLabel')}
+                </label>
                 <Select
                   required
                   value={formData.role}
@@ -171,10 +193,12 @@ export default function NewInspectorPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="officer">ოფიცერი</SelectItem>
-                    <SelectItem value="dispatcher">დისპეტჩერი</SelectItem>
-                    <SelectItem value="manager">მენეჯერი</SelectItem>
-                    <SelectItem value="admin">ადმინისტრატორი</SelectItem>
+                    <SelectItem value="officer">{t('inspectors.new.role.officer')}</SelectItem>
+                    <SelectItem value="dispatcher">
+                      {t('inspectors.new.role.dispatcher')}
+                    </SelectItem>
+                    <SelectItem value="manager">{t('inspectors.new.role.manager')}</SelectItem>
+                    <SelectItem value="admin">{t('inspectors.new.role.admin')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -183,11 +207,13 @@ export default function NewInspectorPage() {
 
           {/* Working Hours */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">სამუშაო საათები</h2>
+            <h2 className="text-lg font-semibold text-text-primary mb-4">
+              {t('inspectors.new.workingHours')}
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  დაწყება *
+                  {t('inspectors.new.startLabel')}
                 </label>
                 <input
                   type="time"
@@ -200,7 +226,7 @@ export default function NewInspectorPage() {
 
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  დასრულება *
+                  {t('inspectors.new.endLabel')}
                 </label>
                 <input
                   type="time"
@@ -215,7 +241,9 @@ export default function NewInspectorPage() {
 
           {/* Status */}
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-4">სტატუსი</h2>
+            <h2 className="text-lg font-semibold text-text-primary mb-4">
+              {t('inspectors.new.statusLabel')}
+            </h2>
             <Select
               value={formData.status}
               onValueChange={v => setFormData({ ...formData, status: v })}
@@ -224,9 +252,9 @@ export default function NewInspectorPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">აქტიური</SelectItem>
-                <SelectItem value="inactive">არააქტიური</SelectItem>
-                <SelectItem value="on_leave">შვებულებაში</SelectItem>
+                <SelectItem value="active">{t('inspectors.new.status.active')}</SelectItem>
+                <SelectItem value="inactive">{t('inspectors.new.status.inactive')}</SelectItem>
+                <SelectItem value="on_leave">{t('inspectors.new.status.onLeave')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -237,7 +265,7 @@ export default function NewInspectorPage() {
               href="/inspectors"
               className="px-4 py-2 text-text-primary bg-bg-tertiary rounded-lg hover:bg-bg-hover transition-colors"
             >
-              გაუქმება
+              {t('inspectors.new.cancel')}
             </Link>
             <button
               type="submit"
@@ -245,7 +273,7 @@ export default function NewInspectorPage() {
               className="inline-flex items-center px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save className="w-5 h-5 mr-2" />
-              {loading ? 'შენახვა...' : 'ოფიცრის შექმნა'}
+              {loading ? t('inspectors.new.saving') : t('inspectors.new.submit')}
             </button>
           </div>
         </form>

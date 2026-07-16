@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react'
 import { useVirtualizer } from '@tanstack/react-virtual'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { BoardTableHeader } from './BoardTableHeader'
 import { CellRenderer } from './CellRenderer'
@@ -19,6 +20,7 @@ export function BoardTable<TData extends Record<string, any>>({
   onSelectionChange,
   height = 600,
 }: BoardTableProps<TData>) {
+  const t = useTranslations()
   const [sortConfig, setSortConfig] = useState<{
     column: string
     direction: 'asc' | 'desc'
@@ -273,8 +275,8 @@ export function BoardTable<TData extends Record<string, any>>({
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <p className="text-lg font-medium mb-1">No items yet</p>
-          <p className="text-sm text-text-tertiary">Create your first item to get started</p>
+          <p className="text-lg font-medium mb-1">{t('boards.boardTable.noItemsYet')}</p>
+          <p className="text-sm text-text-tertiary">{t('boards.boardTable.createFirstItem')}</p>
         </div>
       )}
     </div>

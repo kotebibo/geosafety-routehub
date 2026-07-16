@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 import {
@@ -21,16 +22,21 @@ const LocationsMap = dynamic(
   () => import('@/features/locations/components/LocationsMap').then(mod => mod.LocationsMap),
   {
     ssr: false,
-    loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
-        <div className="text-center">
-          <div className="animate-spin text-4xl mb-2">🗺️</div>
-          <p className="text-text-secondary">რუკის ჩატვირთვა...</p>
-        </div>
-      </div>
-    ),
+    loading: () => <MapLoadingFallback />,
   }
 )
+
+function MapLoadingFallback() {
+  const t = useTranslations()
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
+      <div className="text-center">
+        <div className="animate-spin text-4xl mb-2">🗺️</div>
+        <p className="text-text-secondary">{t('locations.mapLoading')}</p>
+      </div>
+    </div>
+  )
+}
 
 // Georgian regions and their districts/municipalities
 const GEORGIAN_REGIONS: Record<string, string[]> = {
@@ -219,13 +225,13 @@ function extractLocationInfo(
   return { district: foundDistrict, region: foundRegion, city: foundCity }
 }
 
-// Company type labels in Georgian
-const COMPANY_TYPE_LABELS: Record<string, string> = {
-  commercial: 'კომერციული',
-  residential: 'საცხოვრებელი',
-  industrial: 'სამრეწველო',
-  healthcare: 'სამედიცინო',
-  education: 'საგანმანათლებლო',
+// Company type label translation keys
+const COMPANY_TYPE_LABEL_KEYS: Record<string, string> = {
+  commercial: 'locations.companyType.commercial',
+  residential: 'locations.companyType.residential',
+  industrial: 'locations.companyType.industrial',
+  healthcare: 'locations.companyType.healthcare',
+  education: 'locations.companyType.education',
 }
 
 interface Company {
@@ -268,6 +274,7 @@ interface ServiceType {
 }
 
 export default function LocationsMapPage() {
+  const t = useTranslations()
   const [companies, setCompanies] = useState<Company[]>([])
   const [companyServices, setCompanyServices] = useState<CompanyService[]>([])
   const [inspectors, setInspectors] = useState<Inspector[]>([])
@@ -555,7 +562,7 @@ export default function LocationsMapPage() {
       <div className="h-[calc(100vh-64px)] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin text-6xl mb-4">⏳</div>
-          <p className="text-xl text-text-secondary">მონაცემების ჩატვირთვა...</p>
+          <p className="text-xl text-text-secondary">{t('locations.dataLoading')}</p>
         </div>
       </div>
     )
@@ -567,11 +574,11 @@ export default function LocationsMapPage() {
       <div className="bg-bg-primary border-b px-6 py-4 flex-shrink-0">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-text-primary">ყველა ლოკაცია</h1>
-            <p className="text-sm text-text-secondary">ობიექტების რუკა ფილტრებით</p>
+            <h1 className="text-2xl font-bold text-text-primary">{t('locations.pageTitle')}</h1>
+            <p className="text-sm text-text-secondary">{t('locations.pageDescription')}</p>
           </div>
           <div className="text-sm text-text-secondary">
-            ნაჩვენები:{' '}
+            {t('locations.shown')}:{' '}
             <span className="font-bold text-monday-primary">{filteredCompanies.length}</span> /{' '}
             {mappableCompanies.length}
           </div>
@@ -581,19 +588,23 @@ export default function LocationsMapPage() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">ძიება</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              {t('locations.filters.search')}
+            </label>
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="კომპანიის სახელი ან მისამართი..."
+              placeholder={t('locations.filters.searchPlaceholder')}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             />
           </div>
 
           {/* Region Filter */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">რეგიონი</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              {t('locations.filters.region')}
+            </label>
             <Select
               value={selectedRegion}
               onValueChange={v => {
@@ -605,7 +616,7 @@ export default function LocationsMapPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">ყველა რეგიონი</SelectItem>
+                <SelectItem value="all">{t('locations.filters.allRegions')}</SelectItem>
                 {availableFilters.regions.map(region => {
                   const count = filterCounts.regionCounts[region] || 0
                   return (
@@ -616,7 +627,7 @@ export default function LocationsMapPage() {
                 })}
                 {availableFilters.unknownRegionCount > 0 && (
                   <SelectItem value="unknown" className="text-red-600">
-                    უცნობი რეგიონი ({availableFilters.unknownRegionCount})
+                    {t('locations.filters.unknownRegion')} ({availableFilters.unknownRegionCount})
                   </SelectItem>
                 )}
               </SelectContent>
@@ -626,14 +637,14 @@ export default function LocationsMapPage() {
           {/* District Filter */}
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">
-              რაიონი / ქალაქი
+              {t('locations.filters.district')}
             </label>
             <Select value={selectedDistrict} onValueChange={v => setSelectedDistrict(v)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">ყველა რაიონი</SelectItem>
+                <SelectItem value="all">{t('locations.filters.allDistricts')}</SelectItem>
                 {availableDistrictsForRegion.map(district => {
                   const count = districtCountsForSelectedRegion[district] || 0
                   return (
@@ -649,19 +660,20 @@ export default function LocationsMapPage() {
           {/* Company Type Filter */}
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">
-              ობიექტის ტიპი
+              {t('locations.filters.companyType')}
             </label>
             <Select value={selectedCompanyType} onValueChange={v => setSelectedCompanyType(v)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">ყველა ტიპი</SelectItem>
+                <SelectItem value="all">{t('locations.filters.allTypes')}</SelectItem>
                 {availableFilters.companyTypes.map(type => {
                   const count = filterCounts.companyTypeCounts[type] || 0
+                  const labelKey = COMPANY_TYPE_LABEL_KEYS[type]
                   return (
                     <SelectItem key={type} value={type}>
-                      {COMPANY_TYPE_LABELS[type] || type} ({count})
+                      {labelKey ? t(labelKey) : type} ({count})
                     </SelectItem>
                   )
                 })}
@@ -671,13 +683,15 @@ export default function LocationsMapPage() {
 
           {/* Inspector Filter */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">ოფიცერი</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              {t('locations.filters.officer')}
+            </label>
             <Select value={selectedInspector} onValueChange={v => setSelectedInspector(v)}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">ყველა ოფიცერი</SelectItem>
+                <SelectItem value="all">{t('locations.filters.allOfficers')}</SelectItem>
                 {inspectors.map(inspector => {
                   const count = filterCounts.inspectorCounts[inspector.id] || 0
                   return (
@@ -699,7 +713,9 @@ export default function LocationsMapPage() {
           selectedCompanyType !== 'all' ||
           searchQuery) && (
           <div className="mt-4 flex items-center gap-2 flex-wrap">
-            <span className="text-sm text-text-secondary">აქტიური ფილტრები:</span>
+            <span className="text-sm text-text-secondary">
+              {t('locations.filters.activeFilters')}:
+            </span>
 
             {searchQuery && (
               <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm flex items-center gap-2">
@@ -714,7 +730,9 @@ export default function LocationsMapPage() {
               <span
                 className={`px-3 py-1 rounded-full text-sm flex items-center gap-2 ${selectedRegion === 'unknown' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}
               >
-                {selectedRegion === 'unknown' ? 'უცნობი რეგიონი' : selectedRegion}
+                {selectedRegion === 'unknown'
+                  ? t('locations.filters.unknownRegion')
+                  : selectedRegion}
                 <button
                   onClick={() => {
                     setSelectedRegion('all')
@@ -743,7 +761,9 @@ export default function LocationsMapPage() {
 
             {selectedCompanyType !== 'all' && (
               <span className="px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full text-sm flex items-center gap-2">
-                {COMPANY_TYPE_LABELS[selectedCompanyType] || selectedCompanyType}
+                {COMPANY_TYPE_LABEL_KEYS[selectedCompanyType]
+                  ? t(COMPANY_TYPE_LABEL_KEYS[selectedCompanyType])
+                  : selectedCompanyType}
                 <button
                   onClick={() => setSelectedCompanyType('all')}
                   className="hover:text-cyan-900"
@@ -788,7 +808,7 @@ export default function LocationsMapPage() {
               }}
               className="px-3 py-1 bg-bg-tertiary text-text-primary rounded-full text-sm hover:bg-border-medium"
             >
-              გასუფთავება
+              {t('locations.filters.clear')}
             </button>
           </div>
         )}

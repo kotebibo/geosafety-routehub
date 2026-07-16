@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { ChevronDown, ChevronRight, Users, Shield, Settings, Key } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Permission } from '@/services/users.service'
@@ -36,18 +37,17 @@ export function PermissionsGrid({
   onToggleCategory,
   onToggleAllInCategory,
 }: PermissionsGridProps) {
+  const t = useTranslations()
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
         <label className="text-sm font-medium text-text-primary">
-          {'\u10E3\u10E4\u10DA\u10D4\u10D1\u10D4\u10D1\u10D8'} ({selectedPermissions.length}{' '}
-          {'\u10D0\u10E0\u10E9\u10D4\u10E3\u10DA\u10D8'})
+          {t('admin.roles.permissionsLabel')} ({selectedPermissions.length}{' '}
+          {t('admin.roles.selectedUnit')})
         </label>
         {isAdminRole && (
           <span className="text-xs text-color-warning bg-color-warning/10 px-2 py-1 rounded">
-            {
-              '\u10D0\u10D3\u10DB\u10D8\u10DC\u10E1 \u10D0\u10E5\u10D5\u10E1 \u10E7\u10D5\u10D4\u10DA\u10D0 \u10E3\u10E4\u10DA\u10D4\u10D1\u10D0'
-            }
+            {t('admin.roles.adminHasAllPermissions')}
           </span>
         )}
       </div>
@@ -92,9 +92,7 @@ export function PermissionsGrid({
                     }}
                     className="text-xs text-monday-primary hover:text-monday-primary-hover font-medium"
                   >
-                    {allSelected
-                      ? '\u10D2\u10D0\u10E3\u10E5\u10DB\u10D4\u10D1\u10D0'
-                      : '\u10E7\u10D5\u10D4\u10DA\u10D0'}
+                    {allSelected ? t('admin.roles.cancel') : t('admin.roles.filterAll')}
                   </button>
                 )}
               </div>

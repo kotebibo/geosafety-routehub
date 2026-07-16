@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Save, Shield, Plus, AlertTriangle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PermissionsGrid } from './PermissionsGrid'
@@ -60,6 +61,7 @@ export function RoleEditor({
   onToggleCategory,
   onToggleAllInCategory,
 }: RoleEditorProps) {
+  const t = useTranslations()
   const isEditing = isCreating || selectedRole !== null
   const canEdit = isCreating || (selectedRole && !selectedRole.is_system)
 
@@ -68,23 +70,15 @@ export function RoleEditor({
       <div className="bg-bg-primary rounded-lg border border-border-light p-8 text-center">
         <Shield className="w-12 h-12 text-text-disabled mx-auto mb-4" />
         <h3 className="text-lg font-medium text-text-primary mb-2">
-          {
-            '\u10D0\u10D8\u10E0\u10E9\u10D8\u10D4\u10D7 \u10E0\u10DD\u10DA\u10D8 \u10E0\u10D4\u10D3\u10D0\u10E5\u10E2\u10D8\u10E0\u10D4\u10D1\u10D8\u10E1\u10D7\u10D5\u10D8\u10E1'
-          }
+          {t('admin.roles.selectRolePrompt')}
         </h3>
-        <p className="text-text-secondary mb-4">
-          {
-            '\u10D3\u10D0\u10D0\u10EC\u10D9\u10D0\u10DE\u10E3\u10DC\u10D4\u10D7 \u10E0\u10DD\u10DA\u10D6\u10D4 \u10E3\u10E4\u10DA\u10D4\u10D1\u10D4\u10D1\u10D8\u10E1 \u10E1\u10D0\u10DC\u10D0\u10EE\u10D0\u10D5\u10D0\u10D3, \u10D0\u10DC \u10E8\u10D4\u10E5\u10DB\u10D4\u10DC\u10D8\u10D7 \u10D0\u10EE\u10D0\u10DA\u10D8 \u10E0\u10DD\u10DA\u10D8.'
-          }
-        </p>
+        <p className="text-text-secondary mb-4">{t('admin.roles.selectRoleHint')}</p>
         <button
           onClick={onCreateNew}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-monday-primary rounded-lg hover:bg-monday-primary-hover transition-colors"
         >
           <Plus className="w-4 h-4" />
-          {
-            '\u10D0\u10EE\u10D0\u10DA\u10D8 \u10E0\u10DD\u10DA\u10D8\u10E1 \u10E8\u10D4\u10E5\u10DB\u10DC\u10D0'
-          }
+          {t('admin.roles.createRole')}
         </button>
 
         {/* System roles info */}
@@ -93,17 +87,13 @@ export function RoleEditor({
             <AlertTriangle className="w-5 h-5 text-color-warning flex-shrink-0 mt-0.5" />
             <div>
               <h4 className="font-medium text-color-warning">
-                {
-                  '\u10E1\u10D8\u10E1\u10E2\u10D4\u10DB\u10E3\u10E0\u10D8 \u10E0\u10DD\u10DA\u10D4\u10D1\u10D8'
-                }
+                {t('admin.roles.stats.systemRoles')}
               </h4>
               <p className="text-sm text-color-warning mt-1">
-                <strong>{'\u10D0\u10D3\u10DB\u10D8\u10DC\u10D8'}</strong>,{' '}
-                <strong>{'\u10D3\u10D8\u10E1\u10DE\u10D4\u10E2\u10E9\u10D4\u10E0\u10D8'}</strong>{' '}
-                {'\u10D3\u10D0'} <strong>{'\u10DD\u10E4\u10D8\u10EA\u10D4\u10E0\u10D8'}</strong>{' '}
-                {
-                  '\u10E1\u10D8\u10E1\u10E2\u10D4\u10DB\u10E3\u10E0\u10D8 \u10E0\u10DD\u10DA\u10D4\u10D1\u10D8\u10D0 \u10D3\u10D0 \u10DB\u10D0\u10D7\u10D8 \u10E0\u10D4\u10D3\u10D0\u10E5\u10E2\u10D8\u10E0\u10D4\u10D1\u10D0 \u10D0\u10DC \u10EC\u10D0\u10E8\u10DA\u10D0 \u10E8\u10D4\u10E3\u10EB\u10DA\u10D4\u10D1\u10D4\u10DA\u10D8\u10D0. \u10E8\u10D4\u10E5\u10DB\u10D4\u10DC\u10D8\u10D7 \u10DB\u10DD\u10E0\u10D2\u10D4\u10D1\u10E3\u10DA\u10D8 \u10E0\u10DD\u10DA\u10D4\u10D1\u10D8 \u10D3\u10D0\u10DB\u10D0\u10E2\u10D4\u10D1\u10D8\u10D7\u10D8 \u10D9\u10DD\u10DC\u10E4\u10D8\u10D2\u10E3\u10E0\u10D0\u10EA\u10D8\u10D8\u10E1\u10D7\u10D5\u10D8\u10E1.'
-                }
+                <strong>{t('admin.roles.roleNames.admin')}</strong>,{' '}
+                <strong>{t('admin.roles.roleNames.dispatcher')}</strong> {t('admin.roles.and')}{' '}
+                <strong>{t('admin.roles.roleNames.officer')}</strong>{' '}
+                {t('admin.roles.systemRolesInfo')}
               </p>
             </div>
           </div>
@@ -118,12 +108,12 @@ export function RoleEditor({
         <div className="flex items-center gap-2">
           <h2 className="font-semibold text-text-primary">
             {isCreating
-              ? '\u10D0\u10EE\u10D0\u10DA\u10D8 \u10E0\u10DD\u10DA\u10D8\u10E1 \u10E8\u10D4\u10E5\u10DB\u10DC\u10D0'
-              : `\u10E0\u10D4\u10D3\u10D0\u10E5\u10E2\u10D8\u10E0\u10D4\u10D1\u10D0: ${selectedRole?.display_name}`}
+              ? t('admin.roles.createRole')
+              : `${t('admin.roles.editingRolePrefix')}: ${selectedRole?.display_name}`}
           </h2>
           {selectedRole?.is_system && (
             <span className="px-2 py-0.5 text-xs font-medium bg-bg-tertiary text-text-secondary rounded">
-              {'\u10DB\u10EE\u10DD\u10DA\u10DD\u10D3 \u10DC\u10D0\u10EE\u10D5\u10D0'}
+              {t('admin.roles.viewOnly')}
             </span>
           )}
         </div>
@@ -132,7 +122,7 @@ export function RoleEditor({
             onClick={onCancel}
             className="px-3 py-1.5 text-sm text-text-secondary hover:bg-bg-hover rounded transition-colors"
           >
-            {'\u10D2\u10D0\u10E3\u10E5\u10DB\u10D4\u10D1\u10D0'}
+            {t('admin.roles.cancel')}
           </button>
           {canEdit && (
             <button
@@ -141,9 +131,7 @@ export function RoleEditor({
               className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white bg-monday-primary hover:bg-monday-primary-hover rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <Save className="w-4 h-4" />
-              {saving
-                ? '\u10D8\u10DC\u10D0\u10EE\u10D4\u10D1\u10D0...'
-                : '\u10E8\u10D4\u10DC\u10D0\u10EE\u10D5\u10D0'}
+              {saving ? t('admin.roles.saving') : t('admin.roles.save')}
             </button>
           )}
         </div>
@@ -154,20 +142,20 @@ export function RoleEditor({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">
-              {'\u10E0\u10DD\u10DA\u10D8\u10E1 \u10E1\u10D0\u10EE\u10D4\u10DA\u10D8'} *
+              {t('admin.roles.roleName')} *
             </label>
             <input
               type="text"
               value={formData.display_name}
               onChange={e => onFormDataChange({ ...formData, display_name: e.target.value })}
-              placeholder={'\u10DB\u10D0\u10D2., \u10DB\u10D4\u10DC\u10D4\u10EF\u10D4\u10E0\u10D8'}
+              placeholder={t('admin.roles.roleNamePlaceholder')}
               disabled={selectedRole?.is_system}
               className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary disabled:bg-bg-tertiary disabled:cursor-not-allowed"
             />
           </div>
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">
-              {'\u10E4\u10D4\u10E0\u10D8'}
+              {t('admin.roles.color')}
             </label>
             <div className="flex items-center gap-3">
               <input
@@ -199,14 +187,12 @@ export function RoleEditor({
 
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">
-            {'\u10D0\u10E6\u10EC\u10D4\u10E0\u10D0'}
+            {t('admin.roles.description')}
           </label>
           <textarea
             value={formData.description}
             onChange={e => onFormDataChange({ ...formData, description: e.target.value })}
-            placeholder={
-              '\u10D0\u10E6\u10EC\u10D4\u10E0\u10D4\u10D7 \u10E0\u10D0 \u10E8\u10D4\u10E3\u10EB\u10DA\u10D8\u10D0 \u10D0\u10DB \u10E0\u10DD\u10DA\u10E1...'
-            }
+            placeholder={t('admin.roles.descriptionPlaceholder')}
             disabled={selectedRole?.is_system}
             rows={2}
             className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary disabled:bg-bg-tertiary disabled:cursor-not-allowed"

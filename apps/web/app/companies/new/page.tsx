@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Save, X } from 'lucide-react'
 import { companiesService } from '@/services/companies.service'
@@ -21,6 +22,7 @@ import type { LocationFormData, CompanyLocationInput } from '@/types/company'
 
 export default function NewCompanyPage() {
   const router = useRouter()
+  const t = useTranslations()
   const [loading, setLoading] = useState(false)
 
   // Company basic info
@@ -43,13 +45,13 @@ export default function NewCompanyPage() {
 
     // Validate: at least one location required
     if (locations.length === 0) {
-      alert('გთხოვთ დაამატოთ მინიმუმ ერთი ლოკაცია')
+      alert(t('companies.form.locationRequired'))
       return
     }
 
     // Validate: must have a primary location
     if (!locations.some(loc => loc.is_primary)) {
-      alert('გთხოვთ აირჩიოთ მთავარი ლოკაცია')
+      alert(t('companies.form.primaryLocationRequired'))
       return
     }
 
@@ -80,11 +82,11 @@ export default function NewCompanyPage() {
         locationsForApi
       )
 
-      alert('კომპანია წარმატებით შეიქმნა!')
+      alert(t('companies.form.createSuccess'))
       router.push('/companies')
     } catch (error: any) {
       console.error('Error creating company:', error)
-      alert('შეცდომა: ' + error.message)
+      alert(t('companies.form.createError', { message: error.message }))
     } finally {
       setLoading(false)
     }
@@ -94,19 +96,21 @@ export default function NewCompanyPage() {
     <div className="h-full overflow-y-auto">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-text-primary">ახალი კომპანიის დამატება</h1>
-          <p className="text-text-secondary mt-1">შეავსეთ ყველა საჭირო ველი</p>
+          <h1 className="text-3xl font-bold text-text-primary">{t('companies.form.pageTitle')}</h1>
+          <p className="text-text-secondary mt-1">{t('companies.form.pageDescription')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
           {/* Basic Information */}
           <div className="bg-bg-primary rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold text-text-primary mb-4">ძირითადი ინფორმაცია</h2>
+            <h2 className="text-xl font-semibold text-text-primary mb-4">
+              {t('companies.form.basicInfo')}
+            </h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  დასახელება *
+                  {t('companies.form.name')} *
                 </label>
                 <input
                   type="text"
@@ -118,7 +122,9 @@ export default function NewCompanyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">ტიპი</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  {t('companies.form.type')}
+                </label>
                 <Select
                   value={formData.type}
                   onValueChange={v => setFormData({ ...formData, type: v })}
@@ -127,18 +133,20 @@ export default function NewCompanyPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="commercial">კომერციული</SelectItem>
-                    <SelectItem value="residential">საცხოვრებელი</SelectItem>
-                    <SelectItem value="industrial">ინდუსტრიული</SelectItem>
-                    <SelectItem value="healthcare">ჯანდაცვა</SelectItem>
-                    <SelectItem value="education">განათლება</SelectItem>
+                    <SelectItem value="commercial">{t('companies.form.typeCommercial')}</SelectItem>
+                    <SelectItem value="residential">
+                      {t('companies.form.typeResidential')}
+                    </SelectItem>
+                    <SelectItem value="industrial">{t('companies.form.typeIndustrial')}</SelectItem>
+                    <SelectItem value="healthcare">{t('companies.form.typeHealthcare')}</SelectItem>
+                    <SelectItem value="education">{t('companies.form.typeEducation')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  პრიორიტეტი
+                  {t('companies.form.priority')}
                 </label>
                 <Select
                   value={formData.priority}
@@ -148,9 +156,9 @@ export default function NewCompanyPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="low">დაბალი</SelectItem>
-                    <SelectItem value="medium">საშუალო</SelectItem>
-                    <SelectItem value="high">მაღალი</SelectItem>
+                    <SelectItem value="low">{t('companies.form.priorityLow')}</SelectItem>
+                    <SelectItem value="medium">{t('companies.form.priorityMedium')}</SelectItem>
+                    <SelectItem value="high">{t('companies.form.priorityHigh')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -165,14 +173,16 @@ export default function NewCompanyPage() {
           {/* Contact Information (Company-level, optional) */}
           <div className="bg-bg-primary rounded-lg shadow p-6">
             <h2 className="text-xl font-semibold text-text-primary mb-4">
-              საკონტაქტო ინფორმაცია
-              <span className="text-sm font-normal text-text-secondary ml-2">(არასავალდებულო)</span>
+              {t('companies.form.contactInfo')}
+              <span className="text-sm font-normal text-text-secondary ml-2">
+                ({t('companies.form.optional')})
+              </span>
             </h2>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  საკონტაქტო პირი
+                  {t('companies.form.contactName')}
                 </label>
                 <input
                   type="text"
@@ -183,7 +193,9 @@ export default function NewCompanyPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-1">ტელეფონი</label>
+                <label className="block text-sm font-medium text-text-primary mb-1">
+                  {t('companies.form.contactPhone')}
+                </label>
                 <input
                   type="tel"
                   value={formData.contact_phone}
@@ -194,7 +206,7 @@ export default function NewCompanyPage() {
 
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  ელ. ფოსტა
+                  {t('companies.form.contactEmail')}
                 </label>
                 <input
                   type="email"
@@ -206,7 +218,7 @@ export default function NewCompanyPage() {
 
               <div className="col-span-2">
                 <label className="block text-sm font-medium text-text-primary mb-1">
-                  შენიშვნები
+                  {t('companies.form.notes')}
                 </label>
                 <textarea
                   value={formData.notes}
@@ -226,7 +238,7 @@ export default function NewCompanyPage() {
               className="flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Save size={20} />
-              {loading ? 'მიმდინარეობს შენახვა...' : 'შენახვა'}
+              {loading ? t('companies.form.saving') : t('companies.form.save')}
             </button>
 
             <button
@@ -235,7 +247,7 @@ export default function NewCompanyPage() {
               className="flex items-center gap-2 bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600"
             >
               <X size={20} />
-              გაუქმება
+              {t('companies.form.cancel')}
             </button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslations } from 'next-intl'
 
 import { cn } from '@/lib/utils'
 import { History, Clock } from 'lucide-react'
@@ -17,8 +18,8 @@ interface ActivityFeedProps {
   loading: boolean
 }
 
-// Panel variant: Georgian description with inline value pills
-function renderActivityDescription(update: ItemUpdate) {
+// Panel variant: localized description with inline value pills
+function renderActivityDescription(update: ItemUpdate, t: ReturnType<typeof useTranslations>) {
   const fieldName =
     update.metadata?.displayName ||
     update.column_name_ka ||
@@ -39,25 +40,30 @@ function renderActivityDescription(update: ItemUpdate) {
 
   switch (update.update_type) {
     case 'created':
-      return <span>შექმნა ეს ჩანაწერი</span>
+      return <span>{t('boards.updates.activity.created')}</span>
     case 'status_changed':
       return (
         <span>
-          შეცვალა <strong className="text-text-primary">{fieldName}</strong>{' '}
+          {t('boards.updates.activity.changedField')}{' '}
+          <strong className="text-text-primary">{fieldName}</strong>{' '}
           {valuePill(update.old_value || '-', 'old')}
           {' → '}
           {valuePill(update.new_value || '-', 'new')}
         </span>
       )
     case 'assigned':
-      return <span>{update.content || `მიანიჭა ${fieldName}`}</span>
+      return (
+        <span>{update.content || t('boards.updates.activity.assignedField', { fieldName })}</span>
+      )
     case 'reassigned':
-      return <span>{update.content || `გადაანაწილა ${fieldName}`}</span>
+      return (
+        <span>{update.content || t('boards.updates.activity.reassignedField', { fieldName })}</span>
+      )
     case 'comment': {
       const text = update.content?.substring(0, 80) || ''
       return (
         <span>
-          დააკომენტარა:{' '}
+          {t('boards.updates.activity.commented')}{' '}
           <span className="italic text-text-tertiary">
             "{text}
             {(update.content?.length || 0) > 80 ? '...' : ''}"
@@ -68,7 +74,7 @@ function renderActivityDescription(update: ItemUpdate) {
     case 'moved_to_board':
       return (
         <span>
-          გადაიტანა ბორდზე{' '}
+          {t('boards.updates.activity.movedToBoard')}{' '}
           {update.target_board_name && (
             <strong className="text-text-primary">{update.target_board_name}</strong>
           )}
@@ -94,7 +100,8 @@ function renderActivityDescription(update: ItemUpdate) {
 
         return (
           <span>
-            შეცვალა <strong className="text-text-primary">{fieldName}</strong>{' '}
+            {t('boards.updates.activity.changedField')}{' '}
+            <strong className="text-text-primary">{fieldName}</strong>{' '}
             {valuePill(oldDisplay, 'old')}
             {' → '}
             {valuePill(newDisplay, 'new')}
@@ -111,50 +118,67 @@ function renderActivityDescription(update: ItemUpdate) {
         if (typeof newDisplay !== 'string') newDisplay = String(newDisplay)
         return (
           <span>
-            დააყენა <strong className="text-text-primary">{fieldName}</strong>{' '}
+            {t('boards.updates.activity.setField')}{' '}
+            <strong className="text-text-primary">{fieldName}</strong>{' '}
             {valuePill(newDisplay, 'new')}
           </span>
         )
       }
       return (
         <span>
-          განაახლა <strong className="text-text-primary">{fieldName}</strong>
+          {t('boards.updates.activity.updatedField')}{' '}
+          <strong className="text-text-primary">{fieldName}</strong>
         </span>
       )
     default:
-      return <span>{update.content || `განაახლა ${fieldName}`}</span>
+      return (
+        <span>
+          {update.content || t('boards.updates.activity.updatedFieldFallback', { fieldName })}
+        </span>
+      )
   }
 }
 
 // Modal variant: plain English description
-function getActivityDescription(update: ItemUpdate) {
+function getActivityDescription(update: ItemUpdate, t: ReturnType<typeof useTranslations>) {
   const fieldName =
     update.metadata?.displayName || update.column_name || update.field_name || 'field'
   switch (update.update_type) {
     case 'created':
-      return 'created this item'
+      return t('boards.updates.activity.modal.created')
     case 'status_changed':
-      return `changed ${fieldName} from "${update.old_value || '-'}" to "${update.new_value || '-'}"`
+      return t('boards.updates.activity.modal.statusChanged', {
+        fieldName,
+        oldValue: update.old_value || '-',
+        newValue: update.new_value || '-',
+      })
     case 'assigned':
-      return update.content || `assigned ${fieldName}`
+      return update.content || t('boards.updates.activity.modal.assigned', { fieldName })
     case 'reassigned':
-      return update.content || `reassigned ${fieldName}`
+      return update.content || t('boards.updates.activity.modal.reassigned', { fieldName })
     case 'comment':
-      return `commented: "${update.content?.substring(0, 60) || ''}${(update.content?.length || 0) > 60 ? '...' : ''}"`
+      return t('boards.updates.activity.modal.commented', {
+        text: `${update.content?.substring(0, 60) || ''}${(update.content?.length || 0) > 60 ? '...' : ''}`,
+      })
     case 'updated':
       if (update.old_value && update.new_value) {
-        return `changed ${fieldName} from "${update.old_value}" to "${update.new_value}"`
+        return t('boards.updates.activity.modal.updatedFromTo', {
+          fieldName,
+          oldValue: update.old_value,
+          newValue: update.new_value,
+        })
       }
       if (update.new_value) {
-        return `set ${fieldName} to "${update.new_value}"`
+        return t('boards.updates.activity.modal.setTo', { fieldName, newValue: update.new_value })
       }
-      return `updated ${fieldName}`
+      return t('boards.updates.activity.modal.updated', { fieldName })
     default:
-      return update.content || `updated ${fieldName}`
+      return update.content || t('boards.updates.activity.modal.updated', { fieldName })
   }
 }
 
 export function ActivityFeed({ variant, activities, loading }: ActivityFeedProps) {
+  const t = useTranslations()
   const isPanel = variant === 'panel'
 
   if (loading) {
@@ -185,10 +209,14 @@ export function ActivityFeed({ variant, activities, loading }: ActivityFeedProps
         <span
           className={cn('font-medium text-text-primary mb-1', isPanel ? 'text-base' : 'text-lg')}
         >
-          {isPanel ? 'აქტივობა არ არის' : 'No activity yet'}
+          {isPanel
+            ? t('boards.updates.activity.emptyTitlePanel')
+            : t('boards.updates.activity.emptyTitleModal')}
         </span>
         <span className="text-sm text-text-secondary">
-          {isPanel ? 'ცვლილებები აქ გამოჩნდება' : 'Changes to this item will appear here'}
+          {isPanel
+            ? t('boards.updates.activity.emptyDescriptionPanel')
+            : t('boards.updates.activity.emptyDescriptionModal')}
         </span>
       </div>
     )
@@ -223,10 +251,15 @@ export function ActivityFeed({ variant, activities, loading }: ActivityFeedProps
                 <span
                   className={cn('text-text-primary', isPanel ? 'font-semibold' : 'font-medium')}
                 >
-                  {activity.user_name || (isPanel ? 'სისტემა' : 'System')}
+                  {activity.user_name ||
+                    (isPanel
+                      ? t('boards.updates.activity.systemUserPanel')
+                      : t('boards.updates.activity.systemUserModal'))}
                 </span>{' '}
                 <span className="text-text-secondary">
-                  {isPanel ? renderActivityDescription(activity) : getActivityDescription(activity)}
+                  {isPanel
+                    ? renderActivityDescription(activity, t)
+                    : getActivityDescription(activity, t)}
                 </span>
               </div>
               <div

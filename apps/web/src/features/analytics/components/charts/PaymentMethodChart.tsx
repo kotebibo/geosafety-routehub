@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts'
 import type { PaymentMethodBreakdown } from '@/services/board-analytics.service'
 
@@ -10,11 +11,14 @@ interface PaymentMethodChartProps {
 }
 
 export function PaymentMethodChart({ data }: PaymentMethodChartProps) {
+  const t = useTranslations()
   const total = data.reduce((s, d) => s + d.count, 0)
 
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">გადახდის მეთოდი</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">
+        {t('analytics.charts.paymentMethod.title')}
+      </h3>
       <div className="flex items-center gap-6">
         <div className="flex-shrink-0">
           <ResponsiveContainer width={180} height={180} minWidth={0}>

@@ -1,6 +1,7 @@
 'use client'
 
 import { User, Mail, Phone, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui-monday/Toast'
 
 interface Inspector {
@@ -20,14 +21,15 @@ interface InspectorTableProps {
 
 export function InspectorTable({ inspectors, onDelete, onToggleStatus }: InspectorTableProps) {
   const { showToast } = useToast()
+  const t = useTranslations()
 
   const handleDelete = async (id: string, name: string) => {
-    if (confirm(`დარწმუნებული ხართ, რომ გსურთ ${name}-ის წაშლა?`)) {
+    if (confirm(t('inspectors.table.confirmDelete', { name }))) {
       try {
         await onDelete?.(id)
-        showToast('ინსპექტორი წაიშალა', 'success')
+        showToast(t('inspectors.table.deleted'), 'success')
       } catch (error) {
-        showToast('წაშლისას დაფიქსირდა შეცდომა', 'error')
+        showToast(t('inspectors.table.deleteError'), 'error')
       }
     }
   }
@@ -37,7 +39,7 @@ export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Inspect
     try {
       await onToggleStatus?.(inspector.id, newStatus)
     } catch (error) {
-      showToast('სტატუსის ცვლილებისას დაფიქსირდა შეცდომა', 'error')
+      showToast(t('inspectors.table.statusError'), 'error')
     }
   }
 
@@ -48,19 +50,19 @@ export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Inspect
           <thead className="bg-bg-secondary border-b">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                ინსპექტორი
+                {t('inspectors.table.headerInspector')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                კონტაქტი
+                {t('inspectors.table.headerContact')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                სპეციალობა
+                {t('inspectors.table.headerSpecialty')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                სტატუსი
+                {t('inspectors.table.headerStatus')}
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
-                მოქმედებები
+                {t('inspectors.table.headerActions')}
               </th>
             </tr>
           </thead>
@@ -102,12 +104,16 @@ export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Inspect
                     {inspector.status === 'active' ? (
                       <>
                         <ToggleRight className="w-6 h-6 text-green-600" />
-                        <span className="text-sm font-medium text-green-600">აქტიური</span>
+                        <span className="text-sm font-medium text-green-600">
+                          {t('inspectors.table.active')}
+                        </span>
                       </>
                     ) : (
                       <>
                         <ToggleLeft className="w-6 h-6 text-text-tertiary" />
-                        <span className="text-sm font-medium text-text-secondary">არააქტიური</span>
+                        <span className="text-sm font-medium text-text-secondary">
+                          {t('inspectors.table.inactive')}
+                        </span>
                       </>
                     )}
                   </button>
@@ -118,7 +124,7 @@ export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Inspect
                     className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
-                    წაშლა
+                    {t('inspectors.table.delete')}
                   </button>
                 </td>
               </tr>
@@ -128,7 +134,9 @@ export function InspectorTable({ inspectors, onDelete, onToggleStatus }: Inspect
       </div>
 
       {inspectors.length === 0 && (
-        <div className="p-12 text-center text-text-secondary">ინსპექტორები არ არის</div>
+        <div className="p-12 text-center text-text-secondary">
+          {t('inspectors.table.emptyState')}
+        </div>
       )}
     </div>
   )

@@ -15,6 +15,7 @@ function createQueryBuilder(resolvedValue: { data: any; error: any }) {
     'select',
     'eq',
     'or',
+    'ilike',
     'gte',
     'lte',
     'order',
@@ -23,6 +24,7 @@ function createQueryBuilder(resolvedValue: { data: any; error: any }) {
     'is',
     'limit',
     'single',
+    'maybeSingle',
   ]
   for (const m of methods) {
     builder[m] = vi.fn(() => builder)
@@ -82,7 +84,19 @@ describe('Payment Contracts API - GET', () => {
     expect(body.error).toBe('Admin access required')
   })
 
+  it('returns empty contracts when workspace is not found', async () => {
+    mockFromResults['workspaces'] = [{ data: null, error: null }]
+
+    const res = await GET()
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.contracts).toEqual({})
+    expect(body.boards_found).toBe(0)
+  })
+
   it('returns empty contracts when no boards found', async () => {
+    mockFromResults['workspaces'] = [{ data: { id: 'ws1' }, error: null }]
     mockFromResults['boards'] = [{ data: [], error: null }]
 
     const res = await GET()
@@ -94,6 +108,7 @@ describe('Payment Contracts API - GET', () => {
   })
 
   it('returns contracts grouped by tax ID', async () => {
+    mockFromResults['workspaces'] = [{ data: { id: 'ws1' }, error: null }]
     const boards = [{ id: 'b1', name: 'ხელშეკრულებები' }]
     const columns = [
       {
@@ -143,7 +158,58 @@ describe('Payment Contracts API - GET', () => {
     expect(body.contracts['67890'][0].first_payment_date).toBeNull()
   })
 
+  it('classifies contract_source by board name, scoped to the workspace, excluding the services board', async () => {
+    const boards = [
+      { id: 'b1', name: 'ხელშეკრულებები' },
+      { id: 'b2', name: 'ერთჯერადი ხელშეკრულებები' },
+      { id: 'b3', name: 'შეჩერებული' },
+      { id: 'b4', name: 'შეწყვეტილი / დასრულებული' },
+      { id: 'b5', name: 'დამატებითი მომსახურეობები' },
+    ]
+    const columns = [
+      {
+        column_id: 'c1',
+        column_name: 'Tax',
+        column_name_ka: 'ს/კ',
+        column_type: 'text',
+        config: null,
+      },
+    ]
+
+    mockFromResults['workspaces'] = [{ data: { id: 'ws1' }, error: null }]
+    mockFromResults['boards'] = [{ data: boards, error: null }]
+    // one board_columns/board_items result per non-excluded board, in order
+    mockFromResults['board_columns'] = [
+      { data: columns, error: null },
+      { data: columns, error: null },
+      { data: columns, error: null },
+      { data: columns, error: null },
+    ]
+    mockFromResults['board_items'] = [
+      { data: [{ id: 'i1', name: 'Active Co', data: { c1: '11111' } }], error: null },
+      { data: [{ id: 'i2', name: 'OneTime Co', data: { c1: '22222' } }], error: null },
+      { data: [{ id: 'i3', name: 'Paused Co', data: { c1: '33333' } }], error: null },
+      { data: [{ id: 'i4', name: 'Ended Co', data: { c1: '44444' } }], error: null },
+    ]
+    mockFromResults['bank_transactions'] = [{ data: [], error: null }]
+
+    const res = await GET()
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.contracts['11111'][0].contract_source).toBe('active')
+    expect(body.contracts['22222'][0].contract_source).toBe('one_time')
+    expect(body.contracts['33333'][0].contract_source).toBe('paused')
+    expect(body.contracts['44444'][0].contract_source).toBe('ended')
+    // the excluded board never contributes a query, so only 4 boards are summarized
+    expect(body.boards_found).toHaveLength(4)
+    expect(body.boards_found.map((b: { name: string }) => b.name)).not.toContain(
+      'დამატებითი მომსახურეობები'
+    )
+  })
+
   it('returns 500 on board query error', async () => {
+    mockFromResults['workspaces'] = [{ data: { id: 'ws1' }, error: null }]
     mockFromResults['boards'] = [{ data: null, error: new Error('DB error') }]
 
     const res = await GET()
@@ -154,6 +220,7 @@ describe('Payment Contracts API - GET', () => {
   })
 
   it('sets cache control headers', async () => {
+    mockFromResults['workspaces'] = [{ data: { id: 'ws1' }, error: null }]
     mockFromResults['boards'] = [{ data: [], error: null }]
 
     const res = await GET()
@@ -164,6 +231,7 @@ describe('Payment Contracts API - GET', () => {
   })
 
   it('skips boards with no tax ID column', async () => {
+    mockFromResults['workspaces'] = [{ data: { id: 'ws1' }, error: null }]
     const boards = [{ id: 'b1', name: 'ხელშეკრულებები' }]
     const columnsNoTaxId = [
       {

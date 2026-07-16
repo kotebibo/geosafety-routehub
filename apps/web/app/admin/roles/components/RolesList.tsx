@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Shield, Lock, Users, Copy, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { CustomRole } from '@/services/users.service'
@@ -31,11 +32,12 @@ export function RolesList({
   onDuplicateRole,
   onDeleteRole,
 }: RolesListProps) {
+  const t = useTranslations()
   return (
     <div className="bg-bg-primary rounded-lg border border-border-light overflow-hidden">
       <div className="px-4 py-3 border-b border-border-light bg-bg-secondary">
         <h2 className="font-semibold text-text-primary">
-          {'\u10E0\u10DD\u10DA\u10D4\u10D1\u10D8'} ({roles.length})
+          {t('admin.roles.rolesListTitle')} ({roles.length})
         </h2>
       </div>
 
@@ -46,11 +48,7 @@ export function RolesList({
       ) : roles.length === 0 ? (
         <div className="px-4 py-8 text-center">
           <Shield className="w-12 h-12 text-text-disabled mx-auto mb-3" />
-          <p className="text-text-secondary">
-            {
-              '\u10E0\u10DD\u10DA\u10D4\u10D1\u10D8 \u10D5\u10D4\u10E0 \u10DB\u10DD\u10D8\u10EB\u10D4\u10D1\u10DC\u10D0'
-            }
-          </p>
+          <p className="text-text-secondary">{t('admin.roles.noRolesFound')}</p>
         </div>
       ) : (
         <div className="divide-y divide-border-light max-h-[600px] overflow-y-auto">
@@ -77,7 +75,7 @@ export function RolesList({
                     </div>
                     <div className="flex items-center gap-2 text-xs text-text-secondary">
                       <span>
-                        {role.permissions?.length || 0} {'\u10E3\u10E4\u10DA\u10D4\u10D1\u10D0'}
+                        {role.permissions?.length || 0} {t('admin.roles.permissionUnit')}
                       </span>
                       {stats?.usersByRole[role.name] && (
                         <>
@@ -99,7 +97,7 @@ export function RolesList({
                         onDuplicateRole(role)
                       }}
                       className="p-1.5 text-text-tertiary hover:text-monday-primary hover:bg-monday-primary/10 rounded transition-colors"
-                      title={'\u10D3\u10E3\u10D1\u10DA\u10D8\u10E0\u10D4\u10D1\u10D0'}
+                      title={t('admin.roles.duplicate')}
                     >
                       <Copy className="w-4 h-4" />
                     </button>
@@ -109,7 +107,7 @@ export function RolesList({
                         onDeleteRole(role)
                       }}
                       className="p-1.5 text-text-tertiary hover:text-color-error hover:bg-color-error/10 rounded transition-colors"
-                      title={'\u10EC\u10D0\u10E8\u10DA\u10D0'}
+                      title={t('admin.roles.delete')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

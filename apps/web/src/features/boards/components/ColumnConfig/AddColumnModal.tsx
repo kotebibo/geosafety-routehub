@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui-monday/Toast'
 import {
@@ -39,143 +40,110 @@ interface AddColumnModalProps {
 
 const COLUMN_TYPES: Array<{
   type: ColumnType
-  label: string
-  labelKa: string
+  labelKey: string
   icon: React.ReactNode
-  description: string
-  descriptionKa: string
+  descriptionKey: string
 }> = [
   {
     type: 'text',
-    label: 'Text',
-    labelKa: 'ტექსტი',
+    labelKey: 'boards.addColumnModal.types.text.label',
     icon: <Type className="w-5 h-5" />,
-    description: 'Single or multi-line text',
-    descriptionKa: 'ერთ ან მრავალხაზიანი ტექსტი',
+    descriptionKey: 'boards.addColumnModal.types.text.description',
   },
   {
     type: 'number',
-    label: 'Number',
-    labelKa: 'რიცხვი',
+    labelKey: 'boards.addColumnModal.types.number.label',
     icon: <Hash className="w-5 h-5" />,
-    description: 'Numeric values',
-    descriptionKa: 'რიცხვითი მნიშვნელობები',
+    descriptionKey: 'boards.addColumnModal.types.number.description',
   },
   {
     type: 'status',
-    label: 'Status',
-    labelKa: 'სტატუსი',
+    labelKey: 'boards.addColumnModal.types.status.label',
     icon: <CheckSquare className="w-5 h-5" />,
-    description: 'Colored status labels',
-    descriptionKa: 'ფერადი სტატუსის ლეიბლები',
+    descriptionKey: 'boards.addColumnModal.types.status.description',
   },
   {
     type: 'date',
-    label: 'Date',
-    labelKa: 'თარიღი',
+    labelKey: 'boards.addColumnModal.types.date.label',
     icon: <Calendar className="w-5 h-5" />,
-    description: 'Date picker',
-    descriptionKa: 'თარიღის არჩევა',
+    descriptionKey: 'boards.addColumnModal.types.date.description',
   },
   {
     type: 'date_range',
-    label: 'Date Range',
-    labelKa: 'თარიღის დიაპაზონი',
+    labelKey: 'boards.addColumnModal.types.dateRange.label',
     icon: <Calendar className="w-5 h-5" />,
-    description: 'Start and end date',
-    descriptionKa: 'საწყისი და საბოლოო თარიღი',
+    descriptionKey: 'boards.addColumnModal.types.dateRange.description',
   },
   {
     type: 'person',
-    label: 'Person',
-    labelKa: 'პიროვნება',
+    labelKey: 'boards.addColumnModal.types.person.label',
     icon: <User className="w-5 h-5" />,
-    description: 'Assign people',
-    descriptionKa: 'პიროვნების მინიჭება',
+    descriptionKey: 'boards.addColumnModal.types.person.description',
   },
   {
     type: 'route',
-    label: 'Route',
-    labelKa: 'მარშრუტი',
+    labelKey: 'boards.addColumnModal.types.route.label',
     icon: <MapPin className="w-5 h-5" />,
-    description: 'Link to a route',
-    descriptionKa: 'მარშრუტთან დაკავშირება',
+    descriptionKey: 'boards.addColumnModal.types.route.description',
   },
   {
     type: 'company',
-    label: 'Company',
-    labelKa: 'კომპანია',
+    labelKey: 'boards.addColumnModal.types.company.label',
     icon: <Building2 className="w-5 h-5" />,
-    description: 'Link to a company',
-    descriptionKa: 'კომპანიასთან დაკავშირება',
+    descriptionKey: 'boards.addColumnModal.types.company.description',
   },
   {
     type: 'company_address',
-    label: 'Company Address',
-    labelKa: 'კომპანიის მისამართი',
+    labelKey: 'boards.addColumnModal.types.companyAddress.label',
     icon: <Navigation className="w-5 h-5" />,
-    description: 'Auto-display company location address',
-    descriptionKa: 'კომპანიის ლოკაციის მისამართის ავტომატური ჩვენება',
+    descriptionKey: 'boards.addColumnModal.types.companyAddress.description',
   },
   {
     type: 'service_type',
-    label: 'Service Type',
-    labelKa: 'სერვისის ტიპი',
+    labelKey: 'boards.addColumnModal.types.serviceType.label',
     icon: <Shield className="w-5 h-5" />,
-    description: 'Select inspection service',
-    descriptionKa: 'ინსპექტირების სერვისის არჩევა',
+    descriptionKey: 'boards.addColumnModal.types.serviceType.description',
   },
   {
     type: 'checkbox',
-    label: 'Checkbox',
-    labelKa: 'ჩექბოქსი',
+    labelKey: 'boards.addColumnModal.types.checkbox.label',
     icon: <Check className="w-5 h-5" />,
-    description: 'Yes/No toggle',
-    descriptionKa: 'დიახ/არა გადამრთველი',
+    descriptionKey: 'boards.addColumnModal.types.checkbox.description',
   },
   {
     type: 'phone',
-    label: 'Phone',
-    labelKa: 'ტელეფონი',
+    labelKey: 'boards.addColumnModal.types.phone.label',
     icon: <Phone className="w-5 h-5" />,
-    description: 'Phone numbers with click-to-call',
-    descriptionKa: 'ტელეფონის ნომრები დასარეკი ბმულით',
+    descriptionKey: 'boards.addColumnModal.types.phone.description',
   },
   {
     type: 'email',
-    label: 'Email',
-    labelKa: 'ელ-ფოსტა',
+    labelKey: 'boards.addColumnModal.types.email.label',
     icon: <Mail className="w-5 h-5" />,
-    description: 'Email addresses with mailto link',
-    descriptionKa: 'ელ-ფოსტის მისამართები',
+    descriptionKey: 'boards.addColumnModal.types.email.description',
   },
   {
     type: 'files',
-    label: 'Files',
-    labelKa: 'ფაილები',
+    labelKey: 'boards.addColumnModal.types.files.label',
     icon: <Paperclip className="w-5 h-5" />,
-    description: 'Attach photos and documents',
-    descriptionKa: 'ფოტოების და დოკუმენტების მიმაგრება',
+    descriptionKey: 'boards.addColumnModal.types.files.description',
   },
   {
     type: 'updates',
-    label: 'Updates',
-    labelKa: 'განახლებები',
+    labelKey: 'boards.addColumnModal.types.updates.label',
     icon: <MessageSquare className="w-5 h-5" />,
-    description: 'Comments and activity log',
-    descriptionKa: 'კომენტარები და აქტივობის ჟურნალი',
+    descriptionKey: 'boards.addColumnModal.types.updates.description',
   },
   {
     type: 'checkin',
-    label: 'Check-in',
-    labelKa: 'ჩეკ-ინი',
+    labelKey: 'boards.addColumnModal.types.checkin.label',
     icon: <ClipboardCheck className="w-5 h-5" />,
-    description: 'Check-in status, duration and location match',
-    descriptionKa: 'ჩეკ-ინის სტატუსი, ხანგრძლივობა და მდებარეობის შედარება',
+    descriptionKey: 'boards.addColumnModal.types.checkin.description',
   },
 ]
 
 export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColumnModalProps) {
+  const t = useTranslations()
   const { showToast } = useToast()
   const [columnName, setColumnName] = useState('')
   const [selectedType, setSelectedType] = useState<ColumnType>('text')
@@ -208,7 +176,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
 
     // Validate company_address requires a linked company column
     if (selectedType === 'company_address' && !linkedCompanyColumnId && companyColumns.length > 0) {
-      showToast('გთხოვთ აირჩიოთ კომპანიის სვეტი', 'warning')
+      showToast(t('boards.addColumnModal.selectCompanyColumnWarning'), 'warning')
       return
     }
 
@@ -256,7 +224,9 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
       <div className="relative bg-bg-primary rounded-lg shadow-2xl w-full max-w-3xl mx-4 overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
-          <h2 className="text-lg font-semibold text-text-primary">სვეტის დამატება</h2>
+          <h2 className="text-lg font-semibold text-text-primary">
+            {t('boards.addColumnModal.title')}
+          </h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-bg-hover transition-colors">
             <X className="w-5 h-5 text-text-secondary" />
           </button>
@@ -267,14 +237,14 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
           {/* Column Name */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-text-primary mb-2">
-              სვეტის სახელი
+              {t('boards.addColumnModal.nameLabel')}
             </label>
             <input
               type="text"
               value={columnName}
               onChange={e => setColumnName(e.target.value)}
               onBlur={() => setNameBlurred(true)}
-              placeholder="მაგ: პრიორიტეტი, მფლობელი, ვადა"
+              placeholder={t('boards.addColumnModal.namePlaceholder')}
               className={cn(
                 'w-full px-3 py-2 bg-bg-primary text-text-primary border rounded-md placeholder:text-text-tertiary focus:outline-none focus:border-monday-primary',
                 nameBlurred && !columnName.trim()
@@ -284,13 +254,15 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
               autoFocus
             />
             {nameBlurred && !columnName.trim() && (
-              <p className="text-xs text-red-500 mt-1">სვეტის სახელი სავალდებულოა</p>
+              <p className="text-xs text-red-500 mt-1">{t('boards.addColumnModal.nameRequired')}</p>
             )}
           </div>
 
           {/* Column Type */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-text-primary mb-3">სვეტის ტიპი</label>
+            <label className="block text-sm font-medium text-text-primary mb-3">
+              {t('boards.addColumnModal.typeLabel')}
+            </label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {COLUMN_TYPES.map(type => (
                 <button
@@ -320,9 +292,9 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                         selectedType === type.type ? 'text-monday-primary' : 'text-text-primary'
                       )}
                     >
-                      {type.labelKa}
+                      {t(type.labelKey)}
                     </div>
-                    <div className="text-xs text-text-tertiary">{type.descriptionKa}</div>
+                    <div className="text-xs text-text-tertiary">{t(type.descriptionKey)}</div>
                   </div>
                 </button>
               ))}
@@ -333,16 +305,17 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
           {selectedType === 'company_address' && (
             <div className="mb-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
               <label className="block text-sm font-medium text-text-primary mb-2">
-                დაკავშირებული კომპანიის სვეტი
+                {t('boards.addColumnModal.companyAddress.linkedColumnLabel')}
               </label>
               {companyColumns.length === 0 ? (
                 <div className="flex items-start gap-2 text-amber-500">
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium">კომპანიის სვეტი არ მოიძებნა</p>
+                    <p className="text-sm font-medium">
+                      {t('boards.addColumnModal.companyAddress.noCompanyColumnFound')}
+                    </p>
                     <p className="text-xs mt-1">
-                      ჯერ დაამატეთ "კომპანია" ტიპის სვეტი, შემდეგ შეძლებთ მისამართის სვეტის
-                      დამატებას.
+                      {t('boards.addColumnModal.companyAddress.addCompanyColumnFirst')}
                     </p>
                   </div>
                 </div>
@@ -360,7 +333,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                     ))}
                   </select>
                   <p className="text-xs text-text-secondary mt-2">
-                    მისამართი ავტომატურად გამოჩნდება არჩეული კომპანიის ლოკაციიდან
+                    {t('boards.addColumnModal.companyAddress.autoFillHint')}
                   </p>
                 </>
               )}
@@ -371,14 +344,13 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
           {selectedType === 'checkin' && (
             <div className="mb-6 p-4 bg-blue-500/10 rounded-lg border border-blue-500/30">
               <label className="block text-sm font-medium text-text-primary mb-2">
-                კოორდინატების სვეტი (არასავალდებულო)
+                {t('boards.addColumnModal.checkin.coordinatesColumnLabel')}
               </label>
               {coordsCandidateColumns.length === 0 ? (
                 <div className="flex items-start gap-2 text-blue-500">
                   <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   <p className="text-sm">
-                    კოორდინატების სვეტი არ მოიძებნა. ჩეკ-ინი GPS-ის რეჟიმში იმუშავებს — გეოფენსის
-                    შემოწმების გარეშე.
+                    {t('boards.addColumnModal.checkin.noCoordinatesColumn')}
                   </p>
                 </div>
               ) : (
@@ -388,7 +360,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                     onChange={e => setCoordinatesColumnId(e.target.value)}
                     className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
                   >
-                    <option value="">არ არის არჩეული (GPS-ის რეჟიმი)</option>
+                    <option value="">{t('boards.addColumnModal.checkin.gpsModeOption')}</option>
                     {/* value must be column_id (the item.data key), not the row UUID */}
                     {coordsCandidateColumns.map(col => (
                       <option key={col.id} value={col.column_id}>
@@ -397,51 +369,51 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                     ))}
                   </select>
                   <p className="text-xs text-text-secondary mt-2">
-                    აირჩიეთ სვეტი, რომელიც შეიცავს კოორდინატებს (მაგ: &quot;41.71, 44.82&quot;).
-                    ინსპექტორი ამ კოორდინატების 150მ რადიუსში უნდა იყოს ჩეკ-ინისთვის. თუ სვეტი
-                    წაიშლება, ჩეკ-ინი GPS-ის რეჟიმზე გადავა.
+                    {t('boards.addColumnModal.checkin.coordinatesColumnHint')}
                   </p>
                 </>
               )}
 
               <label className="block text-sm font-medium text-text-primary mb-2 mt-4">
-                სერვისი
+                {t('boards.addColumnModal.checkin.serviceLabel')}
               </label>
               <select
                 value={service}
                 onChange={e => setService(e.target.value)}
                 className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
               >
-                <option value="">არ არის მითითებული</option>
+                <option value="">{t('boards.addColumnModal.checkin.serviceNotSpecified')}</option>
                 {CHECKIN_SERVICES.map(s => (
                   <option key={s} value={s}>
                     {s}
                   </option>
                 ))}
-                <option value={CUSTOM_SERVICE}>სხვა...</option>
+                <option value={CUSTOM_SERVICE}>
+                  {t('boards.addColumnModal.checkin.serviceOther')}
+                </option>
               </select>
               {service === CUSTOM_SERVICE && (
                 <input
                   type="text"
                   value={customService}
                   onChange={e => setCustomService(e.target.value)}
-                  placeholder="ჩაწერეთ სერვისის სახელი"
+                  placeholder={t('boards.addColumnModal.checkin.customServicePlaceholder')}
                   className="w-full mt-2 px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
                 />
               )}
               <p className="text-xs text-text-secondary mt-2">
-                რომელი სერვისისთვის კეთდება ჩეკ-ინები ამ სვეტში. ინახება ყოველ ჩეკ-ინზე.
+                {t('boards.addColumnModal.checkin.serviceHint')}
               </p>
 
               <label className="block text-sm font-medium text-text-primary mb-2 mt-4">
-                სტადიის სვეტი (ავტო-განახლება)
+                {t('boards.addColumnModal.checkin.stageColumnLabel')}
               </label>
               <select
                 value={stageColumnId}
                 onChange={e => setStageColumnId(e.target.value)}
                 className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
               >
-                <option value="">გამორთული</option>
+                <option value="">{t('boards.addColumnModal.checkin.stageColumnDisabled')}</option>
                 {statusColumns.map(col => (
                   <option key={col.id} value={col.column_id}>
                     {col.column_name}
@@ -449,8 +421,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                 ))}
               </select>
               <p className="text-xs text-text-secondary mt-2">
-                ჩეკ-ინისას არჩეული ვიზიტის ტიპი ავტომატურად ჩაიწერება ამ სტატუსის სვეტში — კომპანიის
-                მიმდინარე სტადია ყოველთვის განახლებული იქნება.
+                {t('boards.addColumnModal.checkin.stageColumnHint')}
               </p>
             </div>
           )}
@@ -458,7 +429,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
           {/* Column Width */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-text-primary mb-2">
-              სვეტის სიგანე: {width}px
+              {t('boards.addColumnModal.widthLabel', { width })}
             </label>
             <input
               type="range"
@@ -473,8 +444,8 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
               }}
             />
             <div className="flex justify-between text-xs text-text-tertiary mt-1">
-              <span>80px (ვიწრო)</span>
-              <span>500px (ფართო)</span>
+              <span>{t('boards.addColumnModal.widthNarrow')}</span>
+              <span>{t('boards.addColumnModal.widthWide')}</span>
             </div>
           </div>
 
@@ -485,7 +456,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
               onClick={onClose}
               className="px-4 py-2 text-text-secondary hover:bg-bg-hover rounded-md transition-colors"
             >
-              გაუქმება
+              {t('boards.addColumnModal.cancel')}
             </button>
             <button
               type="submit"
@@ -501,7 +472,7 @@ export function AddColumnModal({ onClose, onAdd, existingColumns = [] }: AddColu
                   : 'opacity-50 cursor-not-allowed'
               )}
             >
-              სვეტის დამატება
+              {t('boards.addColumnModal.addColumn')}
             </button>
           </div>
         </form>

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 
 // Authentication is now enabled
@@ -10,6 +11,7 @@ const DISABLE_AUTH_FOR_DEV = false
 export function RouteGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
+  const t = useTranslations()
   const { user, loading } = useAuth()
 
   // Public routes that don't require authentication
@@ -51,7 +53,7 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
       <div className="min-h-screen flex items-center justify-center bg-bg-secondary">
         <div className="text-center">
           <div className="animate-spin text-4xl mb-4">⚙️</div>
-          <p className="text-text-secondary">იტვირთება...</p>
+          <p className="text-text-secondary">{t('common.loading')}</p>
         </div>
       </div>
     )

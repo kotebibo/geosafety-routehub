@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { MapPinned, Navigation } from 'lucide-react'
 import type { LocationCheckin } from '@/types/checkin'
 
@@ -8,15 +9,14 @@ interface CheckinsCardProps {
 }
 
 export function CheckinsCard({ checkins }: CheckinsCardProps) {
+  const t = useTranslations()
   if (checkins.length === 0) return null
 
   return (
     <div className="bg-bg-primary border border-border-light rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-border-light flex items-center gap-2">
         <MapPinned className="w-4.5 h-4.5 text-text-tertiary" />
-        <h2 className="font-semibold text-text-primary">
-          {'\u10D1\u10DD\u10DA\u10DD \u10E9\u10D4\u10D9-\u10D8\u10DC\u10D4\u10D1\u10D8'}
-        </h2>
+        <h2 className="font-semibold text-text-primary">{t('companies.detail.recentCheckins')}</h2>
         <span className="text-xs text-text-tertiary font-medium bg-bg-tertiary px-1.5 py-0.5 rounded">
           {checkins.length}
         </span>
@@ -64,7 +64,7 @@ export function CheckinsCard({ checkins }: CheckinsCardProps) {
                     }`}
                   >
                     {checkin.distance_from_location}
-                    {'\u10DB'}
+                    {t('companies.detail.meterAbbr')}
                   </span>
                 )}
               </div>
@@ -72,7 +72,7 @@ export function CheckinsCard({ checkins }: CheckinsCardProps) {
             {checkin.location_updated && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700 rounded-full flex-shrink-0">
                 <Navigation className="w-3 h-3" />
-                GPS {'\u10D2\u10D0\u10DC\u10D0\u10EE\u10DA\u10D3\u10D0'}
+                GPS {t('companies.detail.updated')}
               </span>
             )}
           </div>

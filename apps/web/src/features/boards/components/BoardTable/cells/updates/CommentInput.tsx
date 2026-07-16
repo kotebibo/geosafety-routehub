@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslations } from 'next-intl'
 
 import { cn } from '@/lib/utils'
 import { Send, X, User, CornerDownRight, AtSign, Paperclip } from 'lucide-react'
@@ -61,6 +62,7 @@ export function CommentInput({
   onFileSelect,
   onRemovePendingFile,
 }: CommentInputProps) {
+  const t = useTranslations()
   const isPanel = variant === 'panel'
 
   return (
@@ -76,7 +78,7 @@ export function CommentInput({
           <div className="flex items-center gap-2 text-sm text-text-link">
             <CornerDownRight className="w-4 h-4" />
             <span>
-              Replying to <strong>{replyingTo.user_name}</strong>
+              {t('boards.updates.comments.replyingTo')} <strong>{replyingTo.user_name}</strong>
             </span>
           </div>
           <button
@@ -123,10 +125,12 @@ export function CommentInput({
               onKeyDown={onKeyDown}
               placeholder={
                 replyingTo
-                  ? `Reply to ${replyingTo.user_name}...`
+                  ? t('boards.updates.comments.replyToPlaceholder', {
+                      name: replyingTo.user_name ?? '',
+                    })
                   : isPanel
-                    ? 'დაწერეთ განახლება... @ მენშენისთვის'
-                    : 'Write an update... Type @ to mention someone'
+                    ? t('boards.updates.comments.writeUpdatePlaceholderPanel')
+                    : t('boards.updates.comments.writeUpdatePlaceholderModal')
               }
               rows={isPanel ? 2 : 3}
               className={cn(
@@ -174,7 +178,9 @@ export function CommentInput({
                     isPanel ? 'w-3 h-3' : 'w-3.5 h-3.5'
                   )}
                 />
-                {isPanel ? 'იტვირთება...' : 'Uploading...'}
+                {isPanel
+                  ? t('boards.updates.comments.uploadingPanel')
+                  : t('boards.updates.comments.uploadingModal')}
               </div>
             )}
 
@@ -198,12 +204,16 @@ export function CommentInput({
                   )}
                 >
                   <Paperclip className={isPanel ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
-                  <span>{isPanel ? 'მიმაგრება' : 'Attach'}</span>
+                  <span>
+                    {isPanel
+                      ? t('boards.updates.comments.attachPanel')
+                      : t('boards.updates.comments.attachModal')}
+                  </span>
                 </button>
                 {!isPanel && (
                   <div className="flex items-center gap-2 text-xs text-text-tertiary">
                     <AtSign className="w-3.5 h-3.5" />
-                    <span>@ to mention</span>
+                    <span>{t('boards.updates.comments.mentionHint')}</span>
                   </div>
                 )}
               </div>
@@ -227,7 +237,13 @@ export function CommentInput({
                   <>
                     <Send className={isPanel ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
                     <span>
-                      {replyingTo ? (isPanel ? 'პასუხი' : 'Reply') : isPanel ? 'გაგზავნა' : 'Send'}
+                      {replyingTo
+                        ? isPanel
+                          ? t('boards.updates.comments.replyButtonPanel')
+                          : t('boards.updates.comments.replyButtonModal')
+                        : isPanel
+                          ? t('boards.updates.comments.sendButtonPanel')
+                          : t('boards.updates.comments.sendButtonModal')}
                     </span>
                   </>
                 )}

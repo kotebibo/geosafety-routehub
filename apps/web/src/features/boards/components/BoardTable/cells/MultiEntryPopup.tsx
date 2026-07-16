@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { Plus, X, Phone, Mail, Type } from 'lucide-react'
@@ -30,13 +31,14 @@ export function MultiEntryPopup({
   onSave,
   onClose,
   triggerRef,
-  placeholder = 'Add entry...',
+  placeholder,
   inputType = 'text',
   validate,
-  title = 'Entries',
+  title,
   formatDisplay,
   getHref,
 }: MultiEntryPopupProps) {
+  const t = useTranslations()
   const [localEntries, setLocalEntries] = useState<string[]>(entries)
   const [inputValue, setInputValue] = useState('')
   const [error, setError] = useState('')
@@ -84,12 +86,16 @@ export function MultiEntryPopup({
     if (!trimmed) return
 
     if (validate && !validate(trimmed)) {
-      setError(inputType === 'email' ? 'არასწორი ელ-ფოსტის ფორმატი' : 'არასწორი ფორმატი')
+      setError(
+        inputType === 'email'
+          ? t('boards.multiEntryPopup.invalidEmailFormat')
+          : t('boards.multiEntryPopup.invalidFormat')
+      )
       return
     }
 
     if (localEntries.includes(trimmed)) {
-      setError('უკვე დამატებულია')
+      setError(t('boards.multiEntryPopup.alreadyAdded'))
       return
     }
 
@@ -140,7 +146,9 @@ export function MultiEntryPopup({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-text-primary">{title}</span>
+          <span className="text-sm font-medium text-text-primary">
+            {title ?? t('boards.multiEntryPopup.entriesTitle')}
+          </span>
           {localEntries.length > 0 && (
             <span className="text-xs text-text-tertiary bg-bg-secondary px-1.5 py-0.5 rounded-full">
               {localEntries.length}
@@ -185,7 +193,9 @@ export function MultiEntryPopup({
                   onClick={() => handleCopy(entry, index)}
                   className="px-1.5 py-0.5 rounded text-[11px] text-text-secondary hover:bg-bg-hover transition-colors"
                 >
-                  {copiedIndex === index ? 'Copied!' : 'Copy'}
+                  {copiedIndex === index
+                    ? t('boards.multiEntryPopup.copied')
+                    : t('boards.multiEntryPopup.copy')}
                 </button>
                 <button
                   onClick={() => handleRemove(index)}
@@ -201,7 +211,9 @@ export function MultiEntryPopup({
         <div className="py-4 mb-3 text-center rounded-md border border-dashed border-border-light">
           <EntryIcon className="w-5 h-5 text-text-tertiary mx-auto mb-1.5" />
           <p className="text-xs text-text-tertiary">
-            {inputType === 'email' ? 'ელ-ფოსტა არ არის დამატებული' : 'ნომერი არ არის დამატებული'}
+            {inputType === 'email'
+              ? t('boards.multiEntryPopup.noEmailsAdded')
+              : t('boards.multiEntryPopup.noNumbersAdded')}
           </p>
         </div>
       )}
@@ -217,7 +229,7 @@ export function MultiEntryPopup({
             setError('')
           }}
           onKeyDown={handleKeyDown}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t('boards.multiEntryPopup.addEntryPlaceholder')}
           className="flex-1 h-8 px-2.5 text-sm border border-border-light rounded-md focus:outline-none focus:border-monday-primary bg-bg-primary text-text-primary placeholder:text-text-tertiary"
         />
         <button
@@ -231,7 +243,7 @@ export function MultiEntryPopup({
           )}
         >
           <Plus className="w-3.5 h-3.5" />
-          Add
+          {t('common.add')}
         </button>
       </div>
 

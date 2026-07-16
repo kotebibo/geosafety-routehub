@@ -45,7 +45,7 @@ export function LanguageTab({
             <span className="text-2xl">🇬🇪</span>
             <div className="text-left">
               <p className="font-medium text-text-primary">ქართული</p>
-              <p className="text-sm text-text-tertiary">Georgian</p>
+              <p className="text-sm text-text-tertiary">{t('settings.language.georgian')}</p>
             </div>
             {language === 'ka' && <Check className="w-5 h-5 text-monday-primary ml-2" />}
           </button>
@@ -62,7 +62,7 @@ export function LanguageTab({
             <span className="text-2xl">🇬🇧</span>
             <div className="text-left">
               <p className="font-medium text-text-primary">English</p>
-              <p className="text-sm text-text-tertiary">ინგლისური</p>
+              <p className="text-sm text-text-tertiary">{t('settings.language.english')}</p>
             </div>
             {language === 'en' && <Check className="w-5 h-5 text-monday-primary ml-2" />}
           </button>

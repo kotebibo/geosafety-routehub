@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { X, Users, Search, ChevronDown, Crown, Pencil, Eye, Trash2, UserPlus } from 'lucide-react'
 import { Tooltip } from '@/shared/components/ui/tooltip'
@@ -30,24 +31,24 @@ type MemberRole = 'owner' | 'editor' | 'viewer'
 
 const ROLE_CONFIG: Record<
   MemberRole,
-  { label: string; icon: React.ReactNode; description: string; color: string }
+  { labelKey: string; icon: React.ReactNode; descriptionKey: string; color: string }
 > = {
   owner: {
-    label: 'Owner',
+    labelKey: 'boards.accessModal.roleOwner',
     icon: <Crown className="w-4 h-4" />,
-    description: 'Full access, can manage members',
+    descriptionKey: 'boards.accessModal.roleOwnerDesc',
     color: 'text-amber-600',
   },
   editor: {
-    label: 'Editor',
+    labelKey: 'boards.accessModal.roleEditor',
     icon: <Pencil className="w-4 h-4" />,
-    description: 'Can edit board content',
+    descriptionKey: 'boards.accessModal.roleEditorDesc',
     color: 'text-blue-600',
   },
   viewer: {
-    label: 'Viewer',
+    labelKey: 'boards.accessModal.roleViewer',
     icon: <Eye className="w-4 h-4" />,
-    description: 'Can only view',
+    descriptionKey: 'boards.accessModal.roleViewerDesc',
     color: 'text-text-secondary',
   },
 }
@@ -60,6 +61,7 @@ export function BoardAccessModal({
   ownerId,
   workspaceId,
 }: BoardAccessModalProps) {
+  const t = useTranslations()
   const { user, isAdmin } = useAuth()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRole, setSelectedRole] = useState<MemberRole>('viewer')
@@ -168,7 +170,9 @@ export function BoardAccessModal({
               <Users className="w-5 h-5 text-monday-primary" />
             </div>
             <div>
-              <h2 className="text-h4 font-semibold text-text-primary">Board Access</h2>
+              <h2 className="text-h4 font-semibold text-text-primary">
+                {t('boards.accessModal.title')}
+              </h2>
               <p className="text-sm text-text-secondary truncate max-w-[280px]">{boardName}</p>
             </div>
           </div>
@@ -195,7 +199,7 @@ export function BoardAccessModal({
                         type="text"
                         value={searchQuery}
                         onChange={e => setSearchQuery(e.target.value)}
-                        placeholder="Search by name or email..."
+                        placeholder={t('boards.accessModal.searchPlaceholder')}
                         autoFocus
                         className={cn(
                           'w-full pl-9 pr-4 py-2 rounded-md bg-bg-primary',
@@ -222,7 +226,7 @@ export function BoardAccessModal({
                         <span className={ROLE_CONFIG[selectedRole].color}>
                           {ROLE_CONFIG[selectedRole].icon}
                         </span>
-                        <span>{ROLE_CONFIG[selectedRole].label}</span>
+                        <span>{t(ROLE_CONFIG[selectedRole].labelKey)}</span>
                         <ChevronDown className="w-4 h-4 text-text-tertiary" />
                       </button>
                       {roleDropdownOpen === 'new' && (
@@ -244,7 +248,7 @@ export function BoardAccessModal({
                         setSearchQuery('')
                       }}
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                   </div>
 
@@ -257,7 +261,7 @@ export function BoardAccessModal({
                         </div>
                       ) : availableUsers.length === 0 ? (
                         <div className="px-4 py-3 text-sm text-text-secondary text-center">
-                          No users found
+                          {t('common.userPicker.noUsersFound')}
                         </div>
                       ) : (
                         availableUsers.slice(0, 5).map(u => (
@@ -274,7 +278,7 @@ export function BoardAccessModal({
                             <UserAvatar name={u.full_name} avatarUrl={u.avatar_url} />
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-medium text-text-primary truncate">
-                                {u.full_name || 'Unknown'}
+                                {u.full_name || t('common.userPicker.unknown')}
                               </div>
                               <div className="text-xs text-text-secondary truncate">{u.email}</div>
                             </div>
@@ -292,7 +296,7 @@ export function BoardAccessModal({
                   className="w-full justify-center"
                 >
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Add people
+                  {t('boards.accessModal.addPeople')}
                 </Button>
               )}
             </div>
@@ -301,7 +305,7 @@ export function BoardAccessModal({
           {/* Members List */}
           <div className="space-y-1">
             <div className="text-sm font-medium text-text-secondary mb-2">
-              Members ({members.length})
+              {t('boards.accessModal.membersCount', { count: members.length })}
             </div>
 
             {loadingMembers ? (
@@ -309,7 +313,9 @@ export function BoardAccessModal({
                 <div className="w-6 h-6 border-2 border-monday-primary border-t-transparent rounded-full animate-spin" />
               </div>
             ) : members.length === 0 ? (
-              <div className="text-sm text-text-secondary text-center py-8">No members yet</div>
+              <div className="text-sm text-text-secondary text-center py-8">
+                {t('boards.accessModal.noMembers')}
+              </div>
             ) : (
               <div className="space-y-1 max-h-[320px] overflow-y-auto">
                 {members.map(member => (
@@ -339,7 +345,7 @@ export function BoardAccessModal({
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border-light">
           <Button variant="primary" onClick={handleClose}>
-            Done
+            {t('common.userPicker.done')}
           </Button>
         </div>
       </div>
@@ -394,6 +400,7 @@ function MemberRow({
   isUpdating,
   isRemoving,
 }: MemberRowProps) {
+  const t = useTranslations()
   const roleConfig = ROLE_CONFIG[member.role]
 
   return (
@@ -437,7 +444,7 @@ function MemberRow({
               )}
             >
               <span className={roleConfig.color}>{roleConfig.icon}</span>
-              <span className="text-text-secondary">{roleConfig.label}</span>
+              <span className="text-text-secondary">{t(roleConfig.labelKey)}</span>
               <ChevronDown className="w-3 h-3 text-text-tertiary" />
             </button>
             {roleDropdownOpen && (
@@ -451,7 +458,7 @@ function MemberRow({
         ) : (
           <div className={cn('flex items-center gap-1.5 px-2 py-1 text-sm', roleConfig.color)}>
             {roleConfig.icon}
-            <span>{roleConfig.label}</span>
+            <span>{t(roleConfig.labelKey)}</span>
           </div>
         )}
       </div>
@@ -483,6 +490,7 @@ interface RoleDropdownProps {
 }
 
 function RoleDropdown({ currentRole, onSelect, excludeOwner }: RoleDropdownProps) {
+  const t = useTranslations()
   const roles: MemberRole[] = excludeOwner ? ['editor', 'viewer'] : ['owner', 'editor', 'viewer']
 
   return (
@@ -512,8 +520,8 @@ function RoleDropdown({ currentRole, onSelect, excludeOwner }: RoleDropdownProps
           >
             <span className={cn('mt-0.5', config.color)}>{config.icon}</span>
             <div>
-              <div className="text-sm font-medium text-text-primary">{config.label}</div>
-              <div className="text-xs text-text-secondary">{config.description}</div>
+              <div className="text-sm font-medium text-text-primary">{t(config.labelKey)}</div>
+              <div className="text-xs text-text-secondary">{t(config.descriptionKey)}</div>
             </div>
             {isSelected && (
               <svg

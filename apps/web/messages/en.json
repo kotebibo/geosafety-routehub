@@ -15,7 +15,18 @@
     "assignments": "Assignments",
     "settings": "Settings",
     "collapse": "Collapse",
-    "expand": "Expand"
+    "expand": "Expand",
+    "myWork": "My Work",
+    "news": "News",
+    "analytics": "Analytics",
+    "tracking": "Tracking",
+    "coordinatesMap": "Coordinates Map",
+    "checkins": "Check-ins",
+    "assistant": "Assistant",
+    "users": "Users",
+    "roles": "Roles",
+    "health": "Health",
+    "payments": "Payments"
   },
   "header": {
     "search": "Search...",
@@ -86,7 +97,15 @@
     "confirm": "Confirm",
     "close": "Close",
     "language": "Language",
-    "select": "Select"
+    "select": "Select",
+    "userPicker": {
+      "selectedCount": "Selected: {count}",
+      "clearAll": "Clear all",
+      "unknown": "Unknown",
+      "searchPlaceholder": "Search...",
+      "noUsersFound": "No users found",
+      "done": "Done"
+    }
   },
   "login": {
     "title": "RouteHub",
@@ -117,7 +136,8 @@
     "signinError": "Sign in error. Please try again.",
     "enterEmailFirst": "Please enter your email first",
     "resetEmailSent": "Password reset link has been sent to your email",
-    "resetError": "Password reset failed. Please try again."
+    "resetError": "Password reset failed. Please try again.",
+    "sessionExpired": "Your session has expired. Please sign in again."
   },
   "reset": {
     "title": "Reset Password",
@@ -194,7 +214,9 @@
     },
     "language": {
       "title": "Language Settings",
-      "interface": "Interface Language"
+      "interface": "Interface Language",
+      "georgian": "Georgian language",
+      "english": "English language"
     },
     "security": {
       "title": "Security",
@@ -271,7 +293,15 @@
   },
   "sidebar": {
     "boardNamePlaceholder": "Board name",
-    "workspaceNamePlaceholder": "Workspace name"
+    "workspaceNamePlaceholder": "Workspace name",
+    "color": {
+      "blue": "Blue",
+      "green": "Green",
+      "red": "Red",
+      "yellow": "Yellow",
+      "purple": "Purple",
+      "orange": "Orange"
+    }
   },
   "globalSearch": {
     "placeholder": "Search across all boards...",
@@ -385,8 +415,1571 @@
       "gpsUpdated": "GPS updated",
       "deleteCheckinTooltip": "Delete check-in",
       "search": "Search",
-      "searchPlaceholder": "Search by inspector, service, company..."
+      "searchPlaceholder": "Search by inspector, service, company...",
+      "officersSelected": "{count} officers selected",
+      "searchOfficers": "Search officers...",
+      "exportCSV": "Export CSV",
+      "exportFailed": "Failed to export CSV"
     },
     "meters": "m"
+  },
+  "routes": {
+    "builder": {
+      "mapLoading": "Loading map...",
+      "selectAtLeastTwo": "Select at least 2 companies",
+      "pleaseAuthenticate": "Please sign in",
+      "optimizationFailed": "Optimization failed",
+      "createRouteFirst": "Please create a route first",
+      "routeSaved": "✅ Route saved!\nID: {id}",
+      "saveFailed": "Saving failed",
+      "title": "Create Route",
+      "subtitle": "Select locations on the map",
+      "selectedLabel": "Selected:",
+      "optimizing": "⏳ Optimizing...",
+      "optimizeButton": "🚀 Optimize",
+      "searchPlaceholder": "🔍 Search...",
+      "routePanelTitle": "Route",
+      "optimizedBadge": "✅ Optimized",
+      "emptySelectTitle": "Select locations",
+      "emptySelectSubtitle": "From the list on the left or on the map",
+      "distanceFromPrevious": "🚗 ~{distance} km from the previous stop",
+      "statsTitle": "📊 Statistics",
+      "statsTotalObjects": "• Total locations: {count}",
+      "statsTotalDistance": "• Total distance: ~{distance} km",
+      "statsSaved": "• Saved: ~15-25%",
+      "saveRoute": "💾 Save Route",
+      "clear": "🗑️ Clear",
+      "defaultRouteName": "Route {date}",
+      "saveModal": {
+        "fillNameAndDate": "Please fill in the name and date",
+        "saveFailed": "Saving failed",
+        "title": "Save Route",
+        "nameLabel": "Route name *",
+        "namePlaceholder": "e.g. Tbilisi - Center",
+        "dateLabel": "Date *",
+        "startTimeLabel": "Start time",
+        "cancel": "Cancel",
+        "saving": "⏳ Saving...",
+        "save": "💾 Save"
+      }
+    },
+    "manage": {
+      "loading": "Loading routes...",
+      "errorOccurred": "An error occurred",
+      "tryAgain": "Try again",
+      "pageTitle": "Route Management",
+      "pageDescription": "All created routes",
+      "newRoute": "New Route",
+      "statsTotalRoutes": "Total Routes",
+      "statsPlanned": "Planned",
+      "statsInProgress": "In Progress",
+      "statsCompleted": "Completed",
+      "emptyTitle": "No routes",
+      "emptyDescription": "Create your first route",
+      "table": {
+        "statusPlanned": "Planned",
+        "statusInProgress": "In Progress",
+        "statusCompleted": "Completed",
+        "statusCancelled": "Cancelled",
+        "confirmDelete": "Are you sure you want to delete the route \"{name}\"?",
+        "deleteSuccess": "Route deleted",
+        "deleteError": "An error occurred while deleting",
+        "reassignPrompt": "New inspector ID:",
+        "reassignSuccess": "Route reassigned",
+        "reassignError": "An error occurred while reassigning",
+        "unknownInspector": "Unknown",
+        "headerRoute": "Route",
+        "headerInspector": "Inspector",
+        "headerDateTime": "Date & Time",
+        "headerDetails": "Details",
+        "headerStatus": "Status",
+        "headerActions": "Actions",
+        "stopsCount": "{count} stops",
+        "distanceKm": "{distance} km",
+        "reassignAction": "Reassign",
+        "deleteAction": "Delete",
+        "empty": "No routes"
+      }
+    },
+    "builderSidebar": {
+      "clearSelection": "Clear",
+      "companiesCount": "Companies ({count})",
+      "inspectorLabel": "Inspector",
+      "noAssignedCompanies": "This inspector has no assigned companies",
+      "selectAll": "All",
+      "selectInspectorPlaceholder": "Select inspector...",
+      "selectedCount": "Selected: {count}",
+      "title": "Create Route"
+    },
+    "optimizationPanel": {
+      "dateLabel": "Date *",
+      "distanceKm": "{distance} km",
+      "fillNameAndDate": "Fill in route name and date",
+      "legDistance": "+{distance} km",
+      "nameLabel": "Route name *",
+      "namePlaceholder": "e.g: Morning route",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "Additional information...",
+      "optimizeButton": "Optimize route",
+      "optimizing": "Optimizing...",
+      "saveButton": "Save route",
+      "saveTitle": "Save route",
+      "saving": "Saving...",
+      "startTimeLabel": "Start time",
+      "stopOrder": "Route order",
+      "title": "Route details",
+      "totalDistance": "Total distance",
+      "totalStops": "Total stops"
+    },
+    "serviceSaveModal": {
+      "dateLabel": "Date *",
+      "detailsTitle": "Route details",
+      "distanceKm": "{distance} km",
+      "enterRouteName": "Please enter a route name",
+      "inspectorLabel": "Inspector:",
+      "inspectorSelected": "Selected",
+      "nameLabel": "Route name *",
+      "namePlaceholder": "e.g: Tbilisi - Fire inspection",
+      "noteBody": "Saving the route will automatically update:",
+      "noteInspectorAssignment": "Inspector assignment",
+      "noteLabel": "Note:",
+      "noteLastInspection": "Last inspection date",
+      "noteNextInspection": "Next inspection date",
+      "saveError": "Error saving route",
+      "saveSuccess": "Route saved successfully! Inspection dates updated.",
+      "saving": "Saving...",
+      "startTimeLabel": "Start time",
+      "stopsLabel": "Stops:",
+      "title": "Save Route",
+      "totalDistanceLabel": "Total distance:"
+    },
+    "useRouteBuilder": {
+      "createOptimizedFirst": "First create an optimized route",
+      "optimizeError": "An error occurred while optimizing the route",
+      "saveError": "An error occurred while saving the route",
+      "saveSuccess": "Route saved successfully!",
+      "selectAtLeastOne": "Select at least one company"
+    }
+  },
+  "admin": {
+    "roles": {
+      "pageTitle": "Role Management",
+      "pageDescription": "Create and manage custom roles with permissions",
+      "createRole": "Create Role",
+      "duplicateSuffix": "Copy",
+      "stats": {
+        "totalRoles": "Total Roles",
+        "systemRoles": "System",
+        "customRoles": "Custom",
+        "totalPermissions": "Permissions"
+      },
+      "searchPlaceholder": "Search roles...",
+      "filterAll": "All",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleteModal": {
+        "title": "Delete Role",
+        "irreversible": "This action is irreversible",
+        "confirmPrefix": "Are you sure you want to delete the",
+        "confirmSuffix": "role?",
+        "usersAssigned": "user(s) have this role assigned",
+        "typeToConfirm": "To confirm, type:"
+      },
+      "permissionsLabel": "Permissions",
+      "selectedUnit": "selected",
+      "adminHasAllPermissions": "Admin has all permissions",
+      "selectRolePrompt": "Select a role to edit",
+      "selectRoleHint": "Click a role to view its permissions, or create a new role.",
+      "roleNames": {
+        "admin": "Admin",
+        "dispatcher": "Dispatcher",
+        "officer": "Officer"
+      },
+      "and": "and",
+      "systemRolesInfo": "are system roles and cannot be edited or deleted. Create custom roles for additional configuration.",
+      "editingRolePrefix": "Editing",
+      "viewOnly": "View only",
+      "saving": "Saving...",
+      "save": "Save",
+      "roleName": "Role name",
+      "roleNamePlaceholder": "e.g., Manager",
+      "color": "Color",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe what this role can do...",
+      "rolesListTitle": "Roles",
+      "noRolesFound": "No roles found",
+      "permissionUnit": "permissions",
+      "duplicate": "Duplicate"
+    },
+    "serviceTypes": {
+      "saveError": "Error while saving",
+      "deleteConfirm": "Are you sure you want to delete?",
+      "deleteError": "Error while deleting",
+      "loading": "Loading...",
+      "pageTitle": "Service Types",
+      "pageDescription": "Manage service types",
+      "addNew": "New Service",
+      "editTitle": "Edit",
+      "addTitle": "Add New Service",
+      "nameEnglish": "Name (English)",
+      "nameGeorgian": "Name (Georgian)",
+      "description": "Description",
+      "requiredInspectorType": "Required officer type",
+      "frequencyDays": "Frequency (days)",
+      "active": "Active",
+      "save": "Save",
+      "cancel": "Cancel",
+      "tableService": "Service",
+      "tableInspectorType": "Officer type",
+      "tableFrequency": "Frequency",
+      "tableStatus": "Status",
+      "tableActions": "Actions",
+      "daysSuffix": "days",
+      "inactive": "Inactive",
+      "noServicesFound": "No services found",
+      "inspectorTypes": {
+        "fireSafety": "Fire Safety Officer",
+        "health": "Health Officer",
+        "building": "Building Officer",
+        "electrical": "Electrical Officer",
+        "foodSafety": "Food Safety Officer",
+        "environmental": "Environmental Officer",
+        "occupational": "Occupational Safety Officer",
+        "general": "General Officer"
+      }
+    },
+    "setupDb": {
+      "pageTitle": "PDP Database Setup",
+      "pageDescription": "Database tables for PDP onboarding",
+      "migrationCreated": "✅ Migration File Created",
+      "runMigrationInstruction": "Run this SQL migration in your Supabase dashboard:",
+      "applyMigrationTitle": "To apply the migration:",
+      "step1": "Go to your Supabase Dashboard",
+      "step2": "Navigate to SQL Editor",
+      "step3": "Copy the migration file content",
+      "step4": "Run the SQL query"
+    },
+    "setupPdp": {
+      "foundExisting": "Found {count} existing PDP service types",
+      "errorPrefix": "Error",
+      "successMessage": "✅ Successfully added {count} PDP service types!",
+      "failedPrefix": "Failed",
+      "pageTitle": "Setup PDP Service Types",
+      "pageDescription": "Add the 5 Personal Data Protection service phases",
+      "willAddTitle": "This will add:",
+      "phase1": "Initial Assessment",
+      "phase2": "Documentation",
+      "phase3": "Implementation",
+      "phase4": "Training",
+      "phase5": "Certification",
+      "adding": "Adding...",
+      "addButton": "Add PDP Service Types",
+      "serviceTypesTitle": "Service Types:",
+      "frequencyOrder": "Frequency: {days} days | Order: {order}"
+    },
+    "users": {
+      "saveUserFailed": "Failed to save user",
+      "updateStatusFailed": "Failed to update user status",
+      "createUserFailed": "Failed to create user",
+      "noRole": "No Role",
+      "pageTitle": "User Management",
+      "pageDescription": "Manage users, roles, and permissions",
+      "manageRoles": "Manage Roles",
+      "createUser": "Create User",
+      "refresh": "Refresh",
+      "createNewUser": "Create New User",
+      "email": "Email",
+      "fullName": "Full Name",
+      "phone": "Phone",
+      "password": "Password",
+      "passwordPlaceholder": "Min 6 characters",
+      "role": "Role",
+      "creating": "Creating...",
+      "cancel": "Cancel",
+      "stats": {
+        "totalUsers": "Total Users",
+        "active": "Active",
+        "inactive": "Inactive",
+        "roles": "Roles"
+      },
+      "searchPlaceholder": "Search by name or email...",
+      "filterAllRoles": "All Roles",
+      "filterAllStatus": "All Status",
+      "noUsersFound": "No users found",
+      "tableUser": "User",
+      "tableStatus": "Status",
+      "tableJoined": "Joined",
+      "tableActions": "Actions",
+      "noName": "No name",
+      "editUser": "Edit user",
+      "deactivateUser": "Deactivate user",
+      "activateUser": "Activate user",
+      "showingCount": "Showing {shown} of {total} users"
+    }
+  },
+  "payments": {
+    "title": "Payments",
+    "subtitle": "Track and analyze transactions",
+    "exportCsv": "CSV",
+    "unmatchedButton": "Unmatched ({count})",
+    "unmatched": {
+      "title": "Unmatched transactions",
+      "countLabel": "{count} transactions require manual matching",
+      "allMatchedTitle": "All transactions are matched",
+      "allMatchedSubtitle": "There are no unmatched transactions",
+      "unknownPayer": "Unknown payer",
+      "ignoreTitle": "Ignore",
+      "suggestedCompanies": "Suggested companies:",
+      "matchAction": "Match",
+      "noSuggestions": "No suggestions found — please match manually",
+      "searchManualLabel": "Or search database manually",
+      "searchPlaceholder": "Type company name or Identification Number...",
+      "searching": "Searching...",
+      "selectAction": "Select",
+      "noResults": "No companies found",
+      "undo": "Undo"
+    },
+    "badges": {
+      "sourceActive": "Active",
+      "sourceOneTime": "One-time",
+      "sourcePaused": "Paused",
+      "sourceEnded": "Ended",
+      "statusMatched": "Matched",
+      "statusUnmatched": "Unmatched",
+      "statusIgnored": "Ignored"
+    },
+    "table": {
+      "linkAction": "Match",
+      "ignoreAction": "Ignore",
+      "unignoreAction": "Unignore",
+      "viewContract": "Go to contract board",
+      "headerCompanyDate": "Company / Date",
+      "headerCompany": "Company",
+      "headerPaid": "Paid",
+      "headerExpected": "Expected",
+      "headerDifference": "Difference",
+      "headerPurpose": "Purpose",
+      "headerStatus": "Status",
+      "loading": "Loading...",
+      "empty": "No transactions found",
+      "totalCompanies": "Total ({count} companies)",
+      "totalTransactions": "Total ({count} transactions)",
+      "paginationInfo": "Showing {from}–{to} of {total} transactions"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by payer, tax ID, purpose...",
+      "statusAll": "All",
+      "statusMatched": "Matched",
+      "statusUnmatched": "Unmatched",
+      "statusUnpaid": "Unpaid",
+      "statusIgnored": "Ignored",
+      "sourceAll": "All sources",
+      "sourceActive": "Active",
+      "sourceOneTime": "One-time",
+      "sourcePaused": "Paused",
+      "sourceEnded": "Ended",
+      "dateFromTitle": "From date",
+      "dateToTitle": "To date",
+      "groupByCompany": "Group by company"
+    },
+    "monthTabs": {
+      "all": "All",
+      "filterLabel": "Filter: {from} — {to}",
+      "months": {
+        "january": "January",
+        "february": "February",
+        "march": "March",
+        "april": "April",
+        "may": "May",
+        "june": "June",
+        "july": "July",
+        "august": "August",
+        "september": "September",
+        "october": "October",
+        "november": "November",
+        "december": "December"
+      }
+    },
+    "stats": {
+      "transactions": "Transactions",
+      "matchedCount": "{count} matched",
+      "unmatchedCount": "{count} unmatched",
+      "received": "Received",
+      "expected": "Expected",
+      "difference": "Difference",
+      "underpaidCount": "{count} underpaid",
+      "overpaidCount": "{count} overpaid"
+    }
+  },
+  "tracking": {
+    "noActiveOfficers": "No active officers in the last 30 minutes",
+    "officersWillAppear": "Officers will appear here when they start tracking",
+    "panel": {
+      "justNow": "Just now",
+      "minutesAgo": "{minutes}m ago",
+      "hoursAgo": "{hours}h ago",
+      "activeInspectors": "Active Inspectors ({count})",
+      "refresh": "Refresh",
+      "searchPlaceholder": "Search inspectors...",
+      "loading": "Loading...",
+      "noActiveInspectors": "No active inspectors",
+      "unnamedRoute": "Unnamed route",
+      "noActiveRoute": "No active route"
+    },
+    "map": {
+      "route": "Route",
+      "unnamed": "Unnamed",
+      "progress": "Progress",
+      "stops": "stops",
+      "noActiveRoute": "No active route",
+      "lastSeen": "Last seen: {minutes}m ago"
+    }
+  },
+  "inspectorTracking": {
+    "mobile": {
+      "active": "Tracking Active",
+      "stopped": "Tracking Stopped",
+      "stopTracking": "Stop Tracking",
+      "startTracking": "Start Tracking",
+      "manualCheckIn": "Manual Check-In",
+      "currentPosition": "Current Position",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "accuracy": "Accuracy",
+      "speed": "Speed",
+      "updatesSent": "Updates sent",
+      "sendingLocation": "Sending location...",
+      "errorLabel": "Error:"
+    },
+    "noProfileTitle": "No inspector profile",
+    "noProfileDescription": "Your account is not linked to an inspector profile. Contact an administrator.",
+    "title": "Location tracking",
+    "subtitle": "Share your location with dispatch"
+  },
+  "workspaces": {
+    "list": {
+      "loading": "Loading workspaces...",
+      "title": "Workspaces",
+      "subtitle": "Organize your boards into workspaces",
+      "createWorkspace": "Create Workspace",
+      "emptyTitle": "No workspaces yet",
+      "emptyDescription": "Create your first workspace to start organizing your boards by team or project.",
+      "createFirstWorkspace": "Create Your First Workspace",
+      "createNewWorkspace": "Create New Workspace",
+      "totalWorkspaces": "Total Workspaces",
+      "totalBoards": "Total Boards",
+      "ownedByYou": "Owned by You",
+      "deleteModal": {
+        "title": "Delete Workspace",
+        "warning": "This action cannot be undone. All boards in this workspace will be permanently deleted.",
+        "typeToConfirm": "Please type the workspace name to confirm:",
+        "placeholder": "Type workspace name",
+        "deleting": "Deleting...",
+        "confirmButton": "Delete Workspace"
+      },
+      "boardsCount": "{count} boards",
+      "openWorkspace": "Open Workspace",
+      "openInNewTab": "Open in New Tab",
+      "duplicate": "Duplicate",
+      "rename": "Rename",
+      "settings": "Settings",
+      "delete": "Delete",
+      "renameModal": {
+        "title": "Rename Workspace",
+        "placeholder": "Workspace name",
+        "saving": "Saving...",
+        "save": "Save"
+      }
+    },
+    "detail": {
+      "loading": "Loading workspace...",
+      "notFoundTitle": "Workspace not found",
+      "notFoundDescription": "The workspace you're looking for doesn't exist or you don't have access.",
+      "backToWorkspaces": "Back to Workspaces",
+      "breadcrumb": "Workspaces",
+      "settings": "Settings",
+      "createBoard": "Create Board",
+      "boardsHeading": "Boards ({count})",
+      "loadingBoards": "Loading boards...",
+      "noBoardsTitle": "No boards in this workspace",
+      "noBoardsDescription": "Create your first board to start organizing your work.",
+      "archivedCount": "Archived ({count})",
+      "shared": "Shared",
+      "restore": "Restore",
+      "archive": "Archive"
+    },
+    "settings": {
+      "loading": "Loading settings...",
+      "notFoundTitle": "Workspace not found",
+      "backToWorkspaces": "Back to Workspaces",
+      "title": "Workspace Settings",
+      "tabs": {
+        "general": "General",
+        "members": "Members",
+        "boards": "Boards",
+        "danger": "Danger Zone"
+      },
+      "general": {
+        "nameLabel": "Workspace Name",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Describe this workspace...",
+        "colorLabel": "Color",
+        "allowBoardCreationLabel": "Allow members to create boards",
+        "allowBoardCreationHint": "When disabled, only admins can create boards",
+        "saving": "Saving...",
+        "saveChanges": "Save Changes"
+      },
+      "colors": {
+        "blue": "Blue",
+        "green": "Green",
+        "red": "Red",
+        "yellow": "Yellow",
+        "purple": "Purple",
+        "orange": "Orange"
+      },
+      "members": {
+        "heading": "Workspace Members ({count})",
+        "addMember": "Add Member",
+        "searchPlaceholder": "Search by name or email...",
+        "noUsersFound": "No users found",
+        "unknown": "Unknown",
+        "loading": "Loading members...",
+        "unknownUser": "Unknown User",
+        "removeMemberTitle": "Remove member",
+        "noMembersFound": "No members found"
+      },
+      "roles": {
+        "owner": "Owner",
+        "admin": "Admin",
+        "editor": "Editor",
+        "member": "Member",
+        "guest": "Guest",
+        "adminDescription": "Can manage members and settings",
+        "editorDescription": "Can create and archive boards",
+        "memberDescription": "Can view and create boards",
+        "guestDescription": "Read-only access"
+      },
+      "boards": {
+        "heading": "Boards ({count})",
+        "loading": "Loading boards...",
+        "noBoards": "No boards in this workspace",
+        "updatedOn": "Updated {date}",
+        "archiveBoardTitle": "Archive board",
+        "deleteBoardTitle": "Delete board",
+        "archivedCount": "Archived ({count})",
+        "archived": "Archived",
+        "restoreBoardTitle": "Restore board",
+        "deleteModal": {
+          "title": "Delete Board",
+          "warningPrefix": "Permanently delete",
+          "warningSuffix": "All items, groups, and activity in this board will be lost. This cannot be undone.",
+          "deleting": "Deleting...",
+          "confirmButton": "Delete Board"
+        }
+      },
+      "danger": {
+        "title": "Danger Zone",
+        "warning": "These actions are irreversible. Please be careful.",
+        "deleteWorkspaceTitle": "Delete this workspace",
+        "deleteWorkspaceDescription": "This will permanently delete the workspace, all its boards, and remove all member access. This cannot be undone.",
+        "delete": "Delete",
+        "deleteModal": {
+          "title": "Delete Workspace",
+          "typeToConfirm": "This action cannot be undone. To confirm, please type:",
+          "placeholder": "Type workspace name",
+          "deleting": "Deleting...",
+          "confirmButton": "Delete Workspace"
+        }
+      }
+    }
+  },
+  "analytics": {
+    "tabs": {
+      "finance": "Finance",
+      "inspectors": "Inspectors",
+      "companies": "Companies",
+      "forecast": "Forecast"
+    },
+    "pageTitle": "Financial Analytics",
+    "pageDescription": "Financial data for companies, inspectors, and locations",
+    "forecast": {
+      "currentMonthly": "Current monthly",
+      "forecast12m": "Forecast in 12 months",
+      "totalLoss12m": "Total loss (12 months)",
+      "retentionRate": "Retention rate",
+      "monthlyDetails": "Monthly breakdown",
+      "table": {
+        "month": "Month",
+        "forecast": "Forecast",
+        "expired": "Expired",
+        "cumulativeLoss": "Cum. loss",
+        "contracts": "Contracts"
+      }
+    },
+    "kpi": {
+      "totalRevenue": "Total revenue",
+      "activeContracts": "Active contracts",
+      "locations": "Locations",
+      "avgPerCompany": "Average / company"
+    },
+    "companyTable": {
+      "title": "Companies table",
+      "searchPlaceholder": "Search...",
+      "columns": {
+        "company": "Company",
+        "service": "Service",
+        "monthly": "Monthly",
+        "invoice": "Invoice",
+        "vat": "VAT",
+        "payment": "Payment",
+        "expiry": "Expiry"
+      },
+      "shownCount": "Showing {shown} / {total}"
+    },
+    "contractsTable": {
+      "expired": "Expired",
+      "daysRemaining": "{days} days",
+      "title": "Contract expiry dates",
+      "columns": {
+        "company": "Company",
+        "inspector": "Inspector",
+        "amount": "Amount",
+        "expiry": "Expiry",
+        "status": "Status",
+        "service": "Service"
+      },
+      "shownCount": "Showing {shown} / {total}"
+    },
+    "charts": {
+      "activityBreakdown": {
+        "title": "Activity",
+        "count": "Count",
+        "revenue": "Revenue"
+      },
+      "common": {
+        "companies": "Companies",
+        "locations": "Locations",
+        "revenue": "Revenue",
+        "amount": "Amount",
+        "noData": "No data available"
+      },
+      "cumulativeLoss": {
+        "title": "Cumulative Loss",
+        "loss": "Loss"
+      },
+      "expiryTimeline": {
+        "title": "Contract Expirations",
+        "contracts": "Contracts",
+        "upTo1Month": "≤1 month",
+        "twoToThreeMonths": "2-3 months",
+        "threePlusMonths": "3+ months"
+      },
+      "inspectorLocations": {
+        "title": "Locations by Inspector"
+      },
+      "inspectorRevenue": {
+        "title": "Revenue by Inspector"
+      },
+      "locationsByInspector": {
+        "title": "Locations by Inspector"
+      },
+      "monthlyTrend": {
+        "title": "Monthly Trend",
+        "newContracts": "New Contracts"
+      },
+      "paymentMethod": {
+        "title": "Payment Method"
+      },
+      "revenueByInspector": {
+        "title": "Revenue by Inspector"
+      },
+      "revenueForecast": {
+        "title": "Revenue Forecast (12 months)",
+        "projected": "Projected",
+        "expired": "Expired",
+        "activeContracts": "Active Contracts",
+        "projectedRevenue": "Projected Revenue",
+        "expiredRevenue": "Expired Revenue"
+      },
+      "revenueShare": {
+        "title": "Revenue Share (%)",
+        "other": "Other",
+        "total": "Total"
+      },
+      "serviceTypeRevenue": {
+        "title": "Revenue by Service Type"
+      },
+      "topCompaniesRevenue": {
+        "title": "Top 10 Companies by Revenue"
+      },
+      "topLocations": {
+        "title": "Top Locations by Revenue"
+      },
+      "valueDistribution": {
+        "title": "Companies by Value"
+      },
+      "workloadScatter": {
+        "title": "Inspector: Locations vs Revenue"
+      }
+    }
+  },
+  "boards": {
+    "detail": {
+      "rollback": {
+        "noFieldName": "Cannot rollback: no field name",
+        "noPreviousValue": "Cannot rollback: no previous value",
+        "itemNotFound": "Cannot rollback: item not found",
+        "success": "Change rolled back successfully",
+        "failed": "Failed to rollback change"
+      },
+      "notFoundTitle": "Board not found",
+      "notFoundDescription": "The board you're looking for doesn't exist or you don't have access to it.",
+      "backToBoards": "Back to Boards",
+      "toolbar": {
+        "selected": "{count} selected",
+        "generateDoc": "Generate Doc",
+        "move": "Move",
+        "moveToGroup": "Move to Group",
+        "duplicating": "Duplicating...",
+        "duplicate": "Duplicate",
+        "delete": "Delete",
+        "clear": "Clear",
+        "searchPlaceholder": "Search...",
+        "itemsCount": "{count} items",
+        "undoTitle": "Undo (Ctrl+Z)",
+        "redoTitle": "Redo (Ctrl+Y)",
+        "import": "Import",
+        "export": "Export",
+        "exportToCsv": "Export to CSV",
+        "exportToExcel": "Export to Excel",
+        "undo": "Undo",
+        "redo": "Redo",
+        "exportCsv": "Export CSV",
+        "exportExcel": "Export Excel"
+      },
+      "itemsError": {
+        "title": "Failed to load items",
+        "description": "There was an error loading the board items",
+        "retry": "Retry"
+      },
+      "noColumns": "No columns configured for this board yet",
+      "configureColumns": "Configure Columns",
+      "toast": {
+        "savedAsTemplate": "Board saved as template",
+        "documentGenerated": "Document generated successfully",
+        "movedWithFailures": "Moved {moved} item(s), {failed} failed",
+        "moved": "Moved {count} item(s)",
+        "moveFailed": "Failed to move items"
+      }
+    },
+    "list": {
+      "loading": "Loading boards...",
+      "title": "My Boards",
+      "subtitle": "Create and manage your custom boards",
+      "createBoard": "Create Board",
+      "emptyTitle": "No boards yet",
+      "emptyDescription": "Create your first board to start organizing your work. Choose from templates or build from scratch.",
+      "createFirstBoard": "Create Your First Board",
+      "createNewBoard": "Create New Board",
+      "totalBoards": "Total Boards",
+      "sharedBoards": "Shared Boards",
+      "boardsYouOwn": "Boards You Own",
+      "workspace": "Workspace",
+      "you": "You",
+      "shared": "Shared",
+      "public": "Public",
+      "openInNewTab": "Open in New Tab",
+      "duplicate": "Duplicate",
+      "access": "Access",
+      "delete": "Delete"
+    },
+    "table": {
+      "dragToMove": "Drag to move"
+    },
+    "updates": {
+      "activity": {
+        "created": "created this item",
+        "changedField": "changed",
+        "assignedField": "assigned {fieldName}",
+        "reassignedField": "reassigned {fieldName}",
+        "commented": "commented:",
+        "movedToBoard": "moved to board",
+        "setField": "set",
+        "updatedField": "updated",
+        "updatedFieldFallback": "updated {fieldName}",
+        "emptyTitlePanel": "No activity yet",
+        "emptyDescriptionPanel": "Changes will appear here",
+        "systemUserPanel": "System",
+        "emptyTitleModal": "No activity yet",
+        "emptyDescriptionModal": "Changes to this item will appear here",
+        "systemUserModal": "System",
+        "modal": {
+          "created": "created this item",
+          "statusChanged": "changed {fieldName} from \"{oldValue}\" to \"{newValue}\"",
+          "assigned": "assigned {fieldName}",
+          "reassigned": "reassigned {fieldName}",
+          "commented": "commented: \"{text}\"",
+          "updatedFromTo": "changed {fieldName} from \"{oldValue}\" to \"{newValue}\"",
+          "setTo": "set {fieldName} to \"{newValue}\"",
+          "updated": "updated {fieldName}"
+        }
+      },
+      "comments": {
+        "writeUpdatePlaceholderPanel": "Write an update... @ to mention",
+        "uploadingPanel": "Uploading...",
+        "attachPanel": "Attach",
+        "replyButtonPanel": "Reply",
+        "sendButtonPanel": "Send",
+        "emptyTitlePanel": "No updates yet",
+        "emptyDescriptionPanel": "Add the first update",
+        "emptyTitleModal": "No updates yet",
+        "emptyDescriptionModal": "Be the first to add an update to this item",
+        "replyingTo": "Replying to",
+        "replyToPlaceholder": "Reply to {name}...",
+        "writeUpdatePlaceholderModal": "Write an update... Type @ to mention someone",
+        "uploadingModal": "Uploading...",
+        "attachModal": "Attach",
+        "mentionHint": "@ to mention",
+        "replyButtonModal": "Reply",
+        "sendButtonModal": "Send"
+      },
+      "files": {
+        "emptyTitle": "No files",
+        "emptyDescription": "This item has no files",
+        "searchPlaceholder": "Search...",
+        "noFilesFound": "No files found"
+      }
+    },
+    "addColumnModal": {
+      "types": {
+        "text": {
+          "label": "Text",
+          "description": "Single or multi-line text"
+        },
+        "number": {
+          "label": "Number",
+          "description": "Numeric values"
+        },
+        "status": {
+          "label": "Status",
+          "description": "Colored status labels"
+        },
+        "date": {
+          "label": "Date",
+          "description": "Date picker"
+        },
+        "dateRange": {
+          "label": "Date range",
+          "description": "Start and end date"
+        },
+        "person": {
+          "label": "Person",
+          "description": "Assign a person"
+        },
+        "route": {
+          "label": "Route",
+          "description": "Link to a route"
+        },
+        "company": {
+          "label": "Company",
+          "description": "Link to a company"
+        },
+        "companyAddress": {
+          "label": "Company address",
+          "description": "Automatically show the company's location address"
+        },
+        "serviceType": {
+          "label": "Service type",
+          "description": "Select the inspection service"
+        },
+        "checkbox": {
+          "label": "Checkbox",
+          "description": "Yes/no toggle"
+        },
+        "phone": {
+          "label": "Phone",
+          "description": "Phone numbers with click-to-call link"
+        },
+        "email": {
+          "label": "Email",
+          "description": "Email addresses"
+        },
+        "files": {
+          "label": "Files",
+          "description": "Attach photos and documents"
+        },
+        "updates": {
+          "label": "Updates",
+          "description": "Comments and activity log"
+        },
+        "checkin": {
+          "label": "Check-in",
+          "description": "Check-in status, duration, and location comparison"
+        }
+      },
+      "selectCompanyColumnWarning": "Please select a company column",
+      "title": "Add Column",
+      "nameLabel": "Column name",
+      "namePlaceholder": "e.g.: Priority, Owner, Deadline",
+      "nameRequired": "Column name is required",
+      "typeLabel": "Column type",
+      "companyAddress": {
+        "linkedColumnLabel": "Linked company column",
+        "noCompanyColumnFound": "No company column found",
+        "addCompanyColumnFirst": "First add a \"Company\" type column, then you'll be able to add an address column.",
+        "autoFillHint": "The address will be automatically filled from the selected company's location"
+      },
+      "checkin": {
+        "coordinatesColumnLabel": "Coordinates column (optional)",
+        "noCoordinatesColumn": "No coordinates column found. Check-in will work in GPS mode — without geofence verification.",
+        "gpsModeOption": "None selected (GPS mode)",
+        "coordinatesColumnHint": "Select a column that contains coordinates (e.g. \"41.71, 44.82\"). The inspector must be within 150m of these coordinates to check in. If the column is deleted, check-in will switch to GPS mode.",
+        "serviceLabel": "Service",
+        "serviceNotSpecified": "Not specified",
+        "serviceOther": "Other...",
+        "customServicePlaceholder": "Enter service name",
+        "serviceHint": "Which service check-ins are made for in this column. Saved on every check-in.",
+        "stageColumnLabel": "Stage column (auto-update)",
+        "stageColumnDisabled": "Disabled",
+        "stageColumnHint": "The selected visit type will automatically be written to this status column at check-in — the company's current stage will always be up to date."
+      },
+      "widthLabel": "Column width: {width}px",
+      "widthNarrow": "80px (narrow)",
+      "widthWide": "500px (wide)",
+      "cancel": "Cancel",
+      "addColumn": "Add column"
+    },
+    "columnConfigPanel": {
+      "visitTypes": {
+        "noDefaults": "This service has no default types — add one below, or select a service first.",
+        "delete": "Delete",
+        "newTypePlaceholder": "New type...",
+        "revertToDefaults": "↺ Revert to default types"
+      },
+      "coordinatesColumnLabel": "Coordinates column (geofence)",
+      "gpsModeOption": "GPS mode (no geofence)",
+      "visitTypesLabel": "Visit types",
+      "title": "Column Settings",
+      "widthLabel": "Width:",
+      "hideColumn": "Hide column",
+      "showColumn": "Show column",
+      "deleteColumn": "Delete column",
+      "confirmDelete": "Delete column \"{name}\"?",
+      "addColumn": "Add Column"
+    },
+    "picker": {
+      "companySearchPlaceholder": "Search company...",
+      "clear": "Clear",
+      "noCompaniesFound": "No companies found",
+      "unnamedCompany": "Unnamed company",
+      "locationsCount": "{count} locations",
+      "back": "Back",
+      "selectLocation": "Select location ({count})",
+      "locationSearchPlaceholder": "Search location...",
+      "usePrimaryLocation": "Use primary location",
+      "noLocationsFound": "No locations found"
+    },
+    "moveModal": {
+      "searchPlaceholder": "Search board...",
+      "loadingBoards": "Loading boards...",
+      "noBoardsMatchSearch": "No board found",
+      "noOtherBoardsAvailable": "No other boards available"
+    },
+    "accessModal": {
+      "title": "Board Access",
+      "searchPlaceholder": "Search by name or email...",
+      "addPeople": "Add people",
+      "membersCount": "Members ({count})",
+      "noMembers": "No members yet",
+      "roleOwner": "Owner",
+      "roleOwnerDesc": "Full access, can manage members",
+      "roleEditor": "Editor",
+      "roleEditorDesc": "Can edit board content",
+      "roleViewer": "Viewer",
+      "roleViewerDesc": "Can only view"
+    },
+    "activityLog": {
+      "action": "Action",
+      "changesCount": "{count} changes",
+      "column": "Column",
+      "emptyValue": "(empty)",
+      "loading": "Loading activity...",
+      "newValue": "New Value",
+      "noActivity": "No activity yet",
+      "noActivityHint": "Changes to board items will appear here",
+      "oldValue": "Old Value",
+      "panelSubtitle": "Track all changes",
+      "panelTitle": "Activity Log",
+      "refresh": "Refresh",
+      "system": "System",
+      "time": "Time",
+      "title": "Activity History",
+      "typeHeader": "Type",
+      "undo": "Undo",
+      "undoTooltip": "Undo this change",
+      "user": "User"
+    },
+    "boardTable": {
+      "createFirstItem": "Create your first item to get started",
+      "noItemsYet": "No items yet"
+    },
+    "companyAddressCell": {
+      "noAddress": "No address"
+    },
+    "companyCell": {
+      "companyLoading": "Loading company...",
+      "selectCompany": "Select company..."
+    },
+    "dateRangeCell": {
+      "clear": "Clear",
+      "duration": "Duration: {count, plural, one {# day} other {# days}}",
+      "durationShort": "({count}d)",
+      "endBeforeStartError": "End date must be after start date",
+      "endDate": "End Date",
+      "setDates": "Set dates",
+      "startDate": "Start Date"
+    },
+    "emailCell": {
+      "addEmail": "Add email...",
+      "emailAddresses": "Email Addresses",
+      "enterEmailAddress": "Enter email address..."
+    },
+    "filePreviewModal": {
+      "download": "Download",
+      "downloadFile": "Download file",
+      "previewNotAvailable": "Preview not available for this file type",
+      "reset": "Reset",
+      "rotate": "Rotate",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
+    },
+    "keyboardShortcuts": {
+      "clearCell": "Clear cell",
+      "copy": "Copy",
+      "editCell": "Edit cell",
+      "navigate": "Navigate",
+      "nextCell": "Next cell",
+      "openItem": "Open item",
+      "paste": "Paste",
+      "selectAll": "Select all",
+      "selectRow": "Select row",
+      "title": "Keyboard Shortcuts"
+    },
+    "multiEntryPopup": {
+      "addEntryPlaceholder": "Add entry...",
+      "alreadyAdded": "Already added",
+      "copied": "Copied!",
+      "copy": "Copy",
+      "entriesTitle": "Entries",
+      "invalidEmailFormat": "Invalid email format",
+      "invalidFormat": "Invalid format",
+      "noEmailsAdded": "No emails added",
+      "noNumbersAdded": "No numbers added"
+    },
+    "personCell": {
+      "addPerson": "Add..."
+    },
+    "phoneEntryPopup": {
+      "copied": "Copied!",
+      "copy": "Copy",
+      "invalidPhoneFormat": "Invalid phone format",
+      "namePlaceholder": "Name (optional)",
+      "noNumbersAdded": "No numbers added",
+      "numberAlreadyAdded": "This number is already added",
+      "numberRequired": "Number is required",
+      "phonePlaceholder": "Phone number",
+      "title": "Phone Numbers"
+    },
+    "sortableColumnHeader": {
+      "deleteColumn": "Delete column",
+      "dueDateMode": "Due date mode",
+      "renameColumn": "Rename column"
+    },
+    "statusLabelEditor": {
+      "addNewLabel": "Add new label",
+      "atLeastOneRequired": "At least one status option is required",
+      "clickToChangeColor": "Click to change color",
+      "deleteLabel": "Delete label",
+      "newLabel": "New Label",
+      "saveError": "Failed to save labels",
+      "saveSuccess": "Labels saved successfully",
+      "saving": "Saving...",
+      "title": "Edit Status Labels"
+    },
+    "updatesPanel": {
+      "activityTab": "Activity",
+      "defaultItemName": "Item",
+      "filesTab": "Files",
+      "updatesTab": "Updates"
+    }
+  },
+  "chat": {
+    "header": {
+      "title": "RouteHub Assistant",
+      "subtitle": "Ask a question about company data",
+      "newChat": "New chat"
+    },
+    "empty": {
+      "title": "How can I help you?",
+      "description": "You can ask about companies, boards, payments, specialists, and other data."
+    },
+    "inputPlaceholder": "Ask a question...",
+    "suggestions": {
+      "activeCompanies": "How many active companies do we have?",
+      "specialistBoards": "What boards are in the specialists workspace?",
+      "haccpItems": "How many items are on the HACCP board?",
+      "bankTransactions": "Show me the latest bank transactions",
+      "anaSanadzeClients": "Show me Ana Sanadze's clients",
+      "unmatchedPayments": "How many unmatched payments are there?"
+    },
+    "tools": {
+      "findCompany": "Find company",
+      "listCompanies": "Company list",
+      "countBoardItems": "Board item count",
+      "listBoardItems": "Board items",
+      "listWorkspacesAndBoards": "Workspaces",
+      "getBankTransactions": "Bank transactions",
+      "getPaymentStats": "Payment statistics",
+      "listInspectors": "Specialists",
+      "getSpecialistWorkload": "Specialist workload",
+      "getServiceTypes": "Service types",
+      "searchBoardItems": "Search items"
+    }
+  },
+  "news": {
+    "toast": {
+      "deleteSuccess": "Announcement deleted",
+      "deleteError": "Error while deleting"
+    },
+    "pageTitle": "News and Announcements",
+    "pageDescription": "Important company news and notifications",
+    "newAnnouncement": "New Announcement",
+    "empty": {
+      "title": "No announcements",
+      "adminHint": "Create your first announcement with the \"New Announcement\" button above",
+      "userHint": "New announcements and news will appear here"
+    },
+    "deleteModal": {
+      "title": "Delete Announcement",
+      "warning": "This action is irreversible",
+      "deleting": "Deleting..."
+    },
+    "createModal": {
+      "fillAllFields": "Please fill in all fields",
+      "publishSuccess": "Announcement published successfully",
+      "genericError": "Error",
+      "title": "New Announcement",
+      "subtitle": "All users will receive a notification",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Announcement title",
+      "priorityLabel": "Priority",
+      "contentLabel": "Content",
+      "contentPlaceholder": "Announcement text...",
+      "sending": "Sending...",
+      "publish": "Publish"
+    },
+    "priority": {
+      "normal": "Normal",
+      "important": "Important",
+      "urgent": "Urgent"
+    }
+  },
+  "companies": {
+    "list": {
+      "confirmDelete": "Are you sure you want to delete {name}?",
+      "deleteSuccess": "Company deleted",
+      "deleteError": "An error occurred while deleting",
+      "columnCompany": "Company",
+      "columnAddress": "Address",
+      "columnCoordinates": "Coordinates",
+      "delete": "Delete",
+      "errorOccurred": "An error occurred",
+      "tryAgain": "Try again",
+      "pageTitle": "Companies",
+      "pageDescription": "All registered companies",
+      "newCompany": "New company",
+      "statTotal": "Total companies",
+      "statShown": "Shown",
+      "statPage": "Page",
+      "searchPlaceholder": "Search by name or address...",
+      "noResultsTitle": "No results found",
+      "noResultsDescription": "No companies found for \"{query}\"",
+      "clearSearch": "Clear",
+      "emptyTitle": "No companies",
+      "emptyDescription": "Add your first company",
+      "tableCaption": "List of companies",
+      "perPage": "Per page:",
+      "pageRange": "{start}-{end} of {total}"
+    },
+    "form": {
+      "locationRequired": "Please add at least one location",
+      "primaryLocationRequired": "Please select a primary location",
+      "createSuccess": "Company created successfully!",
+      "createError": "Error: {message}",
+      "pageTitle": "Add new company",
+      "pageDescription": "Fill in all required fields",
+      "basicInfo": "Basic information",
+      "name": "Name",
+      "type": "Type",
+      "typeCommercial": "Commercial",
+      "typeResidential": "Residential",
+      "typeIndustrial": "Industrial",
+      "typeHealthcare": "Healthcare",
+      "typeEducation": "Education",
+      "priority": "Priority",
+      "priorityLow": "Low",
+      "priorityMedium": "Medium",
+      "priorityHigh": "High",
+      "contactInfo": "Contact information",
+      "optional": "optional",
+      "contactName": "Contact person",
+      "contactPhone": "Phone",
+      "contactEmail": "Email",
+      "notes": "Notes",
+      "saving": "Saving...",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "detail": {
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "statusSuspended": "Suspended",
+      "loadError": "Error loading data",
+      "locationRequired": "Please add at least one location",
+      "locationsUpdated": "Locations updated successfully",
+      "saveError": "Error: {message}",
+      "notFoundTitle": "Company not found",
+      "notFoundDescription": "The requested company does not exist or has been deleted",
+      "backToCompanies": "Back to companies",
+      "breadcrumbCompanies": "Companies",
+      "statLocations": "Locations",
+      "statServices": "Services",
+      "statOverdue": "Overdue",
+      "servicesUpdated": "Services updated",
+      "recentCheckins": "Recent check-ins",
+      "meterAbbr": "m",
+      "updated": "updated",
+      "priorityHigh": "High",
+      "priorityMedium": "Medium",
+      "priorityLow": "Low",
+      "basicInfo": "Basic information",
+      "type": "Type",
+      "priority": "Priority",
+      "contactPerson": "Contact person",
+      "phone": "Phone",
+      "email": "Email",
+      "dateAdded": "Date added",
+      "notes": "Notes",
+      "locations": "Locations",
+      "edit": "Edit",
+      "saving": "Saving...",
+      "save": "Save",
+      "cancel": "Cancel",
+      "noLocationsAdded": "No locations added",
+      "addLocation": "Add location",
+      "primary": "Primary",
+      "services": "Services",
+      "finish": "Finish",
+      "noServicesAdded": "No services added",
+      "addService": "Add service",
+      "notAssigned": "Not assigned",
+      "everyNDays": "Every {days} days",
+      "overdueByDays": "{days} days overdue",
+      "today": "Today",
+      "inNDays": "In {days} days",
+      "notScheduled": "Not scheduled"
+    },
+    "pdp": {
+      "companyNotFound": "Company not found",
+      "backButton": "Go back",
+      "title": "Personal Data Protection",
+      "address": "Address",
+      "contactPerson": "Contact person",
+      "phone": "Phone",
+      "email": "Email",
+      "createSuccess": "Company added successfully!",
+      "createError": "An error occurred",
+      "addFormTitle": "Add Company - Personal Data Protection",
+      "addFormSubtitle": "Personal Data Protection Service",
+      "companyType": "Company type",
+      "newCompany": "New company",
+      "newCompanyDescription": "Requires completing 5 phases",
+      "newCompanyDescriptionEn": "New company - requires 5 phases",
+      "existingCompany": "Existing company",
+      "existingCompanyDescription": "Already certified",
+      "existingCompanyDescriptionEn": "Existing company - already certified",
+      "companyInfo": "Company information",
+      "companyName": "Company name",
+      "companyNamePlaceholder": "Enter company name",
+      "addressPlaceholder": "Enter address",
+      "contactPersonPlaceholder": "First and last name",
+      "phasePlanning": "Phase planning",
+      "phasePlanningDescription": "Set the planned completion date for each phase",
+      "tipLabel": "Tip",
+      "phaseTip": "The recommended interval between phases is 2-3 weeks",
+      "nextCheckup": "Next checkup",
+      "nextCheckupDate": "Next checkup date",
+      "checkupReminder": "Certified companies require a regular checkup every 3 months",
+      "cancel": "Cancel",
+      "inProgress": "In progress...",
+      "addButton": "Add",
+      "statusNew": "New",
+      "statusInProgress": "In progress",
+      "certified": "Certified",
+      "dashboardTitle": "Personal Data Protection - Compliance",
+      "searchPlaceholder": "Search by company name or address...",
+      "filterAll": "All",
+      "totalCompanies": "Total companies",
+      "phasesInProgress": "Phases in progress",
+      "noCompaniesFound": "No companies found",
+      "phasesCompletedOfFive": "{count} of 5 phases completed",
+      "loadComplianceError": "Failed to load compliance data",
+      "unexpectedError": "An unexpected error occurred",
+      "noComplianceData": "No compliance data found",
+      "complianceProgress": "Compliance Progress",
+      "phasesOfFive": "{count} of 5 phases",
+      "phaseLabel": "Phase {number}",
+      "completed": "Completed",
+      "completedOn": "Completed:",
+      "plannedFor": "Planned:",
+      "certificationDate": "Certification date",
+      "certificateNumber": "Certificate number"
+    },
+    "locationManager": {
+      "nameAddressRequired": "Please fill in the name and address",
+      "minOneLocation": "A company must have at least one location",
+      "title": "Locations / Branches",
+      "add": "Add",
+      "primary": "Primary",
+      "setAsPrimary": "Set as primary",
+      "edit": "Edit",
+      "delete": "Delete",
+      "emptyTitle": "No locations added",
+      "emptyDescription": "Add at least one location for the company",
+      "addFirst": "Add first location",
+      "newLocation": "New location",
+      "helpText": "The primary location is shown as the default address. If the company has only one location, it automatically becomes the primary one.",
+      "formName": "Name",
+      "formNamePlaceholder": "e.g. Head office, Branch #1",
+      "formAddress": "Address",
+      "formAddressPlaceholder": "e.g. 12 Rustaveli Ave.",
+      "formContactName": "Contact person",
+      "formContactPhone": "Phone",
+      "formNotes": "Notes",
+      "formNotesPlaceholder": "Additional information",
+      "primaryLocationLabel": "Primary location",
+      "cancel": "Cancel",
+      "save": "Save"
+    }
+  },
+  "inspectors": {
+    "list": {
+      "loading": "Loading officers...",
+      "errorOccurred": "An error occurred",
+      "tryAgain": "Try again",
+      "title": "Officers",
+      "description": "All registered officers",
+      "newInspector": "New officer",
+      "totalInspectors": "Total officers",
+      "active": "Active",
+      "inactive": "Inactive",
+      "emptyTitle": "No officers",
+      "emptyDescription": "Add your first officer"
+    },
+    "new": {
+      "createSuccess": "Officer created successfully!",
+      "createError": "Error creating officer",
+      "backToInspectors": "Back to officers",
+      "title": "New officer",
+      "basicInfo": "Basic information",
+      "fullNameLabel": "Full name *",
+      "fullNamePlaceholder": "e.g. Giorgi Meladze",
+      "emailLabel": "Email *",
+      "phoneLabel": "Phone",
+      "zoneLabel": "Zone",
+      "zonePlaceholder": "e.g. Vake-Saburtalo",
+      "specialtyAndRole": "Specialty and role",
+      "specialtyLabel": "Specialty *",
+      "specialtyPlaceholder": "Select a specialty",
+      "specialty": {
+        "fireSafety": "Fire safety",
+        "health": "Health",
+        "buildingCode": "Building code",
+        "electrical": "Electrical safety",
+        "environmental": "Environmental",
+        "plumbing": "Plumbing",
+        "hvac": "Ventilation (HVAC)",
+        "general": "General"
+      },
+      "roleLabel": "Role *",
+      "role": {
+        "officer": "Officer",
+        "dispatcher": "Dispatcher",
+        "manager": "Manager",
+        "admin": "Administrator"
+      },
+      "workingHours": "Working hours",
+      "startLabel": "Start *",
+      "endLabel": "End *",
+      "statusLabel": "Status",
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "onLeave": "On leave"
+      },
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "submit": "Create officer"
+    },
+    "table": {
+      "confirmDelete": "Are you sure you want to delete {name}?",
+      "deleted": "Inspector deleted",
+      "deleteError": "An error occurred while deleting",
+      "statusError": "An error occurred while changing status",
+      "headerInspector": "Inspector",
+      "headerContact": "Contact",
+      "headerSpecialty": "Specialty",
+      "headerStatus": "Status",
+      "headerActions": "Actions",
+      "active": "Active",
+      "inactive": "Inactive",
+      "delete": "Delete",
+      "emptyState": "No inspectors"
+    }
+  },
+  "inspectorRoutes": {
+    "loading": "Loading routes...",
+    "title": "My routes",
+    "description": "Routes assigned to you",
+    "totalRoutes": "Total routes",
+    "planned": "Planned",
+    "inProgress": "In progress",
+    "completed": "Completed",
+    "emptyTitle": "No routes",
+    "emptyDescription": "No routes have been assigned to you yet",
+    "status": {
+      "planned": "Planned",
+      "inProgress": "In progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "stops": "stops",
+    "km": "km",
+    "view": "View"
+  },
+  "locations": {
+    "mapLoading": "Loading map...",
+    "dataLoading": "Loading data...",
+    "pageTitle": "All Locations",
+    "pageDescription": "Map of facilities with filters",
+    "shown": "Shown",
+    "filters": {
+      "search": "Search",
+      "searchPlaceholder": "Company name or address...",
+      "region": "Region",
+      "allRegions": "All regions",
+      "unknownRegion": "Unknown region",
+      "district": "District / City",
+      "allDistricts": "All districts",
+      "companyType": "Facility type",
+      "allTypes": "All types",
+      "officer": "Officer",
+      "allOfficers": "All officers",
+      "activeFilters": "Active filters",
+      "clear": "Clear"
+    },
+    "companyType": {
+      "commercial": "Commercial",
+      "residential": "Residential",
+      "industrial": "Industrial",
+      "healthcare": "Healthcare",
+      "education": "Education"
+    },
+    "map": {
+      "priorityHigh": "High",
+      "priorityMedium": "Medium",
+      "priorityLow": "Low",
+      "servicesLabel": "Services ({count})"
+    }
+  },
+  "coordinatesMap": {
+    "tabs": {
+      "coordinates": "Coordinates",
+      "comparison": "Comparison"
+    },
+    "emptyCoordinates": "No coordinates found",
+    "emptyComparison": "No geocoded data found",
+    "filterPanel": {
+      "title": "Coordinates",
+      "updatedAt": "Updated:",
+      "searchPlaceholder": "Search...",
+      "inspectorLabel": "Inspector",
+      "allInspectors": "All ({count})"
+    },
+    "map": {
+      "idLabel": "ID:",
+      "googleMaps": "Google Maps"
+    },
+    "comparisonMap": {
+      "addressLabel": "Address:",
+      "skLabel": "ID:",
+      "gpsLabel": "GPS:",
+      "geocodedLabel": "Geocoded:",
+      "kmUnit": "km",
+      "legend": {
+        "title": "Legend",
+        "gpsCoordinate": "GPS coordinate",
+        "geocoded": "Geocoded"
+      },
+      "distance": {
+        "all": "All",
+        "close": "≤ 1 km",
+        "medium": "1–5 km",
+        "far": "> 5 km"
+      },
+      "filter": {
+        "title": "Filter",
+        "lines": "Lines"
+      },
+      "stats": {
+        "title": "Statistics",
+        "total": "Total:",
+        "average": "Average:",
+        "max": "Max:"
+      }
+    }
+  },
+  "errorPage": {
+    "adminTitle": "Admin Error",
+    "adminDescription": "Something went wrong while loading this admin page.",
+    "analyticsTitle": "Analytics Error",
+    "analyticsDescription": "Something went wrong while loading analytics.",
+    "boardTitle": "Board Error",
+    "boardDescription": "Something went wrong while loading this board.",
+    "companiesTitle": "Companies Error",
+    "companiesDescription": "Something went wrong while loading companies.",
+    "companyTitle": "Company Error",
+    "companyDescription": "Something went wrong while loading this company.",
+    "inspectorTitle": "Inspector Error",
+    "inspectorDescription": "Something went wrong while loading this page.",
+    "inspectorsTitle": "Officers Error",
+    "inspectorsDescription": "Something went wrong while loading officers.",
+    "locationsTitle": "Locations Error",
+    "locationsDescription": "Something went wrong while loading locations.",
+    "newsTitle": "News Error",
+    "newsDescription": "Something went wrong while loading news.",
+    "routeBuilderTitle": "Route Builder Error",
+    "routeBuilderDescription": "Something went wrong while building the route.",
+    "routesTitle": "Routes Error",
+    "routesDescription": "Something went wrong while loading routes.",
+    "settingsTitle": "Settings Error",
+    "settingsDescription": "Something went wrong while loading settings.",
+    "trackingTitle": "Tracking Error",
+    "trackingDescription": "Something went wrong while loading tracking.",
+    "workspacesTitle": "Workspaces Error",
+    "workspacesDescription": "Something went wrong while loading workspaces."
+  },
+  "gps": {
+    "notSupported": "Geolocation is not supported by this browser"
   }
 }

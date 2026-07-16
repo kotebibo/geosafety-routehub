@@ -7,6 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui-monday/Toast'
 
 interface SaveRouteModalProps {
@@ -23,6 +24,7 @@ interface SaveRouteModalProps {
 
 export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: SaveRouteModalProps) {
   const { showToast } = useToast()
+  const t = useTranslations()
   const [name, setName] = useState(defaultName)
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [startTime, setStartTime] = useState('09:00')
@@ -45,7 +47,7 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
 
   const handleSave = async () => {
     if (!name || !date) {
-      showToast('გთხოვთ შეავსოთ სახელი და თარიღი', 'warning')
+      showToast(t('routes.builder.saveModal.fillNameAndDate'), 'warning')
       return
     }
 
@@ -55,7 +57,7 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
       onClose()
     } catch (error) {
       console.error('Save failed:', error)
-      showToast('შენახვა ვერ მოხერხდა', 'error')
+      showToast(t('routes.builder.saveModal.saveFailed'), 'error')
     } finally {
       setSaving(false)
     }
@@ -74,19 +76,21 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
           className="bg-bg-primary rounded-lg shadow-2xl p-6 w-full max-w-md pointer-events-auto"
           style={{ position: 'relative', zIndex: 10000 }}
         >
-          <h2 className="text-xl font-bold text-text-primary mb-4">მარშრუტის შენახვა</h2>
+          <h2 className="text-xl font-bold text-text-primary mb-4">
+            {t('routes.builder.saveModal.title')}
+          </h2>
 
           <div className="space-y-4">
             {/* Route Name */}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                მარშრუტის სახელი *
+                {t('routes.builder.saveModal.nameLabel')}
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="მაგ: თბილისი - ცენტრი"
+                placeholder={t('routes.builder.saveModal.namePlaceholder')}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 autoFocus
               />
@@ -94,7 +98,9 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
 
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">თარიღი *</label>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                {t('routes.builder.saveModal.dateLabel')}
+              </label>
               <input
                 type="date"
                 value={date}
@@ -106,7 +112,7 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
             {/* Start Time */}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                დაწყების დრო
+                {t('routes.builder.saveModal.startTimeLabel')}
               </label>
               <input
                 type="time"
@@ -123,14 +129,14 @@ export function SaveRouteModal({ isOpen, onClose, onSave, defaultName = '' }: Sa
               disabled={saving}
               className="flex-1 px-4 py-2 border border-border-medium text-text-primary rounded-lg font-semibold hover:bg-bg-hover disabled:opacity-50 transition-colors"
             >
-              გაუქმება
+              {t('routes.builder.saveModal.cancel')}
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
               className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors"
             >
-              {saving ? '⏳ შენახვა...' : '💾 შენახვა'}
+              {saving ? t('routes.builder.saveModal.saving') : t('routes.builder.saveModal.save')}
             </button>
           </div>
         </div>

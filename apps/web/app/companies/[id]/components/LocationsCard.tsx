@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { MapPin, Edit2, Save, X, User, Phone, Mail } from 'lucide-react'
 import { LocationManager } from '@/features/companies/components/LocationManager'
 import type { CompanyLocation, LocationFormData } from '@/types/company'
@@ -25,14 +26,13 @@ export function LocationsCard({
   onCancel,
   onEditableLocationsChange,
 }: LocationsCardProps) {
+  const t = useTranslations()
   return (
     <div className="bg-bg-primary border border-border-light rounded-xl mb-6 overflow-hidden">
       <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
         <div className="flex items-center gap-2">
           <MapPin className="w-4.5 h-4.5 text-text-tertiary" />
-          <h2 className="font-semibold text-text-primary">
-            {'\u10DA\u10DD\u10D9\u10D0\u10EA\u10D8\u10D4\u10D1\u10D8'}
-          </h2>
+          <h2 className="font-semibold text-text-primary">{t('companies.detail.locations')}</h2>
           <span className="text-xs text-text-tertiary font-medium bg-bg-tertiary px-1.5 py-0.5 rounded">
             {locations.length}
           </span>
@@ -43,7 +43,7 @@ export function LocationsCard({
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
           >
             <Edit2 className="w-3.5 h-3.5" />
-            {'\u10E0\u10D4\u10D3\u10D0\u10E5\u10E2\u10D8\u10E0\u10D4\u10D1\u10D0'}
+            {t('companies.detail.edit')}
           </button>
         )}
       </div>
@@ -59,9 +59,7 @@ export function LocationsCard({
                 className="flex items-center gap-2 px-5 py-2 bg-monday-primary text-white text-sm font-medium rounded-lg hover:bg-monday-primary-hover disabled:opacity-50 transition-colors"
               >
                 <Save className="w-4 h-4" />
-                {saving
-                  ? '\u10D8\u10DC\u10D0\u10EE\u10D4\u10D1\u10D0...'
-                  : '\u10E8\u10D4\u10DC\u10D0\u10EE\u10D5\u10D0'}
+                {saving ? t('companies.detail.saving') : t('companies.detail.save')}
               </button>
               <button
                 onClick={onCancel}
@@ -69,7 +67,7 @@ export function LocationsCard({
                 className="flex items-center gap-2 px-5 py-2 text-sm text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
               >
                 <X className="w-4 h-4" />
-                {'\u10D2\u10D0\u10E3\u10E5\u10DB\u10D4\u10D1\u10D0'}
+                {t('companies.detail.cancel')}
               </button>
             </div>
           </div>
@@ -79,18 +77,14 @@ export function LocationsCard({
               <div className="text-center py-10">
                 <MapPin className="w-10 h-10 text-text-disabled mx-auto mb-3" />
                 <p className="text-sm text-text-tertiary mb-4">
-                  {
-                    '\u10DA\u10DD\u10D9\u10D0\u10EA\u10D8\u10D4\u10D1\u10D8 \u10D0\u10E0 \u10D0\u10E0\u10D8\u10E1 \u10D3\u10D0\u10DB\u10D0\u10E2\u10D4\u10D1\u10E3\u10DA\u10D8'
-                  }
+                  {t('companies.detail.noLocationsAdded')}
                 </p>
                 <button
                   onClick={onStartEdit}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
                 >
                   <MapPin className="w-4 h-4" />
-                  {
-                    '\u10DA\u10DD\u10D9\u10D0\u10EA\u10D8\u10D8\u10E1 \u10D3\u10D0\u10DB\u10D0\u10E2\u10D4\u10D1\u10D0'
-                  }
+                  {t('companies.detail.addLocation')}
                 </button>
               </div>
             ) : (
@@ -120,7 +114,7 @@ export function LocationsCard({
                         </span>
                         {location.is_primary && (
                           <span className="text-[10px] font-semibold uppercase tracking-wider bg-amber-200 text-amber-800 px-1.5 py-0.5 rounded">
-                            {'\u10DB\u10D7\u10D0\u10D5\u10D0\u10E0\u10D8'}
+                            {t('companies.detail.primary')}
                           </span>
                         )}
                       </div>

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { X, Eye, EyeOff, GripVertical, Plus, Trash2, Settings as SettingsIcon } from 'lucide-react'
 import { Tooltip } from '@/shared/components/ui/tooltip'
@@ -14,6 +15,7 @@ import {
 import type { BoardColumn } from '@/types/board'
 
 function ServiceSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const t = useTranslations()
   const [customMode, setCustomMode] = useState(false)
   const [draft, setDraft] = useState('')
   const isPredefined = (CHECKIN_SERVICES as readonly string[]).includes(value)
@@ -35,7 +37,7 @@ function ServiceSelect({ value, onChange }: { value: string; onChange: (v: strin
             ;(e.target as HTMLInputElement).blur()
           }
         }}
-        placeholder="ჩაწერეთ სერვისის სახელი"
+        placeholder={t('boards.addColumnModal.checkin.customServicePlaceholder')}
         className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
       />
     )
@@ -54,14 +56,14 @@ function ServiceSelect({ value, onChange }: { value: string; onChange: (v: strin
       }}
       className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
     >
-      <option value="">არ არის მითითებული</option>
+      <option value="">{t('boards.addColumnModal.checkin.serviceNotSpecified')}</option>
       {CHECKIN_SERVICES.map(s => (
         <option key={s} value={s}>
           {s}
         </option>
       ))}
       {value && !isPredefined && <option value={value}>{value}</option>}
-      <option value={CUSTOM_SERVICE}>სხვა...</option>
+      <option value={CUSTOM_SERVICE}>{t('boards.addColumnModal.checkin.serviceOther')}</option>
     </select>
   )
 }
@@ -73,6 +75,7 @@ interface VisitTypesEditorProps {
 }
 
 function VisitTypesEditor({ config, onSave }: VisitTypesEditorProps) {
+  const t = useTranslations()
   const [draft, setDraft] = useState('')
   const types = getEffectiveVisitTypes(config)
   const isCustomized = Array.isArray(config.visit_types) && config.visit_types.length > 0
@@ -85,8 +88,8 @@ function VisitTypesEditor({ config, onSave }: VisitTypesEditorProps) {
     setDraft('')
   }
 
-  const removeType = (t: string) => {
-    const next = types.filter(x => x !== t)
+  const removeType = (type: string) => {
+    const next = types.filter(x => x !== type)
     // Removing the last type reverts to defaults rather than leaving an
     // empty list (an empty custom list would disable the dropdown entirely)
     onSave(next.length > 0 ? next : null)
@@ -95,7 +98,7 @@ function VisitTypesEditor({ config, onSave }: VisitTypesEditorProps) {
   if (!hasDefaults && types.length === 0) {
     return (
       <p className="text-xs text-text-tertiary">
-        ამ სერვისს ნაგულისხმევი ტიპები არ აქვს — დაამატეთ ქვემოთ, ან ჯერ აირჩიეთ სერვისი.
+        {t('boards.columnConfigPanel.visitTypes.noDefaults')}
       </p>
     )
   }
@@ -103,16 +106,16 @@ function VisitTypesEditor({ config, onSave }: VisitTypesEditorProps) {
   return (
     <div className="space-y-1.5">
       <ul className="space-y-1">
-        {types.map(t => (
+        {types.map(type => (
           <li
-            key={t}
+            key={type}
             className="group flex items-start justify-between gap-2 px-2 py-1.5 rounded-md bg-bg-primary border border-border-light text-xs text-text-primary leading-snug"
           >
-            <span className="min-w-0 break-words">{t}</span>
+            <span className="min-w-0 break-words">{type}</span>
             <button
               type="button"
-              title="წაშლა"
-              onClick={() => removeType(t)}
+              title={t('boards.columnConfigPanel.visitTypes.delete')}
+              onClick={() => removeType(type)}
               className="flex-shrink-0 p-0.5 rounded hover:bg-red-500/10 md:opacity-0 md:group-hover:opacity-100 transition-all"
             >
               <X className="w-3.5 h-3.5 text-red-500" />
@@ -131,7 +134,7 @@ function VisitTypesEditor({ config, onSave }: VisitTypesEditorProps) {
               addType()
             }
           }}
-          placeholder="ახალი ტიპი..."
+          placeholder={t('boards.columnConfigPanel.visitTypes.newTypePlaceholder')}
           className="flex-1 min-w-0 px-2 py-1.5 text-xs bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
         />
         <button
@@ -149,7 +152,7 @@ function VisitTypesEditor({ config, onSave }: VisitTypesEditorProps) {
           onClick={() => onSave(null)}
           className="text-xs text-text-tertiary hover:text-monday-primary transition-colors"
         >
-          ↺ ნაგულისხმევ ტიპებზე დაბრუნება
+          {t('boards.columnConfigPanel.visitTypes.revertToDefaults')}
         </button>
       )}
     </div>
@@ -173,6 +176,7 @@ export function ColumnConfigPanel({
   onAddColumn,
   onDeleteColumn,
 }: ColumnConfigPanelProps) {
+  const t = useTranslations()
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
 
   const handleDragStart = (index: number) => {
@@ -273,7 +277,9 @@ export function ColumnConfigPanel({
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
           <div className="flex items-center gap-2">
             <SettingsIcon className="w-5 h-5 text-monday-primary" />
-            <h2 className="text-lg font-semibold text-text-primary">Column Settings</h2>
+            <h2 className="text-lg font-semibold text-text-primary">
+              {t('boards.columnConfigPanel.title')}
+            </h2>
           </div>
           <button onClick={onClose} className="p-1 rounded hover:bg-bg-hover transition-colors">
             <X className="w-5 h-5 text-text-secondary" />
@@ -316,7 +322,9 @@ export function ColumnConfigPanel({
 
                     {/* Width Control */}
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-text-tertiary">Width:</span>
+                      <span className="text-xs text-text-tertiary">
+                        {t('boards.columnConfigPanel.widthLabel')}
+                      </span>
                       <input
                         type="range"
                         min="80"
@@ -339,7 +347,7 @@ export function ColumnConfigPanel({
                       <div className="mt-2 pt-2 border-t border-border-light space-y-2">
                         <div>
                           <label className="block text-xs text-text-tertiary mb-1">
-                            კოორდინატების სვეტი (გეოფენსი)
+                            {t('boards.columnConfigPanel.coordinatesColumnLabel')}
                           </label>
                           <select
                             value={
@@ -350,7 +358,7 @@ export function ColumnConfigPanel({
                             }
                             className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
                           >
-                            <option value="">GPS-ის რეჟიმი (გეოფენსის გარეშე)</option>
+                            <option value="">{t('boards.columnConfigPanel.gpsModeOption')}</option>
                             {coordsCandidateColumns.map(col => (
                               <option key={col.id} value={col.column_id}>
                                 {col.column_name}
@@ -359,7 +367,9 @@ export function ColumnConfigPanel({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-xs text-text-tertiary mb-1">სერვისი</label>
+                          <label className="block text-xs text-text-tertiary mb-1">
+                            {t('boards.addColumnModal.checkin.serviceLabel')}
+                          </label>
                           <ServiceSelect
                             value={(column.config as Record<string, any>)?.service || ''}
                             onChange={value => {
@@ -373,7 +383,7 @@ export function ColumnConfigPanel({
                         </div>
                         <div>
                           <label className="block text-xs text-text-tertiary mb-1">
-                            სტადიის სვეტი (ავტო-განახლება)
+                            {t('boards.addColumnModal.checkin.stageColumnLabel')}
                           </label>
                           <select
                             value={(column.config as Record<string, any>)?.stage_column_id || ''}
@@ -386,7 +396,9 @@ export function ColumnConfigPanel({
                             }}
                             className="w-full px-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary"
                           >
-                            <option value="">გამორთული</option>
+                            <option value="">
+                              {t('boards.addColumnModal.checkin.stageColumnDisabled')}
+                            </option>
                             {columns
                               .filter(col => col.column_type === 'status')
                               .map(col => (
@@ -398,7 +410,7 @@ export function ColumnConfigPanel({
                         </div>
                         <div>
                           <label className="block text-xs text-text-tertiary mb-1">
-                            ვიზიტის ტიპები
+                            {t('boards.columnConfigPanel.visitTypesLabel')}
                           </label>
                           <VisitTypesEditor
                             config={(column.config as Record<string, any>) || {}}
@@ -419,7 +431,11 @@ export function ColumnConfigPanel({
                   {/* Actions */}
                   <div className="flex items-center gap-1">
                     <Tooltip
-                      content={column.is_visible ? 'Hide column' : 'Show column'}
+                      content={
+                        column.is_visible
+                          ? t('boards.columnConfigPanel.hideColumn')
+                          : t('boards.columnConfigPanel.showColumn')
+                      }
                       side="top"
                       delayDuration={200}
                     >
@@ -434,10 +450,20 @@ export function ColumnConfigPanel({
                         )}
                       </button>
                     </Tooltip>
-                    <Tooltip content="Delete column" side="top" delayDuration={200}>
+                    <Tooltip
+                      content={t('boards.columnConfigPanel.deleteColumn')}
+                      side="top"
+                      delayDuration={200}
+                    >
                       <button
                         onClick={() => {
-                          if (confirm(`Delete column "${column.column_name}"?`)) {
+                          if (
+                            confirm(
+                              t('boards.columnConfigPanel.confirmDelete', {
+                                name: column.column_name,
+                              })
+                            )
+                          ) {
                             onDeleteColumn(column.id)
                           }
                         }}
@@ -460,7 +486,7 @@ export function ColumnConfigPanel({
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-monday-primary text-white rounded-md hover:bg-monday-primary-hover transition-colors"
           >
             <Plus className="w-5 h-5" />
-            <span className="font-medium">Add Column</span>
+            <span className="font-medium">{t('boards.columnConfigPanel.addColumn')}</span>
           </button>
         </div>
       </div>

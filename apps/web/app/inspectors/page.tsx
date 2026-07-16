@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
 import { InspectorTable } from '@/features/inspectors/components'
 import { useInspectors } from '@/features/inspectors/hooks'
@@ -8,22 +9,23 @@ import { Users, UserCheck, UserX, Plus } from 'lucide-react'
 
 export default function InspectorsPage() {
   const router = useRouter()
+  const t = useTranslations()
   const { inspectors, loading, error, deleteInspector, updateInspectorStatus } = useInspectors()
 
   if (loading) {
-    return <LoadingSpinner message="ოფიცრების ჩატვირთვა..." />
+    return <LoadingSpinner message={t('inspectors.list.loading')} />
   }
 
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">დაფიქსირდა შეცდომა</p>
+          <p className="text-red-600 mb-4">{t('inspectors.list.errorOccurred')}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover"
           >
-            თავიდან ცდა
+            {t('inspectors.list.tryAgain')}
           </button>
         </div>
       </div>
@@ -36,10 +38,10 @@ export default function InspectorsPage() {
   return (
     <div className="min-h-screen bg-bg-secondary">
       <PageHeader
-        title="ოფიცრები"
-        description="ყველა რეგისტრირებული ოფიცერი"
+        title={t('inspectors.list.title')}
+        description={t('inspectors.list.description')}
         action={{
-          label: 'ახალი ოფიცერი',
+          label: t('inspectors.list.newInspector'),
           onClick: () => router.push('/inspectors/new'),
           icon: <Plus className="w-5 h-5" />,
         }}
@@ -48,15 +50,20 @@ export default function InspectorsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <StatCard label="სულ ოფიცრები" value={inspectors.length} icon={Users} color="blue" />
           <StatCard
-            label="აქტიური"
+            label={t('inspectors.list.totalInspectors')}
+            value={inspectors.length}
+            icon={Users}
+            color="blue"
+          />
+          <StatCard
+            label={t('inspectors.list.active')}
             value={activeInspectors.length}
             icon={UserCheck}
             color="green"
           />
           <StatCard
-            label="არააქტიური"
+            label={t('inspectors.list.inactive')}
             value={inactiveInspectors.length}
             icon={UserX}
             color="amber"
@@ -67,10 +74,10 @@ export default function InspectorsPage() {
         {inspectors.length === 0 ? (
           <EmptyState
             icon={<Users className="w-16 h-16" />}
-            title="ოფიცრები არ არის"
-            description="დაამატეთ პირველი ოფიცერი"
+            title={t('inspectors.list.emptyTitle')}
+            description={t('inspectors.list.emptyDescription')}
             action={{
-              label: 'ახალი ოფიცერი',
+              label: t('inspectors.list.newInspector'),
               onClick: () => router.push('/inspectors/new'),
             }}
           />

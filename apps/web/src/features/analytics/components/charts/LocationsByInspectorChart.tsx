@@ -1,11 +1,13 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 interface LocationsByInspectorChartProps {
   data: { name: string; locations: number }[]
 }
 
 export function LocationsByInspectorChart({ data }: LocationsByInspectorChartProps) {
+  const t = useTranslations()
   const formatted = data
     .slice(0, 12)
     .sort((a, b) => b.locations - a.locations)
@@ -18,11 +20,11 @@ export function LocationsByInspectorChart({ data }: LocationsByInspectorChartPro
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
       <h3 className="text-sm font-semibold text-text-primary mb-4">
-        ლოკაციები ინსპექტორების მიხედვით
+        {t('analytics.charts.locationsByInspector.title')}
       </h3>
       {data.length === 0 ? (
         <div className="h-[350px] flex items-center justify-center text-sm text-text-tertiary">
-          მონაცემები არ არის
+          {t('analytics.charts.common.noData')}
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={350}>
@@ -55,7 +57,7 @@ export function LocationsByInspectorChart({ data }: LocationsByInspectorChartPro
                 fontSize: 12,
                 color: 'var(--text-primary)',
               }}
-              formatter={(value: any) => [value, 'ლოკაციები']}
+              formatter={(value: any) => [value, t('analytics.charts.common.locations')]}
               labelFormatter={(_: any, payload: any) => payload?.[0]?.payload?.fullName || ''}
             />
             <Bar dataKey="locations" fill="#00C875" radius={[0, 4, 4, 0]} />

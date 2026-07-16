@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCoordinateItems } from '@/features/coordinates-map/hooks/useCoordinateItems'
 import { CoordinatesFilterPanel } from '@/features/coordinates-map/components/CoordinatesFilterPanel'
@@ -37,6 +38,7 @@ const ComparisonMap = dynamic(
 type MapView = 'coordinates' | 'comparison'
 
 export default function CoordinatesMapPage() {
+  const t = useTranslations()
   const { userRole, loading: authLoading } = useAuth()
   const router = useRouter()
   const currentRole = userRole?.role || ''
@@ -95,7 +97,7 @@ export default function CoordinatesMapPage() {
             }`}
           >
             <MapPin className="w-3.5 h-3.5" />
-            კოორდინატები
+            {t('coordinatesMap.tabs.coordinates')}
             <span
               className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] ${
                 activeView === 'coordinates' ? 'bg-white/20' : 'bg-bg-tertiary'
@@ -113,7 +115,7 @@ export default function CoordinatesMapPage() {
             }`}
           >
             <GitCompareArrows className="w-3.5 h-3.5" />
-            შედარება
+            {t('coordinatesMap.tabs.comparison')}
             <span
               className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] ${
                 activeView === 'comparison' ? 'bg-white/20' : 'bg-bg-tertiary'
@@ -132,7 +134,9 @@ export default function CoordinatesMapPage() {
               {items.length === 0 && !isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="bg-bg-primary/90 rounded-lg px-6 py-4 text-center shadow-sm">
-                    <p className="text-text-secondary text-sm">კოორდინატები ვერ მოიძებნა</p>
+                    <p className="text-text-secondary text-sm">
+                      {t('coordinatesMap.emptyCoordinates')}
+                    </p>
                   </div>
                 </div>
               )}
@@ -145,7 +149,7 @@ export default function CoordinatesMapPage() {
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="bg-bg-primary/90 rounded-lg px-6 py-4 text-center shadow-sm">
                     <p className="text-text-secondary text-sm">
-                      გეოკოდირებული მონაცემები ვერ მოიძებნა
+                      {t('coordinatesMap.emptyComparison')}
                     </p>
                   </div>
                 </div>

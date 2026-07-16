@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Search, Phone, MapPin, RefreshCw } from 'lucide-react'
 import { Tooltip } from '@/shared/components/ui/tooltip'
 import type { ActiveInspector } from '@/services/tracking.service'
@@ -20,6 +21,7 @@ export function InspectorTrackingPanel({
   isLoading,
   onRefresh,
 }: InspectorTrackingPanelProps) {
+  const t = useTranslations()
   const [search, setSearch] = useState('')
 
   const filtered = inspectors.filter(i => i.full_name.toLowerCase().includes(search.toLowerCase()))
@@ -33,10 +35,10 @@ export function InspectorTrackingPanel({
 
   const getTimeAgo = (lastUpdate: string) => {
     const minutesAgo = Math.floor((Date.now() - new Date(lastUpdate).getTime()) / 60000)
-    if (minutesAgo < 1) return 'Just now'
-    if (minutesAgo < 60) return `${minutesAgo}m ago`
+    if (minutesAgo < 1) return t('tracking.panel.justNow')
+    if (minutesAgo < 60) return t('tracking.panel.minutesAgo', { minutes: minutesAgo })
     const hours = Math.floor(minutesAgo / 60)
-    return `${hours}h ago`
+    return t('tracking.panel.hoursAgo', { hours })
   }
 
   return (
@@ -45,9 +47,9 @@ export function InspectorTrackingPanel({
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-text-primary">
-            Active Inspectors ({inspectors.length})
+            {t('tracking.panel.activeInspectors', { count: inspectors.length })}
           </h2>
-          <Tooltip content="Refresh" side="top" delayDuration={200}>
+          <Tooltip content={t('tracking.panel.refresh')} side="top" delayDuration={200}>
             <button
               onClick={onRefresh}
               className="p-1 rounded hover:bg-bg-hover text-text-secondary"
@@ -62,7 +64,7 @@ export function InspectorTrackingPanel({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search inspectors..."
+            placeholder={t('tracking.panel.searchPlaceholder')}
             className="w-full pl-8 pr-3 py-2 text-sm border rounded-md focus:outline-none focus:border-blue-500"
           />
         </div>
@@ -72,7 +74,7 @@ export function InspectorTrackingPanel({
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
           <div className="p-4 text-center text-sm text-text-tertiary">
-            {isLoading ? 'Loading...' : 'No active inspectors'}
+            {isLoading ? t('tracking.panel.loading') : t('tracking.panel.noActiveInspectors')}
           </div>
         ) : (
           filtered.map(inspector => {
@@ -112,7 +114,7 @@ export function InspectorTrackingPanel({
                   {route && (
                     <div className="mt-1.5">
                       <div className="text-xs text-text-secondary truncate">
-                        {route.name || 'Unnamed route'}
+                        {route.name || t('tracking.panel.unnamedRoute')}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         <div className="flex-1 bg-bg-tertiary rounded-full h-1.5">
@@ -131,7 +133,9 @@ export function InspectorTrackingPanel({
                   )}
 
                   {!route && (
-                    <div className="text-xs text-text-tertiary italic">No active route</div>
+                    <div className="text-xs text-text-tertiary italic">
+                      {t('tracking.panel.noActiveRoute')}
+                    </div>
                   )}
                 </div>
               </button>

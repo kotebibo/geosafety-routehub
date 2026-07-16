@@ -172,6 +172,19 @@ export function usePaymentData({
     }
   }
 
+  const handleUnignore = async (transactionId: string) => {
+    try {
+      setActionLoading(transactionId)
+      await paymentsService.unignoreTransaction(transactionId)
+      fetchTransactions()
+      fetchStats()
+    } catch (err) {
+      console.error('Error unignoring transaction:', err)
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   return {
     // Data
     stats,
@@ -187,5 +200,6 @@ export function usePaymentData({
     actionLoading,
     handleCopy,
     handleIgnore,
+    handleUnignore,
   }
 }

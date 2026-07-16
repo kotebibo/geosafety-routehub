@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 
 export default function AdminError({
   error,
@@ -9,6 +10,8 @@ export default function AdminError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const t = useTranslations()
+
   useEffect(() => {
     console.error('Admin error:', error)
   }, [error])
@@ -18,16 +21,14 @@ export default function AdminError({
       <div className="text-center max-w-md">
         <div className="text-5xl mb-4">⚙️</div>
         <h2 className="text-xl font-semibold text-text-primary mb-2">
-          ადმინ პანელის ჩატვირთვა ვერ მოხერხდა
+          {t('errorPage.adminTitle')}
         </h2>
-        <p className="text-text-secondary mb-6">
-          მოხდა შეცდომა ადმინისტრაციული მონაცემების ჩატვირთვისას. გთხოვთ სცადოთ თავიდან.
-        </p>
+        <p className="text-text-secondary mb-6">{t('errorPage.adminDescription')}</p>
         <button
           onClick={reset}
           className="px-6 py-2.5 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
         >
-          თავიდან ცდა
+          {t('errorBoundary.retry')}
         </button>
       </div>
     </div>

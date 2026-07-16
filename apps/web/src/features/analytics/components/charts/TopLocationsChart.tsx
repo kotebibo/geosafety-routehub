@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import type { TopLocation } from '@/services/board-analytics.service'
 
@@ -8,6 +9,7 @@ interface TopLocationsChartProps {
 }
 
 export function TopLocationsChart({ data }: TopLocationsChartProps) {
+  const t = useTranslations()
   const formatted = data.slice(0, 12).map(d => ({
     ...d,
     label: d.name.length > 22 ? d.name.slice(0, 22) + '...' : d.name,
@@ -15,10 +17,12 @@ export function TopLocationsChart({ data }: TopLocationsChartProps) {
 
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">ტოპ ლოკაციები შემოსავლით</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">
+        {t('analytics.charts.topLocations.title')}
+      </h3>
       {data.length === 0 ? (
         <div className="h-[350px] flex items-center justify-center text-sm text-text-tertiary">
-          მონაცემები არ არის
+          {t('analytics.charts.common.noData')}
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={350}>
@@ -51,7 +55,7 @@ export function TopLocationsChart({ data }: TopLocationsChartProps) {
                 fontSize: 12,
                 color: 'var(--text-primary)',
               }}
-              formatter={(value: any) => [`₾${value}`, 'თანხა']}
+              formatter={(value: any) => [`₾${value}`, t('analytics.charts.common.amount')]}
               labelFormatter={(_: any, payload: any) => {
                 const item = payload?.[0]?.payload
                 return item ? `${item.name} (${item.inspector})` : ''

@@ -2,6 +2,7 @@
 
 import React, { memo, useRef, useState, useEffect, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { MoreHorizontal, GripVertical, Trash2, Type, ArrowUp, ArrowDown, Clock } from 'lucide-react'
 import { useSortable } from '@dnd-kit/sortable'
@@ -55,6 +56,7 @@ function ColumnMenu({
   onColumnConfigUpdate,
   menuRef,
 }: ColumnMenuProps) {
+  const t = useTranslations()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 })
 
@@ -116,7 +118,7 @@ function ColumnMenu({
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-text-primary hover:bg-bg-hover transition-colors"
               >
                 <Type className="w-4 h-4" />
-                <span>Rename column</span>
+                <span>{t('boards.sortableColumnHeader.renameColumn')}</span>
               </button>
               {/* Due date toggle — only for date columns */}
               {column.column_type === 'date' && onColumnConfigUpdate && (
@@ -131,7 +133,7 @@ function ColumnMenu({
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-text-primary hover:bg-bg-hover transition-colors"
                   >
                     <Clock className="w-4 h-4" />
-                    <span className="flex-1">Due date mode</span>
+                    <span className="flex-1">{t('boards.sortableColumnHeader.dueDateMode')}</span>
                     <div
                       className={cn(
                         'w-8 h-[18px] rounded-full transition-colors flex items-center px-0.5',
@@ -154,7 +156,7 @@ function ColumnMenu({
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>Delete column</span>
+                <span>{t('boards.sortableColumnHeader.deleteColumn')}</span>
               </button>
             </div>
           </>,

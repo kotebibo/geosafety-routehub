@@ -123,8 +123,8 @@ export default function HomePage() {
             </p>
 
             {user && (
-              <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/80 backdrop-blur-sm rounded-full shadow-lg animate-fade-in animation-delay-400">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <div className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 backdrop-blur-sm rounded-full shadow-lg animate-fade-in animation-delay-400">
+                <div className="w-2 h-2 bg-color-success rounded-full animate-pulse"></div>
                 <span className="text-text-secondary">
                   {t('home.greeting')}, <strong>{user.email}</strong>
                 </span>

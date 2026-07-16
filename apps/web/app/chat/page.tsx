@@ -3,6 +3,7 @@
 import { useChat } from '@ai-sdk/react'
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import {
   Send,
@@ -18,27 +19,27 @@ import {
 import { cn } from '@/lib/utils'
 import type { UIMessage } from 'ai'
 
-const SUGGESTED_QUESTIONS = [
-  'რამდენი აქტიური კომპანია გვაქვს?',
-  'რა ბორდები არის სპეციალისტების სამუშაო სივრცეში?',
-  'HACCP ბორდზე რამდენი ჩანაწერია?',
-  'ბოლო ბანკის ტრანზაქციები მაჩვენე',
-  'ანა სანაძის კლიენტები მაჩვენე',
-  'რამდენი შეუთანხმებელი გადახდაა?',
-]
+const SUGGESTED_QUESTION_KEYS = [
+  'chat.suggestions.activeCompanies',
+  'chat.suggestions.specialistBoards',
+  'chat.suggestions.haccpItems',
+  'chat.suggestions.bankTransactions',
+  'chat.suggestions.anaSanadzeClients',
+  'chat.suggestions.unmatchedPayments',
+] as const
 
-const TOOL_FRIENDLY_NAMES: Record<string, string> = {
-  find_company: 'კომპანიის ძიება',
-  list_companies: 'კომპანიების სია',
-  count_board_items: 'ბორდის ჩანაწერების რაოდენობა',
-  list_board_items: 'ბორდის ჩანაწერები',
-  list_workspaces_and_boards: 'სამუშაო სივრცეები',
-  get_bank_transactions: 'ბანკის ტრანზაქციები',
-  get_payment_stats: 'გადახდების სტატისტიკა',
-  list_inspectors: 'სპეციალისტები',
-  get_specialist_workload: 'სპეციალისტის დატვირთვა',
-  get_service_types: 'სერვისის ტიპები',
-  search_board_items: 'ჩანაწერების ძიება',
+const TOOL_FRIENDLY_NAME_KEYS: Record<string, string> = {
+  find_company: 'chat.tools.findCompany',
+  list_companies: 'chat.tools.listCompanies',
+  count_board_items: 'chat.tools.countBoardItems',
+  list_board_items: 'chat.tools.listBoardItems',
+  list_workspaces_and_boards: 'chat.tools.listWorkspacesAndBoards',
+  get_bank_transactions: 'chat.tools.getBankTransactions',
+  get_payment_stats: 'chat.tools.getPaymentStats',
+  list_inspectors: 'chat.tools.listInspectors',
+  get_specialist_workload: 'chat.tools.getSpecialistWorkload',
+  get_service_types: 'chat.tools.getServiceTypes',
+  search_board_items: 'chat.tools.searchBoardItems',
 }
 
 interface ToolCallDisplayProps {
@@ -48,7 +49,9 @@ interface ToolCallDisplayProps {
 }
 
 function ToolCallDisplay({ toolName, input, output }: ToolCallDisplayProps) {
+  const t = useTranslations()
   const [expanded, setExpanded] = useState(false)
+  const nameKey = TOOL_FRIENDLY_NAME_KEYS[toolName]
 
   return (
     <div className="my-1.5 rounded-md border border-gray-200 bg-gray-50 text-xs">
@@ -57,7 +60,7 @@ function ToolCallDisplay({ toolName, input, output }: ToolCallDisplayProps) {
         className="flex w-full items-center gap-1.5 px-2.5 py-1.5 text-left text-gray-500 hover:text-gray-700"
       >
         <Wrench className="h-3 w-3 shrink-0" />
-        <span className="font-medium">{TOOL_FRIENDLY_NAMES[toolName] || toolName}</span>
+        <span className="font-medium">{nameKey ? t(nameKey) : toolName}</span>
         <span className="text-gray-400">
           (
           {Object.entries(input)
@@ -106,6 +109,7 @@ function MessageContent({ message }: { message: UIMessage }) {
 }
 
 export default function ChatPage() {
+  const t = useTranslations()
   const router = useRouter()
   const { isAdmin, isDispatcher, loading: authLoading } = useAuth()
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -150,8 +154,8 @@ export default function ChatPage() {
             <Bot className="h-5 w-5 text-indigo-600" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold text-gray-900">RouteHub ასისტენტი</h1>
-            <p className="text-xs text-gray-500">დასვით კითხვა კომპანიის მონაცემებზე</p>
+            <h1 className="text-lg font-semibold text-gray-900">{t('chat.header.title')}</h1>
+            <p className="text-xs text-gray-500">{t('chat.header.subtitle')}</p>
           </div>
           {messages.length > 0 && (
             <button
@@ -159,7 +163,7 @@ export default function ChatPage() {
               className="ml-auto flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              ახალი ჩატი
+              {t('chat.header.newChat')}
             </button>
           )}
         </div>
@@ -172,19 +176,18 @@ export default function ChatPage() {
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50">
               <Sparkles className="h-8 w-8 text-indigo-500" />
             </div>
-            <h2 className="mb-2 text-lg font-medium text-gray-800">რით შემიძლია დაგეხმაროთ?</h2>
+            <h2 className="mb-2 text-lg font-medium text-gray-800">{t('chat.empty.title')}</h2>
             <p className="mb-8 max-w-md text-center text-sm text-gray-500">
-              შეგიძლიათ მკითხოთ კომპანიების, ბორდების, გადახდების, სპეციალისტების და სხვა
-              მონაცემების შესახებ.
+              {t('chat.empty.description')}
             </p>
             <div className="grid max-w-lg grid-cols-1 gap-2 sm:grid-cols-2">
-              {SUGGESTED_QUESTIONS.map((q, i) => (
+              {SUGGESTED_QUESTION_KEYS.map((key, i) => (
                 <button
                   key={i}
-                  onClick={() => handleSend(q)}
+                  onClick={() => handleSend(t(key))}
                   className="rounded-lg border border-gray-200 px-3 py-2.5 text-left text-sm text-gray-700 transition-colors hover:border-indigo-300 hover:bg-indigo-50"
                 >
-                  {q}
+                  {t(key)}
                 </button>
               ))}
             </div>
@@ -244,7 +247,7 @@ export default function ChatPage() {
           <input
             value={inputValue}
             onChange={e => setInputValue(e.target.value)}
-            placeholder="დასვით კითხვა..."
+            placeholder={t('chat.inputPlaceholder')}
             className="flex-1 rounded-lg border border-gray-300 px-4 py-2.5 text-sm outline-none transition-colors placeholder:text-gray-400 focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400"
             disabled={isLoading}
           />

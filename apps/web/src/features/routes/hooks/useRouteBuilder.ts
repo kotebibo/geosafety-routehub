@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { inspectorsService } from '@/services/inspectors.service'
 import { routesService } from '@/services/routes.service'
 import { useToast } from '@/components/ui-monday/Toast'
@@ -14,6 +15,7 @@ interface Company {
 }
 
 export function useRouteBuilder() {
+  const t = useTranslations()
   const { showToast } = useToast()
   const [inspectors, setInspectors] = useState<any[]>([])
   const [selectedInspector, setSelectedInspector] = useState<string>('')
@@ -88,7 +90,7 @@ export function useRouteBuilder() {
 
   const optimizeRoute = async () => {
     if (selectedCompanies.size === 0) {
-      showToast('აირჩიეთ მინიმუმ ერთი კომპანია', 'warning')
+      showToast(t('routes.useRouteBuilder.selectAtLeastOne'), 'warning')
       return
     }
 
@@ -128,7 +130,7 @@ export function useRouteBuilder() {
       }
     } catch (error) {
       console.error('Error optimizing route:', error)
-      showToast('მარშრუტის ოპტიმიზაციისას დაფიქსირდა შეცდომა', 'error')
+      showToast(t('routes.useRouteBuilder.optimizeError'), 'error')
     } finally {
       setOptimizing(false)
     }
@@ -141,7 +143,7 @@ export function useRouteBuilder() {
     notes?: string
   }) => {
     if (!optimizedRoute || !selectedInspector) {
-      showToast('ჯერ შექმენით ოპტიმიზებული მარშრუტი', 'warning')
+      showToast(t('routes.useRouteBuilder.createOptimizedFirst'), 'warning')
       return
     }
 
@@ -155,14 +157,14 @@ export function useRouteBuilder() {
         route_geometry: optimizedRoute.geometry || null,
       })
 
-      showToast('მარშრუტი წარმატებით შეინახა!', 'success')
+      showToast(t('routes.useRouteBuilder.saveSuccess'), 'success')
 
       // Reset form
       setSelectedCompanies(new Set())
       setOptimizedRoute(null)
     } catch (error) {
       console.error('Error saving route:', error)
-      showToast('მარშრუტის შენახვისას დაფიქსირდა შეცდომა', 'error')
+      showToast(t('routes.useRouteBuilder.saveError'), 'error')
     } finally {
       setSaving(false)
     }

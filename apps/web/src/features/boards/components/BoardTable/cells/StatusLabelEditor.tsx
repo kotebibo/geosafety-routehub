@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { Tooltip } from '@/shared/components/ui/tooltip'
 import { MONDAY_COLORS, type StatusOption } from './StatusCell'
@@ -57,6 +58,7 @@ export function StatusLabelEditor({
   column,
   currentOptions,
 }: StatusLabelEditorProps) {
+  const t = useTranslations()
   const [options, setOptions] = useState<StatusOption[]>(currentOptions)
   const [editingColorIndex, setEditingColorIndex] = useState<number | null>(null)
   const updateColumn = useUpdateColumn()
@@ -83,7 +85,7 @@ export function StatusLabelEditor({
 
   const handleDelete = (index: number) => {
     if (options.length <= 1) {
-      showToast('At least one status option is required', 'error')
+      showToast(t('boards.statusLabelEditor.atLeastOneRequired'), 'error')
       return
     }
     setOptions(prev => prev.filter((_, i) => i !== index))
@@ -92,7 +94,7 @@ export function StatusLabelEditor({
   const handleAddNew = () => {
     const newOption: StatusOption = {
       key: `status_${Date.now()}`,
-      label: 'New Label',
+      label: t('boards.statusLabelEditor.newLabel'),
       color: 'explosive',
     }
     setOptions(prev => [...prev, newOption])
@@ -114,10 +116,10 @@ export function StatusLabelEditor({
           },
         },
       })
-      showToast('Labels saved successfully', 'success')
+      showToast(t('boards.statusLabelEditor.saveSuccess'), 'success')
       onClose()
     } catch (error) {
-      showToast('Failed to save labels', 'error')
+      showToast(t('boards.statusLabelEditor.saveError'), 'error')
     }
   }
 
@@ -141,7 +143,9 @@ export function StatusLabelEditor({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-light">
-          <h2 className="text-lg font-semibold text-text-primary">Edit Status Labels</h2>
+          <h2 className="text-lg font-semibold text-text-primary">
+            {t('boards.statusLabelEditor.title')}
+          </h2>
           <button
             onClick={handleCancel}
             className="p-1 hover:bg-bg-hover rounded transition-colors"
@@ -174,7 +178,11 @@ export function StatusLabelEditor({
                   {/* Label Row */}
                   <div className="flex items-center gap-3">
                     {/* Color Indicator */}
-                    <Tooltip content="Click to change color" side="top" delayDuration={200}>
+                    <Tooltip
+                      content={t('boards.statusLabelEditor.clickToChangeColor')}
+                      side="top"
+                      delayDuration={200}
+                    >
                       <button
                         onClick={() => setEditingColorIndex(isEditingColor ? null : index)}
                         className={cn(
@@ -201,7 +209,11 @@ export function StatusLabelEditor({
                     />
 
                     {/* Delete Button */}
-                    <Tooltip content="Delete label" side="top" delayDuration={200}>
+                    <Tooltip
+                      content={t('boards.statusLabelEditor.deleteLabel')}
+                      side="top"
+                      delayDuration={200}
+                    >
                       <button
                         onClick={() => handleDelete(index)}
                         className={cn(
@@ -306,7 +318,7 @@ export function StatusLabelEditor({
                 d="M12 4v16m8-8H4"
               />
             </svg>
-            Add new label
+            {t('boards.statusLabelEditor.addNewLabel')}
           </button>
         </div>
 
@@ -321,7 +333,7 @@ export function StatusLabelEditor({
               'transition-colors'
             )}
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -334,7 +346,7 @@ export function StatusLabelEditor({
               'transition-colors'
             )}
           >
-            {updateColumn.isPending ? 'Saving...' : 'Save'}
+            {updateColumn.isPending ? t('boards.statusLabelEditor.saving') : t('common.save')}
           </button>
         </div>
       </div>

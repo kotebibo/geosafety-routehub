@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import {
   X,
@@ -32,6 +33,7 @@ export function MoveItemModal({
   sourceBoardId,
   onMoveComplete,
 }: MoveItemModalProps) {
+  const t = useTranslations()
   const [selectedBoardId, setSelectedBoardId] = useState<string>('')
   const [showBoardDropdown, setShowBoardDropdown] = useState(false)
   const [boardSearch, setBoardSearch] = useState('')
@@ -197,7 +199,7 @@ export function MoveItemModal({
                           type="text"
                           value={boardSearch}
                           onChange={e => setBoardSearch(e.target.value)}
-                          placeholder="ბორდის ძიება..."
+                          placeholder={t('boards.moveModal.searchPlaceholder')}
                           className="w-full pl-8 pr-3 py-2 text-sm border border-border-light rounded-md bg-bg-secondary focus:outline-none focus:border-monday-primary focus:ring-1 focus:ring-monday-primary/20"
                           autoFocus
                           onClick={e => e.stopPropagation()}
@@ -210,11 +212,13 @@ export function MoveItemModal({
                       {boardsLoading ? (
                         <div className="px-4 py-8 text-center text-text-tertiary">
                           <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                          Loading boards...
+                          {t('boards.moveModal.loadingBoards')}
                         </div>
                       ) : filteredBoards.length === 0 ? (
                         <div className="px-4 py-8 text-center text-text-tertiary">
-                          {boardSearch ? 'ბორდი ვერ მოიძებნა' : 'No other boards available'}
+                          {boardSearch
+                            ? t('boards.moveModal.noBoardsMatchSearch')
+                            : t('boards.moveModal.noOtherBoardsAvailable')}
                         </div>
                       ) : (
                         filteredBoards.map(board => (

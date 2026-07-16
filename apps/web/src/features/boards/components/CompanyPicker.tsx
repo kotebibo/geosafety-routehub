@@ -6,6 +6,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { Search, X, Building2, MapPin, ChevronRight } from 'lucide-react'
 import { companiesService } from '@/services/companies.service'
@@ -34,10 +35,11 @@ export function CompanyPicker({
   value,
   onChange,
   onClose,
-  placeholder = 'კომპანიის ძებნა...',
+  placeholder,
   companies: propCompanies,
   positionStyle,
 }: CompanyPickerProps) {
+  const t = useTranslations()
   const [search, setSearch] = useState('')
   const [companies, setCompanies] = useState<Company[]>(propCompanies || [])
   const [loading, setLoading] = useState(!propCompanies)
@@ -175,7 +177,7 @@ export function CompanyPicker({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={placeholder}
+            placeholder={placeholder ?? t('boards.picker.companySearchPlaceholder')}
             className="w-full pl-8 pr-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded focus:outline-none focus:border-monday-primary placeholder:text-text-tertiary"
           />
         </div>
@@ -189,7 +191,7 @@ export function CompanyPicker({
             className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-text-secondary hover:bg-bg-hover rounded transition-colors"
           >
             <X className="w-4 h-4" />
-            <span>გასუფთავება</span>
+            <span>{t('boards.picker.clear')}</span>
           </button>
         </div>
       )}
@@ -202,7 +204,7 @@ export function CompanyPicker({
           </div>
         ) : filteredCompanies.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-text-tertiary">
-            კომპანია არ მოიძებნა
+            {t('boards.picker.noCompaniesFound')}
           </div>
         ) : (
           <div className="py-1">
@@ -229,11 +231,13 @@ export function CompanyPicker({
                   <div className="flex-1 text-left overflow-hidden">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-text-primary truncate">
-                        {company.name || 'უსახელო კომპანია'}
+                        {company.name || t('boards.picker.unnamedCompany')}
                       </span>
                       {hasMultipleLocations && (
                         <span className="flex-shrink-0 text-xs bg-color-info/10 text-color-info px-1.5 py-0.5 rounded">
-                          {company.location_count} ლოკაცია
+                          {t('boards.picker.locationsCount', {
+                            count: company.location_count ?? 0,
+                          })}
                         </span>
                       )}
                     </div>

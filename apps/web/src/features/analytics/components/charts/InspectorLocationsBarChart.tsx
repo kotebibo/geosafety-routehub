@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import type { InspectorSummary } from '@/services/board-analytics.service'
 
@@ -8,6 +9,7 @@ interface InspectorLocationsBarChartProps {
 }
 
 export function InspectorLocationsBarChart({ data }: InspectorLocationsBarChartProps) {
+  const t = useTranslations()
   const chartData = [...data]
     .sort((a, b) => b.locations - a.locations)
     .slice(0, 15)
@@ -18,7 +20,9 @@ export function InspectorLocationsBarChart({ data }: InspectorLocationsBarChartP
 
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">ლოკაციები ინსპექტორით</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">
+        {t('analytics.charts.inspectorLocations.title')}
+      </h3>
       <ResponsiveContainer width="100%" height={380}>
         <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" horizontal={false} />
@@ -45,7 +49,7 @@ export function InspectorLocationsBarChart({ data }: InspectorLocationsBarChartP
               fontSize: 12,
               color: 'var(--text-primary)',
             }}
-            formatter={(value: any) => [value, 'ლოკაციები']}
+            formatter={(value: any) => [value, t('analytics.charts.common.locations')]}
             labelFormatter={(label: any) => {
               const item = chartData.find(d => d.shortName === label)
               return item?.name || label

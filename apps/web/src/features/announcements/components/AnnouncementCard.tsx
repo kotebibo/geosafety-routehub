@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from 'date-fns'
 import { ka } from 'date-fns/locale'
+import { useTranslations } from 'next-intl'
 import { Megaphone, AlertTriangle, AlertCircle, User, Clock, Trash2 } from 'lucide-react'
 import type { Announcement } from '@/types/announcement'
 import { Tooltip } from '@/shared/components/ui/tooltip'
@@ -19,7 +20,7 @@ const PRIORITY = {
     bg: 'bg-red-50/60',
     badge: 'bg-red-100 text-red-700',
     iconColor: 'text-red-500 bg-red-100',
-    label: 'სასწრაფო',
+    labelKey: 'news.priority.urgent',
   },
   important: {
     icon: AlertTriangle,
@@ -27,7 +28,7 @@ const PRIORITY = {
     bg: 'bg-amber-50/60',
     badge: 'bg-amber-100 text-amber-700',
     iconColor: 'text-amber-500 bg-amber-100',
-    label: 'მნიშვნელოვანი',
+    labelKey: 'news.priority.important',
   },
   normal: {
     icon: Megaphone,
@@ -35,11 +36,12 @@ const PRIORITY = {
     bg: 'bg-bg-primary',
     badge: '',
     iconColor: 'text-monday-primary bg-monday-primary/10',
-    label: '',
+    labelKey: '',
   },
 } as const
 
 export function AnnouncementCard({ announcement, onClick, onDelete }: AnnouncementCardProps) {
+  const t = useTranslations()
   const config = PRIORITY[announcement.priority] || PRIORITY.normal
   const Icon = config.icon
 
@@ -59,7 +61,7 @@ export function AnnouncementCard({ announcement, onClick, onDelete }: Announceme
 
       {/* Admin delete button */}
       {onDelete && (
-        <Tooltip content="წაშლა" side="top" delayDuration={200}>
+        <Tooltip content={t('common.delete')} side="top" delayDuration={200}>
           <button
             type="button"
             onClick={e => {
@@ -89,7 +91,7 @@ export function AnnouncementCard({ announcement, onClick, onDelete }: Announceme
                 <span
                   className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full flex-shrink-0 ${config.badge}`}
                 >
-                  {config.label}
+                  {t(config.labelKey)}
                 </span>
               )}
             </div>

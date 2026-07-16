@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -16,9 +17,12 @@ interface CumulativeLossChartProps {
 }
 
 export function CumulativeLossChart({ data }: CumulativeLossChartProps) {
+  const t = useTranslations()
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">კუმულაციური დანაკარგი</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">
+        {t('analytics.charts.cumulativeLoss.title')}
+      </h3>
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={data}>
           <defs>
@@ -48,7 +52,10 @@ export function CumulativeLossChart({ data }: CumulativeLossChartProps) {
               fontSize: 12,
               color: 'var(--text-primary)',
             }}
-            formatter={(value: any) => [`₾${Number(value).toLocaleString()}`, 'დანაკარგი']}
+            formatter={(value: any) => [
+              `₾${Number(value).toLocaleString()}`,
+              t('analytics.charts.cumulativeLoss.loss'),
+            ]}
           />
           <Area
             type="monotone"

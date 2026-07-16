@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { usersService, CustomRole, Permission } from '@/services/users.service'
@@ -54,6 +55,7 @@ interface DeleteModalState {
 }
 
 export default function RoleManagementPage() {
+  const t = useTranslations()
   const router = useRouter()
   const { isAdmin, loading: authLoading, refreshUserRole } = useAuth()
 
@@ -170,7 +172,7 @@ export default function RoleManagementPage() {
     setSelectedRole(null)
     setFormData({
       name: '',
-      display_name: `${role.display_name} (\u10D0\u10E1\u10DA\u10D8)`,
+      display_name: `${role.display_name} (${t('admin.roles.duplicateSuffix')})`,
       description: role.description || '',
       color: ROLE_COLORS[Math.floor(Math.random() * ROLE_COLORS.length)],
       permissions: role.permissions || [],
@@ -287,15 +289,9 @@ export default function RoleManagementPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-text-primary">
-                  {
-                    '\u10E0\u10DD\u10DA\u10D4\u10D1\u10D8\u10E1 \u10DB\u10D0\u10E0\u10D7\u10D5\u10D0'
-                  }
+                  {t('admin.roles.pageTitle')}
                 </h1>
-                <p className="text-sm text-text-secondary">
-                  {
-                    '\u10E8\u10D4\u10E5\u10DB\u10D4\u10DC\u10D8\u10D7 \u10D3\u10D0 \u10DB\u10D0\u10E0\u10D7\u10D4\u10D7 \u10DB\u10DD\u10E0\u10D2\u10D4\u10D1\u10E3\u10DA\u10D8 \u10E0\u10DD\u10DA\u10D4\u10D1\u10D8 \u10E3\u10E4\u10DA\u10D4\u10D1\u10D4\u10D1\u10D8\u10D7'
-                  }
-                </p>
+                <p className="text-sm text-text-secondary">{t('admin.roles.pageDescription')}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -311,7 +307,7 @@ export default function RoleManagementPage() {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-monday-primary rounded-lg hover:bg-monday-primary-hover transition-colors whitespace-nowrap"
               >
                 <Plus className="w-4 h-4" />
-                {'\u10E0\u10DD\u10DA\u10D8\u10E1 \u10E8\u10D4\u10E5\u10DB\u10DC\u10D0'}
+                {t('admin.roles.createRole')}
               </button>
             </div>
           </div>
@@ -327,28 +323,28 @@ export default function RoleManagementPage() {
                 icon: Shield,
                 iconBg: 'bg-monday-primary/10',
                 iconColor: 'text-monday-primary',
-                label: '\u10E1\u10E3\u10DA \u10E0\u10DD\u10DA\u10D4\u10D1\u10D8',
+                label: t('admin.roles.stats.totalRoles'),
                 value: stats.totalRoles,
               },
               {
                 icon: Lock,
                 iconBg: 'bg-monday-primary/10',
                 iconColor: 'text-monday-primary',
-                label: '\u10E1\u10D8\u10E1\u10E2\u10D4\u10DB\u10E3\u10E0\u10D8',
+                label: t('admin.roles.stats.systemRoles'),
                 value: stats.systemRoles,
               },
               {
                 icon: Settings,
                 iconBg: 'bg-color-success/10',
                 iconColor: 'text-color-success',
-                label: '\u10DB\u10DD\u10E0\u10D2\u10D4\u10D1\u10E3\u10DA\u10D8',
+                label: t('admin.roles.stats.customRoles'),
                 value: stats.customRoles,
               },
               {
                 icon: Key,
                 iconBg: 'bg-color-warning/10',
                 iconColor: 'text-color-warning',
-                label: '\u10E3\u10E4\u10DA\u10D4\u10D1\u10D4\u10D1\u10D8',
+                label: t('admin.roles.stats.totalPermissions'),
                 value: stats.totalPermissions,
               },
             ].map(({ icon: Icon, iconBg, iconColor, label, value }) => (
@@ -374,7 +370,7 @@ export default function RoleManagementPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
               <input
                 type="text"
-                placeholder={'\u10E0\u10DD\u10DA\u10D8\u10E1 \u10EB\u10D4\u10D1\u10DC\u10D0...'}
+                placeholder={t('admin.roles.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent"
@@ -388,15 +384,9 @@ export default function RoleManagementPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">
-                  {'\u10E7\u10D5\u10D4\u10DA\u10D0 \u10E2\u10D8\u10DE\u10D8'}
-                </SelectItem>
-                <SelectItem value="system">
-                  {'\u10E1\u10D8\u10E1\u10E2\u10D4\u10DB\u10E3\u10E0\u10D8'}
-                </SelectItem>
-                <SelectItem value="custom">
-                  {'\u10DB\u10DD\u10E0\u10D2\u10D4\u10D1\u10E3\u10DA\u10D8'}
-                </SelectItem>
+                <SelectItem value="all">{t('admin.roles.filterAll')}</SelectItem>
+                <SelectItem value="system">{t('admin.roles.stats.systemRoles')}</SelectItem>
+                <SelectItem value="custom">{t('admin.roles.stats.customRoles')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

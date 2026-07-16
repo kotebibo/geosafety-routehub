@@ -15,7 +15,18 @@
     "assignments": "დანიშვნები",
     "settings": "პარამეტრები",
     "collapse": "ჩაკეცვა",
-    "expand": "გაშლა"
+    "expand": "გაშლა",
+    "myWork": "ჩემი სამუშაო",
+    "news": "სიახლეები",
+    "analytics": "ანალიტიკა",
+    "tracking": "თვალყურის დევნება",
+    "coordinatesMap": "კოორდინატების რუკა",
+    "checkins": "ჩექ-ინები",
+    "assistant": "ასისტენტი",
+    "users": "მომხმარებლები",
+    "roles": "როლები",
+    "health": "სისტემის მდგომარეობა",
+    "payments": "გადახდები"
   },
   "header": {
     "search": "ძებნა...",
@@ -86,7 +97,15 @@
     "confirm": "დადასტურება",
     "close": "დახურვა",
     "language": "ენა",
-    "select": "აირჩიეთ"
+    "select": "აირჩიეთ",
+    "userPicker": {
+      "selectedCount": "არჩეულია: {count}",
+      "clearAll": "გასუფთავება",
+      "unknown": "უცნობი",
+      "searchPlaceholder": "ძებნა...",
+      "noUsersFound": "მომხმარებლები არ მოიძებნა",
+      "done": "დასრულება"
+    }
   },
   "login": {
     "title": "RouteHub",
@@ -117,7 +136,8 @@
     "signinError": "შეცდომა შესვლისას. გთხოვთ სცადოთ თავიდან.",
     "enterEmailFirst": "ჯერ შეიყვანეთ ელ.ფოსტა",
     "resetEmailSent": "პაროლის აღდგენის ბმული გამოგზავნილია თქვენს ელ.ფოსტაზე",
-    "resetError": "პაროლის აღდგენა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან."
+    "resetError": "პაროლის აღდგენა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.",
+    "sessionExpired": "თქვენი სესია ამოიწურა. გთხოვთ თავიდან შეხვიდეთ."
   },
   "reset": {
     "title": "პაროლის შეცვლა",
@@ -194,7 +214,9 @@
     },
     "language": {
       "title": "ენის პარამეტრები",
-      "interface": "ინტერფეისის ენა"
+      "interface": "ინტერფეისის ენა",
+      "georgian": "ქართული ენა",
+      "english": "ინგლისური ენა"
     },
     "security": {
       "title": "უსაფრთხოება",
@@ -271,7 +293,15 @@
   },
   "sidebar": {
     "boardNamePlaceholder": "დაფის სახელი",
-    "workspaceNamePlaceholder": "სამუშაო სივრცის სახელი"
+    "workspaceNamePlaceholder": "სამუშაო სივრცის სახელი",
+    "color": {
+      "blue": "ლურჯი",
+      "green": "მწვანე",
+      "red": "წითელი",
+      "yellow": "ყვითელი",
+      "purple": "იასამნისფერი",
+      "orange": "ნარინჯისფერი"
+    }
   },
   "globalSearch": {
     "placeholder": "ძებნა ყველა დაფაზე...",
@@ -385,8 +415,1571 @@
       "gpsUpdated": "GPS განახლდა",
       "deleteCheckinTooltip": "ჩეკ-ინის წაშლა",
       "search": "ძებნა",
-      "searchPlaceholder": "ძებნა ინსპექტორის, სერვისის, კომპანიის მიხედვით..."
+      "searchPlaceholder": "ძებნა ინსპექტორის, სერვისის, კომპანიის მიხედვით...",
+      "officersSelected": "არჩეულია {count} ოფიცერი",
+      "searchOfficers": "ოფიცრების ძებნა...",
+      "exportCSV": "CSV ექსპორტი",
+      "exportFailed": "CSV ექსპორტი ვერ მოხერხდა"
     },
     "meters": "მ"
+  },
+  "routes": {
+    "builder": {
+      "mapLoading": "რუკის ჩატვირთვა...",
+      "selectAtLeastTwo": "აირჩიეთ მინიმუმ 2 კომპანია",
+      "pleaseAuthenticate": "გთხოვთ გაიაროთ ავტორიზაცია",
+      "optimizationFailed": "ოპტიმიზაცია ვერ მოხერხდა",
+      "createRouteFirst": "გთხოვთ ჯერ შექმენით მარშრუტი",
+      "routeSaved": "✅ მარშრუტი შენახულია!\nID: {id}",
+      "saveFailed": "შენახვა ვერ მოხერხდა",
+      "title": "მარშრუტის შექმნა",
+      "subtitle": "აირჩიეთ ობიექტები რუკაზე",
+      "selectedLabel": "არჩეული:",
+      "optimizing": "⏳ ოპტიმიზაცია...",
+      "optimizeButton": "🚀 ოპტიმიზაცია",
+      "searchPlaceholder": "🔍 ძიება...",
+      "routePanelTitle": "მარშრუტი",
+      "optimizedBadge": "✅ ოპტიმიზირებული",
+      "emptySelectTitle": "აირჩიეთ ობიექტები",
+      "emptySelectSubtitle": "მარცხნივ სიიდან ან რუკაზე",
+      "distanceFromPrevious": "🚗 ~{distance} კმ წინა პუნქტიდან",
+      "statsTitle": "📊 სტატისტიკა",
+      "statsTotalObjects": "• სულ ობიექტი: {count}",
+      "statsTotalDistance": "• სრული მანძილი: ~{distance} კმ",
+      "statsSaved": "• დაზოგილი: ~15-25%",
+      "saveRoute": "💾 მარშრუტის შენახვა",
+      "clear": "🗑️ გასუფთავება",
+      "defaultRouteName": "მარშრუტი {date}",
+      "saveModal": {
+        "fillNameAndDate": "გთხოვთ შეავსოთ სახელი და თარიღი",
+        "saveFailed": "შენახვა ვერ მოხერხდა",
+        "title": "მარშრუტის შენახვა",
+        "nameLabel": "მარშრუტის სახელი *",
+        "namePlaceholder": "მაგ: თბილისი - ცენტრი",
+        "dateLabel": "თარიღი *",
+        "startTimeLabel": "დაწყების დრო",
+        "cancel": "გაუქმება",
+        "saving": "⏳ შენახვა...",
+        "save": "💾 შენახვა"
+      }
+    },
+    "manage": {
+      "loading": "მარშრუტების ჩატვირთვა...",
+      "errorOccurred": "დაფიქსირდა შეცდომა",
+      "tryAgain": "თავიდან ცდა",
+      "pageTitle": "მარშრუტების მართვა",
+      "pageDescription": "ყველა შექმნილი მარშრუტი",
+      "newRoute": "ახალი მარშრუტი",
+      "statsTotalRoutes": "სულ მარშრუტები",
+      "statsPlanned": "დაგეგმილი",
+      "statsInProgress": "მიმდინარე",
+      "statsCompleted": "დასრულებული",
+      "emptyTitle": "მარშრუტები არ არის",
+      "emptyDescription": "შექმენით პირველი მარშრუტი",
+      "table": {
+        "statusPlanned": "დაგეგმილი",
+        "statusInProgress": "მიმდინარე",
+        "statusCompleted": "დასრულებული",
+        "statusCancelled": "გაუქმებული",
+        "confirmDelete": "დარწმუნებული ხართ, რომ გსურთ \"{name}\" მარშრუტის წაშლა?",
+        "deleteSuccess": "მარშრუტი წაიშალა",
+        "deleteError": "წაშლისას დაფიქსირდა შეცდომა",
+        "reassignPrompt": "ახალი ინსპექტორის ID:",
+        "reassignSuccess": "მარშრუტი გადაინიშნა",
+        "reassignError": "გადანიშვნისას დაფიქსირდა შეცდომა",
+        "unknownInspector": "უცნობი",
+        "headerRoute": "მარშრუტი",
+        "headerInspector": "ინსპექტორი",
+        "headerDateTime": "თარიღი & დრო",
+        "headerDetails": "დეტალები",
+        "headerStatus": "სტატუსი",
+        "headerActions": "მოქმედებები",
+        "stopsCount": "{count} გაჩერება",
+        "distanceKm": "{distance} კმ",
+        "reassignAction": "გადანიშვნა",
+        "deleteAction": "წაშლა",
+        "empty": "მარშრუტები არ არის"
+      }
+    },
+    "builderSidebar": {
+      "clearSelection": "გასუფთავება",
+      "companiesCount": "კომპანიები ({count})",
+      "inspectorLabel": "ინსპექტორი",
+      "noAssignedCompanies": "ამ ინსპექტორს არ აქვს დანიშნული კომპანიები",
+      "selectAll": "ყველა",
+      "selectInspectorPlaceholder": "აირჩიეთ ინსპექტორი...",
+      "selectedCount": "არჩეული: {count}",
+      "title": "მარშრუტის შექმნა"
+    },
+    "optimizationPanel": {
+      "dateLabel": "თარიღი *",
+      "distanceKm": "{distance} კმ",
+      "fillNameAndDate": "შეავსეთ მარშრუტის სახელი და თარიღი",
+      "legDistance": "+{distance} კმ",
+      "nameLabel": "მარშრუტის სახელი *",
+      "namePlaceholder": "მაგ: დილის მარშრუტი",
+      "notesLabel": "შენიშვნა",
+      "notesPlaceholder": "დამატებითი ინფორმაცია...",
+      "optimizeButton": "მარშრუტის ოპტიმიზაცია",
+      "optimizing": "ოპტიმიზაცია...",
+      "saveButton": "მარშრუტის შენახვა",
+      "saveTitle": "მარშრუტის შენახვა",
+      "saving": "შენახვა...",
+      "startTimeLabel": "დაწყების დრო",
+      "stopOrder": "მარშრუტის თანმიმდევრობა",
+      "title": "მარშრუტის დეტალები",
+      "totalDistance": "სულ მანძილი",
+      "totalStops": "სულ გაჩერება"
+    },
+    "serviceSaveModal": {
+      "dateLabel": "თარიღი *",
+      "detailsTitle": "მარშრუტის დეტალები",
+      "distanceKm": "{distance} კმ",
+      "enterRouteName": "გთხოვთ შეიყვანოთ მარშრუტის სახელი",
+      "inspectorLabel": "ინსპექტორი:",
+      "inspectorSelected": "არჩეული",
+      "nameLabel": "მარშრუტის სახელი *",
+      "namePlaceholder": "მაგ: თბილისი - სახანძრო ინსპექცია",
+      "noteBody": "მარშრუტის შენახვისას ავტომატურად განახლდება:",
+      "noteInspectorAssignment": "ინსპექტორის დანიშვნა",
+      "noteLabel": "შენიშვნა:",
+      "noteLastInspection": "ბოლო ინსპექციის თარიღი",
+      "noteNextInspection": "შემდეგი ინსპექციის თარიღი",
+      "saveError": "შეცდომა მარშრუტის შენახვისას",
+      "saveSuccess": "მარშრუტი წარმატებით შეინახა! ინსპექციის თარიღები განახლდა.",
+      "saving": "შენახვა...",
+      "startTimeLabel": "დაწყების დრო",
+      "stopsLabel": "გაჩერებები:",
+      "title": "მარშრუტის შენახვა",
+      "totalDistanceLabel": "სრული მანძილი:"
+    },
+    "useRouteBuilder": {
+      "createOptimizedFirst": "ჯერ შექმენით ოპტიმიზებული მარშრუტი",
+      "optimizeError": "მარშრუტის ოპტიმიზაციისას დაფიქსირდა შეცდომა",
+      "saveError": "მარშრუტის შენახვისას დაფიქსირდა შეცდომა",
+      "saveSuccess": "მარშრუტი წარმატებით შეინახა!",
+      "selectAtLeastOne": "აირჩიეთ მინიმუმ ერთი კომპანია"
+    }
+  },
+  "admin": {
+    "roles": {
+      "pageTitle": "როლების მართვა",
+      "pageDescription": "შექმენით და მართეთ მორგებული როლები უფლებებით",
+      "createRole": "როლის შექმნა",
+      "duplicateSuffix": "ასლი",
+      "stats": {
+        "totalRoles": "სულ როლები",
+        "systemRoles": "სისტემური",
+        "customRoles": "მორგებული",
+        "totalPermissions": "უფლებები"
+      },
+      "searchPlaceholder": "როლის ძებნა...",
+      "filterAll": "ყველა",
+      "cancel": "გაუქმება",
+      "delete": "წაშლა",
+      "deleteModal": {
+        "title": "როლის წაშლა",
+        "irreversible": "ეს მოქმედება შეუქცევადია",
+        "confirmPrefix": "დარწმუნებული ხართ, რომ გსურთ",
+        "confirmSuffix": "როლის წაშლა?",
+        "usersAssigned": "მომხმარებელს აქვს ეს როლი მინიჭებული",
+        "typeToConfirm": "დასადასტურებლად ჩაწერეთ:"
+      },
+      "permissionsLabel": "უფლებები",
+      "selectedUnit": "არჩეული",
+      "adminHasAllPermissions": "ადმინს აქვს ყველა უფლება",
+      "selectRolePrompt": "აირჩიეთ როლი რედაქტირებისთვის",
+      "selectRoleHint": "დააწკაპუნეთ როლზე უფლებების სანახავად, ან შექმენით ახალი როლი.",
+      "roleNames": {
+        "admin": "ადმინი",
+        "dispatcher": "დისპეტჩერი",
+        "officer": "ოფიცერი"
+      },
+      "and": "და",
+      "systemRolesInfo": "სისტემური როლებია და მათი რედაქტირება ან წაშლა შეუძლებელია. შექმენით მორგებული როლები დამატებითი კონფიგურაციისთვის.",
+      "editingRolePrefix": "რედაქტირება",
+      "viewOnly": "მხოლოდ ნახვა",
+      "saving": "ინახება...",
+      "save": "შენახვა",
+      "roleName": "როლის სახელი",
+      "roleNamePlaceholder": "მაგ., მენეჯერი",
+      "color": "ფერი",
+      "description": "აღწერა",
+      "descriptionPlaceholder": "აღწერეთ რა შეუძლია ამ როლს...",
+      "rolesListTitle": "როლები",
+      "noRolesFound": "როლები ვერ მოიძებნა",
+      "permissionUnit": "უფლება",
+      "duplicate": "დუბლირება"
+    },
+    "serviceTypes": {
+      "saveError": "შეცდომა შენახვისას",
+      "deleteConfirm": "დარწმუნებული ხართ რომ გსურთ წაშლა?",
+      "deleteError": "შეცდომა წაშლისას",
+      "loading": "იტვირთება...",
+      "pageTitle": "სერვისის ტიპები",
+      "pageDescription": "მართეთ სერვისების ტიპები",
+      "addNew": "ახალი სერვისი",
+      "editTitle": "რედაქტირება",
+      "addTitle": "ახალი სერვისის დამატება",
+      "nameEnglish": "დასახელება (English)",
+      "nameGeorgian": "დასახელება (ქართული)",
+      "description": "აღწერა",
+      "requiredInspectorType": "საჭირო ოფიცრის ტიპი",
+      "frequencyDays": "სიხშირე (დღეები)",
+      "active": "აქტიური",
+      "save": "შენახვა",
+      "cancel": "გაუქმება",
+      "tableService": "სერვისი",
+      "tableInspectorType": "ოფიცრის ტიპი",
+      "tableFrequency": "სიხშირე",
+      "tableStatus": "სტატუსი",
+      "tableActions": "მოქმედებები",
+      "daysSuffix": "დღე",
+      "inactive": "არააქტიური",
+      "noServicesFound": "სერვისები არ მოიძებნა",
+      "inspectorTypes": {
+        "fireSafety": "სახანძრო უსაფრთხოება",
+        "health": "ჯანმრთელობა",
+        "building": "სამშენებლო",
+        "electrical": "ელექტრო",
+        "foodSafety": "სურსათის უსაფრთხოება",
+        "environmental": "გარემოსდაცვა",
+        "occupational": "შრომის უსაფრთხოება",
+        "general": "ზოგადი"
+      }
+    },
+    "setupDb": {
+      "pageTitle": "PDP მონაცემთა ბაზის დაყენება",
+      "pageDescription": "მონაცემთა ბაზის ცხრილები PDP ონბორდინგისთვის",
+      "migrationCreated": "✅ მიგრაციის ფაილი შექმნილია",
+      "runMigrationInstruction": "გაუშვით ეს SQL მიგრაცია თქვენს Supabase დაშბორდში:",
+      "applyMigrationTitle": "მიგრაციის გამოსაყენებლად:",
+      "step1": "გადადით თქვენს Supabase დაშბორდზე",
+      "step2": "გახსენით SQL Editor",
+      "step3": "დააკოპირეთ მიგრაციის ფაილის შიგთავსი",
+      "step4": "გაუშვით SQL მოთხოვნა"
+    },
+    "setupPdp": {
+      "foundExisting": "ნაპოვნია {count} არსებული PDP სერვისის ტიპი",
+      "errorPrefix": "შეცდომა",
+      "successMessage": "✅ წარმატებით დაემატა {count} PDP სერვისის ტიპი!",
+      "failedPrefix": "ვერ მოხერხდა",
+      "pageTitle": "PDP სერვისის ტიპების დაყენება",
+      "pageDescription": "დაამატეთ პერსონალურ მონაცემთა დაცვის 5 სერვისის ფაზა",
+      "willAddTitle": "დაემატება:",
+      "phase1": "პირველადი შეფასება (Initial Assessment)",
+      "phase2": "დოკუმენტაცია (Documentation)",
+      "phase3": "დანერგვა (Implementation)",
+      "phase4": "ტრენინგი (Training)",
+      "phase5": "სერტიფიცირება (Certification)",
+      "adding": "ემატება...",
+      "addButton": "PDP სერვისის ტიპების დამატება",
+      "serviceTypesTitle": "სერვისის ტიპები:",
+      "frequencyOrder": "სიხშირე: {days} დღე | რიგი: {order}"
+    },
+    "users": {
+      "saveUserFailed": "მომხმარებლის შენახვა ვერ მოხერხდა",
+      "updateStatusFailed": "მომხმარებლის სტატუსის განახლება ვერ მოხერხდა",
+      "createUserFailed": "მომხმარებლის შექმნა ვერ მოხერხდა",
+      "noRole": "როლის გარეშე",
+      "pageTitle": "მომხმარებლების მართვა",
+      "pageDescription": "მართეთ მომხმარებლები, როლები და უფლებები",
+      "manageRoles": "როლების მართვა",
+      "createUser": "მომხმარებლის შექმნა",
+      "refresh": "განახლება",
+      "createNewUser": "ახალი მომხმარებლის შექმნა",
+      "email": "ელფოსტა",
+      "fullName": "სრული სახელი",
+      "phone": "ტელეფონი",
+      "password": "პაროლი",
+      "passwordPlaceholder": "მინ. 6 სიმბოლო",
+      "role": "როლი",
+      "creating": "იქმნება...",
+      "cancel": "გაუქმება",
+      "stats": {
+        "totalUsers": "სულ მომხმარებელი",
+        "active": "აქტიური",
+        "inactive": "არააქტიური",
+        "roles": "როლები"
+      },
+      "searchPlaceholder": "ძებნა სახელით ან ელფოსტით...",
+      "filterAllRoles": "ყველა როლი",
+      "filterAllStatus": "ყველა სტატუსი",
+      "noUsersFound": "მომხმარებლები არ მოიძებნა",
+      "tableUser": "მომხმარებელი",
+      "tableStatus": "სტატუსი",
+      "tableJoined": "რეგისტრაციის თარიღი",
+      "tableActions": "მოქმედებები",
+      "noName": "უსახელო",
+      "editUser": "მომხმარებლის რედაქტირება",
+      "deactivateUser": "მომხმარებლის დეაქტივაცია",
+      "activateUser": "მომხმარებლის აქტივაცია",
+      "showingCount": "ნაჩვენებია {shown} / {total} მომხმარებელი"
+    }
+  },
+  "payments": {
+    "title": "გადახდები",
+    "subtitle": "ტრანზაქციების თვალყურის დევნება და ანალიზი",
+    "exportCsv": "CSV",
+    "unmatchedButton": "დაუკავშირებელი ({count})",
+    "unmatched": {
+      "title": "დაუკავშირებელი ტრანზაქციები",
+      "countLabel": "{count} ტრანზაქცია მოითხოვს ხელით დაკავშირებას",
+      "allMatchedTitle": "ყველა ტრანზაქცია დაკავშირებულია",
+      "allMatchedSubtitle": "დაუკავშირებელი ტრანზაქციები არ არის",
+      "unknownPayer": "უცნობი გადამხდელი",
+      "ignoreTitle": "იგნორირება",
+      "suggestedCompanies": "შემოთავაზებული კომპანიები:",
+      "matchAction": "დაკავშირება",
+      "noSuggestions": "შემოთავაზებები ვერ მოიძებნა — გთხოვთ ხელით დააკავშიროთ",
+      "searchManualLabel": "ან მოძებნეთ ბაზაში ხელით",
+      "searchPlaceholder": "შეიყვანეთ კომპანიის სახელი ან საიდენტიფიკაციო ნომერი...",
+      "searching": "იძებნება...",
+      "selectAction": "არჩევა",
+      "noResults": "კომპანია ვერ მოიძებნა",
+      "undo": "დაბრუნება"
+    },
+    "badges": {
+      "sourceActive": "აქტიური",
+      "sourceOneTime": "ერთჯერადი",
+      "sourcePaused": "შეჩერებ.",
+      "sourceEnded": "შეწყვეტ.",
+      "statusMatched": "დაკავშ.",
+      "statusUnmatched": "დაუკავშ.",
+      "statusIgnored": "იგნორ."
+    },
+    "table": {
+      "linkAction": "დაკავშირება",
+      "ignoreAction": "იგნორირება",
+      "unignoreAction": "დაბრუნება",
+      "viewContract": "ხელშეკრულების ბორდზე გადასვლა",
+      "headerCompanyDate": "კომპანია / თარიღი",
+      "headerCompany": "შპს",
+      "headerPaid": "გადახდილი",
+      "headerExpected": "მოსალოდნელი",
+      "headerDifference": "სხვაობა",
+      "headerPurpose": "დანიშნულება",
+      "headerStatus": "სტატუსი",
+      "loading": "იტვირთება...",
+      "empty": "ტრანზაქციები არ მოიძებნა",
+      "totalCompanies": "ჯამი ({count} კომპანია)",
+      "totalTransactions": "ჯამი ({count} ტრანზაქცია)",
+      "paginationInfo": "{total} ტრანზაქციიდან {from}–{to}"
+    },
+    "filters": {
+      "searchPlaceholder": "ძიება გადამხდელით, ს/კ-ით, დანიშნულებით...",
+      "statusAll": "ყველა",
+      "statusMatched": "დაკავშ.",
+      "statusUnmatched": "დაუკავშ.",
+      "statusUnpaid": "გადაუხდელი",
+      "statusIgnored": "იგნორ.",
+      "sourceAll": "ყველა წყარო",
+      "sourceActive": "აქტიური",
+      "sourceOneTime": "ერთჯერადი",
+      "sourcePaused": "შეჩერებული",
+      "sourceEnded": "შეწყვეტილი",
+      "dateFromTitle": "თარიღიდან",
+      "dateToTitle": "თარიღამდე",
+      "groupByCompany": "დაჯგუფება"
+    },
+    "monthTabs": {
+      "all": "ყველა",
+      "filterLabel": "ფილტრი: {from} — {to}",
+      "months": {
+        "january": "იანვარი",
+        "february": "თებერვალი",
+        "march": "მარტი",
+        "april": "აპრილი",
+        "may": "მაისი",
+        "june": "ივნისი",
+        "july": "ივლისი",
+        "august": "აგვისტო",
+        "september": "სექტემბერი",
+        "october": "ოქტომბერი",
+        "november": "ნოემბერი",
+        "december": "დეკემბერი"
+      }
+    },
+    "stats": {
+      "transactions": "ტრანზაქციები",
+      "matchedCount": "{count} დაკავშ.",
+      "unmatchedCount": "{count} დაუკავშ.",
+      "received": "მიღებული",
+      "expected": "მოსალოდნელი",
+      "difference": "სხვაობა",
+      "underpaidCount": "{count} ნაკლ.",
+      "overpaidCount": "{count} ზედმ."
+    }
+  },
+  "tracking": {
+    "noActiveOfficers": "ბოლო 30 წუთში აქტიური ოფიცრები არ არიან",
+    "officersWillAppear": "ოფიცრები აქ გამოჩნდებიან, როცა თრექინგს დაიწყებენ",
+    "panel": {
+      "justNow": "ახლახან",
+      "minutesAgo": "{minutes} წთ წინ",
+      "hoursAgo": "{hours} სთ წინ",
+      "activeInspectors": "აქტიური ინსპექტორები ({count})",
+      "refresh": "განახლება",
+      "searchPlaceholder": "ინსპექტორების ძიება...",
+      "loading": "იტვირთება...",
+      "noActiveInspectors": "აქტიური ინსპექტორები არ არიან",
+      "unnamedRoute": "უსახელო მარშრუტი",
+      "noActiveRoute": "აქტიური მარშრუტი არ არის"
+    },
+    "map": {
+      "route": "მარშრუტი",
+      "unnamed": "უსახელო",
+      "progress": "პროგრესი",
+      "stops": "გაჩერება",
+      "noActiveRoute": "აქტიური მარშრუტი არ არის",
+      "lastSeen": "ბოლოს ნანახი: {minutes} წთ წინ"
+    }
+  },
+  "inspectorTracking": {
+    "mobile": {
+      "active": "თრექინგი აქტიურია",
+      "stopped": "თრექინგი გაჩერებულია",
+      "stopTracking": "თრექინგის გაჩერება",
+      "startTracking": "თრექინგის დაწყება",
+      "manualCheckIn": "ხელით ჩექინი",
+      "currentPosition": "მიმდინარე პოზიცია",
+      "latitude": "განედი",
+      "longitude": "გრძედი",
+      "accuracy": "სიზუსტე",
+      "speed": "სიჩქარე",
+      "updatesSent": "გაგზავნილი განახლებები",
+      "sendingLocation": "ლოკაცია იგზავნება...",
+      "errorLabel": "შეცდომა:"
+    },
+    "noProfileTitle": "ინსპექტორის პროფილი არ მოიძებნა",
+    "noProfileDescription": "თქვენი ანგარიში არ არის დაკავშირებული ინსპექტორის პროფილთან. მიმართეთ ადმინისტრატორს.",
+    "title": "ლოკაციის თრექინგი",
+    "subtitle": "გაუზიარეთ თქვენი ლოკაცია დისპეტჩერს"
+  },
+  "workspaces": {
+    "list": {
+      "loading": "სამუშაო სივრცეები იტვირთება...",
+      "title": "სამუშაო სივრცეები",
+      "subtitle": "დააორგანიზეთ დაფები სამუშაო სივრცეებში",
+      "createWorkspace": "სამუშაო სივრცის შექმნა",
+      "emptyTitle": "სამუშაო სივრცეები ჯერ არ არის",
+      "emptyDescription": "შექმენით პირველი სამუშაო სივრცე, რომ დაფები გუნდის ან პროექტის მიხედვით დააორგანიზოთ.",
+      "createFirstWorkspace": "შექმენით პირველი სამუშაო სივრცე",
+      "createNewWorkspace": "ახალი სამუშაო სივრცის შექმნა",
+      "totalWorkspaces": "სულ სამუშაო სივრცე",
+      "totalBoards": "სულ დაფა",
+      "ownedByYou": "თქვენ ფლობთ",
+      "deleteModal": {
+        "title": "სამუშაო სივრცის წაშლა",
+        "warning": "ეს ქმედება შეუქცევადია. ამ სამუშაო სივრცის ყველა დაფა სამუდამოდ წაიშლება.",
+        "typeToConfirm": "დასადასტურებლად აკრიფეთ სამუშაო სივრცის სახელი:",
+        "placeholder": "აკრიფეთ სამუშაო სივრცის სახელი",
+        "deleting": "იშლება...",
+        "confirmButton": "სამუშაო სივრცის წაშლა"
+      },
+      "boardsCount": "{count} დაფა",
+      "openWorkspace": "სამუშაო სივრცის გახსნა",
+      "openInNewTab": "ახალ ჩანართში გახსნა",
+      "duplicate": "დუბლირება",
+      "rename": "გადარქმევა",
+      "settings": "პარამეტრები",
+      "delete": "წაშლა",
+      "renameModal": {
+        "title": "სამუშაო სივრცის გადარქმევა",
+        "placeholder": "სამუშაო სივრცის სახელი",
+        "saving": "ინახება...",
+        "save": "შენახვა"
+      }
+    },
+    "detail": {
+      "loading": "სამუშაო სივრცე იტვირთება...",
+      "notFoundTitle": "სამუშაო სივრცე ვერ მოიძებნა",
+      "notFoundDescription": "სამუშაო სივრცე, რომელსაც ეძებთ, არ არსებობს ან მასზე წვდომა არ გაქვთ.",
+      "backToWorkspaces": "სამუშაო სივრცეებზე დაბრუნება",
+      "breadcrumb": "სამუშაო სივრცეები",
+      "settings": "პარამეტრები",
+      "createBoard": "დაფის შექმნა",
+      "boardsHeading": "დაფები ({count})",
+      "loadingBoards": "დაფები იტვირთება...",
+      "noBoardsTitle": "ამ სამუშაო სივრცეში დაფები არ არის",
+      "noBoardsDescription": "შექმენით პირველი დაფა სამუშაოს დასაორგანიზებლად.",
+      "archivedCount": "დაარქივებული ({count})",
+      "shared": "გაზიარებული",
+      "restore": "აღდგენა",
+      "archive": "დაარქივება"
+    },
+    "settings": {
+      "loading": "პარამეტრები იტვირთება...",
+      "notFoundTitle": "სამუშაო სივრცე ვერ მოიძებნა",
+      "backToWorkspaces": "სამუშაო სივრცეებზე დაბრუნება",
+      "title": "სამუშაო სივრცის პარამეტრები",
+      "tabs": {
+        "general": "ზოგადი",
+        "members": "წევრები",
+        "boards": "დაფები",
+        "danger": "სახიფათო ზონა"
+      },
+      "general": {
+        "nameLabel": "სამუშაო სივრცის სახელი",
+        "descriptionLabel": "აღწერა",
+        "descriptionPlaceholder": "აღწერეთ ეს სამუშაო სივრცე...",
+        "colorLabel": "ფერი",
+        "allowBoardCreationLabel": "წევრებს ჰქონდეთ დაფების შექმნის უფლება",
+        "allowBoardCreationHint": "გამორთვისას დაფების შექმნა მხოლოდ ადმინისტრატორებს შეეძლებათ",
+        "saving": "ინახება...",
+        "saveChanges": "ცვლილებების შენახვა"
+      },
+      "colors": {
+        "blue": "ლურჯი",
+        "green": "მწვანე",
+        "red": "წითელი",
+        "yellow": "ყვითელი",
+        "purple": "იისფერი",
+        "orange": "ნარინჯისფერი"
+      },
+      "members": {
+        "heading": "სამუშაო სივრცის წევრები ({count})",
+        "addMember": "წევრის დამატება",
+        "searchPlaceholder": "ძებნა სახელით ან ელფოსტით...",
+        "noUsersFound": "მომხმარებლები ვერ მოიძებნა",
+        "unknown": "უცნობი",
+        "loading": "წევრები იტვირთება...",
+        "unknownUser": "უცნობი მომხმარებელი",
+        "removeMemberTitle": "წევრის წაშლა",
+        "noMembersFound": "წევრები ვერ მოიძებნა"
+      },
+      "roles": {
+        "owner": "მფლობელი",
+        "admin": "ადმინისტრატორი",
+        "editor": "რედაქტორი",
+        "member": "წევრი",
+        "guest": "სტუმარი",
+        "adminDescription": "შეუძლია წევრებისა და პარამეტრების მართვა",
+        "editorDescription": "შეუძლია დაფების შექმნა და დაარქივება",
+        "memberDescription": "შეუძლია დაფების ნახვა და შექმნა",
+        "guestDescription": "მხოლოდ ნახვის წვდომა"
+      },
+      "boards": {
+        "heading": "დაფები ({count})",
+        "loading": "დაფები იტვირთება...",
+        "noBoards": "ამ სამუშაო სივრცეში დაფები არ არის",
+        "updatedOn": "განახლდა {date}",
+        "archiveBoardTitle": "დაფის დაარქივება",
+        "deleteBoardTitle": "დაფის წაშლა",
+        "archivedCount": "დაარქივებული ({count})",
+        "archived": "დაარქივებული",
+        "restoreBoardTitle": "დაფის აღდგენა",
+        "deleteModal": {
+          "title": "დაფის წაშლა",
+          "warningPrefix": "სამუდამოდ წაიშალოს",
+          "warningSuffix": "ამ დაფის ყველა ჩანაწერი, ჯგუფი და აქტივობა დაიკარგება. ეს ქმედება შეუქცევადია.",
+          "deleting": "იშლება...",
+          "confirmButton": "დაფის წაშლა"
+        }
+      },
+      "danger": {
+        "title": "სახიფათო ზონა",
+        "warning": "ეს ქმედებები შეუქცევადია. გთხოვთ, სიფრთხილით მოეკიდოთ.",
+        "deleteWorkspaceTitle": "ამ სამუშაო სივრცის წაშლა",
+        "deleteWorkspaceDescription": "ეს სამუდამოდ წაშლის სამუშაო სივრცეს, მის ყველა დაფას და გააუქმებს ყველა წევრის წვდომას. ეს ქმედება შეუქცევადია.",
+        "delete": "წაშლა",
+        "deleteModal": {
+          "title": "სამუშაო სივრცის წაშლა",
+          "typeToConfirm": "ეს ქმედება შეუქცევადია. დასადასტურებლად აკრიფეთ:",
+          "placeholder": "აკრიფეთ სამუშაო სივრცის სახელი",
+          "deleting": "იშლება...",
+          "confirmButton": "სამუშაო სივრცის წაშლა"
+        }
+      }
+    }
+  },
+  "analytics": {
+    "tabs": {
+      "finance": "ფინანსები",
+      "inspectors": "ინსპექტორები",
+      "companies": "კომპანიები",
+      "forecast": "პროგნოზი"
+    },
+    "pageTitle": "ფინანსური ანალიტიკა",
+    "pageDescription": "კომპანიების, ინსპექტორების და ლოკაციების ფინანსური მონაცემები",
+    "forecast": {
+      "currentMonthly": "მიმდინარე თვიური",
+      "forecast12m": "პროგნოზი 12 თვეში",
+      "totalLoss12m": "ჯამური დანაკარგი (12 თვე)",
+      "retentionRate": "შენარჩუნების მაჩვენებელი",
+      "monthlyDetails": "თვიური დეტალები",
+      "table": {
+        "month": "თვე",
+        "forecast": "პროგნოზი",
+        "expired": "ვადაგასული",
+        "cumulativeLoss": "კუმ. დანაკარგი",
+        "contracts": "კონტრაქტები"
+      }
+    },
+    "kpi": {
+      "totalRevenue": "ჯამური შემოსავალი",
+      "activeContracts": "აქტიური კონტრაქტები",
+      "locations": "ლოკაციები",
+      "avgPerCompany": "საშუალო / კომპანია"
+    },
+    "companyTable": {
+      "title": "კომპანიების ცხრილი",
+      "searchPlaceholder": "ძებნა...",
+      "columns": {
+        "company": "კომპანია",
+        "service": "სერვისი",
+        "monthly": "ყოველთვიური",
+        "invoice": "ინვოისი",
+        "vat": "დღგ",
+        "payment": "გადახდა",
+        "expiry": "ვადა"
+      },
+      "shownCount": "ნაჩვენებია {shown} / {total}"
+    },
+    "contractsTable": {
+      "expired": "ვადაგასული",
+      "daysRemaining": "{days} დღე",
+      "title": "კონტრაქტების ვადები",
+      "columns": {
+        "company": "კომპანია",
+        "inspector": "ინსპექტორი",
+        "amount": "თანხა",
+        "expiry": "ვადა",
+        "status": "სტატუსი",
+        "service": "სერვისი"
+      },
+      "shownCount": "ნაჩვენებია {shown} / {total}"
+    },
+    "charts": {
+      "activityBreakdown": {
+        "title": "საქმიანობა",
+        "count": "რაოდენობა",
+        "revenue": "შემოსავალი"
+      },
+      "common": {
+        "companies": "კომპანიები",
+        "locations": "ლოკაციები",
+        "revenue": "შემოსავალი",
+        "amount": "თანხა",
+        "noData": "მონაცემები არ არის"
+      },
+      "cumulativeLoss": {
+        "title": "კუმულაციური დანაკარგი",
+        "loss": "დანაკარგი"
+      },
+      "expiryTimeline": {
+        "title": "კონტრაქტების ვადის გასვლა",
+        "contracts": "კონტრაქტები",
+        "upTo1Month": "≤1 თვე",
+        "twoToThreeMonths": "2-3 თვე",
+        "threePlusMonths": "3+ თვე"
+      },
+      "inspectorLocations": {
+        "title": "ლოკაციები ინსპექტორით"
+      },
+      "inspectorRevenue": {
+        "title": "შემოსავალი ინსპექტორით"
+      },
+      "locationsByInspector": {
+        "title": "ლოკაციები ინსპექტორების მიხედვით"
+      },
+      "monthlyTrend": {
+        "title": "ყოველთვიური ტრენდი",
+        "newContracts": "ახალი კონტრაქტები"
+      },
+      "paymentMethod": {
+        "title": "გადახდის მეთოდი"
+      },
+      "revenueByInspector": {
+        "title": "შემოსავალი ინსპექტორების მიხედვით"
+      },
+      "revenueForecast": {
+        "title": "შემოსავლის პროგნოზი (12 თვე)",
+        "projected": "პროგნოზირებული",
+        "expired": "ვადაგასული",
+        "activeContracts": "აქტიური კონტრაქტები",
+        "projectedRevenue": "პროგნოზირებული შემოსავალი",
+        "expiredRevenue": "ვადაგასული შემოსავალი"
+      },
+      "revenueShare": {
+        "title": "შემოსავლის წილი (%)",
+        "other": "სხვა",
+        "total": "ჯამი"
+      },
+      "serviceTypeRevenue": {
+        "title": "შემოსავალი სერვისის ტიპით"
+      },
+      "topCompaniesRevenue": {
+        "title": "ტოპ 10 კომპანია შემოსავლით"
+      },
+      "topLocations": {
+        "title": "ტოპ ლოკაციები შემოსავლით"
+      },
+      "valueDistribution": {
+        "title": "კომპანიები ღირებულების მიხედვით"
+      },
+      "workloadScatter": {
+        "title": "ინსპექტორი: ლოკაციები vs შემოსავალი"
+      }
+    }
+  },
+  "boards": {
+    "detail": {
+      "rollback": {
+        "noFieldName": "დაბრუნება ვერ მოხერხდა: ველის სახელი არ არის",
+        "noPreviousValue": "დაბრუნება ვერ მოხერხდა: წინა მნიშვნელობა არ არსებობს",
+        "itemNotFound": "დაბრუნება ვერ მოხერხდა: ჩანაწერი ვერ მოიძებნა",
+        "success": "ცვლილება წარმატებით დაბრუნდა",
+        "failed": "ცვლილების დაბრუნება ვერ მოხერხდა"
+      },
+      "notFoundTitle": "ბორდი ვერ მოიძებნა",
+      "notFoundDescription": "ბორდი, რომელსაც ეძებთ, არ არსებობს ან მასზე წვდომა არ გაქვთ.",
+      "backToBoards": "ბორდებზე დაბრუნება",
+      "toolbar": {
+        "selected": "არჩეულია: {count}",
+        "generateDoc": "დოკუმენტის გენერაცია",
+        "move": "გადატანა",
+        "moveToGroup": "ჯგუფში გადატანა",
+        "duplicating": "კოპირდება...",
+        "duplicate": "დუბლირება",
+        "delete": "წაშლა",
+        "clear": "გასუფთავება",
+        "searchPlaceholder": "ძებნა...",
+        "itemsCount": "{count} ჩანაწერი",
+        "undoTitle": "დაბრუნება (Ctrl+Z)",
+        "redoTitle": "გამეორება (Ctrl+Y)",
+        "import": "იმპორტი",
+        "export": "ექსპორტი",
+        "exportToCsv": "ექსპორტი CSV-ში",
+        "exportToExcel": "ექსპორტი Excel-ში",
+        "undo": "დაბრუნება",
+        "redo": "გამეორება",
+        "exportCsv": "CSV ექსპორტი",
+        "exportExcel": "Excel ექსპორტი"
+      },
+      "itemsError": {
+        "title": "ჩანაწერების ჩატვირთვა ვერ მოხერხდა",
+        "description": "ბორდის ჩანაწერების ჩატვირთვისას მოხდა შეცდომა",
+        "retry": "ხელახლა ცდა"
+      },
+      "noColumns": "ამ ბორდზე სვეტები ჯერ არ არის კონფიგურირებული",
+      "configureColumns": "სვეტების კონფიგურაცია",
+      "toast": {
+        "savedAsTemplate": "ბორდი შენახულია შაბლონად",
+        "documentGenerated": "დოკუმენტი წარმატებით შეიქმნა",
+        "movedWithFailures": "გადატანილია {moved} ჩანაწერი, {failed} ვერ გადავიდა",
+        "moved": "გადატანილია {count} ჩანაწერი",
+        "moveFailed": "ჩანაწერების გადატანა ვერ მოხერხდა"
+      }
+    },
+    "list": {
+      "loading": "ბორდები იტვირთება...",
+      "title": "ჩემი ბორდები",
+      "subtitle": "შექმენით და მართეთ თქვენი ბორდები",
+      "createBoard": "ბორდის შექმნა",
+      "emptyTitle": "ბორდები ჯერ არ არის",
+      "emptyDescription": "შექმენით პირველი ბორდი სამუშაოს ორგანიზებისთვის. აირჩიეთ შაბლონი ან შექმენით ნულიდან.",
+      "createFirstBoard": "შექმენით პირველი ბორდი",
+      "createNewBoard": "ახალი ბორდის შექმნა",
+      "totalBoards": "სულ ბორდები",
+      "sharedBoards": "გაზიარებული ბორდები",
+      "boardsYouOwn": "თქვენი ბორდები",
+      "workspace": "სამუშაო სივრცე",
+      "you": "თქვენ",
+      "shared": "გაზიარებული",
+      "public": "საჯარო",
+      "openInNewTab": "ახალ ჩანართში გახსნა",
+      "duplicate": "დუბლირება",
+      "access": "წვდომა",
+      "delete": "წაშლა"
+    },
+    "table": {
+      "dragToMove": "გადაათრიეთ გადასატანად"
+    },
+    "updates": {
+      "activity": {
+        "created": "შექმნა ეს ჩანაწერი",
+        "changedField": "შეცვალა",
+        "assignedField": "მიანიჭა {fieldName}",
+        "reassignedField": "გადაანაწილა {fieldName}",
+        "commented": "დააკომენტარა:",
+        "movedToBoard": "გადაიტანა ბორდზე",
+        "setField": "დააყენა",
+        "updatedField": "განაახლა",
+        "updatedFieldFallback": "განაახლა {fieldName}",
+        "emptyTitlePanel": "აქტივობა არ არის",
+        "emptyDescriptionPanel": "ცვლილებები აქ გამოჩნდება",
+        "systemUserPanel": "სისტემა",
+        "emptyTitleModal": "No activity yet",
+        "emptyDescriptionModal": "Changes to this item will appear here",
+        "systemUserModal": "System",
+        "modal": {
+          "created": "created this item",
+          "statusChanged": "changed {fieldName} from \"{oldValue}\" to \"{newValue}\"",
+          "assigned": "assigned {fieldName}",
+          "reassigned": "reassigned {fieldName}",
+          "commented": "commented: \"{text}\"",
+          "updatedFromTo": "changed {fieldName} from \"{oldValue}\" to \"{newValue}\"",
+          "setTo": "set {fieldName} to \"{newValue}\"",
+          "updated": "updated {fieldName}"
+        }
+      },
+      "comments": {
+        "writeUpdatePlaceholderPanel": "დაწერეთ განახლება... @ მენშენისთვის",
+        "uploadingPanel": "იტვირთება...",
+        "attachPanel": "მიმაგრება",
+        "replyButtonPanel": "პასუხი",
+        "sendButtonPanel": "გაგზავნა",
+        "emptyTitlePanel": "განახლებები არ არის",
+        "emptyDescriptionPanel": "დაამატეთ პირველი განახლება",
+        "emptyTitleModal": "No updates yet",
+        "emptyDescriptionModal": "Be the first to add an update to this item",
+        "replyingTo": "Replying to",
+        "replyToPlaceholder": "Reply to {name}...",
+        "writeUpdatePlaceholderModal": "Write an update... Type @ to mention someone",
+        "uploadingModal": "Uploading...",
+        "attachModal": "Attach",
+        "mentionHint": "@ to mention",
+        "replyButtonModal": "Reply",
+        "sendButtonModal": "Send"
+      },
+      "files": {
+        "emptyTitle": "ფაილები არ არის",
+        "emptyDescription": "ამ ჩანაწერს ფაილები არ აქვს",
+        "searchPlaceholder": "ძიება...",
+        "noFilesFound": "ფაილი ვერ მოიძებნა"
+      }
+    },
+    "addColumnModal": {
+      "types": {
+        "text": {
+          "label": "ტექსტი",
+          "description": "ერთ ან მრავალხაზიანი ტექსტი"
+        },
+        "number": {
+          "label": "რიცხვი",
+          "description": "რიცხვითი მნიშვნელობები"
+        },
+        "status": {
+          "label": "სტატუსი",
+          "description": "ფერადი სტატუსის ლეიბლები"
+        },
+        "date": {
+          "label": "თარიღი",
+          "description": "თარიღის არჩევა"
+        },
+        "dateRange": {
+          "label": "თარიღის დიაპაზონი",
+          "description": "საწყისი და საბოლოო თარიღი"
+        },
+        "person": {
+          "label": "პიროვნება",
+          "description": "პიროვნების მინიჭება"
+        },
+        "route": {
+          "label": "მარშრუტი",
+          "description": "მარშრუტთან დაკავშირება"
+        },
+        "company": {
+          "label": "კომპანია",
+          "description": "კომპანიასთან დაკავშირება"
+        },
+        "companyAddress": {
+          "label": "კომპანიის მისამართი",
+          "description": "კომპანიის ლოკაციის მისამართის ავტომატური ჩვენება"
+        },
+        "serviceType": {
+          "label": "სერვისის ტიპი",
+          "description": "ინსპექტირების სერვისის არჩევა"
+        },
+        "checkbox": {
+          "label": "ჩექბოქსი",
+          "description": "დიახ/არა გადამრთველი"
+        },
+        "phone": {
+          "label": "ტელეფონი",
+          "description": "ტელეფონის ნომრები დასარეკი ბმულით"
+        },
+        "email": {
+          "label": "ელ-ფოსტა",
+          "description": "ელ-ფოსტის მისამართები"
+        },
+        "files": {
+          "label": "ფაილები",
+          "description": "ფოტოების და დოკუმენტების მიმაგრება"
+        },
+        "updates": {
+          "label": "განახლებები",
+          "description": "კომენტარები და აქტივობის ჟურნალი"
+        },
+        "checkin": {
+          "label": "ჩეკ-ინი",
+          "description": "ჩეკ-ინის სტატუსი, ხანგრძლივობა და მდებარეობის შედარება"
+        }
+      },
+      "selectCompanyColumnWarning": "გთხოვთ აირჩიოთ კომპანიის სვეტი",
+      "title": "სვეტის დამატება",
+      "nameLabel": "სვეტის სახელი",
+      "namePlaceholder": "მაგ: პრიორიტეტი, მფლობელი, ვადა",
+      "nameRequired": "სვეტის სახელი სავალდებულოა",
+      "typeLabel": "სვეტის ტიპი",
+      "companyAddress": {
+        "linkedColumnLabel": "დაკავშირებული კომპანიის სვეტი",
+        "noCompanyColumnFound": "კომპანიის სვეტი არ მოიძებნა",
+        "addCompanyColumnFirst": "ჯერ დაამატეთ \"კომპანია\" ტიპის სვეტი, შემდეგ შეძლებთ მისამართის სვეტის დამატებას.",
+        "autoFillHint": "მისამართი ავტომატურად გამოჩნდება არჩეული კომპანიის ლოკაციიდან"
+      },
+      "checkin": {
+        "coordinatesColumnLabel": "კოორდინატების სვეტი (არასავალდებულო)",
+        "noCoordinatesColumn": "კოორდინატების სვეტი არ მოიძებნა. ჩეკ-ინი GPS-ის რეჟიმში იმუშავებს — გეოფენსის შემოწმების გარეშე.",
+        "gpsModeOption": "არ არის არჩეული (GPS-ის რეჟიმი)",
+        "coordinatesColumnHint": "აირჩიეთ სვეტი, რომელიც შეიცავს კოორდინატებს (მაგ: \"41.71, 44.82\"). ინსპექტორი ამ კოორდინატების 150მ რადიუსში უნდა იყოს ჩეკ-ინისთვის. თუ სვეტი წაიშლება, ჩეკ-ინი GPS-ის რეჟიმზე გადავა.",
+        "serviceLabel": "სერვისი",
+        "serviceNotSpecified": "არ არის მითითებული",
+        "serviceOther": "სხვა...",
+        "customServicePlaceholder": "ჩაწერეთ სერვისის სახელი",
+        "serviceHint": "რომელი სერვისისთვის კეთდება ჩეკ-ინები ამ სვეტში. ინახება ყოველ ჩეკ-ინზე.",
+        "stageColumnLabel": "სტადიის სვეტი (ავტო-განახლება)",
+        "stageColumnDisabled": "გამორთული",
+        "stageColumnHint": "ჩეკ-ინისას არჩეული ვიზიტის ტიპი ავტომატურად ჩაიწერება ამ სტატუსის სვეტში — კომპანიის მიმდინარე სტადია ყოველთვის განახლებული იქნება."
+      },
+      "widthLabel": "სვეტის სიგანე: {width}px",
+      "widthNarrow": "80px (ვიწრო)",
+      "widthWide": "500px (ფართო)",
+      "cancel": "გაუქმება",
+      "addColumn": "სვეტის დამატება"
+    },
+    "columnConfigPanel": {
+      "visitTypes": {
+        "noDefaults": "ამ სერვისს ნაგულისხმევი ტიპები არ აქვს — დაამატეთ ქვემოთ, ან ჯერ აირჩიეთ სერვისი.",
+        "delete": "წაშლა",
+        "newTypePlaceholder": "ახალი ტიპი...",
+        "revertToDefaults": "↺ ნაგულისხმევ ტიპებზე დაბრუნება"
+      },
+      "coordinatesColumnLabel": "კოორდინატების სვეტი (გეოფენსი)",
+      "gpsModeOption": "GPS-ის რეჟიმი (გეოფენსის გარეშე)",
+      "visitTypesLabel": "ვიზიტის ტიპები",
+      "title": "Column Settings",
+      "widthLabel": "Width:",
+      "hideColumn": "Hide column",
+      "showColumn": "Show column",
+      "deleteColumn": "Delete column",
+      "confirmDelete": "Delete column \"{name}\"?",
+      "addColumn": "Add Column"
+    },
+    "picker": {
+      "companySearchPlaceholder": "კომპანიის ძებნა...",
+      "clear": "გასუფთავება",
+      "noCompaniesFound": "კომპანია არ მოიძებნა",
+      "unnamedCompany": "უსახელო კომპანია",
+      "locationsCount": "{count} ლოკაცია",
+      "back": "უკან",
+      "selectLocation": "აირჩიეთ ლოკაცია ({count})",
+      "locationSearchPlaceholder": "ლოკაციის ძებნა...",
+      "usePrimaryLocation": "მთავარი ლოკაციის გამოყენება",
+      "noLocationsFound": "ლოკაცია არ მოიძებნა"
+    },
+    "moveModal": {
+      "searchPlaceholder": "ბორდის ძიება...",
+      "noBoardsMatchSearch": "ბორდი ვერ მოიძებნა",
+      "loadingBoards": "Loading boards...",
+      "noOtherBoardsAvailable": "No other boards available"
+    },
+    "accessModal": {
+      "title": "Board Access",
+      "searchPlaceholder": "Search by name or email...",
+      "addPeople": "Add people",
+      "membersCount": "Members ({count})",
+      "noMembers": "No members yet",
+      "roleOwner": "Owner",
+      "roleOwnerDesc": "Full access, can manage members",
+      "roleEditor": "Editor",
+      "roleEditorDesc": "Can edit board content",
+      "roleViewer": "Viewer",
+      "roleViewerDesc": "Can only view"
+    },
+    "activityLog": {
+      "action": "მოქმედება",
+      "changesCount": "{count} ცვლილება",
+      "column": "სვეტი",
+      "emptyValue": "(ცარიელი)",
+      "loading": "იტვირთება აქტივობა...",
+      "newValue": "ახალი მნიშვნელობა",
+      "noActivity": "აქტივობა ჯერ არ არის",
+      "noActivityHint": "დაფის ელემენტებში ცვლილებები აქ გამოჩნდება",
+      "oldValue": "ძველი მნიშვნელობა",
+      "panelSubtitle": "ყველა ცვლილების თვალყურის დევნება",
+      "panelTitle": "აქტივობის ჟურნალი",
+      "refresh": "განახლება",
+      "system": "სისტემა",
+      "time": "დრო",
+      "title": "აქტივობის ისტორია",
+      "typeHeader": "ტიპი",
+      "undo": "გაუქმება",
+      "undoTooltip": "ამ ცვლილების გაუქმება",
+      "user": "მომხმარებელი"
+    },
+    "boardTable": {
+      "createFirstItem": "შექმენით პირველი ელემენტი დასაწყებად",
+      "noItemsYet": "ელემენტები ჯერ არ არის"
+    },
+    "companyAddressCell": {
+      "noAddress": "მისამართი არ არის"
+    },
+    "companyCell": {
+      "companyLoading": "კომპანია იტვირთება...",
+      "selectCompany": "აირჩიეთ კომპანია..."
+    },
+    "dateRangeCell": {
+      "clear": "გასუფთავება",
+      "duration": "ხანგრძლივობა: {count} დღე",
+      "durationShort": "({count} დღ.)",
+      "endBeforeStartError": "დასრულების თარიღი უნდა იყოს დაწყების თარიღის შემდეგ",
+      "endDate": "დასრულების თარიღი",
+      "setDates": "თარიღების მითითება",
+      "startDate": "დაწყების თარიღი"
+    },
+    "emailCell": {
+      "addEmail": "დაამატეთ ელ-ფოსტა...",
+      "emailAddresses": "ელ-ფოსტის მისამართები",
+      "enterEmailAddress": "შეიყვანეთ ელ-ფოსტის მისამართი..."
+    },
+    "filePreviewModal": {
+      "download": "ჩამოტვირთვა",
+      "downloadFile": "ფაილის ჩამოტვირთვა",
+      "previewNotAvailable": "ამ ტიპის ფაილისთვის გადახედვა მიუწვდომელია",
+      "reset": "საწყისი მდგომარეობა",
+      "rotate": "შემობრუნება",
+      "zoomIn": "გადიდება",
+      "zoomOut": "დაპატარავება"
+    },
+    "keyboardShortcuts": {
+      "clearCell": "უჯრედის გასუფთავება",
+      "copy": "კოპირება",
+      "editCell": "უჯრედის რედაქტირება",
+      "navigate": "ნავიგაცია",
+      "nextCell": "შემდეგი უჯრედი",
+      "openItem": "ელემენტის გახსნა",
+      "paste": "ჩასმა",
+      "selectAll": "ყველას მონიშვნა",
+      "selectRow": "მწკრივის მონიშვნა",
+      "title": "კლავიატურის მალსახმობები"
+    },
+    "multiEntryPopup": {
+      "addEntryPlaceholder": "დაამატეთ ჩანაწერი...",
+      "alreadyAdded": "უკვე დამატებულია",
+      "copied": "დაკოპირდა!",
+      "copy": "კოპირება",
+      "entriesTitle": "ჩანაწერები",
+      "invalidEmailFormat": "არასწორი ელ-ფოსტის ფორმატი",
+      "invalidFormat": "არასწორი ფორმატი",
+      "noEmailsAdded": "ელ-ფოსტა არ არის დამატებული",
+      "noNumbersAdded": "ნომერი არ არის დამატებული"
+    },
+    "personCell": {
+      "addPerson": "დაამატე..."
+    },
+    "phoneEntryPopup": {
+      "copied": "დაკოპირდა!",
+      "copy": "კოპირება",
+      "invalidPhoneFormat": "არასწორი ტელეფონის ფორმატი",
+      "namePlaceholder": "სახელი (არასავალდებულო)",
+      "noNumbersAdded": "ნომერი არ არის დამატებული",
+      "numberAlreadyAdded": "ეს ნომერი უკვე დამატებულია",
+      "numberRequired": "ნომერი სავალდებულოა",
+      "phonePlaceholder": "ტელეფონის ნომერი",
+      "title": "ტელეფონის ნომრები"
+    },
+    "sortableColumnHeader": {
+      "deleteColumn": "სვეტის წაშლა",
+      "dueDateMode": "ვადის რეჟიმი",
+      "renameColumn": "სვეტის სახელის შეცვლა"
+    },
+    "statusLabelEditor": {
+      "addNewLabel": "ახალი ლეიბლის დამატება",
+      "atLeastOneRequired": "საჭიროა მინიმუმ ერთი სტატუსის ვარიანტი",
+      "clickToChangeColor": "დააჭირეთ ფერის შესაცვლელად",
+      "deleteLabel": "ლეიბლის წაშლა",
+      "newLabel": "ახალი ლეიბლი",
+      "saveError": "ლეიბლების შენახვა ვერ მოხერხდა",
+      "saveSuccess": "ლეიბლები წარმატებით შეინახა",
+      "saving": "ინახება...",
+      "title": "სტატუსის ლეიბლების რედაქტირება"
+    },
+    "updatesPanel": {
+      "activityTab": "აქტივობა",
+      "defaultItemName": "ელემენტი",
+      "filesTab": "ფაილები",
+      "updatesTab": "განახლებები"
+    }
+  },
+  "chat": {
+    "header": {
+      "title": "RouteHub ასისტენტი",
+      "subtitle": "დასვით კითხვა კომპანიის მონაცემებზე",
+      "newChat": "ახალი ჩატი"
+    },
+    "empty": {
+      "title": "რით შემიძლია დაგეხმაროთ?",
+      "description": "შეგიძლიათ მკითხოთ კომპანიების, ბორდების, გადახდების, სპეციალისტების და სხვა მონაცემების შესახებ."
+    },
+    "inputPlaceholder": "დასვით კითხვა...",
+    "suggestions": {
+      "activeCompanies": "რამდენი აქტიური კომპანია გვაქვს?",
+      "specialistBoards": "რა ბორდები არის სპეციალისტების სამუშაო სივრცეში?",
+      "haccpItems": "HACCP ბორდზე რამდენი ჩანაწერია?",
+      "bankTransactions": "ბოლო ბანკის ტრანზაქციები მაჩვენე",
+      "anaSanadzeClients": "ანა სანაძის კლიენტები მაჩვენე",
+      "unmatchedPayments": "რამდენი შეუთანხმებელი გადახდაა?"
+    },
+    "tools": {
+      "findCompany": "კომპანიის ძიება",
+      "listCompanies": "კომპანიების სია",
+      "countBoardItems": "ბორდის ჩანაწერების რაოდენობა",
+      "listBoardItems": "ბორდის ჩანაწერები",
+      "listWorkspacesAndBoards": "სამუშაო სივრცეები",
+      "getBankTransactions": "ბანკის ტრანზაქციები",
+      "getPaymentStats": "გადახდების სტატისტიკა",
+      "listInspectors": "სპეციალისტები",
+      "getSpecialistWorkload": "სპეციალისტის დატვირთვა",
+      "getServiceTypes": "სერვისის ტიპები",
+      "searchBoardItems": "ჩანაწერების ძიება"
+    }
+  },
+  "news": {
+    "toast": {
+      "deleteSuccess": "განცხადება წაშლილია",
+      "deleteError": "შეცდომა წაშლისას"
+    },
+    "pageTitle": "სიახლეები და განცხადებები",
+    "pageDescription": "კომპანიის მნიშვნელოვანი სიახლეები და შეტყობინებები",
+    "newAnnouncement": "ახალი განცხადება",
+    "empty": {
+      "title": "განცხადებები არ არის",
+      "adminHint": "შექმენით პირველი განცხადება ზემოთ \"ახალი განცხადება\" ღილაკით",
+      "userHint": "ახალი განცხადებები და სიახლეები გამოჩნდება აქ"
+    },
+    "deleteModal": {
+      "title": "განცხადების წაშლა",
+      "warning": "ეს მოქმედება შეუქცევადია",
+      "deleting": "იშლება..."
+    },
+    "createModal": {
+      "fillAllFields": "გთხოვთ შეავსოთ ყველა ველი",
+      "publishSuccess": "განცხადება წარმატებით გამოქვეყნდა",
+      "genericError": "შეცდომა",
+      "title": "ახალი განცხადება",
+      "subtitle": "ყველა მომხმარებელი მიიღებს შეტყობინებას",
+      "titleLabel": "სათაური",
+      "titlePlaceholder": "განცხადების სათაური",
+      "priorityLabel": "პრიორიტეტი",
+      "contentLabel": "შინაარსი",
+      "contentPlaceholder": "განცხადების ტექსტი...",
+      "sending": "იგზავნება...",
+      "publish": "გამოქვეყნება"
+    },
+    "priority": {
+      "normal": "ჩვეულებრივი",
+      "important": "მნიშვნელოვანი",
+      "urgent": "სასწრაფო"
+    }
+  },
+  "companies": {
+    "list": {
+      "confirmDelete": "დარწმუნებული ხართ, რომ გსურთ {name}-ის წაშლა?",
+      "deleteSuccess": "კომპანია წაიშალა",
+      "deleteError": "წაშლისას დაფიქსირდა შეცდომა",
+      "columnCompany": "კომპანია",
+      "columnAddress": "მისამართი",
+      "columnCoordinates": "კოორდინატები",
+      "delete": "წაშლა",
+      "errorOccurred": "დაფიქსირდა შეცდომა",
+      "tryAgain": "თავიდან ცდა",
+      "pageTitle": "კომპანიები",
+      "pageDescription": "ყველა რეგისტრირებული კომპანია",
+      "newCompany": "ახალი კომპანია",
+      "statTotal": "სულ კომპანიები",
+      "statShown": "ნაჩვენები",
+      "statPage": "გვერდი",
+      "searchPlaceholder": "ძებნა სახელით ან მისამართით...",
+      "noResultsTitle": "შედეგები არ მოიძებნა",
+      "noResultsDescription": "\"{query}\" მოთხოვნით კომპანიები არ მოიძებნა",
+      "clearSearch": "გასუფთავება",
+      "emptyTitle": "კომპანიები არ არის",
+      "emptyDescription": "დაამატეთ პირველი კომპანია",
+      "tableCaption": "კომპანიების სია",
+      "perPage": "გვერდზე:",
+      "pageRange": "{start}-{end} სულ {total}-დან"
+    },
+    "form": {
+      "locationRequired": "გთხოვთ დაამატოთ მინიმუმ ერთი ლოკაცია",
+      "primaryLocationRequired": "გთხოვთ აირჩიოთ მთავარი ლოკაცია",
+      "createSuccess": "კომპანია წარმატებით შეიქმნა!",
+      "createError": "შეცდომა: {message}",
+      "pageTitle": "ახალი კომპანიის დამატება",
+      "pageDescription": "შეავსეთ ყველა საჭირო ველი",
+      "basicInfo": "ძირითადი ინფორმაცია",
+      "name": "დასახელება",
+      "type": "ტიპი",
+      "typeCommercial": "კომერციული",
+      "typeResidential": "საცხოვრებელი",
+      "typeIndustrial": "ინდუსტრიული",
+      "typeHealthcare": "ჯანდაცვა",
+      "typeEducation": "განათლება",
+      "priority": "პრიორიტეტი",
+      "priorityLow": "დაბალი",
+      "priorityMedium": "საშუალო",
+      "priorityHigh": "მაღალი",
+      "contactInfo": "საკონტაქტო ინფორმაცია",
+      "optional": "არასავალდებულო",
+      "contactName": "საკონტაქტო პირი",
+      "contactPhone": "ტელეფონი",
+      "contactEmail": "ელ. ფოსტა",
+      "notes": "შენიშვნები",
+      "saving": "მიმდინარეობს შენახვა...",
+      "save": "შენახვა",
+      "cancel": "გაუქმება"
+    },
+    "detail": {
+      "statusActive": "აქტიური",
+      "statusInactive": "არააქტიური",
+      "statusSuspended": "შეჩერებული",
+      "loadError": "შეცდომა მონაცემების ჩატვირთვისას",
+      "locationRequired": "გთხოვთ დაამატოთ მინიმუმ ერთი ლოკაცია",
+      "locationsUpdated": "ლოკაციები წარმატებით განახლდა",
+      "saveError": "შეცდომა: {message}",
+      "notFoundTitle": "კომპანია არ მოიძებნა",
+      "notFoundDescription": "მოთხოვნილი კომპანია არ არსებობს ან წაშლილია",
+      "backToCompanies": "კომპანიებზე დაბრუნება",
+      "breadcrumbCompanies": "კომპანიები",
+      "statLocations": "ლოკაცია",
+      "statServices": "სერვისი",
+      "statOverdue": "ვადაგადაცილებული",
+      "servicesUpdated": "სერვისები განახლდა",
+      "recentCheckins": "ბოლო ჩეკ-ინები",
+      "meterAbbr": "მ",
+      "updated": "განახლდა",
+      "priorityHigh": "მაღალი",
+      "priorityMedium": "საშუალო",
+      "priorityLow": "დაბალი",
+      "basicInfo": "ძირითადი ინფორმაცია",
+      "type": "ტიპი",
+      "priority": "პრიორიტეტი",
+      "contactPerson": "საკონტაქტო პირი",
+      "phone": "ტელეფონი",
+      "email": "ელ. ფოსტა",
+      "dateAdded": "დამატების თარიღი",
+      "notes": "შენიშვნები",
+      "locations": "ლოკაციები",
+      "edit": "რედაქტირება",
+      "saving": "ინახება...",
+      "save": "შენახვა",
+      "cancel": "გაუქმება",
+      "noLocationsAdded": "ლოკაციები არ არის დამატებული",
+      "addLocation": "ლოკაციის დამატება",
+      "primary": "მთავარი",
+      "services": "სერვისები",
+      "finish": "დასრულება",
+      "noServicesAdded": "სერვისები არ არის დამატებული",
+      "addService": "სერვისის დამატება",
+      "notAssigned": "არ არის მინიჭებული",
+      "everyNDays": "ყოველ {days} დღეში",
+      "overdueByDays": "{days} დღით ვადაგადაცილებული",
+      "today": "დღეს",
+      "inNDays": "{days} დღეში",
+      "notScheduled": "არ არის დაგეგმილი"
+    },
+    "pdp": {
+      "companyNotFound": "კომპანია ვერ მოიძებნა",
+      "backButton": "უკან დაბრუნება",
+      "title": "პერსონალურ მონაცემთა დაცვა",
+      "address": "მისამართი",
+      "contactPerson": "საკონტაქტო პირი",
+      "phone": "ტელეფონი",
+      "email": "ელ. ფოსტა",
+      "createSuccess": "კომპანია წარმატებით დაემატა!",
+      "createError": "დაფიქსირდა შეცდომა",
+      "addFormTitle": "კომპანიის დამატება - პერსონალურ მონაცემთა დაცვა",
+      "addFormSubtitle": "Personal Data Protection Service",
+      "companyType": "კომპანიის ტიპი",
+      "newCompany": "ახალი კომპანია",
+      "newCompanyDescription": "საჭიროებს 5 ფაზის გავლას",
+      "newCompanyDescriptionEn": "New company - requires 5 phases",
+      "existingCompany": "არსებული კომპანია",
+      "existingCompanyDescription": "უკვე სერტიფიცირებული",
+      "existingCompanyDescriptionEn": "Existing company - already certified",
+      "companyInfo": "კომპანიის ინფორმაცია",
+      "companyName": "კომპანიის სახელი",
+      "companyNamePlaceholder": "შეიყვანეთ კომპანიის სახელი",
+      "addressPlaceholder": "შეიყვანეთ მისამართი",
+      "contactPersonPlaceholder": "სახელი და გვარი",
+      "phasePlanning": "ფაზების დაგეგმვა",
+      "phasePlanningDescription": "განსაზღვრეთ თითოეული ფაზის დასრულების დაგეგმილი თარიღი",
+      "tipLabel": "რჩევა",
+      "phaseTip": "ფაზებს შორის რეკომენდებული ინტერვალი არის 2-3 კვირა",
+      "nextCheckup": "შემდეგი შემოწმება",
+      "nextCheckupDate": "შემდეგი შემოწმების თარიღი",
+      "checkupReminder": "სერტიფიცირებული კომპანიები საჭიროებენ რეგულარულ შემოწმებას ყოველ 3 თვეში",
+      "cancel": "გაუქმება",
+      "inProgress": "მიმდინარეობს...",
+      "addButton": "დამატება",
+      "statusNew": "ახალი",
+      "statusInProgress": "მიმდინარე",
+      "certified": "სერტიფიცირებული",
+      "dashboardTitle": "პერსონალურ მონაცემთა დაცვა - კომპლაენსი",
+      "searchPlaceholder": "ძებნა კომპანიის სახელით ან მისამართით...",
+      "filterAll": "ყველა",
+      "totalCompanies": "სულ კომპანიები",
+      "phasesInProgress": "მიმდინარე ფაზები",
+      "noCompaniesFound": "კომპანიები არ მოიძებნა",
+      "phasesCompletedOfFive": "{count} / 5 ფაზა დასრულებული",
+      "loadComplianceError": "კომპლაენსის მონაცემების ჩატვირთვა ვერ მოხერხდა",
+      "unexpectedError": "დაფიქსირდა მოულოდნელი შეცდომა",
+      "noComplianceData": "კომპლაენსის მონაცემები არ მოიძებნა",
+      "complianceProgress": "კომპლაენსის პროგრესი",
+      "phasesOfFive": "{count} / 5 ფაზა",
+      "phaseLabel": "ფაზა {number}",
+      "completed": "დასრულებული",
+      "completedOn": "დასრულდა:",
+      "plannedFor": "დაგეგმილია:",
+      "certificationDate": "სერტიფიკატის თარიღი",
+      "certificateNumber": "სერტიფიკატის ნომერი"
+    },
+    "locationManager": {
+      "nameAddressRequired": "გთხოვთ შეავსოთ სახელი და მისამართი",
+      "minOneLocation": "კომპანიას უნდა ჰქონდეს მინიმუმ ერთი ლოკაცია",
+      "title": "ლოკაციები / ფილიალები",
+      "add": "დამატება",
+      "primary": "მთავარი",
+      "setAsPrimary": "მთავარად დაყენება",
+      "edit": "რედაქტირება",
+      "delete": "წაშლა",
+      "emptyTitle": "ლოკაციები არ არის დამატებული",
+      "emptyDescription": "დაამატეთ მინიმუმ ერთი ლოკაცია კომპანიისთვის",
+      "addFirst": "პირველი ლოკაციის დამატება",
+      "newLocation": "ახალი ლოკაცია",
+      "helpText": "მთავარი ლოკაცია გამოჩნდება როგორც ნაგულისხმევი მისამართი. თუ კომპანიას აქვს მხოლოდ ერთი ლოკაცია, ის ავტომატურად იქნება მთავარი.",
+      "formName": "სახელი",
+      "formNamePlaceholder": "მაგ: მთავარი ოფისი, ფილიალი #1",
+      "formAddress": "მისამართი",
+      "formAddressPlaceholder": "მაგ: რუსთაველის გამზ. 12",
+      "formContactName": "საკონტაქტო პირი",
+      "formContactPhone": "ტელეფონი",
+      "formNotes": "შენიშვნა",
+      "formNotesPlaceholder": "დამატებითი ინფორმაცია",
+      "primaryLocationLabel": "მთავარი ლოკაცია",
+      "cancel": "გაუქმება",
+      "save": "შენახვა"
+    }
+  },
+  "inspectors": {
+    "list": {
+      "loading": "ოფიცრების ჩატვირთვა...",
+      "errorOccurred": "დაფიქსირდა შეცდომა",
+      "tryAgain": "თავიდან ცდა",
+      "title": "ოფიცრები",
+      "description": "ყველა რეგისტრირებული ოფიცერი",
+      "newInspector": "ახალი ოფიცერი",
+      "totalInspectors": "სულ ოფიცრები",
+      "active": "აქტიური",
+      "inactive": "არააქტიური",
+      "emptyTitle": "ოფიცრები არ არის",
+      "emptyDescription": "დაამატეთ პირველი ოფიცერი"
+    },
+    "new": {
+      "createSuccess": "ოფიცერი წარმატებით შეიქმნა!",
+      "createError": "შეცდომა ოფიცრის შექმნისას",
+      "backToInspectors": "უკან ოფიცრებზე",
+      "title": "ახალი ოფიცერი",
+      "basicInfo": "ძირითადი ინფორმაცია",
+      "fullNameLabel": "სახელი და გვარი *",
+      "fullNamePlaceholder": "მაგ: გიორგი მელაძე",
+      "emailLabel": "ელ-ფოსტა *",
+      "phoneLabel": "ტელეფონი",
+      "zoneLabel": "ზონა",
+      "zonePlaceholder": "მაგ: ვაკე-საბურთალო",
+      "specialtyAndRole": "სპეციალობა და როლი",
+      "specialtyLabel": "სპეციალობა *",
+      "specialtyPlaceholder": "აირჩიეთ სპეციალობა",
+      "specialty": {
+        "fireSafety": "სახანძრო უსაფრთხოება",
+        "health": "ჯანდაცვა",
+        "buildingCode": "სამშენებლო კოდექსი",
+        "electrical": "ელექტრო უსაფრთხოება",
+        "environmental": "გარემოსდაცვა",
+        "plumbing": "სანტექნიკა",
+        "hvac": "ვენტილაცია",
+        "general": "ზოგადი"
+      },
+      "roleLabel": "როლი *",
+      "role": {
+        "officer": "ოფიცერი",
+        "dispatcher": "დისპეტჩერი",
+        "manager": "მენეჯერი",
+        "admin": "ადმინისტრატორი"
+      },
+      "workingHours": "სამუშაო საათები",
+      "startLabel": "დაწყება *",
+      "endLabel": "დასრულება *",
+      "statusLabel": "სტატუსი",
+      "status": {
+        "active": "აქტიური",
+        "inactive": "არააქტიური",
+        "onLeave": "შვებულებაში"
+      },
+      "cancel": "გაუქმება",
+      "saving": "შენახვა...",
+      "submit": "ოფიცრის შექმნა"
+    },
+    "table": {
+      "confirmDelete": "დარწმუნებული ხართ, რომ გსურთ {name}-ის წაშლა?",
+      "deleted": "ინსპექტორი წაიშალა",
+      "deleteError": "წაშლისას დაფიქსირდა შეცდომა",
+      "statusError": "სტატუსის ცვლილებისას დაფიქსირდა შეცდომა",
+      "headerInspector": "ინსპექტორი",
+      "headerContact": "კონტაქტი",
+      "headerSpecialty": "სპეციალობა",
+      "headerStatus": "სტატუსი",
+      "headerActions": "მოქმედებები",
+      "active": "აქტიური",
+      "inactive": "არააქტიური",
+      "delete": "წაშლა",
+      "emptyState": "ინსპექტორები არ არის"
+    }
+  },
+  "inspectorRoutes": {
+    "loading": "მარშრუტების ჩატვირთვა...",
+    "title": "ჩემი მარშრუტები",
+    "description": "თქვენზე დანიშნული მარშრუტები",
+    "totalRoutes": "სულ მარშრუტები",
+    "planned": "დაგეგმილი",
+    "inProgress": "მიმდინარე",
+    "completed": "დასრულებული",
+    "emptyTitle": "მარშრუტები არ არის",
+    "emptyDescription": "თქვენზე ჯერ არ არის დანიშნული მარშრუტები",
+    "status": {
+      "planned": "დაგეგმილი",
+      "inProgress": "მიმდინარე",
+      "completed": "დასრულებული",
+      "cancelled": "გაუქმებული"
+    },
+    "stops": "გაჩერება",
+    "km": "კმ",
+    "view": "ნახვა"
+  },
+  "locations": {
+    "mapLoading": "რუკის ჩატვირთვა...",
+    "dataLoading": "მონაცემების ჩატვირთვა...",
+    "pageTitle": "ყველა ლოკაცია",
+    "pageDescription": "ობიექტების რუკა ფილტრებით",
+    "shown": "ნაჩვენები",
+    "filters": {
+      "search": "ძიება",
+      "searchPlaceholder": "კომპანიის სახელი ან მისამართი...",
+      "region": "რეგიონი",
+      "allRegions": "ყველა რეგიონი",
+      "unknownRegion": "უცნობი რეგიონი",
+      "district": "რაიონი / ქალაქი",
+      "allDistricts": "ყველა რაიონი",
+      "companyType": "ობიექტის ტიპი",
+      "allTypes": "ყველა ტიპი",
+      "officer": "ოფიცერი",
+      "allOfficers": "ყველა ოფიცერი",
+      "activeFilters": "აქტიური ფილტრები",
+      "clear": "გასუფთავება"
+    },
+    "companyType": {
+      "commercial": "კომერციული",
+      "residential": "საცხოვრებელი",
+      "industrial": "სამრეწველო",
+      "healthcare": "სამედიცინო",
+      "education": "საგანმანათლებლო"
+    },
+    "map": {
+      "priorityHigh": "მაღალი",
+      "priorityMedium": "საშუალო",
+      "priorityLow": "დაბალი",
+      "servicesLabel": "სერვისები ({count})"
+    }
+  },
+  "coordinatesMap": {
+    "tabs": {
+      "coordinates": "კოორდინატები",
+      "comparison": "შედარება"
+    },
+    "emptyCoordinates": "კოორდინატები ვერ მოიძებნა",
+    "emptyComparison": "გეოკოდირებული მონაცემები ვერ მოიძებნა",
+    "filterPanel": {
+      "title": "კოორდინატები",
+      "updatedAt": "განახლდა:",
+      "searchPlaceholder": "ძიება...",
+      "inspectorLabel": "ინსპექტორი",
+      "allInspectors": "ყველა ({count})"
+    },
+    "map": {
+      "idLabel": "ID:",
+      "googleMaps": "Google Maps"
+    },
+    "comparisonMap": {
+      "addressLabel": "მისამართი:",
+      "skLabel": "ს/კ:",
+      "gpsLabel": "GPS:",
+      "geocodedLabel": "გეოკოდ.:",
+      "kmUnit": "კმ",
+      "legend": {
+        "title": "ლეგენდა",
+        "gpsCoordinate": "GPS კოორდინატი",
+        "geocoded": "გეოკოდირებული"
+      },
+      "distance": {
+        "all": "ყველა",
+        "close": "≤ 1 კმ",
+        "medium": "1–5 კმ",
+        "far": "> 5 კმ"
+      },
+      "filter": {
+        "title": "ფილტრი",
+        "lines": "ხაზები"
+      },
+      "stats": {
+        "title": "სტატისტიკა",
+        "total": "სულ:",
+        "average": "საშუალო:",
+        "max": "მაქს.:"
+      }
+    }
+  },
+  "errorPage": {
+    "adminTitle": "ადმინის შეცდომა",
+    "adminDescription": "დაფიქსირდა შეცდომა ამ ადმინის გვერდის ჩატვირთვისას.",
+    "analyticsTitle": "ანალიტიკის შეცდომა",
+    "analyticsDescription": "დაფიქსირდა შეცდომა ანალიტიკის ჩატვირთვისას.",
+    "boardTitle": "ბორდის შეცდომა",
+    "boardDescription": "დაფიქსირდა შეცდომა ბორდის ჩატვირთვისას.",
+    "companiesTitle": "კომპანიების შეცდომა",
+    "companiesDescription": "დაფიქსირდა შეცდომა კომპანიების ჩატვირთვისას.",
+    "companyTitle": "კომპანიის შეცდომა",
+    "companyDescription": "დაფიქსირდა შეცდომა კომპანიის ჩატვირთვისას.",
+    "inspectorTitle": "ინსპექტორის შეცდომა",
+    "inspectorDescription": "დაფიქსირდა შეცდომა გვერდის ჩატვირთვისას.",
+    "inspectorsTitle": "ოფიცრების შეცდომა",
+    "inspectorsDescription": "დაფიქსირდა შეცდომა ოფიცრების ჩატვირთვისას.",
+    "locationsTitle": "ლოკაციების შეცდომა",
+    "locationsDescription": "დაფიქსირდა შეცდომა ლოკაციების ჩატვირთვისას.",
+    "newsTitle": "სიახლეების შეცდომა",
+    "newsDescription": "დაფიქსირდა შეცდომა სიახლეების ჩატვირთვისას.",
+    "routeBuilderTitle": "მარშრუტის შექმნის შეცდომა",
+    "routeBuilderDescription": "დაფიქსირდა შეცდომა მარშრუტის შექმნისას.",
+    "routesTitle": "მარშრუტების შეცდომა",
+    "routesDescription": "დაფიქსირდა შეცდომა მარშრუტების ჩატვირთვისას.",
+    "settingsTitle": "პარამეტრების შეცდომა",
+    "settingsDescription": "დაფიქსირდა შეცდომა პარამეტრების ჩატვირთვისას.",
+    "trackingTitle": "თვალყურის დევნების შეცდომა",
+    "trackingDescription": "დაფიქსირდა შეცდომა თვალყურის დევნების ჩატვირთვისას.",
+    "workspacesTitle": "სამუშაო სივრცეების შეცდომა",
+    "workspacesDescription": "დაფიქსირდა შეცდომა სამუშაო სივრცეების ჩატვირთვისას."
+  },
+  "gps": {
+    "notSupported": "გეოლოკაცია არ არის მხარდაჭერილი ამ ბრაუზერში"
   }
 }

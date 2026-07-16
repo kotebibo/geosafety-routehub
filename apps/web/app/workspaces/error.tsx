@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 
 export default function WorkspacesError({
   error,
@@ -9,6 +10,8 @@ export default function WorkspacesError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const t = useTranslations()
+
   useEffect(() => {
     console.error('Workspaces error:', error)
   }, [error])
@@ -18,16 +21,14 @@ export default function WorkspacesError({
       <div className="text-center max-w-md">
         <div className="text-5xl mb-4">📁</div>
         <h2 className="text-xl font-semibold text-text-primary mb-2">
-          სამუშაო სივრცეების ჩატვირთვა ვერ მოხერხდა
+          {t('errorPage.workspacesTitle')}
         </h2>
-        <p className="text-text-secondary mb-6">
-          მოხდა შეცდომა სამუშაო სივრცეების ჩატვირთვისას. გთხოვთ სცადოთ თავიდან.
-        </p>
+        <p className="text-text-secondary mb-6">{t('errorPage.workspacesDescription')}</p>
         <button
           onClick={reset}
           className="px-6 py-2.5 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
         >
-          თავიდან ცდა
+          {t('errorBoundary.retry')}
         </button>
       </div>
     </div>

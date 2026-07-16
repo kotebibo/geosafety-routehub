@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 
 export default function NewsError({
   error,
@@ -9,6 +10,8 @@ export default function NewsError({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  const t = useTranslations()
+
   useEffect(() => {
     console.error('News error:', error)
   }, [error])
@@ -17,17 +20,13 @@ export default function NewsError({
     <div className="flex-1 flex items-center justify-center bg-bg-secondary p-8">
       <div className="text-center max-w-md">
         <div className="text-5xl mb-4">📰</div>
-        <h2 className="text-xl font-semibold text-text-primary mb-2">
-          სიახლეების ჩატვირთვა ვერ მოხერხდა
-        </h2>
-        <p className="text-text-secondary mb-6">
-          მოხდა შეცდომა სიახლეების ჩატვირთვისას. გთხოვთ სცადოთ თავიდან.
-        </p>
+        <h2 className="text-xl font-semibold text-text-primary mb-2">{t('errorPage.newsTitle')}</h2>
+        <p className="text-text-secondary mb-6">{t('errorPage.newsDescription')}</p>
         <button
           onClick={reset}
           className="px-6 py-2.5 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
         >
-          თავიდან ცდა
+          {t('errorBoundary.retry')}
         </button>
       </div>
     </div>

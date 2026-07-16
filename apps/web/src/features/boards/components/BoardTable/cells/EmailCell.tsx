@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { Mail } from 'lucide-react'
 import { OverflowTooltip } from './OverflowTooltip'
@@ -38,6 +39,7 @@ function validateEmail(value: string): boolean {
 }
 
 export function EmailCell({ value, onEdit, readOnly = false, onEditStart }: EmailCellProps) {
+  const t = useTranslations()
   const [isOpen, setIsOpen] = useState(false)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const emails = normalizeEmails(value)
@@ -102,7 +104,7 @@ export function EmailCell({ value, onEdit, readOnly = false, onEditStart }: Emai
             )}
           </>
         ) : (
-          <span className="text-sm text-text-tertiary">Add email...</span>
+          <span className="text-sm text-text-tertiary">{t('boards.emailCell.addEmail')}</span>
         )}
       </button>
 
@@ -112,10 +114,10 @@ export function EmailCell({ value, onEdit, readOnly = false, onEditStart }: Emai
           onSave={handleSave}
           onClose={() => setIsOpen(false)}
           triggerRef={buttonRef}
-          placeholder="Enter email address..."
+          placeholder={t('boards.emailCell.enterEmailAddress')}
           inputType="email"
           validate={validateEmail}
-          title="Email Addresses"
+          title={t('boards.emailCell.emailAddresses')}
           getHref={v => `mailto:${v}`}
         />
       )}

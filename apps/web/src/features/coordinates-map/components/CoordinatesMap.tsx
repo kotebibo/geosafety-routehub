@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
+import { useTranslations } from 'next-intl'
 import 'leaflet/dist/leaflet.css'
 import type { CoordinateItem } from '../types'
 
@@ -41,6 +42,7 @@ interface CoordinatesMapProps {
 }
 
 export function CoordinatesMap({ items, inspectors }: CoordinatesMapProps) {
+  const t = useTranslations()
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
   const markersRef = useRef<L.Marker[]>([])
@@ -127,7 +129,7 @@ export function CoordinatesMap({ items, inspectors }: CoordinatesMapProps) {
               <span style="display: inline-block; width: 10px; height: 10px; background: ${color}; border-radius: 50%; margin-right: 6px;"></span>
               ${item.inspector}
             </div>
-            ${item.sk ? `<div style="font-size: 12px; color: #9CA3AF; margin-bottom: 6px;">ID: ${item.sk}</div>` : ''}
+            ${item.sk ? `<div style="font-size: 12px; color: #9CA3AF; margin-bottom: 6px;">${t('coordinatesMap.map.idLabel')} ${item.sk}</div>` : ''}
             <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" style="
               display: inline-block;
               margin-top: 6px;
@@ -137,7 +139,7 @@ export function CoordinatesMap({ items, inspectors }: CoordinatesMapProps) {
               border-radius: 4px;
               font-size: 11px;
               text-decoration: none;
-            ">Google Maps</a>
+            ">${t('coordinatesMap.map.googleMaps')}</a>
           </div>
         `,
           { maxWidth: 300, className: 'coord-popup' }

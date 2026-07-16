@@ -93,7 +93,7 @@
  *             properties:
  *               action:
  *                 type: string
- *                 enum: [match, ignore]
+ *                 enum: [match, ignore, unignore]
  *               transactionId:
  *                 type: string
  *                 format: uuid
@@ -133,7 +133,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import { requireAdmin, requireAdminOrDispatcher } from '@/middleware/auth'
 
 const manualMatchSchema = z.object({
-  action: z.enum(['match', 'ignore']),
+  action: z.enum(['match', 'ignore', 'unignore']),
   transactionId: z.string().uuid(),
   companyId: z.string().uuid().optional(), // required if action = 'match'
   notes: z.string().optional(),
@@ -258,6 +258,17 @@ export async function POST(request: NextRequest) {
       if (error) throw error
 
       return NextResponse.json({ success: true, action: 'ignored' })
+    }
+
+    if (action === 'unignore') {
+      const { error } = await supabase
+        .from('bank_transactions')
+        .update({ status: 'unmatched' })
+        .eq('id', transactionId)
+
+      if (error) throw error
+
+      return NextResponse.json({ success: true, action: 'unignored' })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

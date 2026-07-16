@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { Plus, X, Phone } from 'lucide-react'
@@ -32,6 +33,7 @@ export function PhoneEntryPopup({
   triggerRef,
   formatPhone,
 }: PhoneEntryPopupProps) {
+  const t = useTranslations()
   const [localEntries, setLocalEntries] = useState<PhoneEntry[]>(entries)
   const [nameValue, setNameValue] = useState('')
   const [numberValue, setNumberValue] = useState('')
@@ -78,17 +80,17 @@ export function PhoneEntryPopup({
     const trimmedName = nameValue.trim()
 
     if (!trimmedNumber) {
-      setError('ნომერი სავალდებულოა')
+      setError(t('boards.phoneEntryPopup.numberRequired'))
       return
     }
 
     if (!validatePhone(trimmedNumber)) {
-      setError('არასწორი ტელეფონის ფორმატი')
+      setError(t('boards.phoneEntryPopup.invalidPhoneFormat'))
       return
     }
 
     if (localEntries.some(e => e.number === trimmedNumber)) {
-      setError('ეს ნომერი უკვე დამატებულია')
+      setError(t('boards.phoneEntryPopup.numberAlreadyAdded'))
       return
     }
 
@@ -140,7 +142,9 @@ export function PhoneEntryPopup({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-text-primary">Phone Numbers</span>
+          <span className="text-sm font-medium text-text-primary">
+            {t('boards.phoneEntryPopup.title')}
+          </span>
           {localEntries.length > 0 && (
             <span className="text-xs text-text-tertiary bg-bg-secondary px-1.5 py-0.5 rounded-full">
               {localEntries.length}
@@ -184,7 +188,9 @@ export function PhoneEntryPopup({
                   onClick={() => handleCopy(entry.number, index)}
                   className="px-1.5 py-0.5 rounded text-[11px] text-text-secondary hover:bg-bg-hover transition-colors"
                 >
-                  {copiedIndex === index ? 'Copied!' : 'Copy'}
+                  {copiedIndex === index
+                    ? t('boards.phoneEntryPopup.copied')
+                    : t('boards.phoneEntryPopup.copy')}
                 </button>
                 <button
                   onClick={() => handleRemove(index)}
@@ -199,7 +205,7 @@ export function PhoneEntryPopup({
       ) : (
         <div className="py-4 mb-3 text-center rounded-md border border-dashed border-border-light">
           <Phone className="w-5 h-5 text-text-tertiary mx-auto mb-1.5" />
-          <p className="text-xs text-text-tertiary">ნომერი არ არის დამატებული</p>
+          <p className="text-xs text-text-tertiary">{t('boards.phoneEntryPopup.noNumbersAdded')}</p>
         </div>
       )}
 
@@ -215,7 +221,7 @@ export function PhoneEntryPopup({
               setError('')
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Name (optional)"
+            placeholder={t('boards.phoneEntryPopup.namePlaceholder')}
             className="flex-1 h-8 px-2.5 text-sm border border-border-light rounded-md focus:outline-none focus:border-monday-primary bg-bg-primary text-text-primary placeholder:text-text-tertiary"
           />
         </div>
@@ -228,7 +234,7 @@ export function PhoneEntryPopup({
               setError('')
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Phone number"
+            placeholder={t('boards.phoneEntryPopup.phonePlaceholder')}
             className="flex-1 h-8 px-2.5 text-sm border border-border-light rounded-md focus:outline-none focus:border-monday-primary bg-bg-primary text-text-primary placeholder:text-text-tertiary"
           />
           <button
@@ -242,7 +248,7 @@ export function PhoneEntryPopup({
             )}
           >
             <Plus className="w-3.5 h-3.5" />
-            Add
+            {t('common.add')}
           </button>
         </div>
       </div>

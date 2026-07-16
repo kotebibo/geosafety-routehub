@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import type { ExpiringContract } from '@/services/board-analytics.service'
 
 interface ExpiringContractsTableProps {
@@ -7,6 +8,7 @@ interface ExpiringContractsTableProps {
 }
 
 export function ExpiringContractsTable({ data }: ExpiringContractsTableProps) {
+  const t = useTranslations()
   const urgencyClass = (days: number) => {
     if (days <= 0) return 'text-red-500 bg-red-50'
     if (days <= 30) return 'text-red-600 bg-red-50'
@@ -15,27 +17,39 @@ export function ExpiringContractsTable({ data }: ExpiringContractsTableProps) {
   }
 
   const urgencyLabel = (days: number) => {
-    if (days <= 0) return 'ვადაგასული'
-    if (days <= 30) return `${days} დღე`
-    if (days <= 90) return `${days} დღე`
-    return `${days} დღე`
+    if (days <= 0) return t('analytics.contractsTable.expired')
+    return t('analytics.contractsTable.daysRemaining', { days })
   }
 
   return (
     <div className="bg-bg-primary rounded-lg border">
       <div className="px-6 py-4 border-b">
-        <h3 className="text-sm font-semibold text-text-primary">კონტრაქტების ვადები</h3>
+        <h3 className="text-sm font-semibold text-text-primary">
+          {t('analytics.contractsTable.title')}
+        </h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b bg-bg-secondary/50">
-              <th className="text-left px-4 py-2.5 text-text-secondary font-medium">კომპანია</th>
-              <th className="text-left px-4 py-2.5 text-text-secondary font-medium">ინსპექტორი</th>
-              <th className="text-right px-4 py-2.5 text-text-secondary font-medium">თანხა</th>
-              <th className="text-left px-4 py-2.5 text-text-secondary font-medium">ვადა</th>
-              <th className="text-center px-4 py-2.5 text-text-secondary font-medium">სტატუსი</th>
-              <th className="text-left px-4 py-2.5 text-text-secondary font-medium">სერვისი</th>
+              <th className="text-left px-4 py-2.5 text-text-secondary font-medium">
+                {t('analytics.contractsTable.columns.company')}
+              </th>
+              <th className="text-left px-4 py-2.5 text-text-secondary font-medium">
+                {t('analytics.contractsTable.columns.inspector')}
+              </th>
+              <th className="text-right px-4 py-2.5 text-text-secondary font-medium">
+                {t('analytics.contractsTable.columns.amount')}
+              </th>
+              <th className="text-left px-4 py-2.5 text-text-secondary font-medium">
+                {t('analytics.contractsTable.columns.expiry')}
+              </th>
+              <th className="text-center px-4 py-2.5 text-text-secondary font-medium">
+                {t('analytics.contractsTable.columns.status')}
+              </th>
+              <th className="text-left px-4 py-2.5 text-text-secondary font-medium">
+                {t('analytics.contractsTable.columns.service')}
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -80,7 +94,7 @@ export function ExpiringContractsTable({ data }: ExpiringContractsTableProps) {
       </div>
       {data.length > 20 && (
         <div className="px-4 py-2 text-xs text-text-tertiary border-t">
-          ნაჩვენებია 20 / {data.length}
+          {t('analytics.contractsTable.shownCount', { shown: 20, total: data.length })}
         </div>
       )}
     </div>

@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase/client'
 import { Plus, Edit2, Trash2, Save, X } from 'lucide-react'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
@@ -29,17 +30,18 @@ interface ServiceType {
 }
 
 const INSPECTOR_TYPES = [
-  { value: 'fire_safety', label: 'Fire Safety Officer', label_ka: 'სახანძრო უსაფრთხოება' },
-  { value: 'health', label: 'Health Officer', label_ka: 'ჯანმრთელობა' },
-  { value: 'building', label: 'Building Officer', label_ka: 'სამშენებლო' },
-  { value: 'electrical', label: 'Electrical Officer', label_ka: 'ელექტრო' },
-  { value: 'food_safety', label: 'Food Safety Officer', label_ka: 'სურსათის უსაფრთხოება' },
-  { value: 'environmental', label: 'Environmental Officer', label_ka: 'გარემოსდაცვა' },
-  { value: 'occupational', label: 'Occupational Safety Officer', label_ka: 'შრომის უსაფრთხოება' },
-  { value: 'general', label: 'General Officer', label_ka: 'ზოგადი' },
+  { value: 'fire_safety', labelKey: 'admin.serviceTypes.inspectorTypes.fireSafety' },
+  { value: 'health', labelKey: 'admin.serviceTypes.inspectorTypes.health' },
+  { value: 'building', labelKey: 'admin.serviceTypes.inspectorTypes.building' },
+  { value: 'electrical', labelKey: 'admin.serviceTypes.inspectorTypes.electrical' },
+  { value: 'food_safety', labelKey: 'admin.serviceTypes.inspectorTypes.foodSafety' },
+  { value: 'environmental', labelKey: 'admin.serviceTypes.inspectorTypes.environmental' },
+  { value: 'occupational', labelKey: 'admin.serviceTypes.inspectorTypes.occupational' },
+  { value: 'general', labelKey: 'admin.serviceTypes.inspectorTypes.general' },
 ]
 
 export default function ServiceTypesPage() {
+  const t = useTranslations()
   const router = useRouter()
   const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([])
   const [loading, setLoading] = useState(true)
@@ -106,13 +108,13 @@ export default function ServiceTypesPage() {
       resetForm()
     } catch (error) {
       console.error('Error saving service type:', error)
-      alert('შეცდომა შენახვისას')
+      alert(t('admin.serviceTypes.saveError'))
     }
   }
 
   async function handleDelete(id: string) {
     if (!supabase) return
-    if (!confirm('დარწმუნებული ხართ რომ გსურთ წაშლა?')) return
+    if (!confirm(t('admin.serviceTypes.deleteConfirm'))) return
     try {
       const response = await fetch(`/api/service-types?id=${id}`, {
         method: 'DELETE',
@@ -122,7 +124,7 @@ export default function ServiceTypesPage() {
       await fetchServiceTypes()
     } catch (error) {
       console.error('Error deleting service type:', error)
-      alert('შეცდომა წაშლისას')
+      alert(t('admin.serviceTypes.deleteError'))
     }
   }
 
@@ -161,7 +163,7 @@ export default function ServiceTypesPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">იტვირთება...</div>
+        <div className="text-lg">{t('admin.serviceTypes.loading')}</div>
       </div>
     )
   }
@@ -170,27 +172,29 @@ export default function ServiceTypesPage() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary">სერვისის ტიპები</h1>
-          <p className="text-text-secondary mt-1">მართეთ სერვისების ტიპები</p>
+          <h1 className="text-3xl font-bold text-text-primary">
+            {t('admin.serviceTypes.pageTitle')}
+          </h1>
+          <p className="text-text-secondary mt-1">{t('admin.serviceTypes.pageDescription')}</p>
         </div>
         <button
           onClick={startAdd}
           className="flex items-center gap-2 bg-monday-primary text-white px-4 py-2 rounded-lg hover:bg-monday-primary-hover transition"
         >
           <Plus size={20} />
-          ახალი სერვისი
+          {t('admin.serviceTypes.addNew')}
         </button>
       </div>
 
       {(isAddingNew || editingId) && (
         <div className="bg-bg-primary border-2 border-monday-primary rounded-lg p-6 mb-6 shadow-lg">
           <h2 className="text-xl font-bold mb-4">
-            {editingId ? 'რედაქტირება' : 'ახალი სერვისის დამატება'}
+            {editingId ? t('admin.serviceTypes.editTitle') : t('admin.serviceTypes.addTitle')}
           </h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                დასახელება (English)
+                {t('admin.serviceTypes.nameEnglish')}
               </label>
               <input
                 type="text"
@@ -201,7 +205,7 @@ export default function ServiceTypesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                დასახელება (ქართული)
+                {t('admin.serviceTypes.nameGeorgian')}
               </label>
               <input
                 type="text"
@@ -211,7 +215,9 @@ export default function ServiceTypesPage() {
               />
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-text-primary mb-1">აღწერა</label>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                {t('admin.serviceTypes.description')}
+              </label>
               <textarea
                 value={formData.description || ''}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -221,7 +227,7 @@ export default function ServiceTypesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                საჭირო ოფიცრის ტიპი
+                {t('admin.serviceTypes.requiredInspectorType')}
               </label>
               <Select
                 value={formData.required_inspector_type || 'general'}
@@ -233,7 +239,7 @@ export default function ServiceTypesPage() {
                 <SelectContent>
                   {INSPECTOR_TYPES.map(type => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label_ka}
+                      {t(type.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -241,7 +247,7 @@ export default function ServiceTypesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                სიხშირე (დღეები)
+                {t('admin.serviceTypes.frequencyDays')}
               </label>
               <input
                 type="number"
@@ -262,7 +268,7 @@ export default function ServiceTypesPage() {
                 className="w-4 h-4 text-monday-primary"
               />
               <label htmlFor="is_active" className="ml-2 text-sm text-text-primary">
-                აქტიური
+                {t('admin.serviceTypes.active')}
               </label>
             </div>
           </div>
@@ -272,14 +278,14 @@ export default function ServiceTypesPage() {
               className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700"
             >
               <Save size={18} />
-              შენახვა
+              {t('admin.serviceTypes.save')}
             </button>
             <button
               onClick={resetForm}
               className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
             >
               <X size={18} />
-              გაუქმება
+              {t('admin.serviceTypes.cancel')}
             </button>
           </div>
         </div>
@@ -290,22 +296,22 @@ export default function ServiceTypesPage() {
           <thead className="bg-bg-secondary">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
-                სერვისი
+                {t('admin.serviceTypes.tableService')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
-                აღწერა
+                {t('admin.serviceTypes.description')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
-                ოფიცრის ტიპი
+                {t('admin.serviceTypes.tableInspectorType')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
-                სიხშირე
+                {t('admin.serviceTypes.tableFrequency')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase">
-                სტატუსი
+                {t('admin.serviceTypes.tableStatus')}
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase">
-                მოქმედებები
+                {t('admin.serviceTypes.tableActions')}
               </th>
             </tr>
           </thead>
@@ -319,18 +325,25 @@ export default function ServiceTypesPage() {
                 <td className="px-6 py-4 text-sm text-text-secondary">{st.description}</td>
                 <td className="px-6 py-4">
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-monday-primary/10 text-monday-primary">
-                    {INSPECTOR_TYPES.find(t => t.value === st.required_inspector_type)?.label_ka}
+                    {(() => {
+                      const inspectorType = INSPECTOR_TYPES.find(
+                        it => it.value === st.required_inspector_type
+                      )
+                      return inspectorType ? t(inspectorType.labelKey) : null
+                    })()}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-sm">{st.default_frequency_days} დღე</td>
+                <td className="px-6 py-4 text-sm">
+                  {st.default_frequency_days} {t('admin.serviceTypes.daysSuffix')}
+                </td>
                 <td className="px-6 py-4">
                   {st.is_active ? (
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-color-success/10 text-color-success">
-                      აქტიური
+                      {t('admin.serviceTypes.active')}
                     </span>
                   ) : (
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-bg-tertiary text-text-secondary">
-                      არააქტიური
+                      {t('admin.serviceTypes.inactive')}
                     </span>
                   )}
                 </td>
@@ -355,7 +368,9 @@ export default function ServiceTypesPage() {
           </tbody>
         </table>
         {serviceTypes.length === 0 && (
-          <div className="text-center py-12 text-text-secondary">სერვისები არ მოიძებნა</div>
+          <div className="text-center py-12 text-text-secondary">
+            {t('admin.serviceTypes.noServicesFound')}
+          </div>
         )}
       </div>
     </div>

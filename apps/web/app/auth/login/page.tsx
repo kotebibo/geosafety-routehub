@@ -40,14 +40,10 @@ function LoginForm() {
   // Show session expired message if redirected from expired session
   useEffect(() => {
     if (sessionStorage.getItem('routehub-session-expired')) {
-      setError(
-        language === 'ka'
-          ? 'სესია ამოიწურა, გთხოვთ თავიდან შეხვიდეთ'
-          : 'Session expired, please sign in again'
-      )
+      setError(t('login.sessionExpired'))
       sessionStorage.removeItem('routehub-session-expired')
     }
-  }, [language])
+  }, [t])
 
   const handleForgotPassword = async () => {
     if (!email) {

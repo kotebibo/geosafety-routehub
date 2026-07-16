@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslations } from 'next-intl'
 import { X, User, Clock, Megaphone, AlertTriangle, AlertCircle } from 'lucide-react'
 import { formatDistanceToNow, format } from 'date-fns'
 import { Tooltip } from '@/shared/components/ui/tooltip'
@@ -18,16 +19,16 @@ const PRIORITY = {
   urgent: {
     icon: AlertCircle,
     bg: 'bg-red-50',
-    label: 'სასწრაფო',
+    labelKey: 'news.priority.urgent',
     badge: 'bg-red-100 text-red-700',
   },
   important: {
     icon: AlertTriangle,
     bg: 'bg-amber-50',
-    label: 'მნიშვნელოვანი',
+    labelKey: 'news.priority.important',
     badge: 'bg-amber-100 text-amber-700',
   },
-  normal: { icon: Megaphone, bg: 'bg-bg-secondary', label: '', badge: '' },
+  normal: { icon: Megaphone, bg: 'bg-bg-secondary', labelKey: '', badge: '' },
 } as const
 
 export function AnnouncementDetailModal({
@@ -35,6 +36,7 @@ export function AnnouncementDetailModal({
   onClose,
   onMarkRead,
 }: AnnouncementDetailModalProps) {
+  const t = useTranslations()
   // Mark as read on open
   useEffect(() => {
     if (!announcement.is_read) {
@@ -89,7 +91,7 @@ export function AnnouncementDetailModal({
                     <span
                       className={`px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full ${config.badge}`}
                     >
-                      {config.label}
+                      {t(config.labelKey)}
                     </span>
                   )}
                 </div>
@@ -117,7 +119,7 @@ export function AnnouncementDetailModal({
             onClick={onClose}
             className="px-5 py-2 bg-monday-primary text-white text-sm font-medium rounded-lg hover:bg-monday-primary-hover transition-colors"
           >
-            დახურვა
+            {t('common.close')}
           </button>
         </div>
       </div>

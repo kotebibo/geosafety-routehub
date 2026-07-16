@@ -1,6 +1,7 @@
 'use client'
 
 import { MapPin, Play, Square, Navigation, Wifi, WifiOff, CheckCircle2 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useLocationSender } from '../hooks/useLocationSender'
 
 interface MobileTrackingViewProps {
@@ -9,6 +10,7 @@ interface MobileTrackingViewProps {
 }
 
 export function MobileTrackingView({ inspectorId, routeId }: MobileTrackingViewProps) {
+  const t = useTranslations()
   const {
     isTracking,
     lastPosition,
@@ -32,12 +34,12 @@ export function MobileTrackingView({ inspectorId, routeId }: MobileTrackingViewP
           {isTracking ? (
             <>
               <Wifi className="w-4 h-4" />
-              Tracking Active
+              {t('inspectorTracking.mobile.active')}
             </>
           ) : (
             <>
               <WifiOff className="w-4 h-4" />
-              Tracking Stopped
+              {t('inspectorTracking.mobile.stopped')}
             </>
           )}
         </div>
@@ -56,12 +58,12 @@ export function MobileTrackingView({ inspectorId, routeId }: MobileTrackingViewP
           {isTracking ? (
             <>
               <Square className="w-6 h-6" />
-              Stop Tracking
+              {t('inspectorTracking.mobile.stopTracking')}
             </>
           ) : (
             <>
               <Play className="w-6 h-6" />
-              Start Tracking
+              {t('inspectorTracking.mobile.startTracking')}
             </>
           )}
         </div>
@@ -74,7 +76,7 @@ export function MobileTrackingView({ inspectorId, routeId }: MobileTrackingViewP
       >
         <div className="flex items-center justify-center gap-2">
           <CheckCircle2 className="w-5 h-5" />
-          Manual Check-In
+          {t('inspectorTracking.mobile.manualCheckIn')}
         </div>
       </button>
 
@@ -83,29 +85,37 @@ export function MobileTrackingView({ inspectorId, routeId }: MobileTrackingViewP
         <div className="bg-bg-primary rounded-xl border p-4 space-y-3">
           <div className="flex items-center gap-2 text-sm font-medium text-text-primary">
             <MapPin className="w-4 h-4 text-blue-500" />
-            Current Position
+            {t('inspectorTracking.mobile.currentPosition')}
           </div>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <div className="text-xs text-text-secondary">Latitude</div>
+              <div className="text-xs text-text-secondary">
+                {t('inspectorTracking.mobile.latitude')}
+              </div>
               <div className="font-mono text-text-primary">
                 {lastPosition.coords.latitude.toFixed(6)}
               </div>
             </div>
             <div>
-              <div className="text-xs text-text-secondary">Longitude</div>
+              <div className="text-xs text-text-secondary">
+                {t('inspectorTracking.mobile.longitude')}
+              </div>
               <div className="font-mono text-text-primary">
                 {lastPosition.coords.longitude.toFixed(6)}
               </div>
             </div>
             <div>
-              <div className="text-xs text-text-secondary">Accuracy</div>
+              <div className="text-xs text-text-secondary">
+                {t('inspectorTracking.mobile.accuracy')}
+              </div>
               <div className="font-mono text-text-primary">
                 {Math.round(lastPosition.coords.accuracy)}m
               </div>
             </div>
             <div>
-              <div className="text-xs text-text-secondary">Speed</div>
+              <div className="text-xs text-text-secondary">
+                {t('inspectorTracking.mobile.speed')}
+              </div>
               <div className="font-mono text-text-primary">
                 {lastPosition.coords.speed != null
                   ? `${(lastPosition.coords.speed * 3.6).toFixed(1)} km/h`
@@ -119,13 +129,13 @@ export function MobileTrackingView({ inspectorId, routeId }: MobileTrackingViewP
       {/* Stats */}
       <div className="bg-bg-primary rounded-xl border p-4">
         <div className="flex items-center justify-between text-sm">
-          <span className="text-text-secondary">Updates sent</span>
+          <span className="text-text-secondary">{t('inspectorTracking.mobile.updatesSent')}</span>
           <span className="font-semibold text-text-primary">{sendCount}</span>
         </div>
         {isSending && (
           <div className="flex items-center gap-2 mt-2 text-xs text-blue-600">
             <Navigation className="w-3 h-3 animate-pulse" />
-            Sending location...
+            {t('inspectorTracking.mobile.sendingLocation')}
           </div>
         )}
       </div>
@@ -133,7 +143,7 @@ export function MobileTrackingView({ inspectorId, routeId }: MobileTrackingViewP
       {/* Error Display */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm text-red-700">
-          <strong>Error:</strong> {error}
+          <strong>{t('inspectorTracking.mobile.errorLabel')}</strong> {error}
         </div>
       )}
     </div>

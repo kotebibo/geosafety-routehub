@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
@@ -121,6 +122,7 @@ const TemplateManagementModal = dynamic(
 )
 
 export default function BoardDetailPage({ params }: { params: { id: string } }) {
+  const t = useTranslations()
   const router = useRouter()
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
@@ -289,18 +291,18 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   const handleActivityRollback = useCallback(
     async (update: any) => {
       if (!update.field_name) {
-        showToast('Cannot rollback: no field name', 'error')
+        showToast(t('boards.detail.rollback.noFieldName'), 'error')
         return
       }
       if (update.old_value === undefined || update.old_value === null) {
-        showToast('Cannot rollback: no previous value', 'error')
+        showToast(t('boards.detail.rollback.noPreviousValue'), 'error')
         return
       }
 
       try {
         const item = items?.find(i => i.id === update.item_id)
         if (!item) {
-          showToast('Cannot rollback: item not found', 'error')
+          showToast(t('boards.detail.rollback.itemNotFound'), 'error')
           return
         }
 
@@ -320,7 +322,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           })
         }
 
-        showToast('Change rolled back successfully', 'success')
+        showToast(t('boards.detail.rollback.success'), 'success')
         await queryClient.refetchQueries({
           queryKey: [...queryKeys.routes.all, 'board-items', params.id],
           type: 'active',
@@ -328,7 +330,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
         refetchActivity()
       } catch (error) {
         console.error('Failed to rollback:', error)
-        showToast('Failed to rollback change', 'error')
+        showToast(t('boards.detail.rollback.failed'), 'error')
       }
     },
     [items, updateItem, queryClient, params.id, refetchActivity, showToast]
@@ -343,13 +345,13 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
   if (!board) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <h2 className="text-h3 font-semibold text-text-primary mb-2">Board not found</h2>
-        <p className="text-text-secondary mb-6">
-          The board you&apos;re looking for doesn&apos;t exist or you don&apos;t have access to it.
-        </p>
+        <h2 className="text-h3 font-semibold text-text-primary mb-2">
+          {t('boards.detail.notFoundTitle')}
+        </h2>
+        <p className="text-text-secondary mb-6">{t('boards.detail.notFoundDescription')}</p>
         <Button variant="primary" onClick={() => router.push('/boards')}>
           <ArrowLeft className="w-5 h-5 mr-2" />
-          Back to Boards
+          {t('boards.detail.backToBoards')}
         </Button>
       </div>
     )
@@ -393,20 +395,20 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
             {selection.size > 0 ? (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text-secondary font-medium">
-                  {selection.size} selected
+                  {t('boards.detail.toolbar.selected', { count: selection.size })}
                 </span>
                 <Button variant="secondary" size="sm" onClick={() => openModal('generateDoc')}>
                   <FileText className="w-4 h-4 mr-1" />
-                  Generate Doc
+                  {t('boards.detail.toolbar.generateDoc')}
                 </Button>
                 <Button variant="secondary" size="sm" onClick={() => openModal('moveModal')}>
                   <ArrowRightLeft className="w-4 h-4 mr-1" />
-                  Move
+                  {t('boards.detail.toolbar.move')}
                 </Button>
                 {groups && groups.length > 1 && (
                   <Button variant="secondary" size="sm" onClick={() => openModal('moveToGroup')}>
                     <FolderInput className="w-4 h-4 mr-1" />
-                    Move to Group
+                    {t('boards.detail.toolbar.moveToGroup')}
                   </Button>
                 )}
                 <Button
@@ -416,7 +418,9 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   disabled={duplicateItems.isPending}
                 >
                   <Copy className="w-4 h-4 mr-1" />
-                  {duplicateItems.isPending ? 'Duplicating...' : 'Duplicate'}
+                  {duplicateItems.isPending
+                    ? t('boards.detail.toolbar.duplicating')
+                    : t('boards.detail.toolbar.duplicate')}
                 </Button>
                 <Button
                   variant="secondary"
@@ -426,13 +430,13 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <Trash2 className="w-4 h-4 mr-1" />
-                  Delete
+                  {t('boards.detail.toolbar.delete')}
                 </Button>
                 <button
                   onClick={() => setSelection(new Set())}
                   className="text-xs text-text-tertiary hover:text-text-secondary ml-1"
                 >
-                  Clear
+                  {t('boards.detail.toolbar.clear')}
                 </button>
               </div>
             ) : (
@@ -457,14 +461,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-text-tertiary" />
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder={t('boards.detail.toolbar.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="pl-9 pr-3 py-1.5 text-sm border border-border-light rounded-md bg-bg-primary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent w-32 md:w-48"
               />
             </div>
             <span className="hidden md:inline text-sm text-text-secondary">
-              {filteredItems?.length || 0} items
+              {t('boards.detail.toolbar.itemsCount', { count: filteredItems?.length || 0 })}
             </span>
 
             {/* Desktop: Undo/Redo, Import, Export */}
@@ -475,7 +479,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   onClick={performUndo}
                   disabled={!canUndo}
                   className="p-1.5 rounded hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
-                  title="Undo (Ctrl+Z)"
+                  title={t('boards.detail.toolbar.undoTitle')}
                 >
                   <Undo2 className="w-4 h-4" />
                 </button>
@@ -483,7 +487,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   onClick={performRedo}
                   disabled={!canRedo}
                   className="p-1.5 rounded hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed text-text-secondary"
-                  title="Redo (Ctrl+Y)"
+                  title={t('boards.detail.toolbar.redoTitle')}
                 >
                   <Redo2 className="w-4 h-4" />
                 </button>
@@ -493,14 +497,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
 
               <Button variant="secondary" size="sm" onClick={() => openModal('importModal')}>
                 <Upload className="w-4 h-4 mr-2" />
-                Import
+                {t('boards.detail.toolbar.import')}
               </Button>
 
               {/* Export Button */}
               <div className="relative">
                 <Button variant="secondary" size="sm" onClick={() => toggleModal('exportMenu')}>
                   <Download className="w-4 h-4 mr-2" />
-                  Export
+                  {t('boards.detail.toolbar.export')}
                 </Button>
                 {modals.exportMenu && (
                   <>
@@ -511,14 +515,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                         className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
                       >
                         <Download className="w-4 h-4 text-color-success" />
-                        Export to CSV
+                        {t('boards.detail.toolbar.exportToCsv')}
                       </button>
                       <button
                         onClick={() => handlers.handleExport('excel', filteredItems)}
                         className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
                       >
                         <Download className="w-4 h-4 text-monday-primary" />
-                        Export to Excel
+                        {t('boards.detail.toolbar.exportToExcel')}
                       </button>
                     </div>
                   </>
@@ -545,7 +549,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary disabled:opacity-30"
                   >
                     <Undo2 className="w-4 h-4 text-text-secondary" />
-                    Undo
+                    {t('boards.detail.toolbar.undo')}
                   </button>
                   <button
                     onClick={() => {
@@ -556,7 +560,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary disabled:opacity-30"
                   >
                     <Redo2 className="w-4 h-4 text-text-secondary" />
-                    Redo
+                    {t('boards.detail.toolbar.redo')}
                   </button>
                   <div className="my-1 border-t border-border-light" />
                   <button
@@ -567,7 +571,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary"
                   >
                     <Upload className="w-4 h-4 text-text-secondary" />
-                    Import
+                    {t('boards.detail.toolbar.import')}
                   </button>
                   <button
                     onClick={() => {
@@ -577,7 +581,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary"
                   >
                     <Download className="w-4 h-4 text-color-success" />
-                    Export CSV
+                    {t('boards.detail.toolbar.exportCsv')}
                   </button>
                   <button
                     onClick={() => {
@@ -587,11 +591,11 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary"
                   >
                     <Download className="w-4 h-4 text-monday-primary" />
-                    Export Excel
+                    {t('boards.detail.toolbar.exportExcel')}
                   </button>
                   <div className="my-1 border-t border-border-light" />
                   <span className="px-4 py-2 text-xs text-text-tertiary">
-                    {filteredItems?.length || 0} items
+                    {t('boards.detail.toolbar.itemsCount', { count: filteredItems?.length || 0 })}
                   </span>
                 </div>
               )}
@@ -619,12 +623,14 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-text-primary mb-2">Failed to load items</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-2">
+              {t('boards.detail.itemsError.title')}
+            </h3>
             <p className="text-sm text-text-secondary mb-4">
-              There was an error loading the board items
+              {t('boards.detail.itemsError.description')}
             </p>
             <Button variant="primary" onClick={() => window.location.reload()}>
-              Retry
+              {t('boards.detail.itemsError.retry')}
             </Button>
           </div>
         ) : columns && columns.length > 0 ? (
@@ -674,9 +680,9 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           </ErrorBoundary>
         ) : (
           <div className="flex flex-col items-center justify-center py-24 bg-bg-primary rounded-lg border border-border-light">
-            <p className="text-text-secondary mb-4">No columns configured for this board yet</p>
+            <p className="text-text-secondary mb-4">{t('boards.detail.noColumns')}</p>
             <Button variant="secondary" onClick={() => openModal('addColumn')}>
-              Configure Columns
+              {t('boards.detail.configureColumns')}
             </Button>
           </div>
         )}
@@ -746,7 +752,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           onClose={() => closeModal('saveAsTemplate')}
           boardId={params.id}
           boardName={board.name}
-          onSuccess={() => showToast('Board saved as template', 'success')}
+          onSuccess={() => showToast(t('boards.detail.toast.savedAsTemplate'), 'success')}
         />
       )}
 
@@ -777,7 +783,7 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           onClose={() => closeModal('generateDoc')}
           boardId={params.id}
           items={items.filter(item => selection.has(item.id))}
-          onSuccess={() => showToast('Document generated successfully', 'success')}
+          onSuccess={() => showToast(t('boards.detail.toast.documentGenerated'), 'success')}
         />
       )}
 
@@ -804,12 +810,17 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
           onMoveComplete={(movedCount, failedCount) => {
             if (movedCount > 0) {
               showToast(
-                `Moved ${movedCount} item(s)${failedCount > 0 ? `, ${failedCount} failed` : ''}`,
+                failedCount > 0
+                  ? t('boards.detail.toast.movedWithFailures', {
+                      moved: movedCount,
+                      failed: failedCount,
+                    })
+                  : t('boards.detail.toast.moved', { count: movedCount }),
                 failedCount > 0 ? 'warning' : 'success'
               )
               setSelection(new Set())
             } else {
-              showToast('Failed to move items', 'error')
+              showToast(t('boards.detail.toast.moveFailed'), 'error')
             }
           }}
         />

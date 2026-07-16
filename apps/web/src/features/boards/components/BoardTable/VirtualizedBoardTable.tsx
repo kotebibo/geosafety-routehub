@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useRef, useMemo, useState, useCallback, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { cn } from '@/lib/utils'
 import {
@@ -158,6 +159,7 @@ export function VirtualizedBoardTable({
   onDeleteSubitem,
   commentCounts,
 }: VirtualizedBoardTableProps) {
+  const t = useTranslations()
   // Scroll container ref - THIS is the key difference from the non-virtualized version
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -1320,7 +1322,7 @@ export function VirtualizedBoardTable({
                       {canDrag && (
                         <div
                           data-drag-handle
-                          title="გადაათრიეთ გადასატანად"
+                          title={t('boards.table.dragToMove')}
                           className="absolute left-0 top-0 bottom-0 w-4 flex items-center justify-center opacity-0 group-hover/row:opacity-100 hover:bg-bg-hover cursor-grab active:cursor-grabbing"
                         >
                           <GripVertical className="w-3.5 h-3.5 text-text-tertiary" />

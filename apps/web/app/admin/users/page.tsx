@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { usersService, User, CustomRole } from '@/services/users.service'
@@ -40,6 +41,7 @@ import {
 } from '@/shared/components/ui/select'
 
 export default function UserManagementPage() {
+  const t = useTranslations()
   const router = useRouter()
   const { user: currentUser, isAdmin, loading: authLoading, refreshUserRole } = useAuth()
   const { showToast } = useToast()
@@ -185,7 +187,7 @@ export default function UserManagementPage() {
       setEditingUserId(null)
     } catch (error) {
       console.error('Error saving user:', error)
-      showToast('Failed to save user', 'error')
+      showToast(t('admin.users.saveUserFailed'), 'error')
     }
   }
 
@@ -202,7 +204,7 @@ export default function UserManagementPage() {
       await fetchData()
     } catch (error) {
       console.error('Error toggling user status:', error)
-      showToast('Failed to update user status', 'error')
+      showToast(t('admin.users.updateStatusFailed'), 'error')
     }
   }
 
@@ -220,7 +222,7 @@ export default function UserManagementPage() {
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Failed to create user')
+        throw new Error(data.error || t('admin.users.createUserFailed'))
       }
 
       // Success - reset form, close panel, refresh list
@@ -229,7 +231,7 @@ export default function UserManagementPage() {
       setShowCreatePassword(false)
       await fetchData()
     } catch (error: any) {
-      setCreateError(error.message || 'Failed to create user')
+      setCreateError(error.message || t('admin.users.createUserFailed'))
     } finally {
       setCreating(false)
     }
@@ -241,7 +243,7 @@ export default function UserManagementPage() {
   }
 
   function getRoleDisplayName(roleName?: string): string {
-    if (!roleName) return 'No Role'
+    if (!roleName) return t('admin.users.noRole')
     const role = roles.find(r => r.name === roleName)
     return role?.display_name || roleName
   }
@@ -265,8 +267,10 @@ export default function UserManagementPage() {
                 <Users className="w-6 h-6 text-monday-primary" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-text-primary">User Management</h1>
-                <p className="text-sm text-text-secondary">Manage users, roles, and permissions</p>
+                <h1 className="text-2xl font-bold text-text-primary">
+                  {t('admin.users.pageTitle')}
+                </h1>
+                <p className="text-sm text-text-secondary">{t('admin.users.pageDescription')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -275,7 +279,7 @@ export default function UserManagementPage() {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-primary bg-bg-primary border border-border-medium rounded-lg hover:bg-bg-secondary"
               >
                 <Shield className="w-4 h-4" />
-                Manage Roles
+                {t('admin.users.manageRoles')}
               </button>
               <button
                 onClick={() => {
@@ -285,14 +289,14 @@ export default function UserManagementPage() {
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
               >
                 <Plus className="w-4 h-4" />
-                Create User
+                {t('admin.users.createUser')}
               </button>
               <button
                 onClick={fetchData}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-monday-primary rounded-lg hover:bg-monday-primary-hover"
               >
                 <RefreshCw className="w-4 h-4" />
-                Refresh
+                {t('admin.users.refresh')}
               </button>
             </div>
           </div>
@@ -304,7 +308,9 @@ export default function UserManagementPage() {
         {showCreateForm && (
           <div className="bg-bg-primary rounded-lg border border-border-light p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-text-primary">Create New User</h2>
+              <h2 className="text-lg font-semibold text-text-primary">
+                {t('admin.users.createNewUser')}
+              </h2>
               <button
                 onClick={() => {
                   setShowCreateForm(false)
@@ -326,7 +332,7 @@ export default function UserManagementPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Email <span className="text-red-500">*</span>
+                    {t('admin.users.email')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -340,7 +346,7 @@ export default function UserManagementPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Full Name <span className="text-red-500">*</span>
+                    {t('admin.users.fullName')} <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -354,7 +360,7 @@ export default function UserManagementPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Phone
+                    {t('admin.users.phone')}
                   </label>
                   <input
                     type="text"
@@ -367,7 +373,7 @@ export default function UserManagementPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">
-                    Password <span className="text-red-500">*</span>
+                    {t('admin.users.password')} <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -377,7 +383,7 @@ export default function UserManagementPage() {
                       value={createForm.password}
                       onChange={e => setCreateForm({ ...createForm, password: e.target.value })}
                       className="w-full px-3 py-2 pr-10 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
-                      placeholder="Min 6 characters"
+                      placeholder={t('admin.users.passwordPlaceholder')}
                     />
                     <button
                       type="button"
@@ -394,7 +400,9 @@ export default function UserManagementPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">Role</label>
+                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                    {t('admin.users.role')}
+                  </label>
                   <Select
                     value={createForm.role === '' ? '__none__' : createForm.role}
                     onValueChange={v =>
@@ -405,7 +413,7 @@ export default function UserManagementPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__none__">No Role</SelectItem>
+                      <SelectItem value="__none__">{t('admin.users.noRole')}</SelectItem>
                       {roles.map(role => (
                         <SelectItem key={role.name} value={role.name}>
                           {role.display_name}
@@ -427,7 +435,7 @@ export default function UserManagementPage() {
                   ) : (
                     <Plus className="w-4 h-4" />
                   )}
-                  {creating ? 'Creating...' : 'Create User'}
+                  {creating ? t('admin.users.creating') : t('admin.users.createUser')}
                 </button>
                 <button
                   type="button"
@@ -437,7 +445,7 @@ export default function UserManagementPage() {
                   }}
                   className="px-4 py-2 text-sm font-medium text-text-secondary hover:text-text-primary"
                 >
-                  Cancel
+                  {t('admin.users.cancel')}
                 </button>
               </div>
             </form>
@@ -452,7 +460,7 @@ export default function UserManagementPage() {
                 <Users className="w-5 h-5 text-monday-primary" />
               </div>
               <div>
-                <p className="text-sm text-text-secondary">Total Users</p>
+                <p className="text-sm text-text-secondary">{t('admin.users.stats.totalUsers')}</p>
                 <p className="text-2xl font-bold text-text-primary">{stats.total}</p>
               </div>
             </div>
@@ -463,7 +471,7 @@ export default function UserManagementPage() {
                 <UserCheck className="w-5 h-5 text-color-success" />
               </div>
               <div>
-                <p className="text-sm text-text-secondary">Active</p>
+                <p className="text-sm text-text-secondary">{t('admin.users.stats.active')}</p>
                 <p className="text-2xl font-bold text-text-primary">{stats.active}</p>
               </div>
             </div>
@@ -474,7 +482,7 @@ export default function UserManagementPage() {
                 <UserX className="w-5 h-5 text-color-error" />
               </div>
               <div>
-                <p className="text-sm text-text-secondary">Inactive</p>
+                <p className="text-sm text-text-secondary">{t('admin.users.stats.inactive')}</p>
                 <p className="text-2xl font-bold text-text-primary">{stats.inactive}</p>
               </div>
             </div>
@@ -485,7 +493,7 @@ export default function UserManagementPage() {
                 <Shield className="w-5 h-5 text-purple" />
               </div>
               <div>
-                <p className="text-sm text-text-secondary">Roles</p>
+                <p className="text-sm text-text-secondary">{t('admin.users.stats.roles')}</p>
                 <p className="text-2xl font-bold text-text-primary">{roles.length}</p>
               </div>
             </div>
@@ -500,7 +508,7 @@ export default function UserManagementPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
               <input
                 type="text"
-                placeholder="Search by name or email..."
+                placeholder={t('admin.users.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
@@ -513,8 +521,8 @@ export default function UserManagementPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="none">No Role</SelectItem>
+                <SelectItem value="all">{t('admin.users.filterAllRoles')}</SelectItem>
+                <SelectItem value="none">{t('admin.users.noRole')}</SelectItem>
                 {roles.map(role => (
                   <SelectItem key={role.name} value={role.name}>
                     {role.display_name}
@@ -529,9 +537,9 @@ export default function UserManagementPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="all">{t('admin.users.filterAllStatus')}</SelectItem>
+                <SelectItem value="active">{t('admin.users.stats.active')}</SelectItem>
+                <SelectItem value="inactive">{t('admin.users.stats.inactive')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -546,26 +554,26 @@ export default function UserManagementPage() {
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-12 h-12 text-text-disabled mx-auto mb-4" />
-              <p className="text-text-secondary">No users found</p>
+              <p className="text-text-secondary">{t('admin.users.noUsersFound')}</p>
             </div>
           ) : (
             <table className="w-full">
               <thead className="bg-bg-secondary border-b border-border-light">
                 <tr>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                    User
+                    {t('admin.users.tableUser')}
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                    Role
+                    {t('admin.users.role')}
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                    Status
+                    {t('admin.users.tableStatus')}
                   </th>
                   <th className="text-left px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                    Joined
+                    {t('admin.users.tableJoined')}
                   </th>
                   <th className="text-right px-6 py-3 text-xs font-semibold text-text-secondary uppercase tracking-wider">
-                    Actions
+                    {t('admin.users.tableActions')}
                   </th>
                 </tr>
               </thead>
@@ -585,14 +593,14 @@ export default function UserManagementPage() {
                             type="text"
                             value={editForm.full_name}
                             onChange={e => setEditForm({ ...editForm, full_name: e.target.value })}
-                            placeholder="Full name"
+                            placeholder={t('admin.users.fullName')}
                             className="w-full px-3 py-1.5 border border-border-medium rounded text-sm"
                           />
                           <input
                             type="text"
                             value={editForm.phone}
                             onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
-                            placeholder="Phone"
+                            placeholder={t('admin.users.phone')}
                             className="w-full px-3 py-1.5 border border-border-medium rounded text-sm"
                           />
                         </div>
@@ -603,7 +611,7 @@ export default function UserManagementPage() {
                           </div>
                           <div>
                             <p className="font-medium text-text-primary">
-                              {user.full_name || 'No name'}
+                              {user.full_name || t('admin.users.noName')}
                             </p>
                             <p className="text-sm text-text-secondary flex items-center gap-1">
                               <Mail className="w-3 h-3" />
@@ -631,7 +639,7 @@ export default function UserManagementPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="__none__">No Role</SelectItem>
+                            <SelectItem value="__none__">{t('admin.users.noRole')}</SelectItem>
                             {roles.map(role => (
                               <SelectItem key={role.name} value={role.name}>
                                 {role.display_name}
@@ -660,7 +668,9 @@ export default function UserManagementPage() {
                             : 'bg-color-error/10 text-color-error'
                         )}
                       >
-                        {user.is_active ? 'Active' : 'Inactive'}
+                        {user.is_active
+                          ? t('admin.users.stats.active')
+                          : t('admin.users.stats.inactive')}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-text-secondary">
@@ -691,7 +701,7 @@ export default function UserManagementPage() {
                             <button
                               onClick={() => handleEditUser(user)}
                               className="p-1.5 text-text-tertiary hover:text-monday-primary hover:bg-monday-primary/10 rounded"
-                              title="Edit user"
+                              title={t('admin.users.editUser')}
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
@@ -703,7 +713,11 @@ export default function UserManagementPage() {
                                   ? 'text-text-tertiary hover:text-color-error hover:bg-color-error/10'
                                   : 'text-text-tertiary hover:text-color-success hover:bg-color-success/10'
                               )}
-                              title={user.is_active ? 'Deactivate user' : 'Activate user'}
+                              title={
+                                user.is_active
+                                  ? t('admin.users.deactivateUser')
+                                  : t('admin.users.activateUser')
+                              }
                             >
                               {user.is_active ? (
                                 <UserX className="w-4 h-4" />
@@ -724,7 +738,7 @@ export default function UserManagementPage() {
 
         {/* Footer info */}
         <div className="mt-4 text-sm text-text-secondary">
-          Showing {filteredUsers.length} of {users.length} users
+          {t('admin.users.showingCount', { shown: filteredUsers.length, total: users.length })}
         </div>
       </div>
     </div>
