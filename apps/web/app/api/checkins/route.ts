@@ -4,7 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
-import { parseCoordinates, haversineMeters } from '@/lib/geo-utils'
+import {
+  parseCoordinates,
+  haversineMeters,
+  isWithinRadius,
+  CHECKIN_RADIUS_METERS,
+} from '@/lib/geo-utils'
 import { getEffectiveVisitTypes } from '@/features/boards/constants/checkin'
 
 const createCheckinSchema = z.object({
@@ -27,8 +32,6 @@ const checkoutSchema = z.object({
   lng: z.number().min(-180).max(180),
   accuracy: z.number().optional(),
 })
-
-const CHECKIN_RADIUS_METERS = 150
 
 export async function POST(request: NextRequest) {
   try {
@@ -111,7 +114,7 @@ export async function POST(request: NextRequest) {
             distanceFromLocation = Math.round(
               haversineMeters(validated.lat, validated.lng, targetCoords.lat, targetCoords.lng)
             )
-            if (distanceFromLocation > CHECKIN_RADIUS_METERS) {
+            if (!isWithinRadius(distanceFromLocation, validated.accuracy, CHECKIN_RADIUS_METERS)) {
               return NextResponse.json(
                 {
                   error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
@@ -138,7 +141,7 @@ export async function POST(request: NextRequest) {
           distanceFromLocation = Math.round(
             haversineMeters(validated.lat, validated.lng, loc.lat, loc.lng)
           )
-          if (distanceFromLocation > CHECKIN_RADIUS_METERS) {
+          if (!isWithinRadius(distanceFromLocation, validated.accuracy, CHECKIN_RADIUS_METERS)) {
             return NextResponse.json(
               {
                 error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე კომპანიის ლოკაციიდან. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
@@ -339,7 +342,11 @@ export async function PATCH(request: NextRequest) {
     const checkoutDistance = Math.round(
       haversineMeters(checkin.lat, checkin.lng, validated.lat, validated.lng)
     )
-    const locationMatch = checkoutDistance <= CHECKIN_RADIUS_METERS
+    const locationMatch = isWithinRadius(
+      checkoutDistance,
+      validated.accuracy,
+      CHECKIN_RADIUS_METERS
+    )
 
     const { data: updated, error: updateError } = await supabase
       .from('location_checkins')

@@ -197,6 +197,92 @@ describe('POST /api/checkins (check-in)', () => {
     expect(json.max_radius).toBe(150)
   })
 
+  // Company location ~200m north of validCheckinBody's lat/lng — used to exercise
+  // the distance-minus-accuracy boundary (GPS accuracy is forgiving slack).
+  const NEAR_LOCATION_LAT = validCheckinBody.lat + 0.0018 // ~200m away
+
+  function makeAcceptingLocationCheckinsHandler() {
+    const handler: any = {
+      select: vi.fn().mockImplementation(() => {
+        const innerChain: any = {}
+        const chainMethods = ['eq', 'is', 'limit', 'order', 'filter']
+        for (const m of chainMethods) {
+          innerChain[m] = vi.fn().mockReturnValue(innerChain)
+        }
+        innerChain.maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
+        innerChain.single = vi.fn().mockResolvedValue({ data: null, error: null })
+        innerChain.then = (resolve: any) =>
+          Promise.resolve({ data: null, error: null }).then(resolve)
+        return innerChain
+      }),
+      insert: vi.fn().mockImplementation(() => {
+        const insertChain: any = {}
+        insertChain.select = vi.fn().mockReturnValue(insertChain)
+        insertChain.single = vi.fn().mockResolvedValue({
+          data: {
+            id: 'new-checkin-id',
+            inspector_id: USER_ID,
+            company_id: COMPANY_ID,
+            company_location_id: LOCATION_ID,
+            created_at: new Date().toISOString(),
+            lat: validCheckinBody.lat,
+            lng: validCheckinBody.lng,
+          },
+          error: null,
+        })
+        return insertChain
+      }),
+    }
+    return handler
+  }
+
+  it('should return 201 when distance minus accuracy is within radius (indoor GPS slack)', async () => {
+    mockFromHandlers['user_roles'] = createChainableMock({ data: { role: 'officer' }, error: null })
+    mockFromHandlers['location_checkins'] = makeAcceptingLocationCheckinsHandler()
+    mockFromHandlers['company_locations'] = createChainableMock({
+      data: { lat: NEAR_LOCATION_LAT, lng: validCheckinBody.lng },
+      error: null,
+    })
+
+    // raw distance ~200m, accuracy 60 -> effective distance ~140m <= 150
+    const req = makeRequest('POST', { ...validCheckinBody, accuracy: 60 })
+    const res = await POST(req)
+
+    expect(res.status).toBe(201)
+  })
+
+  it('should return 201 exactly at the distance-minus-accuracy boundary (== 150)', async () => {
+    mockFromHandlers['user_roles'] = createChainableMock({ data: { role: 'officer' }, error: null })
+    mockFromHandlers['location_checkins'] = makeAcceptingLocationCheckinsHandler()
+    mockFromHandlers['company_locations'] = createChainableMock({
+      data: { lat: NEAR_LOCATION_LAT, lng: validCheckinBody.lng },
+      error: null,
+    })
+
+    // raw distance ~200m, accuracy 50 -> effective distance exactly 150m
+    const req = makeRequest('POST', { ...validCheckinBody, accuracy: 50 })
+    const res = await POST(req)
+
+    expect(res.status).toBe(201)
+  })
+
+  it('should return 422 when distance minus accuracy still exceeds radius', async () => {
+    mockFromHandlers['user_roles'] = createChainableMock({ data: { role: 'officer' }, error: null })
+    mockFromHandlers['location_checkins'] = createChainableMock({ data: null, error: null })
+    mockFromHandlers['company_locations'] = createChainableMock({
+      data: { lat: NEAR_LOCATION_LAT, lng: validCheckinBody.lng },
+      error: null,
+    })
+
+    // raw distance ~200m, accuracy 10 -> effective distance ~190m > 150
+    const req = makeRequest('POST', { ...validCheckinBody, accuracy: 10 })
+    const res = await POST(req)
+
+    expect(res.status).toBe(422)
+    const json = await res.json()
+    expect(json.distance).toBeDefined()
+  })
+
   it('should return 201 on successful check-in (location has no GPS)', async () => {
     mockFromHandlers['user_roles'] = createChainableMock({ data: { role: 'officer' }, error: null })
 

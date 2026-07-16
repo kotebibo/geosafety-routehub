@@ -25,7 +25,14 @@ import {
   useCheckout,
   useDeleteCheckin,
 } from '@/features/boards/hooks/useCheckinQueries'
-import { parseCoordinates, haversineMeters, formatDuration, formatElapsed } from '@/lib/geo-utils'
+import {
+  parseCoordinates,
+  haversineMeters,
+  formatDuration,
+  formatElapsed,
+  isWithinRadius,
+  CHECKIN_RADIUS_METERS,
+} from '@/lib/geo-utils'
 import { getEffectiveVisitTypes, OTHER_VISIT_TYPE } from '@/features/boards/constants/checkin'
 import {
   Select,
@@ -37,8 +44,6 @@ import {
 import { useToast } from '@/components/ui-monday/Toast'
 import type { BoardColumn } from '@/types/board'
 import type { LocationCheckin } from '@/types/checkin'
-
-const RADIUS_METERS = 150
 
 interface CheckinBottomSheetProps {
   itemId: string
@@ -117,7 +122,8 @@ export function CheckinBottomSheet({
     return Math.round(haversineMeters(coords.lat, coords.lng, targetCoords.lat, targetCoords.lng))
   }, [coords, targetCoords])
 
-  const withinRadius = distance !== null && distance <= RADIUS_METERS
+  const withinRadius =
+    distance !== null && isWithinRadius(distance, coords?.accuracy, CHECKIN_RADIUS_METERS)
   const canCheckin =
     coords &&
     (distance === null || withinRadius) &&
@@ -233,11 +239,13 @@ export function CheckinBottomSheet({
               >
                 {distance}
                 {t('checkin.meters')}
+                {coords?.accuracy != null &&
+                  ` (±${Math.round(coords.accuracy)}${t('checkin.meters')})`}
               </span>
               <span className={`text-xs ${withinRadius ? 'text-green-500' : 'text-red-500'}`}>
                 {withinRadius
-                  ? t('checkin.withinRadius', { radius: RADIUS_METERS })
-                  : t('checkin.outsideRadius', { radius: RADIUS_METERS })}
+                  ? t('checkin.withinRadius', { radius: CHECKIN_RADIUS_METERS })
+                  : t('checkin.outsideRadius', { radius: CHECKIN_RADIUS_METERS })}
               </span>
             </div>
           )}

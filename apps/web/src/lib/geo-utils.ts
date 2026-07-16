@@ -9,6 +9,20 @@ export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+export const CHECKIN_RADIUS_METERS = 150
+
+// GPS accuracy is a margin of error, not noise to ignore — a reading whose
+// accuracy radius overlaps the geofence should still be accepted, since the
+// device may simply be unable to pinpoint closer (common indoors).
+export function isWithinRadius(
+  distanceMeters: number,
+  accuracyMeters: number | null | undefined,
+  radiusMeters: number
+): boolean {
+  const effectiveDistance = distanceMeters - (accuracyMeters ?? 0)
+  return effectiveDistance <= radiusMeters
+}
+
 export function formatDuration(minutes: number, language: 'ka' | 'en' = 'ka'): string {
   const [hUnit, mUnit] = language === 'en' ? ['h', 'm'] : ['სთ', 'წთ']
   if (minutes < 60) return `${minutes}${mUnit}`
