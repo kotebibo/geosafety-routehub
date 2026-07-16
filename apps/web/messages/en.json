@@ -780,7 +780,8 @@
       "sourceEnded": "Ended",
       "dateFromTitle": "From date",
       "dateToTitle": "To date",
-      "groupByCompany": "Group by company"
+      "groupByCompany": "Group by company",
+      "groupLockedForUnpaid": "Grouping is required for the \"Unpaid\" filter"
     },
     "monthTabs": {
       "all": "All",

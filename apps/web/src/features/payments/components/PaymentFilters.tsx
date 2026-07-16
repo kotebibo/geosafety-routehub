@@ -137,14 +137,19 @@ export function PaymentFilters({
         )}
       </div>
 
-      {/* Group toggle */}
+      {/* Group toggle — locked on while "unpaid" is selected, since that
+          filter is a company-aggregate concept and has no flat-mode meaning */}
       <button
         onClick={onGroupByCompanyToggle}
+        disabled={statusFilter === 'unpaid'}
+        title={statusFilter === 'unpaid' ? t('payments.filters.groupLockedForUnpaid') : undefined}
         className={cn(
           'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors',
-          groupByCompany
-            ? 'bg-monday-primary/10 text-monday-primary border-monday-primary/30'
-            : 'bg-bg-primary text-text-secondary border-border-light hover:bg-bg-secondary'
+          statusFilter === 'unpaid'
+            ? 'bg-monday-primary/10 text-monday-primary border-monday-primary/30 opacity-60 cursor-not-allowed'
+            : groupByCompany
+              ? 'bg-monday-primary/10 text-monday-primary border-monday-primary/30'
+              : 'bg-bg-primary text-text-secondary border-border-light hover:bg-bg-secondary'
         )}
       >
         <Building2 className="w-3.5 h-3.5" />

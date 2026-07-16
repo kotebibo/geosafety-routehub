@@ -31,6 +31,13 @@ export function usePaymentFilters() {
     return () => clearTimeout(timer)
   }, [searchQuery])
 
+  // "Unpaid" is a company-aggregate concept (paid vs. expected over a
+  // period) — it only makes sense in grouped mode, so force grouping on
+  // whenever it's selected instead of silently showing unfiltered rows.
+  useEffect(() => {
+    if (statusFilter === 'unpaid') setGroupByCompany(true)
+  }, [statusFilter])
+
   // Compute date range from month selection or custom dates
   const effectiveDateRange = useMemo(() => {
     if (dateFrom || dateTo) {

@@ -780,7 +780,8 @@
       "sourceEnded": "შეწყვეტილი",
       "dateFromTitle": "თარიღიდან",
       "dateToTitle": "თარიღამდე",
-      "groupByCompany": "დაჯგუფება"
+      "groupByCompany": "დაჯგუფება",
+      "groupLockedForUnpaid": "დაჯგუფება სავალდებულოა \"გადაუხდელი\" ფილტრისთვის"
     },
     "monthTabs": {
       "all": "ყველა",
