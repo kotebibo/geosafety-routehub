@@ -177,8 +177,12 @@ export async function GET(request: NextRequest) {
       query = query.lte('entry_date', toDate)
     }
     if (search) {
+      // Escape PostgREST or()-filter syntax characters so search terms like
+      // "Ltd, Tbilisi" or "(Note)" don't break the filter parser or get
+      // interpreted as extra clauses.
+      const escapedSearch = search.replace(/[\\,()]/g, '\\$&')
       query = query.or(
-        `sender_name.ilike.%${search}%,sender_inn.ilike.%${search}%,purpose.ilike.%${search}%,doc_key.ilike.%${search}%`
+        `sender_name.ilike.%${escapedSearch}%,sender_inn.ilike.%${escapedSearch}%,purpose.ilike.%${escapedSearch}%,doc_key.ilike.%${escapedSearch}%`
       )
     }
 

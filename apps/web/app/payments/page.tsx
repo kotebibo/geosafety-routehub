@@ -60,6 +60,7 @@ export default function PaymentsPage() {
     selectedMonth: filters.selectedMonth,
     statusFilter: filters.statusFilter,
     matchSourceFilter: filters.matchSourceFilter,
+    searchQuery: filters.searchDebounced,
   })
 
   // Auth guard

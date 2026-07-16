@@ -15,6 +15,7 @@ interface UseGroupedTransactionsParams {
   selectedMonth: number | null
   statusFilter: string
   matchSourceFilter: string
+  searchQuery?: string
 }
 
 export function useGroupedTransactions({
@@ -27,6 +28,7 @@ export function useGroupedTransactions({
   selectedMonth,
   statusFilter,
   matchSourceFilter,
+  searchQuery,
 }: UseGroupedTransactionsParams) {
   const grouped = useMemo((): GroupedTransactions[] => {
     if (!groupByCompany) return []
@@ -66,8 +68,10 @@ export function useGroupedTransactions({
     }
 
     // Add active contracts with zero transactions in this period
-    // Show on "all" filter and "unpaid" filter
-    if (!contractsLoading && (!statusFilter || statusFilter === 'unpaid')) {
+    // Show on "all" filter and "unpaid" filter — but not while a text search
+    // is active, since these contracts have no matching transaction and
+    // would otherwise drown out real search results after sorting.
+    if (!searchQuery && !contractsLoading && (!statusFilter || statusFilter === 'unpaid')) {
       const paidTaxIds = new Set(Object.keys(groups))
       for (const [taxId, contractList] of Object.entries(contracts)) {
         if (paidTaxIds.has(taxId)) continue // already has transactions
@@ -130,6 +134,7 @@ export function useGroupedTransactions({
     selectedMonth,
     statusFilter,
     matchSourceFilter,
+    searchQuery,
   ])
 
   return { grouped }
