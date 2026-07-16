@@ -9,6 +9,8 @@ export interface DocumentTemplate {
   file_size?: number
   tags: string[]
   tag_mapping: Record<string, string>
+  email_subject_template?: string | null
+  email_body_template?: string | null
   is_active: boolean
   created_by: string
   created_at: string
@@ -41,6 +43,8 @@ export interface GenerateDocumentResponse {
   downloadUrl: string
   previewHtml: string
   fileName: string
+  emailSubject?: string | null
+  emailBody?: string | null
 }
 
 export interface SendDocumentInput {

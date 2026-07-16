@@ -72,6 +72,23 @@ const generateSchema = z.object({
   boardId: z.string().uuid(),
 })
 
+// Georgian months in genitive case ("ივლისის", not "ივლისი") — used for
+// phrasing like "ივლისის თვის მომსახურება". Irregular; no rule derives these.
+const GEORGIAN_MONTHS_GENITIVE = [
+  'იანვრის',
+  'თებერვლის',
+  'მარტის',
+  'აპრილის',
+  'მაისის',
+  'ივნისის',
+  'ივლისის',
+  'აგვისტოს',
+  'სექტემბრის',
+  'ოქტომბრის',
+  'ნოემბრის',
+  'დეკემბრის',
+]
+
 function resolveComputedField(fieldName: string, itemData: Record<string, any>): string {
   const computed = fieldName.replace('@computed:', '')
 
@@ -91,6 +108,9 @@ function resolveComputedField(fieldName: string, itemData: Record<string, any>):
     }
     case 'current_month': {
       return new Date().toLocaleDateString('ka-GE', { month: 'long' })
+    }
+    case 'current_month_genitive': {
+      return GEORGIAN_MONTHS_GENITIVE[new Date().getMonth()]
     }
     case 'current_date_iso': {
       return new Date().toISOString().split('T')[0]
@@ -168,6 +188,15 @@ function buildMergeData(
   }
 
   return mergeData
+}
+
+// Plain-text {{tag}} substitution for email subject/body templates — same
+// tag syntax as the docx templates, resolved against the same mergeData.
+function resolveTextTemplate(template: string, mergeData: Record<string, any>): string {
+  return template.replace(/\{\{([^}]+)\}\}/g, (_match, tagName) => {
+    const trimmed = tagName.trim()
+    return mergeData[trimmed] !== undefined ? String(mergeData[trimmed]) : ''
+  })
 }
 
 function generateDocx(templateBuffer: ArrayBuffer, mergeData: Record<string, any>): Buffer {
@@ -445,11 +474,20 @@ export async function POST(request: NextRequest) {
 
     if (insertError) throw insertError
 
+    const emailSubject = template.email_subject_template
+      ? resolveTextTemplate(template.email_subject_template, mergeData)
+      : null
+    const emailBody = template.email_body_template
+      ? resolveTextTemplate(template.email_body_template, mergeData)
+      : null
+
     return NextResponse.json({
       documentId: generatedDoc.id,
       downloadUrl: `/api/documents/download?id=${generatedDoc.id}`,
       previewHtml,
       fileName,
+      emailSubject,
+      emailBody,
     })
   } catch (error: any) {
     if (error.name === 'UnauthorizedError') {

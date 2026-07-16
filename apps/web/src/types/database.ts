@@ -1056,6 +1056,8 @@ export type Database = {
           created_at: string | null
           created_by: string
           description: string | null
+          email_body_template: string | null
+          email_subject_template: string | null
           file_name: string
           file_path: string
           file_size: number | null
@@ -1072,6 +1074,8 @@ export type Database = {
           created_at?: string | null
           created_by: string
           description?: string | null
+          email_body_template?: string | null
+          email_subject_template?: string | null
           file_name: string
           file_path: string
           file_size?: number | null
@@ -1088,6 +1092,8 @@ export type Database = {
           created_at?: string | null
           created_by?: string
           description?: string | null
+          email_body_template?: string | null
+          email_subject_template?: string | null
           file_name?: string
           file_path?: string
           file_size?: number | null

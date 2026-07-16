@@ -31,6 +31,7 @@ const RECIPIENT_COLUMN_TYPES = ['email', 'text']
 
 interface EmailStepProps {
   defaultSubject: string
+  defaultMessage?: string
   sending: boolean
   onSend: (to: string[], subject: string, message?: string) => void
   onSkip: () => void
@@ -40,6 +41,7 @@ interface EmailStepProps {
 
 export function EmailStep({
   defaultSubject,
+  defaultMessage = '',
   sending,
   onSend,
   onSkip,
@@ -62,7 +64,7 @@ export function EmailStep({
   )
   const [to, setTo] = useState('')
   const [subject, setSubject] = useState(defaultSubject)
-  const [message, setMessage] = useState('')
+  const [message, setMessage] = useState(defaultMessage)
   const [emailError, setEmailError] = useState('')
 
   const parsedFromColumn = useMemo(

@@ -274,7 +274,8 @@ export function GenerateDocumentModal({
 
           {step === 'email' && result && (
             <EmailStep
-              defaultSubject={`Document: ${result.fileName}`}
+              defaultSubject={result.emailSubject || `Document: ${result.fileName}`}
+              defaultMessage={result.emailBody || ''}
               sending={sending}
               onSend={handleSendEmail}
               onSkip={handleSkipEmail}
