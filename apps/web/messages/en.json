@@ -388,5 +388,24 @@
       "searchPlaceholder": "Search by inspector, service, company..."
     },
     "meters": "m"
+  },
+  "routing": {
+    "title": "Routing",
+    "subtitle": "Boards and companies ordered by visit deadlines",
+    "loading": "Loading...",
+    "noBoards": "No boards found",
+    "companiesCount": "{count} companies",
+    "overdueCount": "{count} overdue",
+    "daysLeft": "{days} days left",
+    "dueToday": "Due today",
+    "overdueDays": "Overdue by {days} days",
+    "neverVisited": "No visits yet",
+    "activeNow": "Active visit",
+    "lastVisit": "Last visit: {date}",
+    "emptyBoard": "No companies on this board",
+    "showMore": "Show more ({count})",
+    "sharedWithMe": "Shared with me",
+    "openMap": "Open map",
+    "openInBoard": "Open in board"
   }
 }

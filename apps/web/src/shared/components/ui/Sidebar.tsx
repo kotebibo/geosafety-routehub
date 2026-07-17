@@ -51,6 +51,7 @@ import {
   Bot,
   Activity,
   ClipboardCheck,
+  Waypoints,
 } from 'lucide-react'
 import {
   DndContext,
@@ -848,6 +849,15 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       labelEn: 'Route Builder',
       icon: MapIcon,
       permission: 'pages:route_builder',
+    },
+    {
+      href: '/routing',
+      label: 'მარშრუტიზაცია',
+      labelEn: 'Routing',
+      icon: Waypoints,
+      // TODO: switch to a dedicated pages:routing permission once the
+      // page-permissions migration lands on all three instances
+      permission: 'pages:routes',
     },
     {
       href: '/admin/assignments',

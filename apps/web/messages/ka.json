@@ -388,5 +388,24 @@
       "searchPlaceholder": "ძებნა ინსპექტორის, სერვისის, კომპანიის მიხედვით..."
     },
     "meters": "მ"
+  },
+  "routing": {
+    "title": "მარშრუტიზაცია",
+    "subtitle": "დაფები და კომპანიები ვიზიტის ვადების მიხედვით",
+    "loading": "იტვირთება...",
+    "noBoards": "დაფები ვერ მოიძებნა",
+    "companiesCount": "{count} კომპანია",
+    "overdueCount": "{count} ვადაგადაცილებული",
+    "daysLeft": "დარჩა {days} დღე",
+    "dueToday": "ვადა დღეს იწურება",
+    "overdueDays": "ვადაგადაცილებულია {days} დღით",
+    "neverVisited": "ვიზიტი არ ყოფილა",
+    "activeNow": "მიმდინარე ვიზიტი",
+    "lastVisit": "ბოლო ვიზიტი: {date}",
+    "emptyBoard": "ამ დაფაზე კომპანიები არ არის",
+    "showMore": "მეტის ჩვენება ({count})",
+    "sharedWithMe": "Shared with me",
+    "openMap": "რუკაზე ნახვა",
+    "openInBoard": "დაფაზე გახსნა"
   }
 }
