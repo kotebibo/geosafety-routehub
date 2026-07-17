@@ -9,6 +9,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
+import { LocationsMapSkeleton } from '@/features/locations/components/LocationsMapSkeleton'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import {
   Select,
   SelectTrigger,
@@ -27,12 +29,11 @@ const LocationsMap = dynamic(
 )
 
 function MapLoadingFallback() {
-  const t = useTranslations()
   return (
-    <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
-      <div className="text-center">
-        <div className="animate-spin text-4xl mb-2">🗺️</div>
-        <p className="text-text-secondary">{t('locations.mapLoading')}</p>
+    <div className="w-full h-full relative bg-bg-secondary">
+      <Skeleton variant="rect" className="absolute inset-0 h-full w-full rounded-none" />
+      <div className="absolute top-4 left-4">
+        <Skeleton variant="bar" className="h-8 w-40" />
       </div>
     </div>
   )
@@ -558,14 +559,7 @@ export default function LocationsMapPage() {
   })
 
   if (loading) {
-    return (
-      <div className="h-[calc(100vh-64px)] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin text-6xl mb-4">⏳</div>
-          <p className="text-xl text-text-secondary">{t('locations.dataLoading')}</p>
-        </div>
-      </div>
-    )
+    return <LocationsMapSkeleton />
   }
 
   return (

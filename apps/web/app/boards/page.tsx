@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useUserBoards } from '@/features/boards/hooks'
 import { Button } from '@/shared/components/ui'
 import { CreateBoardModal, BoardAccessModal } from '@/features/boards/components'
+import { BoardsListSkeleton } from '@/features/boards/components/BoardsListSkeleton'
 import { Plus, MoreHorizontal, Trash2, Copy, ExternalLink, Users, Folder, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Board } from '@/features/boards/types/board'
@@ -90,14 +91,7 @@ export default function BoardsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">{t('boards.list.loading')}</span>
-        </div>
-      </div>
-    )
+    return <BoardsListSkeleton />
   }
 
   return (

@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader } from '@/shared/components/ui/PageHeader'
+import { CheckinsSkeleton } from '@/features/admin/components/CheckinsSkeleton'
 import { createClient } from '@/lib/supabase'
 import {
   MapPinned,
@@ -179,11 +180,7 @@ export default function AdminCheckinsPage() {
   }
 
   if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-screen">
-        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
-      </div>
-    )
+    return <CheckinsSkeleton />
   }
 
   const visibleCheckins = search.trim()

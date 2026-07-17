@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useAnnouncements } from '@/hooks/useAnnouncements'
 import { useToast } from '@/components/ui-monday/Toast'
 import { PageHeader } from '@/shared/components/ui/PageHeader'
+import { NewsSkeleton } from '@/features/news/components/NewsSkeleton'
 import {
   AnnouncementCard,
   AnnouncementDetailModal,
@@ -48,39 +49,7 @@ export default function NewsPage() {
 
   // Loading skeleton
   if (authLoading || isLoading) {
-    return (
-      <div className="min-h-screen bg-bg-secondary">
-        <div className="bg-bg-primary border-b">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="animate-pulse">
-              <div className="h-7 w-64 bg-bg-tertiary rounded mb-2" />
-              <div className="h-4 w-96 bg-bg-tertiary rounded" />
-            </div>
-          </div>
-        </div>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-4">
-          {[1, 2, 3].map(i => (
-            <div
-              key={i}
-              className="animate-pulse bg-bg-primary rounded-xl border border-border-light p-5"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-10 h-10 bg-bg-tertiary rounded-lg" />
-                <div className="flex-1">
-                  <div className="h-5 w-48 bg-bg-tertiary rounded mb-2" />
-                  <div className="h-4 w-full bg-bg-tertiary rounded mb-1" />
-                  <div className="h-4 w-2/3 bg-bg-tertiary rounded" />
-                  <div className="flex gap-4 mt-3">
-                    <div className="h-3 w-24 bg-bg-tertiary rounded" />
-                    <div className="h-3 w-20 bg-bg-tertiary rounded" />
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
+    return <NewsSkeleton />
   }
 
   return (

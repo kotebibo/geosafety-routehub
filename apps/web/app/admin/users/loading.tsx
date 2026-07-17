@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/shared/components/feedback'
+import { AdminUsersSkeleton } from '@/features/admin/components/AdminUsersSkeleton'
 
 export default function UsersLoading() {
-  return <PageSkeleton variant="table" rows={8} />
+  return <AdminUsersSkeleton />
 }

@@ -14,6 +14,7 @@ import {
   Navigation,
   LayoutDashboard,
 } from 'lucide-react'
+import { HomeSkeleton } from '@/features/home/components/HomeSkeleton'
 
 export default function HomePage() {
   const { user, userRole, loading } = useAuth()
@@ -25,17 +26,7 @@ export default function HomePage() {
   }, [])
 
   if (loading || !mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-bg-secondary via-bg-secondary to-bg-tertiary">
-        <div className="text-center">
-          <div className="relative">
-            <div className="w-24 h-24 border-4 border-monday-primary/20 rounded-full animate-pulse"></div>
-            <div className="absolute inset-0 w-24 h-24 border-4 border-monday-primary rounded-full animate-spin border-t-transparent"></div>
-          </div>
-          <p className="mt-4 text-text-secondary animate-pulse">{t('common.loading')}</p>
-        </div>
-      </div>
-    )
+    return <HomeSkeleton />
   }
 
   const isAdmin = userRole?.role === 'admin'

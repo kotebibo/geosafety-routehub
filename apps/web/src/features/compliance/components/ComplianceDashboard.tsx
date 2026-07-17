@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl'
 import { CheckCircle, Clock, AlertCircle, Calendar, Search, Filter } from 'lucide-react'
 import { PDPComplianceOverview } from '@/types/compliance'
 import { complianceService } from '@/services/compliance.service'
+import { CompaniesPdpListSkeleton } from './CompaniesPdpListSkeleton'
 
 export function ComplianceDashboard() {
   const t = useTranslations()
@@ -81,11 +82,7 @@ export function ComplianceDashboard() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin text-4xl">⏳</div>
-      </div>
-    )
+    return <CompaniesPdpListSkeleton />
   }
 
   return (

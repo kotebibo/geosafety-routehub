@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/shared/components/feedback'
+import { InspectorsListSkeleton } from '@/features/inspectors/components/InspectorsListSkeleton'
 
 export default function InspectorsLoading() {
-  return <PageSkeleton variant="table" rows={8} />
+  return <InspectorsListSkeleton />
 }

@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase/client'
 import { useAuth } from '@/contexts/AuthContext'
-import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
+import { PageHeader, StatCard, EmptyState } from '@/shared/components/ui'
+import { InspectorRoutesSkeleton } from '@/features/inspector/components/InspectorRoutesSkeleton'
 import { Calendar, Clock, MapPin, Route as RouteIcon } from 'lucide-react'
 
 interface Route {
@@ -51,7 +52,7 @@ export default function InspectorRoutesPage() {
   }
 
   if (authLoading || loading) {
-    return <LoadingSpinner message={t('inspectorRoutes.loading')} />
+    return <InspectorRoutesSkeleton />
   }
 
   const plannedRoutes = routes.filter(r => r.status === 'planned')

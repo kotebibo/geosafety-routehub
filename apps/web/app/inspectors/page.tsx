@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
+import { PageHeader, StatCard, EmptyState } from '@/shared/components/ui'
 import { InspectorTable } from '@/features/inspectors/components'
+import { InspectorsListSkeleton } from '@/features/inspectors/components/InspectorsListSkeleton'
 import { useInspectors } from '@/features/inspectors/hooks'
 import { Users, UserCheck, UserX, Plus } from 'lucide-react'
 
@@ -13,7 +14,7 @@ export default function InspectorsPage() {
   const { inspectors, loading, error, deleteInspector, updateInspectorStatus } = useInspectors()
 
   if (loading) {
-    return <LoadingSpinner message={t('inspectors.list.loading')} />
+    return <InspectorsListSkeleton />
   }
 
   if (error) {

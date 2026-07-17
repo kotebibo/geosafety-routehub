@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { MobileTrackingView } from '@/features/tracking/components/MobileTrackingView'
-import { RefreshCw, Navigation } from 'lucide-react'
+import { InspectorTrackingSkeleton } from '@/features/inspector/components/InspectorTrackingSkeleton'
+import { Navigation } from 'lucide-react'
 
 export default function InspectorTrackingPage() {
   const { user, userRole, loading: authLoading } = useAuth()
@@ -25,11 +26,7 @@ export default function InspectorTrackingPage() {
   }, [authLoading, isAllowed, router])
 
   if (authLoading || inspectorLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-screen">
-        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
-      </div>
-    )
+    return <InspectorTrackingSkeleton />
   }
 
   if (!inspectorId) {

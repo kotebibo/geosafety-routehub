@@ -425,7 +425,6 @@
   },
   "routes": {
     "builder": {
-      "mapLoading": "რუკის ჩატვირთვა...",
       "selectAtLeastTwo": "აირჩიეთ მინიმუმ 2 კომპანია",
       "pleaseAuthenticate": "გთხოვთ გაიაროთ ავტორიზაცია",
       "optimizationFailed": "ოპტიმიზაცია ვერ მოხერხდა",
@@ -1869,7 +1868,6 @@
     "view": "ნახვა"
   },
   "locations": {
-    "mapLoading": "რუკის ჩატვირთვა...",
     "dataLoading": "მონაცემების ჩატვირთვა...",
     "pageTitle": "ყველა ლოკაცია",
     "pageDescription": "ობიექტების რუკა ფილტრებით",

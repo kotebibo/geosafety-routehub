@@ -20,6 +20,7 @@ import {
   useWorkspacePermissions,
 } from '@/features/workspaces/hooks'
 import { Button } from '@/shared/components/ui'
+import { WorkspaceSettingsSkeleton } from '@/features/workspaces/components/WorkspaceSettingsSkeleton'
 import {
   Select,
   SelectTrigger,
@@ -180,14 +181,7 @@ export default function WorkspaceSettingsPage() {
   )
 
   if (workspaceLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">{t('workspaces.settings.loading')}</span>
-        </div>
-      </div>
-    )
+    return <WorkspaceSettingsSkeleton />
   }
 
   if (!workspace) {

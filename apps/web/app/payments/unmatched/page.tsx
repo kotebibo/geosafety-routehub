@@ -17,6 +17,7 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { UnmatchedPaymentsSkeleton } from '@/features/payments/components/UnmatchedPaymentsSkeleton'
 
 // Temporary matching company structure
 interface SearchedCompany {
@@ -187,11 +188,7 @@ export default function UnmatchedPaymentsPage() {
   }
 
   if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-monday-primary" />
-      </div>
-    )
+    return <UnmatchedPaymentsSkeleton />
   }
 
   return (
@@ -214,8 +211,10 @@ export default function UnmatchedPaymentsPage() {
 
       {/* Transaction Cards */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-monday-primary" />
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="skeleton rounded-lg h-16 border border-border-light" />
+          ))}
         </div>
       ) : transactions.length === 0 ? (
         <div className="text-center py-16">

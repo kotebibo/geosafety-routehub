@@ -14,6 +14,8 @@ import {
 } from '@/features/workspaces/hooks'
 import { CreateBoardModal } from '@/features/boards/components'
 import { Button } from '@/shared/components/ui'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
+import { WorkspaceDetailSkeleton } from '@/features/workspaces/components/WorkspaceDetailSkeleton'
 import {
   Plus,
   MoreHorizontal,
@@ -80,14 +82,7 @@ export default function WorkspaceDetailPage() {
   }
 
   if (workspaceLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">{t('workspaces.detail.loading')}</span>
-        </div>
-      </div>
-    )
+    return <WorkspaceDetailSkeleton />
   }
 
   if (!workspace) {
@@ -161,9 +156,20 @@ export default function WorkspaceDetailPage() {
           </h2>
 
           {activeBoardsLoading ? (
-            <div className="flex items-center gap-3 py-8">
-              <div className="w-6 h-6 border-3 border-monday-primary border-t-transparent rounded-full animate-spin" />
-              <span className="text-text-secondary">{t('workspaces.detail.loadingBoards')}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-44 rounded-lg overflow-hidden bg-bg-primary border border-border-light"
+                >
+                  <Skeleton className="h-2 w-full rounded-none" />
+                  <div className="p-5 space-y-3">
+                    <Skeleton variant="bar" className="h-5 w-3/4" />
+                    <Skeleton variant="bar" className="h-3 w-full" />
+                    <Skeleton variant="bar" className="h-3 w-2/3" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : activeBoards && activeBoards.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

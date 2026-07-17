@@ -3,7 +3,7 @@
 import { useMemo, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { PageHeader, LoadingSpinner, StatCard, EmptyState, DataTable } from '@/shared/components/ui'
+import { PageHeader, StatCard, EmptyState, DataTable } from '@/shared/components/ui'
 import { ComponentErrorBoundary } from '@/shared/components/feedback'
 import {
   Select,

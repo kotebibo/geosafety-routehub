@@ -19,6 +19,7 @@ import { CompanyInfoCard } from './components/CompanyInfoCard'
 import { LocationsCard } from './components/LocationsCard'
 import { ServicesCard } from './components/ServicesCard'
 import { CheckinsCard } from './components/CheckinsCard'
+import { CompanyDetailSkeleton } from '@/features/companies/components/CompanyDetailSkeleton'
 
 interface Company {
   id: string
@@ -223,25 +224,7 @@ export default function CompanyDetailsPage() {
 
   // Loading skeleton
   if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-6 py-8 animate-pulse">
-        <div className="h-5 w-20 bg-bg-tertiary rounded mb-6" />
-        <div className="flex items-start gap-6 mb-8">
-          <div className="w-14 h-14 bg-bg-tertiary rounded-xl" />
-          <div className="flex-1">
-            <div className="h-7 w-64 bg-bg-tertiary rounded mb-2" />
-            <div className="h-4 w-40 bg-bg-tertiary rounded" />
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-bg-tertiary rounded-xl" />
-          ))}
-        </div>
-        <div className="h-64 bg-bg-tertiary rounded-xl mb-6" />
-        <div className="h-48 bg-bg-tertiary rounded-xl" />
-      </div>
-    )
+    return <CompanyDetailSkeleton />
   }
 
   if (!company) {

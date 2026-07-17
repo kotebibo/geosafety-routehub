@@ -23,6 +23,7 @@ import {
 import { RolesList } from './components/RolesList'
 import { RoleEditor } from './components/RoleEditor'
 import { DeleteRoleModal } from './components/DeleteRoleModal'
+import { RolesSkeleton } from '@/features/admin/components/RolesSkeleton'
 
 const ROLE_COLORS = [
   '#ef4444',
@@ -264,11 +265,7 @@ export default function RoleManagementPage() {
   }
 
   if (authLoading || !isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
+    return <RolesSkeleton />
   }
 
   return (

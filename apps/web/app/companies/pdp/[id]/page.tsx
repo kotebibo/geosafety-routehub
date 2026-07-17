@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowLeft, Building2, MapPin, Phone, Mail, User } from 'lucide-react'
 import { PhaseProgressTracker } from '@/features/compliance'
 import { companiesService } from '@/features/companies/services'
+import { CompanyPdpDetailSkeleton } from '@/features/companies/components/CompanyPdpDetailSkeleton'
 
 interface Company {
   id: string
@@ -44,11 +45,7 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-bg-secondary flex items-center justify-center">
-        <div className="animate-spin text-4xl">⏳</div>
-      </div>
-    )
+    return <CompanyPdpDetailSkeleton />
   }
 
   if (!company) {

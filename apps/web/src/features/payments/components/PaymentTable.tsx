@@ -3,6 +3,7 @@ import { Banknote, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import type { BankTransaction, ContractInfo } from '@/services/payments.service'
 
 import { formatAmount } from '../helpers'
@@ -107,12 +108,29 @@ export function PaymentTable({
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={7} className="text-center py-16">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-monday-primary mx-auto" />
-                  <p className="text-xs text-text-tertiary mt-2">{t('payments.table.loading')}</p>
-                </td>
-              </tr>
+              Array.from({ length: 8 }).map((_, i) => (
+                <tr key={i} className="border-b border-border-light">
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-3/4" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-full ml-auto" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-full ml-auto" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-full ml-auto" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-2/3" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton className="h-4 w-12 rounded-full" />
+                  </td>
+                  <td className="px-4 py-2.5" />
+                </tr>
+              ))
             ) : transactions.length === 0 && grouped.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-16">

@@ -10,6 +10,7 @@ import { useTranslations } from 'next-intl'
 import { CheckCircle, Circle, Clock, Calendar, FileText } from 'lucide-react'
 import { COMPLIANCE_PHASES, PDPCompliancePhase } from '@/types/compliance'
 import { complianceService } from '@/services/compliance.service'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 
 interface PhaseProgressTrackerProps {
   companyId: string
@@ -50,8 +51,27 @@ export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTr
   if (loading) {
     return (
       <div className="bg-bg-primary rounded-lg shadow p-6">
-        <div className="flex items-center justify-center h-40">
-          <div className="animate-spin text-4xl">⏳</div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <Skeleton variant="bar" className="h-5 w-40 mb-2" />
+            <Skeleton variant="bar" className="h-3 w-24" />
+          </div>
+          <div className="text-right">
+            <Skeleton variant="bar" className="h-6 w-12 mb-2 ml-auto" />
+            <Skeleton variant="bar" className="h-3 w-16 ml-auto" />
+          </div>
+        </div>
+        <Skeleton className="h-2 w-full rounded-full mb-4" />
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton variant="circle" className="w-12 h-12 flex-shrink-0" />
+              <div className="flex-1">
+                <Skeleton variant="bar" className="h-4 w-1/2 mb-2" />
+                <Skeleton variant="bar" className="h-3 w-3/4" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     )

@@ -18,6 +18,7 @@ import {
   SelectContent,
   SelectItem,
 } from '@/shared/components/ui/select'
+import { ServiceTypesSkeleton } from '@/features/admin/components/ServiceTypesSkeleton'
 
 interface ServiceType {
   id: string
@@ -161,11 +162,7 @@ export default function ServiceTypesPage() {
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">{t('admin.serviceTypes.loading')}</div>
-      </div>
-    )
+    return <ServiceTypesSkeleton />
   }
 
   return (

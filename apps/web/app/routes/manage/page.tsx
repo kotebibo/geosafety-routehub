@@ -2,9 +2,10 @@
 
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { PageHeader, LoadingSpinner, StatCard, EmptyState } from '@/shared/components/ui'
+import { PageHeader, StatCard, EmptyState } from '@/shared/components/ui'
 import { ComponentErrorBoundary } from '@/shared/components/feedback'
 import { RoutesTable } from '@/features/routes/components'
+import { RoutesManageSkeleton } from '@/features/routes/components/RoutesManageSkeleton'
 import { useRoutes } from '@/features/routes/hooks'
 import { Route as RouteIcon, Calendar, CheckCircle, Plus } from 'lucide-react'
 
@@ -14,7 +15,7 @@ export default function RoutesManagePage() {
   const { routes, inspectors, loading, error, deleteRoute, reassignRoute } = useRoutes()
 
   if (loading) {
-    return <LoadingSpinner message={t('routes.manage.loading')} />
+    return <RoutesManageSkeleton />
   }
 
   if (error) {

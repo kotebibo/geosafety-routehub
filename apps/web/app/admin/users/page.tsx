@@ -32,6 +32,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui-monday/Toast'
+import { AdminUsersSkeleton } from '@/features/admin/components/AdminUsersSkeleton'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import {
   Select,
   SelectTrigger,
@@ -249,11 +251,7 @@ export default function UserManagementPage() {
   }
 
   if (authLoading || !isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    )
+    return <AdminUsersSkeleton />
   }
 
   return (
@@ -548,9 +546,57 @@ export default function UserManagementPage() {
         {/* Users Table */}
         <div className="bg-bg-primary rounded-lg border border-border-light overflow-hidden">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-            </div>
+            <table className="w-full">
+              <thead className="bg-bg-secondary border-b border-border-light">
+                <tr>
+                  <th className="text-left px-6 py-3">
+                    <Skeleton variant="bar" className="h-3 w-16" />
+                  </th>
+                  <th className="text-left px-6 py-3">
+                    <Skeleton variant="bar" className="h-3 w-12" />
+                  </th>
+                  <th className="text-left px-6 py-3">
+                    <Skeleton variant="bar" className="h-3 w-16" />
+                  </th>
+                  <th className="text-left px-6 py-3">
+                    <Skeleton variant="bar" className="h-3 w-16" />
+                  </th>
+                  <th className="text-right px-6 py-3">
+                    <Skeleton variant="bar" className="h-3 w-16 ml-auto" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-light">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton variant="circle" className="w-10 h-10" />
+                        <div className="space-y-2">
+                          <Skeleton variant="bar" className="h-4 w-32" />
+                          <Skeleton variant="bar" className="h-3 w-40" />
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-5 w-20 rounded-full" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton className="h-5 w-16 rounded-full" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <Skeleton variant="bar" className="h-4 w-24" />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-end gap-2">
+                        <Skeleton className="w-7 h-7" />
+                        <Skeleton className="w-7 h-7" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : filteredUsers.length === 0 ? (
             <div className="text-center py-12">
               <Users className="w-12 h-12 text-text-disabled mx-auto mb-4" />

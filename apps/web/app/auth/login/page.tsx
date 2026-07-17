@@ -7,16 +7,11 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase'
 import { LogIn, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
+import { AuthSkeleton } from '@/features/auth/components/AuthSkeleton'
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-bg-secondary">
-          <div className="animate-spin text-4xl">⚙️</div>
-        </div>
-      }
-    >
+    <Suspense fallback={<AuthSkeleton />}>
       <LoginForm />
     </Suspense>
   )

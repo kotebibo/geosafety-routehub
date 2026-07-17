@@ -10,6 +10,7 @@ import {
   useUpdateMyWorkItemDate,
 } from '../hooks/useMyWork'
 import { MyWorkDateGroup } from './MyWorkDateGroup'
+import { MyWorkSkeleton } from './MyWorkSkeleton'
 import type { DateGroup } from '../hooks/useMyWork'
 
 const DATE_GROUP_ORDER: DateGroup[] = [
@@ -40,6 +41,10 @@ export function MyWorkPage() {
     updateDate.mutate({ itemId, dateColumnId, date })
   }
 
+  if (loading) {
+    return <MyWorkSkeleton />
+  }
+
   return (
     <div className="flex-1 min-h-0 overflow-auto">
       <div className="max-w-5xl mx-auto px-6 py-6">
@@ -51,24 +56,15 @@ export function MyWorkPage() {
           <div>
             <h1 className="text-xl font-bold text-text-primary">{t('myWork.title')}</h1>
             <p className="text-sm text-text-secondary">
-              {loading
-                ? t('myWork.loading')
-                : totalItems === 0
-                  ? t('myWork.noItems')
-                  : t('myWork.itemsCount', {
-                      count: totalItems,
-                      plural: totalItems !== 1 ? 's' : '',
-                    })}
+              {totalItems === 0
+                ? t('myWork.noItems')
+                : t('myWork.itemsCount', {
+                    count: totalItems,
+                    plural: totalItems !== 1 ? 's' : '',
+                  })}
             </p>
           </div>
         </div>
-
-        {/* Loading state */}
-        {loading && (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-text-tertiary animate-spin" />
-          </div>
-        )}
 
         {/* Empty state */}
         {!loading && totalItems === 0 && (

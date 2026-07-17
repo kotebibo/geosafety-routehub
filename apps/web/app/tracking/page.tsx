@@ -8,7 +8,7 @@ import { useTracking } from '@/features/tracking/hooks/useTracking'
 import { TrackingMap } from '@/features/tracking/components/TrackingMap'
 import { InspectorTrackingPanel } from '@/features/tracking/components/InspectorTrackingPanel'
 import { trackingService } from '@/services/tracking.service'
-import { RefreshCw } from 'lucide-react'
+import { TrackingSkeleton } from '@/features/tracking/components/TrackingSkeleton'
 
 export default function TrackingPage() {
   const t = useTranslations()
@@ -41,11 +41,7 @@ export default function TrackingPage() {
   }, [selectedInspectorId])
 
   if (authLoading || !isAllowed) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
-      </div>
-    )
+    return <TrackingSkeleton />
   }
 
   return (

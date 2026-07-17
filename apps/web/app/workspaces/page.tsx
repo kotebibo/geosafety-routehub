@@ -11,6 +11,7 @@ import {
   useUpdateWorkspace,
 } from '@/features/workspaces/hooks'
 import { CreateWorkspaceModal } from '@/features/workspaces/components'
+import { WorkspacesListSkeleton } from '@/features/workspaces/components/WorkspacesListSkeleton'
 import { Button } from '@/shared/components/ui'
 import {
   Plus,
@@ -102,14 +103,7 @@ export default function WorkspacesPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">{t('workspaces.list.loading')}</span>
-        </div>
-      </div>
-    )
+    return <WorkspacesListSkeleton />
   }
 
   return (

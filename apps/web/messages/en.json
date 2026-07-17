@@ -425,7 +425,6 @@
   },
   "routes": {
     "builder": {
-      "mapLoading": "Loading map...",
       "selectAtLeastTwo": "Select at least 2 companies",
       "pleaseAuthenticate": "Please sign in",
       "optimizationFailed": "Optimization failed",
@@ -1869,7 +1868,6 @@
     "view": "View"
   },
   "locations": {
-    "mapLoading": "Loading map...",
     "dataLoading": "Loading data...",
     "pageTitle": "All Locations",
     "pageDescription": "Map of facilities with filters",

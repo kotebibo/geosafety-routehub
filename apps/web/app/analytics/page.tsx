@@ -24,7 +24,7 @@ import {
   RevenueForecastChart,
   CumulativeLossChart,
 } from '@/features/analytics/components/charts'
-import { RefreshCw } from 'lucide-react'
+import { AnalyticsSkeleton } from '@/features/analytics/components/AnalyticsSkeleton'
 
 type Tab = 'finance' | 'inspectors' | 'companies' | 'forecast'
 
@@ -52,11 +52,7 @@ export default function AnalyticsPage() {
   }, [authLoading, isAllowed, router])
 
   if (authLoading || !isAllowed) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
-      </div>
-    )
+    return <AnalyticsSkeleton />
   }
 
   return (

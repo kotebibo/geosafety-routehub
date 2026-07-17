@@ -10,14 +10,14 @@ import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 import { SaveRouteModal } from '@/features/routes/components/SaveRouteModal'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 
 function MapLoading() {
-  const t = useTranslations()
   return (
-    <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
-      <div className="text-center">
-        <div className="animate-spin text-4xl mb-2">🗺️</div>
-        <p className="text-text-secondary">{t('routes.builder.mapLoading')}</p>
+    <div className="w-full h-full relative bg-bg-secondary">
+      <Skeleton variant="rect" className="absolute inset-0 h-full w-full rounded-none" />
+      <div className="absolute top-4 left-4">
+        <Skeleton variant="bar" className="h-8 w-40" />
       </div>
     </div>
   )

@@ -17,6 +17,7 @@ import {
   ChevronUp,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ChatSkeleton } from '@/features/chat/components/ChatSkeleton'
 import type { UIMessage } from 'ai'
 
 const SUGGESTED_QUESTION_KEYS = [
@@ -138,11 +139,7 @@ export default function ChatPage() {
   }
 
   if (authLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-      </div>
-    )
+    return <ChatSkeleton />
   }
 
   return (

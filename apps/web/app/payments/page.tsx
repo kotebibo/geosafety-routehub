@@ -20,6 +20,7 @@ import {
   useGroupedTransactions,
 } from '@/features/payments/hooks'
 import { exportTransactionsCSV } from '@/features/payments/helpers'
+import { PaymentsListSkeleton } from '@/features/payments/components/PaymentsListSkeleton'
 
 export default function PaymentsPage() {
   const router = useRouter()
@@ -71,11 +72,7 @@ export default function PaymentsPage() {
   }, [authLoading, isAdmin, isDispatcher, router])
 
   if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-monday-primary" />
-      </div>
-    )
+    return <PaymentsListSkeleton />
   }
 
   const totalPages = filters.groupByCompany ? 1 : Math.ceil(data.total / filters.limit)

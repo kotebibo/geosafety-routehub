@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/shared/components/feedback'
+import { LocationsMapSkeleton } from '@/features/locations/components/LocationsMapSkeleton'
 
 export default function LocationsLoading() {
-  return <PageSkeleton variant="table" rows={10} />
+  return <LocationsMapSkeleton />
 }

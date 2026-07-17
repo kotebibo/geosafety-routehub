@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCoordinateItems } from '@/features/coordinates-map/hooks/useCoordinateItems'
 import { CoordinatesFilterPanel } from '@/features/coordinates-map/components/CoordinatesFilterPanel'
+import { CoordinatesMapSkeleton } from '@/features/coordinates-map/components/CoordinatesMapSkeleton'
 import { RefreshCw, MapPin, GitCompareArrows } from 'lucide-react'
 
 const CoordinatesMap = dynamic(
@@ -65,11 +66,7 @@ export default function CoordinatesMapPage() {
   }, [authLoading, isAllowed, router])
 
   if (authLoading || !isAllowed) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
-      </div>
-    )
+    return <CoordinatesMapSkeleton />
   }
 
   return (

@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/shared/components/feedback'
+import { CompaniesListSkeleton } from '@/features/companies/components/CompaniesListSkeleton'
 
 export default function CompaniesLoading() {
-  return <PageSkeleton variant="table" rows={10} />
+  return <CompaniesListSkeleton />
 }

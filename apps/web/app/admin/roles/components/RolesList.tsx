@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { Shield, Lock, Users, Copy, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import type { CustomRole } from '@/services/users.service'
 
 interface RoleStats {
@@ -42,8 +43,24 @@ export function RolesList({
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-6 h-6 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
+        <div className="divide-y divide-border-light">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="px-4 py-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Skeleton variant="circle" className="w-4 h-4" />
+                  <div className="space-y-2">
+                    <Skeleton variant="bar" className="h-4 w-32" />
+                    <Skeleton variant="bar" className="h-3 w-20" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Skeleton className="w-6 h-6" />
+                  <Skeleton className="w-6 h-6" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : roles.length === 0 ? (
         <div className="px-4 py-8 text-center">

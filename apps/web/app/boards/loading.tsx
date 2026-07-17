@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/shared/components/feedback'
+import { BoardsListSkeleton } from '@/features/boards/components/BoardsListSkeleton'
 
 export default function BoardsLoading() {
-  return <PageSkeleton variant="table" rows={6} />
+  return <BoardsListSkeleton />
 }

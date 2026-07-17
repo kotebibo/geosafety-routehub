@@ -23,6 +23,7 @@ import {
   type VirtualRow,
 } from '../../utils/flattenGroupsForVirtualization'
 import { Tooltip } from '@/shared/components/ui/tooltip'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import { SubitemRow } from './SubitemRow'
 import type {
   BoardColumn,
@@ -1507,8 +1508,29 @@ export function VirtualizedBoardTable({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500" />
+      <div className={containerClassName || 'h-full'}>
+        <div className="border border-border-light rounded-lg bg-bg-primary overflow-hidden">
+          <div className="flex items-center h-9 border-b border-border-light px-3 gap-4">
+            <Skeleton variant="bar" className="h-3 w-4" />
+            <Skeleton variant="bar" className="h-3 w-32" />
+            <Skeleton variant="bar" className="h-3 w-24" />
+            <Skeleton variant="bar" className="h-3 w-20" />
+            <Skeleton variant="bar" className="h-3 w-24" />
+          </div>
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className="flex items-center h-9 border-b border-border-light px-3 gap-4">
+              <Skeleton variant="bar" className="h-3 w-4" />
+              <Skeleton
+                variant="bar"
+                className="h-3"
+                style={{ width: `${140 + (i % 3) * 30}px` }}
+              />
+              <Skeleton className="h-5 w-16 rounded-full" />
+              <Skeleton variant="bar" className="h-3 w-16" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
