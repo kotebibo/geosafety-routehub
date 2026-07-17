@@ -32,8 +32,8 @@ import { useRoutes } from '@/features/routes/hooks/useRoutes'
 import { useServiceTypes } from '@/hooks/useServiceTypes'
 import { useCompaniesWithLocationCount } from '@/hooks/useCompanyLocations'
 import type { BoardColumn, ColumnType } from '../types/board'
-import { MONDAY_COLORS, DEFAULT_STATUS_OPTIONS } from './BoardTable/cells/StatusCell'
-import type { StatusOption } from './BoardTable/cells/StatusCell'
+import { MONDAY_COLORS, DEFAULT_STATUS_OPTIONS } from '../constants/statusColors'
+import type { StatusOption } from '../constants/statusColors'
 import type { FilterConfig } from './BoardToolbar'
 
 // Smart default operators per column type

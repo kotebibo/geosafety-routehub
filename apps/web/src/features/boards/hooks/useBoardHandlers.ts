@@ -766,8 +766,13 @@ export function useBoardHandlers({
   // ==================== EXPORT/IMPORT HANDLERS ====================
 
   const handleExport = useCallback(
-    async (format: 'csv' | 'excel', filteredItems: BoardItem[]) => {
-      if (!board || !columns || !filteredItems) return
+    async (
+      format: 'csv' | 'excel',
+      exportItems: BoardItem[],
+      exportGroups?: BoardGroup[],
+      preserveItemOrder?: boolean
+    ) => {
+      if (!board || !columns || !exportItems) return
 
       try {
         const [exportModule, lookups] = await Promise.all([
@@ -777,10 +782,12 @@ export function useBoardHandlers({
 
         const options = {
           format,
-          items: filteredItems,
+          items: exportItems,
           columns: columns.filter(col => col.is_visible),
           boardName: board.name,
           lookups,
+          groups: exportGroups,
+          preserveItemOrder,
         }
 
         if (format === 'csv') {

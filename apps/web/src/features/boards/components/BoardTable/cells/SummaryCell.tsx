@@ -5,7 +5,7 @@ import {
   getColorInfo,
   DEFAULT_STATUS_OPTIONS,
   type StatusOption,
-} from './StatusCell'
+} from '../../../constants/statusColors'
 import type { BoardColumn } from '@/types/board'
 import type { BoardItem } from '../../../types/board'
 

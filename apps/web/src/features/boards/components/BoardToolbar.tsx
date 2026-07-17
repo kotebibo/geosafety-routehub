@@ -15,8 +15,8 @@ import {
   Check,
 } from 'lucide-react'
 import type { BoardColumn, ColumnType } from '../types/board'
-import { MONDAY_COLORS, DEFAULT_STATUS_OPTIONS } from './BoardTable/cells/StatusCell'
-import type { StatusOption } from './BoardTable/cells/StatusCell'
+import { MONDAY_COLORS, DEFAULT_STATUS_OPTIONS } from '../constants/statusColors'
+import type { StatusOption } from '../constants/statusColors'
 import { FilterPopover, COLUMN_TYPE_ICONS } from './FilterPopover'
 
 // Columns that don't make sense for grouping

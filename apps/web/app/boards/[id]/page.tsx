@@ -511,14 +511,28 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                     <div className="fixed inset-0 z-40" onClick={() => closeModal('exportMenu')} />
                     <div className="absolute right-0 top-full mt-1 w-44 bg-bg-primary rounded-lg shadow-lg border border-border-light z-50 py-1">
                       <button
-                        onClick={() => handlers.handleExport('csv', filteredItems)}
+                        onClick={() =>
+                          handlers.handleExport(
+                            'csv',
+                            groupedItems,
+                            effectiveGroups,
+                            !!viewTabState.sortConfig
+                          )
+                        }
                         className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
                       >
                         <Download className="w-4 h-4 text-color-success" />
                         {t('boards.detail.toolbar.exportToCsv')}
                       </button>
                       <button
-                        onClick={() => handlers.handleExport('excel', filteredItems)}
+                        onClick={() =>
+                          handlers.handleExport(
+                            'excel',
+                            groupedItems,
+                            effectiveGroups,
+                            !!viewTabState.sortConfig
+                          )
+                        }
                         className="w-full px-4 py-2 text-sm text-left hover:bg-bg-hover flex items-center gap-2"
                       >
                         <Download className="w-4 h-4 text-monday-primary" />
@@ -575,7 +589,12 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   </button>
                   <button
                     onClick={() => {
-                      handlers.handleExport('csv', filteredItems)
+                      handlers.handleExport(
+                        'csv',
+                        groupedItems,
+                        effectiveGroups,
+                        !!viewTabState.sortConfig
+                      )
                       setMobileToolbarOpen(false)
                     }}
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary"
@@ -585,7 +604,12 @@ export default function BoardDetailPage({ params }: { params: { id: string } }) 
                   </button>
                   <button
                     onClick={() => {
-                      handlers.handleExport('excel', filteredItems)
+                      handlers.handleExport(
+                        'excel',
+                        groupedItems,
+                        effectiveGroups,
+                        !!viewTabState.sortConfig
+                      )
                       setMobileToolbarOpen(false)
                     }}
                     className="w-full px-4 py-2.5 text-sm text-left hover:bg-bg-hover flex items-center gap-3 text-text-primary"
