@@ -10,10 +10,10 @@ const DEFAULT_STATUS_OPTIONS = [
 ]
 
 export interface ExportLookups {
-  persons?: Map<string, string>        // UUID -> name
-  companies?: Map<string, string>      // UUID -> name
-  routes?: Map<string, string>         // UUID -> name
-  serviceTypes?: Map<string, string>   // UUID -> name
+  persons?: Map<string, string> // UUID -> name
+  companies?: Map<string, string> // UUID -> name
+  routes?: Map<string, string> // UUID -> name
+  serviceTypes?: Map<string, string> // UUID -> name
 }
 
 interface ExportOptions {
@@ -53,11 +53,7 @@ function getStatusLabel(statusKey: string, column: BoardColumn): string {
 /**
  * Format cell value for export based on column type
  */
-function formatCellValue(
-  value: any,
-  column: BoardColumn,
-  lookups?: ExportLookups
-): string {
+function formatCellValue(value: any, column: BoardColumn, lookups?: ExportLookups): string {
   if (value === null || value === undefined || value === '') {
     return ''
   }
@@ -71,30 +67,30 @@ function formatCellValue(
     case 'person':
       // Resolve person UUID to name
       if (lookups?.persons?.has(value)) {
-        return lookups.persons.get(value) || value
+        return lookups.persons.get(value) || ''
       }
-      return value
+      return ''
 
     case 'company':
       // Resolve company UUID to name
       if (lookups?.companies?.has(value)) {
-        return lookups.companies.get(value) || value
+        return lookups.companies.get(value) || ''
       }
-      return value
+      return ''
 
     case 'route':
       // Resolve route UUID to name
       if (lookups?.routes?.has(value)) {
-        return lookups.routes.get(value) || value
+        return lookups.routes.get(value) || ''
       }
-      return value
+      return ''
 
     case 'service_type':
       // Resolve service type UUID to name
       if (lookups?.serviceTypes?.has(value)) {
-        return lookups.serviceTypes.get(value) || value
+        return lookups.serviceTypes.get(value) || ''
       }
-      return value
+      return ''
 
     case 'checkbox':
       return value === true ? 'Yes' : value === false ? 'No' : ''
@@ -103,10 +99,10 @@ function formatCellValue(
       if (value) {
         try {
           const date = new Date(value)
-          return date.toLocaleDateString('en-US', {
+          return date.toLocaleDateString('ka-GE', {
             year: 'numeric',
             month: 'short',
-            day: 'numeric'
+            day: 'numeric',
           })
         } catch {
           return String(value)
@@ -121,10 +117,10 @@ function formatCellValue(
         const formatDateRange = (d: string) => {
           try {
             const date = new Date(d)
-            return date.toLocaleDateString('en-US', {
+            return date.toLocaleDateString('ka-GE', {
               year: 'numeric',
               month: 'short',
-              day: 'numeric'
+              day: 'numeric',
             })
           } catch {
             return d
@@ -147,7 +143,10 @@ function formatCellValue(
 
     case 'files':
       if (Array.isArray(value)) {
-        return value.length > 0 ? `${value.length} file(s)` : ''
+        return value
+          .map((f: any) => f?.name)
+          .filter(Boolean)
+          .join(', ')
       }
       return ''
 
@@ -198,7 +197,7 @@ export function exportToCSV({ items, columns, boardName, lookups }: ExportOption
   // Convert to CSV string
   const csvContent = [
     headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
-    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
   ].join('\n')
 
   // Download
@@ -208,9 +207,19 @@ export function exportToCSV({ items, columns, boardName, lookups }: ExportOption
 
 /**
  * Export board data to Excel format (XLSX)
- * Uses a simple XML-based format that Excel can open
+ * Uses the xlsx (SheetJS) library to produce a real OOXML binary — a
+ * hand-rolled XML/.xls text file gets misdetected by Excel/LibreOffice
+ * as a legacy binary workbook and its UTF-8 bytes (Georgian text) get
+ * reinterpreted as Windows-1252, producing mojibake.
  */
-export function exportToExcel({ items, columns, boardName, lookups }: ExportOptions): void {
+export async function exportToExcel({
+  items,
+  columns,
+  boardName,
+  lookups,
+}: ExportOptions): Promise<void> {
+  const XLSX = await import('xlsx')
+
   // Build headers
   const headers = ['Name', ...columns.map(col => col.column_name)]
 
@@ -233,60 +242,15 @@ export function exportToExcel({ items, columns, boardName, lookups }: ExportOpti
     return rowData
   })
 
-  // Create XML spreadsheet
-  const xmlContent = generateExcelXML(headers, rows, boardName)
+  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows])
+  const workbook = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(workbook, worksheet, boardName.substring(0, 31))
 
-  // Download
-  const blob = new Blob([xmlContent], { type: 'application/vnd.ms-excel;charset=utf-8;' })
-  downloadBlob(blob, `${sanitizeFilename(boardName)}_${formatDate()}.xls`)
-}
-
-/**
- * Generate Excel XML format
- */
-function generateExcelXML(headers: string[], rows: (string | number | boolean)[][], sheetName: string): string {
-  const escapeXml = (str: string) => {
-    return String(str)
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&apos;')
-  }
-
-  const headerCells = headers.map(h => `<Cell ss:StyleID="Header"><Data ss:Type="String">${escapeXml(h)}</Data></Cell>`).join('')
-  const headerRow = `<Row>${headerCells}</Row>`
-
-  const dataRows = rows.map(row => {
-    const cells = row.map(cell => {
-      const type = typeof cell === 'number' ? 'Number' : 'String'
-      return `<Cell><Data ss:Type="${type}">${escapeXml(String(cell))}</Data></Cell>`
-    }).join('')
-    return `<Row>${cells}</Row>`
-  }).join('')
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
-  xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-  <Styles>
-    <Style ss:ID="Default" ss:Name="Normal">
-      <Alignment ss:Vertical="Center"/>
-      <Font ss:FontName="Arial" ss:Size="11"/>
-    </Style>
-    <Style ss:ID="Header">
-      <Alignment ss:Vertical="Center"/>
-      <Font ss:FontName="Arial" ss:Size="11" ss:Bold="1"/>
-      <Interior ss:Color="#E6E9EF" ss:Pattern="Solid"/>
-    </Style>
-  </Styles>
-  <Worksheet ss:Name="${escapeXml(sheetName.substring(0, 31))}">
-    <Table>
-      ${headerRow}
-      ${dataRows}
-    </Table>
-  </Worksheet>
-</Workbook>`
+  const wbBytes = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
+  const blob = new Blob([wbBytes], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  downloadBlob(blob, `${sanitizeFilename(boardName)}_${formatDate()}.xlsx`)
 }
 
 /**

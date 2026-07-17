@@ -786,7 +786,7 @@ export function useBoardHandlers({
         if (format === 'csv') {
           exportModule.exportToCSV(options)
         } else {
-          exportModule.exportToExcel(options)
+          await exportModule.exportToExcel(options)
         }
 
         showToast(`Exported to ${format.toUpperCase()}`, 'success')
