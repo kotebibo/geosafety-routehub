@@ -64,6 +64,9 @@ export interface BoardSettings {
   // Routing feature: the inspector's starting point for planning routes on
   // this board. Either the live GPS position or a manually entered address.
   routing_start?: RoutingStartLocation
+  // Routing feature: the officer this board belongs to. Admin assigns it;
+  // the officer is also added as a board_member so RLS scopes them to it.
+  assigned_officer_id?: string | null
 }
 
 export interface RoutingStartLocation {

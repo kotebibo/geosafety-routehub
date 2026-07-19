@@ -2034,6 +2034,12 @@
     "improved": "{pct}% optimized",
     "openInMaps": "Open in Google Maps",
     "saveDraft": "Save",
-    "draftSaved": "Route saved (local draft for now)"
+    "draftSaved": "Route saved (local draft for now)",
+    "assignOfficer": "Assign officer",
+    "unassignOfficer": "Unassign",
+    "noOfficers": "No officers",
+    "officerAssigned": "Officer assigned",
+    "officerUnassigned": "Officer unassigned",
+    "officerAssignFailed": "Could not assign officer"
   }
 }
