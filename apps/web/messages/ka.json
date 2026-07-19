@@ -2048,6 +2048,19 @@
     "consumptionPer100": "მოხმარება 100 კმ-ზე",
     "transportSaved": "ტრანსპორტი შენახულია",
     "transportSaveFailed": "შენახვა ვერ მოხერხდა",
-    "transportConsumptionInvalid": "მოხმარება არასწორია"
+    "transportConsumptionInvalid": "მოხმარება არასწორია",
+    "weekPlanning": "კვირის დაგეგმვა",
+    "planWeek": "სრული კვირის დაგეგმვა",
+    "planWeekShort": "დაგეგმვა",
+    "saveDay": "დღის შენახვა",
+    "daySaved": "დღე შენახულია",
+    "saveDaysFirst": "ჯერ შეინახეთ დღეები",
+    "dayEmpty": "ობიექტები არ არის",
+    "assignTo": "მიაბით: {day}",
+    "clickToAssign": "დააჭირეთ ობიექტს დღეზე დასამატებლად",
+    "noCoords": "კოორდინატები არ აქვს",
+    "weekCompanies": "{count} ობიექტი",
+    "fuelLiters": "{liters} ლ საწვავი",
+    "weekPlanned": "კვირა დაიგეგმა"
   }
 }

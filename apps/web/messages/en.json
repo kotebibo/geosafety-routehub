@@ -2048,6 +2048,19 @@
     "consumptionPer100": "Consumption per 100 km",
     "transportSaved": "Transport saved",
     "transportSaveFailed": "Could not save",
-    "transportConsumptionInvalid": "Invalid consumption"
+    "transportConsumptionInvalid": "Invalid consumption",
+    "weekPlanning": "Week planning",
+    "planWeek": "Plan full week",
+    "planWeekShort": "Plan",
+    "saveDay": "Save day",
+    "daySaved": "Day saved",
+    "saveDaysFirst": "Save the days first",
+    "dayEmpty": "No objects",
+    "assignTo": "Assign to: {day}",
+    "clickToAssign": "Click an object to add it to the day",
+    "noCoords": "No coordinates",
+    "weekCompanies": "{count} objects",
+    "fuelLiters": "{liters} L fuel",
+    "weekPlanned": "Week planned"
   }
 }
