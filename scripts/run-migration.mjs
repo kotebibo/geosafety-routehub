@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 /**
- * Applies a SQL migration to ALL Supabase instances (or one with --only).
+ * Applies a SQL migration to Supabase instances, staging-first.
  *
- * The three instances share a schema but hold separate data — a migration
- * applied to only one instance is a production bug on the other two.
+ * Flow: run on STAGING, verify, then run on the three PROD instances.
+ * A migration applied to only some prod instances is a bug on the others.
  *
- * Usage:
- *   node scripts/run-migration.mjs 101_my_migration.sql
- *   node scripts/run-migration.mjs 101_my_migration.sql --only=Team3
+ * Each entry in scripts/instances.json has an `env`: "stage" | "prod".
+ *
+ * Usage (pick a target — no default, on purpose):
+ *   node scripts/run-migration.mjs 106_x.sql --stage        # staging only (do this first)
+ *   node scripts/run-migration.mjs 106_x.sql --prod         # all three prod instances
+ *   node scripts/run-migration.mjs 106_x.sql --only=Team3   # a single named instance
+ *   node scripts/run-migration.mjs 106_x.sql --all          # every instance (rarely needed)
  *
  * Requires scripts/instances.json (gitignored — copy instances.example.json
  * and fill in the Supabase Management API tokens).
@@ -25,20 +29,42 @@ if (!fs.existsSync(instancesPath)) {
 }
 const instances = JSON.parse(fs.readFileSync(instancesPath, 'utf8'))
 
-const file = process.argv[2]
-const only = process.argv.find(a => a.startsWith('--only='))?.split('=')[1]
-if (!file) {
-  console.error('usage: node scripts/run-migration.mjs <migration-file> [--only=Name]')
+const args = process.argv.slice(2)
+const file = args.find(a => !a.startsWith('--'))
+const only = args.find(a => a.startsWith('--only='))?.split('=')[1]
+const stage = args.includes('--stage')
+const prod = args.includes('--prod')
+const all = args.includes('--all')
+
+if (!file || (!only && !stage && !prod && !all)) {
+  console.error('usage: node scripts/run-migration.mjs <migration-file> (--stage | --prod | --only=Name | --all)')
+  console.error('  run --stage first, verify, then --prod')
+  process.exit(1)
+}
+
+const targets = instances.filter(inst => {
+  if (only) return inst.name === only
+  if (all) return true
+  if (stage) return inst.env === 'stage'
+  if (prod) return inst.env === 'prod'
+  return false
+})
+
+if (targets.length === 0) {
+  console.error('No matching instances for that target. Check scripts/instances.json `env` fields.')
   process.exit(1)
 }
 
 const sqlPath = path.isAbsolute(file) ? file : path.join(__dirname, '..', 'supabase', 'migrations', file)
 const sql = fs.readFileSync(sqlPath, 'utf8')
-console.log('Applying', path.basename(sqlPath), only ? `(only ${only})` : `to ${instances.length} instances`)
+
+if (prod || all) {
+  console.log(`⚠️  Applying to ${targets.length} PROD instance(s): ${targets.map(t => t.name).join(', ')}`)
+}
+console.log('Applying', path.basename(sqlPath), 'to:', targets.map(t => t.name).join(', '))
 
 let failed = false
-for (const inst of instances) {
-  if (only && inst.name !== only) continue
+for (const inst of targets) {
   const r = await fetch(`https://api.supabase.com/v1/projects/${inst.ref}/database/query`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${inst.token}`, 'Content-Type': 'application/json' },
