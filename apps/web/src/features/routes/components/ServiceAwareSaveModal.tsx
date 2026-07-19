@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { X, Save, Calendar, Clock, User } from 'lucide-react'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
 import { FeatureGate } from '@/components/FeatureGate'
@@ -50,6 +51,7 @@ export function ServiceAwareSaveModal({
   selectedServices,
   onSaveSuccess,
 }: ServiceAwareSaveModalProps) {
+  const t = useTranslations()
   const [name, setName] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [startTime, setStartTime] = useState('08:00')
@@ -63,7 +65,7 @@ export function ServiceAwareSaveModal({
 
   const handleSave = async () => {
     if (!name.trim()) {
-      showToast('გთხოვთ შეიყვანოთ მარშრუტის სახელი', 'warning')
+      showToast(t('routes.serviceSaveModal.enterRouteName'), 'warning')
       return
     }
 
@@ -103,12 +105,12 @@ export function ServiceAwareSaveModal({
         throw new Error(result.error || 'Failed to save route')
       }
 
-      showToast('მარშრუტი წარმატებით შეინახა! ინსპექციის თარიღები განახლდა.', 'success')
+      showToast(t('routes.serviceSaveModal.saveSuccess'), 'success')
       onSaveSuccess()
       onClose()
     } catch (error) {
       console.error('Save error:', error)
-      showToast('შეცდომა მარშრუტის შენახვისას', 'error')
+      showToast(t('routes.serviceSaveModal.saveError'), 'error')
     } finally {
       setSaving(false)
     }
@@ -123,7 +125,9 @@ export function ServiceAwareSaveModal({
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
               <Save className="w-5 h-5 text-green-600" />
             </div>
-            <h2 className="text-xl font-bold text-text-primary">მარშრუტის შენახვა</h2>
+            <h2 className="text-xl font-bold text-text-primary">
+              {t('routes.serviceSaveModal.title')}
+            </h2>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-bg-hover rounded-lg transition-colors">
             <X className="w-5 h-5 text-text-secondary" />
@@ -135,13 +139,13 @@ export function ServiceAwareSaveModal({
           {/* Route Name */}
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">
-              მარშრუტის სახელი *
+              {t('routes.serviceSaveModal.nameLabel')}
             </label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="მაგ: თბილისი - სახანძრო ინსპექცია"
+              placeholder={t('routes.serviceSaveModal.namePlaceholder')}
               className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
             />
           </div>
@@ -150,7 +154,7 @@ export function ServiceAwareSaveModal({
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">
               <Calendar className="w-4 h-4 inline mr-1" />
-              თარიღი *
+              {t('routes.serviceSaveModal.dateLabel')}
             </label>
             <input
               type="date"
@@ -164,7 +168,7 @@ export function ServiceAwareSaveModal({
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">
               <Clock className="w-4 h-4 inline mr-1" />
-              დაწყების დრო
+              {t('routes.serviceSaveModal.startTimeLabel')}
             </label>
             <input
               type="time"
@@ -176,20 +180,28 @@ export function ServiceAwareSaveModal({
 
           {/* Route Stats */}
           <div className="bg-bg-secondary rounded-lg p-4 space-y-2">
-            <h3 className="font-medium text-text-primary mb-2">მარშრუტის დეტალები</h3>
+            <h3 className="font-medium text-text-primary mb-2">
+              {t('routes.serviceSaveModal.detailsTitle')}
+            </h3>
             <div className="flex justify-between text-sm">
-              <span className="text-text-secondary">გაჩერებები:</span>
+              <span className="text-text-secondary">{t('routes.serviceSaveModal.stopsLabel')}</span>
               <span className="font-semibold text-text-primary">{route.length}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-text-secondary">სრული მანძილი:</span>
-              <span className="font-semibold text-text-primary">{totalDistance.toFixed(1)} კმ</span>
+              <span className="text-text-secondary">
+                {t('routes.serviceSaveModal.totalDistanceLabel')}
+              </span>
+              <span className="font-semibold text-text-primary">
+                {t('routes.serviceSaveModal.distanceKm', { distance: totalDistance.toFixed(1) })}
+              </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-text-secondary">ინსპექტორი:</span>
+              <span className="text-text-secondary">
+                {t('routes.serviceSaveModal.inspectorLabel')}
+              </span>
               <span className="font-semibold text-text-primary">
                 <User className="w-3 h-3 inline mr-1" />
-                არჩეული
+                {t('routes.serviceSaveModal.inspectorSelected')}
               </span>
             </div>
           </div>
@@ -197,12 +209,13 @@ export function ServiceAwareSaveModal({
           {/* Important Note */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
-              💡 <strong>შენიშვნა:</strong> მარშრუტის შენახვისას ავტომატურად განახლდება:
+              💡 <strong>{t('routes.serviceSaveModal.noteLabel')}</strong>{' '}
+              {t('routes.serviceSaveModal.noteBody')}
             </p>
             <ul className="text-xs text-blue-700 mt-2 ml-4 list-disc space-y-1">
-              <li>ბოლო ინსპექციის თარიღი</li>
-              <li>შემდეგი ინსპექციის თარიღი</li>
-              <li>ინსპექტორის დანიშვნა</li>
+              <li>{t('routes.serviceSaveModal.noteLastInspection')}</li>
+              <li>{t('routes.serviceSaveModal.noteNextInspection')}</li>
+              <li>{t('routes.serviceSaveModal.noteInspectorAssignment')}</li>
             </ul>
           </div>
         </div>
@@ -214,7 +227,7 @@ export function ServiceAwareSaveModal({
             disabled={saving}
             className="flex-1 px-4 py-2 text-text-primary bg-bg-tertiary rounded-lg hover:bg-bg-hover transition-colors disabled:opacity-50"
           >
-            გაუქმება
+            {t('common.cancel')}
           </button>
           <button
             onClick={handleSave}
@@ -222,7 +235,7 @@ export function ServiceAwareSaveModal({
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
             <Save className="w-5 h-5" />
-            {saving ? 'შენახვა...' : 'შენახვა'}
+            {saving ? t('routes.serviceSaveModal.saving') : t('common.save')}
           </button>
         </div>
       </div>

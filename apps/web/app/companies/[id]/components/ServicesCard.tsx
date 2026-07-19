@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Shield, Edit2, Save, X, User, Clock, AlertTriangle } from 'lucide-react'
 import { PDPOnboardingManager } from '@/components/PDPOnboardingManager'
 
@@ -19,27 +20,6 @@ interface CompanyService {
   inspectors: {
     full_name: string
   } | null
-}
-
-const priorityConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  high: {
-    label: '\u10DB\u10D0\u10E6\u10D0\u10DA\u10D8',
-    bg: 'bg-red-50',
-    text: 'text-red-700',
-    dot: 'bg-red-500',
-  },
-  medium: {
-    label: '\u10E1\u10D0\u10E8\u10E3\u10D0\u10DA\u10DD',
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
-    dot: 'bg-amber-500',
-  },
-  low: {
-    label: '\u10D3\u10D0\u10D1\u10D0\u10DA\u10D8',
-    bg: 'bg-blue-50',
-    text: 'text-blue-700',
-    dot: 'bg-blue-500',
-  },
 }
 
 function isOverdue(nextDate: string | null): boolean {
@@ -69,14 +49,35 @@ export function ServicesCard({
   onFinish,
   onCancel,
 }: ServicesCardProps) {
+  const t = useTranslations()
+
+  const priorityConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
+    high: {
+      label: t('companies.detail.priorityHigh'),
+      bg: 'bg-red-50',
+      text: 'text-red-700',
+      dot: 'bg-red-500',
+    },
+    medium: {
+      label: t('companies.detail.priorityMedium'),
+      bg: 'bg-amber-50',
+      text: 'text-amber-700',
+      dot: 'bg-amber-500',
+    },
+    low: {
+      label: t('companies.detail.priorityLow'),
+      bg: 'bg-blue-50',
+      text: 'text-blue-700',
+      dot: 'bg-blue-500',
+    },
+  }
+
   return (
     <div className="bg-bg-primary border border-border-light rounded-xl mb-6 overflow-hidden">
       <div className="px-6 py-4 border-b border-border-light flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Shield className="w-4.5 h-4.5 text-text-tertiary" />
-          <h2 className="font-semibold text-text-primary">
-            {'\u10E1\u10D4\u10E0\u10D5\u10D8\u10E1\u10D4\u10D1\u10D8'}
-          </h2>
+          <h2 className="font-semibold text-text-primary">{t('companies.detail.services')}</h2>
           <span className="text-xs text-text-tertiary font-medium bg-bg-tertiary px-1.5 py-0.5 rounded">
             {services.length}
           </span>
@@ -87,7 +88,7 @@ export function ServicesCard({
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded-lg transition-colors"
           >
             <Edit2 className="w-3.5 h-3.5" />
-            {'\u10E0\u10D4\u10D3\u10D0\u10E5\u10E2\u10D8\u10E0\u10D4\u10D1\u10D0'}
+            {t('companies.detail.edit')}
           </button>
         )}
       </div>
@@ -107,14 +108,14 @@ export function ServicesCard({
                 className="flex items-center gap-2 px-5 py-2 bg-monday-primary text-white text-sm font-medium rounded-lg hover:bg-monday-primary-hover transition-colors"
               >
                 <Save className="w-4 h-4" />
-                {'\u10D3\u10D0\u10E1\u10E0\u10E3\u10DA\u10D4\u10D1\u10D0'}
+                {t('companies.detail.finish')}
               </button>
               <button
                 onClick={onCancel}
                 className="flex items-center gap-2 px-5 py-2 text-sm text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
               >
                 <X className="w-4 h-4" />
-                {'\u10D2\u10D0\u10E3\u10E5\u10DB\u10D4\u10D1\u10D0'}
+                {t('companies.detail.cancel')}
               </button>
             </div>
           </div>
@@ -124,18 +125,14 @@ export function ServicesCard({
               <div className="text-center py-10">
                 <Shield className="w-10 h-10 text-text-disabled mx-auto mb-3" />
                 <p className="text-sm text-text-tertiary mb-4">
-                  {
-                    '\u10E1\u10D4\u10E0\u10D5\u10D8\u10E1\u10D4\u10D1\u10D8 \u10D0\u10E0 \u10D0\u10E0\u10D8\u10E1 \u10D3\u10D0\u10DB\u10D0\u10E2\u10D4\u10D1\u10E3\u10DA\u10D8'
-                  }
+                  {t('companies.detail.noServicesAdded')}
                 </p>
                 <button
                   onClick={onStartEdit}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-sm bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
                 >
                   <Shield className="w-4 h-4" />
-                  {
-                    '\u10E1\u10D4\u10E0\u10D5\u10D8\u10E1\u10D8\u10E1 \u10D3\u10D0\u10DB\u10D0\u10E2\u10D4\u10D1\u10D0'
-                  }
+                  {t('companies.detail.addService')}
                 </button>
               </div>
             ) : (
@@ -175,16 +172,15 @@ export function ServicesCard({
                               <User className="w-3.5 h-3.5" />
                               {service.inspectors?.full_name || (
                                 <span className="text-amber-600">
-                                  {
-                                    '\u10D0\u10E0 \u10D0\u10E0\u10D8\u10E1 \u10DB\u10D8\u10DC\u10D8\u10ED\u10D4\u10D1\u10E3\u10DA\u10D8'
-                                  }
+                                  {t('companies.detail.notAssigned')}
                                 </span>
                               )}
                             </span>
                             <span className="flex items-center gap-1.5">
                               <Clock className="w-3.5 h-3.5" />
-                              {'\u10E7\u10DD\u10D5\u10D4\u10DA'} {service.inspection_frequency_days}{' '}
-                              {'\u10D3\u10E6\u10D4\u10E8\u10D8'}
+                              {t('companies.detail.everyNDays', {
+                                days: service.inspection_frequency_days ?? 0,
+                              })}
                             </span>
                           </div>
                         </div>
@@ -201,17 +197,15 @@ export function ServicesCard({
                                 className={`text-xs mt-0.5 ${overdue ? 'text-red-500' : 'text-text-tertiary'}`}
                               >
                                 {overdue
-                                  ? `${Math.abs(days!)} \u10D3\u10E6\u10D8\u10D7 \u10D5\u10D0\u10D3\u10D0\u10D2\u10D0\u10D3\u10D0\u10EA\u10D8\u10DA\u10D4\u10D1\u10E3\u10DA\u10D8`
+                                  ? t('companies.detail.overdueByDays', { days: Math.abs(days!) })
                                   : days === 0
-                                    ? '\u10D3\u10E6\u10D4\u10E1'
-                                    : `${days} \u10D3\u10E6\u10D4\u10E8\u10D8`}
+                                    ? t('companies.detail.today')
+                                    : t('companies.detail.inNDays', { days: days ?? 0 })}
                               </p>
                             </div>
                           ) : (
                             <p className="text-xs text-text-tertiary">
-                              {
-                                '\u10D0\u10E0 \u10D0\u10E0\u10D8\u10E1 \u10D3\u10D0\u10D2\u10D4\u10D2\u10DB\u10D8\u10DA\u10D8'
-                              }
+                              {t('companies.detail.notScheduled')}
                             </p>
                           )}
                         </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslations } from 'next-intl'
 import { useUsers } from '@/hooks/useUsers'
 import { cn } from '@/lib/utils'
 import { Search, X, Check } from 'lucide-react'
@@ -42,9 +43,10 @@ export function MultiUserPicker({
   value,
   onChange,
   onClose,
-  placeholder = 'ძებნა...',
+  placeholder,
   triggerRect,
 }: MultiUserPickerProps) {
+  const t = useTranslations()
   const [search, setSearch] = useState('')
   const { users, loading } = useUsers()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -124,14 +126,16 @@ export function MultiUserPicker({
     >
       {/* Header with selected count */}
       <div className="px-3 py-2 bg-bg-secondary border-b border-border-light flex items-center justify-between">
-        <span className="text-sm font-medium text-text-secondary">არჩეულია: {value.length}</span>
+        <span className="text-sm font-medium text-text-secondary">
+          {t('common.userPicker.selectedCount', { count: value.length })}
+        </span>
         {value.length > 0 && (
           <button
             onClick={clearAll}
             className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1"
           >
             <X className="w-3 h-3" />
-            გასუფთავება
+            {t('common.userPicker.clearAll')}
           </button>
         )}
       </div>
@@ -150,7 +154,9 @@ export function MultiUserPicker({
               >
                 {getInitials(user.full_name)}
               </div>
-              <span className="max-w-[100px] truncate">{user.full_name || 'Unknown'}</span>
+              <span className="max-w-[100px] truncate">
+                {user.full_name || t('common.userPicker.unknown')}
+              </span>
               <button
                 onClick={() => removeUser(user.id)}
                 className="w-4 h-4 rounded-full hover:bg-bg-hover flex items-center justify-center"
@@ -171,7 +177,7 @@ export function MultiUserPicker({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder={placeholder}
+            placeholder={placeholder ?? t('common.userPicker.searchPlaceholder')}
             className="w-full pl-9 pr-3 py-2 text-sm bg-bg-primary text-text-primary border border-border-light rounded-md focus:outline-none focus:border-monday-primary focus:ring-1 focus:ring-monday-primary placeholder:text-text-tertiary"
           />
         </div>
@@ -185,7 +191,7 @@ export function MultiUserPicker({
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="px-4 py-8 text-center text-sm text-text-tertiary">
-            მომხმარებლები არ მოიძებნა
+            {t('common.userPicker.noUsersFound')}
           </div>
         ) : (
           <div className="py-1">
@@ -228,7 +234,7 @@ export function MultiUserPicker({
                         isSelected ? 'text-monday-primary' : 'text-text-primary'
                       )}
                     >
-                      {user.full_name || 'Unknown'}
+                      {user.full_name || t('common.userPicker.unknown')}
                     </div>
                     {user.email && (
                       <div className="text-xs text-text-tertiary truncate">{user.email}</div>
@@ -247,7 +253,7 @@ export function MultiUserPicker({
           onClick={onClose}
           className="w-full py-2 bg-monday-primary text-text-inverse text-sm font-medium rounded-md hover:bg-[var(--monday-primary-hover)] transition-colors"
         >
-          დასრულება
+          {t('common.userPicker.done')}
         </button>
       </div>
     </div>

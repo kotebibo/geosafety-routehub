@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Calendar, CheckCircle, Circle, Building2, ArrowRight } from 'lucide-react'
 import { COMPLIANCE_PHASES } from '@/types/compliance'
 
@@ -30,6 +31,7 @@ interface AddCompanyWithComplianceProps {
 }
 
 export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithComplianceProps) {
+  const t = useTranslations()
   const [companyType, setCompanyType] = useState<'new' | 'existing'>('new')
   const [loading, setLoading] = useState(false)
   const [companyData, setCompanyData] = useState({
@@ -66,13 +68,13 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto p-6 space-y-6">
       <div className="bg-bg-primary p-4 border-b">
-        <h2 className="text-2xl font-bold">კომპანიის დამატება - პერსონალურ მონაცემთა დაცვა</h2>
-        <p className="text-text-secondary mt-1">Personal Data Protection Service</p>
+        <h2 className="text-2xl font-bold">{t('companies.pdp.addFormTitle')}</h2>
+        <p className="text-text-secondary mt-1">{t('companies.pdp.addFormSubtitle')}</p>
       </div>
 
       {/* Company Type Selection */}
       <div className="bg-bg-primary rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">კომპანიის ტიპი</h3>
+        <h3 className="text-lg font-semibold mb-4">{t('companies.pdp.companyType')}</h3>
         <div className="grid grid-cols-2 gap-4">
           <button
             type="button"
@@ -86,9 +88,13 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
             <div className="flex items-center justify-center mb-3">
               <Circle className="w-10 h-10 text-blue-500" />
             </div>
-            <div className="font-semibold text-lg mb-1">ახალი კომპანია</div>
-            <div className="text-sm text-text-secondary">საჭიროებს 5 ფაზის გავლას</div>
-            <div className="text-xs text-text-secondary mt-2">New company - requires 5 phases</div>
+            <div className="font-semibold text-lg mb-1">{t('companies.pdp.newCompany')}</div>
+            <div className="text-sm text-text-secondary">
+              {t('companies.pdp.newCompanyDescription')}
+            </div>
+            <div className="text-xs text-text-secondary mt-2">
+              {t('companies.pdp.newCompanyDescriptionEn')}
+            </div>
           </button>
 
           <button
@@ -103,10 +109,12 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
             <div className="flex items-center justify-center mb-3">
               <CheckCircle className="w-10 h-10 text-green-500" />
             </div>
-            <div className="font-semibold text-lg mb-1">არსებული კომპანია</div>
-            <div className="text-sm text-text-secondary">უკვე სერტიფიცირებული</div>
+            <div className="font-semibold text-lg mb-1">{t('companies.pdp.existingCompany')}</div>
+            <div className="text-sm text-text-secondary">
+              {t('companies.pdp.existingCompanyDescription')}
+            </div>
             <div className="text-xs text-text-secondary mt-2">
-              Existing company - already certified
+              {t('companies.pdp.existingCompanyDescriptionEn')}
             </div>
           </button>
         </div>
@@ -116,12 +124,12 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
       <div className="bg-bg-primary rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
           <Building2 className="w-5 h-5" />
-          კომპანიის ინფორმაცია
+          {t('companies.pdp.companyInfo')}
         </h3>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">
-              კომპანიის სახელი <span className="text-red-500">*</span>
+              {t('companies.pdp.companyName')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -129,13 +137,13 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
               value={companyData.name}
               onChange={e => setCompanyData({ ...companyData, name: e.target.value })}
               className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="შეიყვანეთ კომპანიის სახელი"
+              placeholder={t('companies.pdp.companyNamePlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">
-              მისამართი <span className="text-red-500">*</span>
+              {t('companies.pdp.address')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -143,26 +151,28 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
               value={companyData.address}
               onChange={e => setCompanyData({ ...companyData, address: e.target.value })}
               className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="შეიყვანეთ მისამართი"
+              placeholder={t('companies.pdp.addressPlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text-primary mb-1">
-                საკონტაქტო პირი
+                {t('companies.pdp.contactPerson')}
               </label>
               <input
                 type="text"
                 value={companyData.contact_person}
                 onChange={e => setCompanyData({ ...companyData, contact_person: e.target.value })}
                 className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="სახელი და გვარი"
+                placeholder={t('companies.pdp.contactPersonPlaceholder')}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-1">ტელეფონი</label>
+              <label className="block text-sm font-medium text-text-primary mb-1">
+                {t('companies.pdp.phone')}
+              </label>
               <input
                 type="tel"
                 value={companyData.contact_phone}
@@ -174,7 +184,9 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1">ელ. ფოსტა</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">
+              {t('companies.pdp.email')}
+            </label>
             <input
               type="email"
               value={companyData.contact_email}
@@ -191,10 +203,10 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
         <div className="bg-bg-primary rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            ფაზების დაგეგმვა
+            {t('companies.pdp.phasePlanning')}
           </h3>
           <p className="text-sm text-text-secondary mb-4">
-            განსაზღვრეთ თითოეული ფაზის დასრულების დაგეგმილი თარიღი
+            {t('companies.pdp.phasePlanningDescription')}
           </p>
           <div className="space-y-4">
             {COMPLIANCE_PHASES.map(phase => (
@@ -227,7 +239,7 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
           </div>
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              💡 <strong>რჩევა:</strong> ფაზებს შორის რეკომენდებული ინტერვალი არის 2-3 კვირა
+              💡 <strong>{t('companies.pdp.tipLabel')}:</strong> {t('companies.pdp.phaseTip')}
             </p>
           </div>
         </div>
@@ -238,11 +250,11 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
         <div className="bg-bg-primary rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            შემდეგი შემოწმება
+            {t('companies.pdp.nextCheckup')}
           </h3>
           <div>
             <label className="block text-sm font-medium text-text-primary mb-1">
-              შემდეგი შემოწმების თარიღი
+              {t('companies.pdp.nextCheckupDate')}
             </label>
             <input
               type="date"
@@ -251,7 +263,7 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
               className="w-full px-3 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <p className="text-sm text-text-secondary mt-2">
-              📅 სერტიფიცირებული კომპანიები საჭიროებენ რეგულარულ შემოწმებას ყოველ 3 თვეში
+              📅 {t('companies.pdp.checkupReminder')}
             </p>
           </div>
         </div>
@@ -265,7 +277,7 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
           disabled={loading}
           className="px-6 py-2 border border-border-medium rounded-lg hover:bg-bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          გაუქმება
+          {t('companies.pdp.cancel')}
         </button>
         <button
           type="submit"
@@ -275,11 +287,11 @@ export function AddCompanyWithCompliance({ onSubmit, onCancel }: AddCompanyWithC
           {loading ? (
             <>
               <span className="animate-spin">⏳</span>
-              მიმდინარეობს...
+              {t('companies.pdp.inProgress')}
             </>
           ) : (
             <>
-              დამატება
+              {t('companies.pdp.addButton')}
               <ArrowRight className="w-4 h-4" />
             </>
           )}

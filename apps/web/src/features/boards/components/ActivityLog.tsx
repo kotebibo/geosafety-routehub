@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { History, RefreshCw, Undo2, X, ArrowRight, Clock } from 'lucide-react'
 import { Tooltip } from '@/shared/components/ui/tooltip'
@@ -49,9 +50,9 @@ interface ActivityLogProps {
 }
 
 // Format value for display (handle JSON, objects, etc.)
-function formatValue(value: string | undefined | null): string {
+function formatValue(value: string | undefined | null, emptyLabel: string): string {
   if (value === null || value === undefined || value === '') {
-    return '(empty)'
+    return emptyLabel
   }
 
   // Try to parse as JSON for objects
@@ -71,31 +72,31 @@ function formatValue(value: string | undefined | null): string {
   }
 }
 
-// Get update type label
-function getUpdateTypeLabel(type: ItemUpdate['update_type']): string {
+// Get update type label translation key
+function getUpdateTypeLabelKey(type: ItemUpdate['update_type']): string {
   switch (type) {
     case 'created':
-      return 'Created'
+      return 'boards.activityLog.type.created'
     case 'updated':
-      return 'Updated'
+      return 'boards.activityLog.type.updated'
     case 'deleted':
-      return 'Deleted'
+      return 'boards.activityLog.type.deleted'
     case 'status_changed':
-      return 'Status Changed'
+      return 'boards.activityLog.type.statusChanged'
     case 'assigned':
-      return 'Assigned'
+      return 'boards.activityLog.type.assigned'
     case 'reassigned':
-      return 'Reassigned'
+      return 'boards.activityLog.type.reassigned'
     case 'comment':
-      return 'Comment'
+      return 'boards.activityLog.type.comment'
     case 'completed':
-      return 'Completed'
+      return 'boards.activityLog.type.completed'
     case 'column_changed':
-      return 'Column Changed'
+      return 'boards.activityLog.type.columnChanged'
     case 'moved_to_board':
-      return 'Moved'
+      return 'boards.activityLog.type.moved'
     default:
-      return 'Changed'
+      return 'boards.activityLog.type.changed'
   }
 }
 
@@ -135,6 +136,7 @@ export function ActivityLog({
   maxHeight = '400px',
   className,
 }: ActivityLogProps) {
+  const t = useTranslations()
   const [hoveredRow, setHoveredRow] = useState<string | null>(null)
 
   if (isLoading) {
@@ -142,7 +144,7 @@ export function ActivityLog({
       <div className={cn('bg-bg-primary rounded-lg border border-border-light', className)}>
         <div className="flex items-center gap-2 px-4 py-3 border-b border-border-light">
           <History className="w-5 h-5 text-text-tertiary animate-pulse" />
-          <span className="font-medium text-text-secondary">Loading activity...</span>
+          <span className="font-medium text-text-secondary">{t('boards.activityLog.loading')}</span>
         </div>
         <div className="p-4 space-y-2">
           {[1, 2, 3, 4, 5].map(i => (
@@ -162,8 +164,10 @@ export function ActivityLog({
         )}
       >
         <History className="w-16 h-16 text-text-disabled mx-auto mb-4" />
-        <p className="text-text-tertiary font-medium text-lg">No activity yet</p>
-        <p className="text-text-tertiary text-sm mt-1">Changes to board items will appear here</p>
+        <p className="text-text-tertiary font-medium text-lg">
+          {t('boards.activityLog.noActivity')}
+        </p>
+        <p className="text-text-tertiary text-sm mt-1">{t('boards.activityLog.noActivityHint')}</p>
       </div>
     )
   }
@@ -179,13 +183,13 @@ export function ActivityLog({
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-light bg-bg-secondary flex-shrink-0">
         <div className="flex items-center gap-2">
           <History className="w-5 h-5 text-text-secondary" />
-          <span className="font-semibold text-text-primary">Activity History</span>
+          <span className="font-semibold text-text-primary">{t('boards.activityLog.title')}</span>
           <span className="text-xs text-text-tertiary bg-bg-primary px-2 py-0.5 rounded-full border">
-            {updates.length} changes
+            {t('boards.activityLog.changesCount', { count: updates.length })}
           </span>
         </div>
         {onRefresh && (
-          <Tooltip content="Refresh" side="top" delayDuration={200}>
+          <Tooltip content={t('boards.activityLog.refresh')} side="top" delayDuration={200}>
             <button
               onClick={onRefresh}
               className="p-1.5 rounded hover:bg-bg-hover transition-colors"
@@ -201,16 +205,28 @@ export function ActivityLog({
         <table className="w-full text-sm min-w-[900px]">
           <thead className="bg-bg-secondary sticky top-0">
             <tr className="border-b border-border-light">
-              <th className="text-left px-4 py-2 font-medium text-text-secondary w-36">Time</th>
-              <th className="text-left px-4 py-2 font-medium text-text-secondary w-32">User</th>
-              <th className="text-left px-4 py-2 font-medium text-text-secondary w-28">Type</th>
-              <th className="text-left px-4 py-2 font-medium text-text-secondary w-32">Column</th>
-              <th className="text-left px-4 py-2 font-medium text-text-secondary">Old Value</th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary w-36">
+                {t('boards.activityLog.time')}
+              </th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary w-32">
+                {t('boards.activityLog.user')}
+              </th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary w-28">
+                {t('boards.activityLog.typeHeader')}
+              </th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary w-32">
+                {t('boards.activityLog.column')}
+              </th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary">
+                {t('boards.activityLog.oldValue')}
+              </th>
               <th className="text-center px-2 py-2 w-8"></th>
-              <th className="text-left px-4 py-2 font-medium text-text-secondary">New Value</th>
+              <th className="text-left px-4 py-2 font-medium text-text-secondary">
+                {t('boards.activityLog.newValue')}
+              </th>
               {showRollback && (
                 <th className="text-center px-4 py-2 font-medium text-text-secondary w-20">
-                  Action
+                  {t('boards.activityLog.action')}
                 </th>
               )}
             </tr>
@@ -248,7 +264,7 @@ export function ActivityLog({
                   <td className="px-4 py-3">
                     <Tooltip content={update.user_name} side="top" delayDuration={200}>
                       <span className="font-medium text-text-secondary truncate block max-w-[120px]">
-                        {update.user_name || 'System'}
+                        {update.user_name || t('boards.activityLog.system')}
                       </span>
                     </Tooltip>
                   </td>
@@ -261,7 +277,7 @@ export function ActivityLog({
                         getUpdateTypeColor(update.update_type)
                       )}
                     >
-                      {getUpdateTypeLabel(update.update_type)}
+                      {t(getUpdateTypeLabelKey(update.update_type))}
                     </span>
                   </td>
 
@@ -287,12 +303,12 @@ export function ActivityLog({
                   <td className="px-4 py-3">
                     {update.old_value ? (
                       <Tooltip
-                        content={formatValue(update.old_value)}
+                        content={formatValue(update.old_value, t('boards.activityLog.emptyValue'))}
                         side="top"
                         delayDuration={200}
                       >
                         <span className="inline-flex items-center px-2 py-1 bg-red-50 text-red-700 rounded text-xs max-w-[150px] truncate">
-                          {formatValue(update.old_value)}
+                          {formatValue(update.old_value, t('boards.activityLog.emptyValue'))}
                         </span>
                       </Tooltip>
                     ) : (
@@ -313,12 +329,12 @@ export function ActivityLog({
                   <td className="px-4 py-3">
                     {update.new_value ? (
                       <Tooltip
-                        content={formatValue(update.new_value)}
+                        content={formatValue(update.new_value, t('boards.activityLog.emptyValue'))}
                         side="top"
                         delayDuration={200}
                       >
                         <span className="inline-flex items-center px-2 py-1 bg-green-50 text-green-700 rounded text-xs max-w-[150px] truncate">
-                          {formatValue(update.new_value)}
+                          {formatValue(update.new_value, t('boards.activityLog.emptyValue'))}
                         </span>
                       </Tooltip>
                     ) : update.content ? (
@@ -336,7 +352,11 @@ export function ActivityLog({
                   {showRollback && (
                     <td className="px-4 py-3 text-center">
                       {canRollback ? (
-                        <Tooltip content="Undo this change" side="top" delayDuration={200}>
+                        <Tooltip
+                          content={t('boards.activityLog.undoTooltip')}
+                          side="top"
+                          delayDuration={200}
+                        >
                           <button
                             onClick={() => onRollback?.(update)}
                             className={cn(
@@ -347,7 +367,7 @@ export function ActivityLog({
                             )}
                           >
                             <Undo2 className="w-3 h-3" />
-                            Undo
+                            {t('boards.activityLog.undo')}
                           </button>
                         </Tooltip>
                       ) : (
@@ -372,6 +392,8 @@ interface ActivityLogPanelProps extends Omit<ActivityLogProps, 'maxHeight' | 'cl
 }
 
 export function ActivityLogPanel({ isOpen, onClose, ...props }: ActivityLogPanelProps) {
+  const t = useTranslations()
+
   if (!isOpen) return null
 
   return (
@@ -388,8 +410,10 @@ export function ActivityLogPanel({ isOpen, onClose, ...props }: ActivityLogPanel
               <History className="w-5 h-5 text-color-info" />
             </div>
             <div>
-              <h2 className="font-semibold text-text-primary">Activity Log</h2>
-              <p className="text-xs text-text-tertiary">Track all changes</p>
+              <h2 className="font-semibold text-text-primary">
+                {t('boards.activityLog.panelTitle')}
+              </h2>
+              <p className="text-xs text-text-tertiary">{t('boards.activityLog.panelSubtitle')}</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-bg-hover transition-colors">

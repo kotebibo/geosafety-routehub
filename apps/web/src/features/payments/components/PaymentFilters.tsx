@@ -1,4 +1,5 @@
 import { Search, Building2, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { cn } from '@/lib/utils'
 
@@ -33,6 +34,7 @@ export function PaymentFilters({
   groupByCompany,
   onGroupByCompanyToggle,
 }: PaymentFiltersProps) {
+  const t = useTranslations()
   return (
     <div className="flex items-center gap-3 flex-wrap">
       {/* Search — server-side */}
@@ -40,7 +42,7 @@ export function PaymentFilters({
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary" />
         <input
           type="text"
-          placeholder="ძიება გადამხდელით, ს/კ-ით, დანიშნულებით..."
+          placeholder={t('payments.filters.searchPlaceholder')}
           value={searchQuery}
           onChange={e => onSearchChange(e.target.value)}
           className="w-full pl-9 pr-4 py-2 rounded-lg border border-border-light bg-bg-primary text-text-primary text-sm placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-monday-primary/30 focus:border-monday-primary"
@@ -58,11 +60,11 @@ export function PaymentFilters({
       {/* Status filter pills */}
       <div className="flex items-center gap-0.5 bg-bg-primary border border-border-light rounded-lg p-0.5">
         {[
-          { value: '', label: 'ყველა' },
-          { value: 'matched', label: 'დაკავშ.' },
-          { value: 'unmatched', label: 'დაუკავშ.' },
-          { value: 'unpaid', label: 'გადაუხდელი' },
-          { value: 'ignored', label: 'იგნორ.' },
+          { value: '', label: t('payments.filters.statusAll') },
+          { value: 'matched', label: t('payments.filters.statusMatched') },
+          { value: 'unmatched', label: t('payments.filters.statusUnmatched') },
+          { value: 'unpaid', label: t('payments.filters.statusUnpaid') },
+          { value: 'ignored', label: t('payments.filters.statusIgnored') },
         ].map(opt => (
           <button
             key={opt.value}
@@ -85,11 +87,11 @@ export function PaymentFilters({
       {statusFilter !== 'unmatched' && statusFilter !== 'ignored' && (
         <div className="flex items-center gap-0.5 bg-bg-primary border border-border-light rounded-lg p-0.5">
           {[
-            { value: '', label: 'ყველა წყარო' },
-            { value: 'active', label: 'აქტიური' },
-            { value: 'one_time', label: 'ერთჯერადი' },
-            { value: 'paused', label: 'შეჩერებული' },
-            { value: 'ended', label: 'შეწყვეტილი' },
+            { value: '', label: t('payments.filters.sourceAll') },
+            { value: 'active', label: t('payments.filters.sourceActive') },
+            { value: 'one_time', label: t('payments.filters.sourceOneTime') },
+            { value: 'paused', label: t('payments.filters.sourcePaused') },
+            { value: 'ended', label: t('payments.filters.sourceEnded') },
           ].map(opt => (
             <button
               key={opt.value}
@@ -118,7 +120,7 @@ export function PaymentFilters({
           value={dateFrom}
           onChange={e => onDateFromChange(e.target.value)}
           className="px-2 py-1.5 rounded-lg border border-border-light bg-bg-primary text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-monday-primary/30"
-          title="თარიღიდან"
+          title={t('payments.filters.dateFromTitle')}
         />
         <span className="text-text-tertiary text-xs">—</span>
         <input
@@ -126,7 +128,7 @@ export function PaymentFilters({
           value={dateTo}
           onChange={e => onDateToChange(e.target.value)}
           className="px-2 py-1.5 rounded-lg border border-border-light bg-bg-primary text-text-primary text-xs focus:outline-none focus:ring-2 focus:ring-monday-primary/30"
-          title="თარიღამდე"
+          title={t('payments.filters.dateToTitle')}
         />
         {(dateFrom || dateTo) && (
           <button onClick={onClearDateFilter} className="p-1 hover:bg-bg-secondary rounded">
@@ -135,18 +137,23 @@ export function PaymentFilters({
         )}
       </div>
 
-      {/* Group toggle */}
+      {/* Group toggle — locked on while "unpaid" is selected, since that
+          filter is a company-aggregate concept and has no flat-mode meaning */}
       <button
         onClick={onGroupByCompanyToggle}
+        disabled={statusFilter === 'unpaid'}
+        title={statusFilter === 'unpaid' ? t('payments.filters.groupLockedForUnpaid') : undefined}
         className={cn(
           'inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors',
-          groupByCompany
-            ? 'bg-monday-primary/10 text-monday-primary border-monday-primary/30'
-            : 'bg-bg-primary text-text-secondary border-border-light hover:bg-bg-secondary'
+          statusFilter === 'unpaid'
+            ? 'bg-monday-primary/10 text-monday-primary border-monday-primary/30 opacity-60 cursor-not-allowed'
+            : groupByCompany
+              ? 'bg-monday-primary/10 text-monday-primary border-monday-primary/30'
+              : 'bg-bg-primary text-text-secondary border-border-light hover:bg-bg-secondary'
         )}
       >
         <Building2 className="w-3.5 h-3.5" />
-        დაჯგუფება
+        {t('payments.filters.groupByCompany')}
       </button>
     </div>
   )

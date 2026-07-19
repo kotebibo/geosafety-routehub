@@ -93,7 +93,7 @@
  *             properties:
  *               action:
  *                 type: string
- *                 enum: [match, ignore]
+ *                 enum: [match, ignore, unignore]
  *               transactionId:
  *                 type: string
  *                 format: uuid
@@ -133,7 +133,7 @@ import { createServerClient } from '@/lib/supabase/server'
 import { requireAdmin, requireAdminOrDispatcher } from '@/middleware/auth'
 
 const manualMatchSchema = z.object({
-  action: z.enum(['match', 'ignore']),
+  action: z.enum(['match', 'ignore', 'unignore']),
   transactionId: z.string().uuid(),
   companyId: z.string().uuid().optional(), // required if action = 'match'
   notes: z.string().optional(),
@@ -177,8 +177,12 @@ export async function GET(request: NextRequest) {
       query = query.lte('entry_date', toDate)
     }
     if (search) {
+      // Escape PostgREST or()-filter syntax characters so search terms like
+      // "Ltd, Tbilisi" or "(Note)" don't break the filter parser or get
+      // interpreted as extra clauses.
+      const escapedSearch = search.replace(/[\\,()]/g, '\\$&')
       query = query.or(
-        `sender_name.ilike.%${search}%,sender_inn.ilike.%${search}%,purpose.ilike.%${search}%,doc_key.ilike.%${search}%`
+        `sender_name.ilike.%${escapedSearch}%,sender_inn.ilike.%${escapedSearch}%,purpose.ilike.%${escapedSearch}%,doc_key.ilike.%${escapedSearch}%`
       )
     }
 
@@ -258,6 +262,17 @@ export async function POST(request: NextRequest) {
       if (error) throw error
 
       return NextResponse.json({ success: true, action: 'ignored' })
+    }
+
+    if (action === 'unignore') {
+      const { error } = await supabase
+        .from('bank_transactions')
+        .update({ status: 'unmatched' })
+        .eq('id', transactionId)
+
+      if (error) throw error
+
+      return NextResponse.json({ success: true, action: 'unignored' })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

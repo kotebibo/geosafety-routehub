@@ -98,6 +98,41 @@ There are 6 themes driven by CSS variables on the root element
 - Form controls inherit themed bg/text from a base-layer rule in
   `globals.css`; utility classes on a specific input still override it.
 
+## Internationalization (i18n)
+
+The app uses `next-intl`, wired up client-side via `src/contexts/LanguageContext.tsx`.
+Two locales are supported — `ka` (Georgian, default) and `en` (English) — backed
+by `apps/web/messages/ka.json` and `apps/web/messages/en.json`. Missing keys fall
+back to the other language rather than rendering a raw key, so a gap is easy to
+miss visually — treat both files as required, not optional.
+
+**Any new user-facing string must be added to both `ka.json` and `en.json` and
+referenced via `useTranslations()` — never hardcode literal UI text in JSX,**
+including for brand-new components, pages, error/toast messages, form labels,
+and empty states:
+
+```typescript
+// CORRECT
+const t = useTranslations()
+<h3>{t('settings.language.title')}</h3>
+
+// WRONG - hardcoded literal text, in either language
+<h3>მარშრუტები</h3>
+<h3>Routes</h3>
+```
+
+- Nest new keys under the relevant feature/domain key (matching the existing
+  structure in `messages/*.json`, e.g. `settings.*`, `nav.*`, `home.*`) rather
+  than adding flat top-level keys.
+- Add the key to **both** files in the same commit — a key present in only one
+  locale is a bug, not a follow-up task.
+- **Before every commit/push** (from `apps/web`), also run
+  `node scripts/check-i18n-keys.mjs` (`npm run check-i18n`) — it diffs the key
+  sets of `ka.json`/`en.json` and fails if they're out of sync.
+- A handful of legacy components still have hardcoded Georgian text instead of
+  `t()` calls — don't copy that pattern in new code, and migrate it to `t()` if
+  you're already touching that file.
+
 ## Project Structure
 
 ```

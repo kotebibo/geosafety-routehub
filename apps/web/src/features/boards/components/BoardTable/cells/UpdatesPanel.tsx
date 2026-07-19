@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useQueryClient } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 
@@ -40,12 +41,13 @@ export function UpdatesPanel({
   isOpen,
   onClose,
   itemId,
-  itemName = 'Item',
+  itemName,
   itemType = 'board_item',
   row,
   allColumns,
   onCommentCountChange,
 }: UpdatesPanelProps) {
+  const t = useTranslations()
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const userId = user?.id ?? null
@@ -169,7 +171,7 @@ export function UpdatesPanel({
             </div>
             <div className="min-w-0">
               <p className="text-sm font-semibold text-text-primary truncate max-w-[380px]">
-                {itemName}
+                {itemName || t('boards.updatesPanel.defaultItemName')}
               </p>
             </div>
           </div>
@@ -186,19 +188,19 @@ export function UpdatesPanel({
           {[
             {
               key: 'updates' as TabType,
-              label: 'განახლებები',
+              label: t('boards.updatesPanel.updatesTab'),
               icon: MessageSquare,
               count: comments.length,
             },
             {
               key: 'files' as TabType,
-              label: 'ფაილები',
+              label: t('boards.updatesPanel.filesTab'),
               icon: FolderOpen,
               count: files.aggregatedFiles.length,
             },
             {
               key: 'activity' as TabType,
-              label: 'აქტივობა',
+              label: t('boards.updatesPanel.activityTab'),
               icon: History,
               count: activities.length,
             },

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import type { BoardItem, BoardColumn } from '../types/board'
 
 interface KeyboardNavigationOptions {
@@ -488,39 +489,52 @@ export function useKeyboardNavigation({
 
 // Keyboard shortcuts help component
 export function KeyboardShortcutsHelp() {
+  const t = useTranslations()
+
   return (
     <div className="text-xs text-text-tertiary space-y-1">
-      <div className="font-medium text-text-secondary mb-2">Keyboard Shortcuts</div>
+      <div className="font-medium text-text-secondary mb-2">
+        {t('boards.keyboardShortcuts.title')}
+      </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-1">
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">↑↓←→</kbd> Navigate
+          <kbd className="px-1 bg-bg-tertiary rounded">↑↓←→</kbd>{' '}
+          {t('boards.keyboardShortcuts.navigate')}
         </div>
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">Enter</kbd> Edit cell
+          <kbd className="px-1 bg-bg-tertiary rounded">Enter</kbd>{' '}
+          {t('boards.keyboardShortcuts.editCell')}
         </div>
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">Tab</kbd> Next cell
+          <kbd className="px-1 bg-bg-tertiary rounded">Tab</kbd>{' '}
+          {t('boards.keyboardShortcuts.nextCell')}
         </div>
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">Esc</kbd> Cancel
+          <kbd className="px-1 bg-bg-tertiary rounded">Esc</kbd> {t('common.cancel')}
         </div>
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">Space</kbd> Select row
+          <kbd className="px-1 bg-bg-tertiary rounded">Space</kbd>{' '}
+          {t('boards.keyboardShortcuts.selectRow')}
         </div>
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">Ctrl+C</kbd> Copy
+          <kbd className="px-1 bg-bg-tertiary rounded">Ctrl+C</kbd>{' '}
+          {t('boards.keyboardShortcuts.copy')}
         </div>
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">Ctrl+V</kbd> Paste
+          <kbd className="px-1 bg-bg-tertiary rounded">Ctrl+V</kbd>{' '}
+          {t('boards.keyboardShortcuts.paste')}
         </div>
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">Ctrl+A</kbd> Select all
+          <kbd className="px-1 bg-bg-tertiary rounded">Ctrl+A</kbd>{' '}
+          {t('boards.keyboardShortcuts.selectAll')}
         </div>
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">Delete</kbd> Clear cell
+          <kbd className="px-1 bg-bg-tertiary rounded">Delete</kbd>{' '}
+          {t('boards.keyboardShortcuts.clearCell')}
         </div>
         <div>
-          <kbd className="px-1 bg-bg-tertiary rounded">Shift+Enter</kbd> Open item
+          <kbd className="px-1 bg-bg-tertiary rounded">Shift+Enter</kbd>{' '}
+          {t('boards.keyboardShortcuts.openItem')}
         </div>
       </div>
     </div>

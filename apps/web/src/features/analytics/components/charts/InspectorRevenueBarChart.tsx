@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts'
 import type { InspectorSummary } from '@/services/board-analytics.service'
 
@@ -8,6 +9,7 @@ interface InspectorRevenueBarChartProps {
 }
 
 export function InspectorRevenueBarChart({ data }: InspectorRevenueBarChartProps) {
+  const t = useTranslations()
   const chartData = data.slice(0, 15).map(d => ({
     ...d,
     shortName: d.name.length > 20 ? d.name.slice(0, 20) + '…' : d.name,
@@ -15,7 +17,9 @@ export function InspectorRevenueBarChart({ data }: InspectorRevenueBarChartProps
 
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">შემოსავალი ინსპექტორით</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">
+        {t('analytics.charts.inspectorRevenue.title')}
+      </h3>
       <ResponsiveContainer width="100%" height={380}>
         <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--border-primary)" horizontal={false} />
@@ -42,7 +46,10 @@ export function InspectorRevenueBarChart({ data }: InspectorRevenueBarChartProps
               fontSize: 12,
               color: 'var(--text-primary)',
             }}
-            formatter={(value: any) => [`₾${value.toLocaleString()}`, 'შემოსავალი']}
+            formatter={(value: any) => [
+              `₾${value.toLocaleString()}`,
+              t('analytics.charts.common.revenue'),
+            ]}
             labelFormatter={(label: any) => {
               const item = chartData.find(d => d.shortName === label)
               return item?.name || label

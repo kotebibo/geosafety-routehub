@@ -25,7 +25,10 @@ export * from './select'
 export { Tooltip, TooltipProvider } from './tooltip'
 
 // Feedback
-export { LoadingSpinner } from './LoadingSpinner'
+export { Skeleton } from './Skeleton'
+export { ListPageSkeleton } from './ListPageSkeleton'
+export { TabbedSettingsSkeleton } from './TabbedSettingsSkeleton'
+export { FormPageSkeleton } from './FormPageSkeleton'
 
 // Display
 export { StatCard } from './StatCard'

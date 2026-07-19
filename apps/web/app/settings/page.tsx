@@ -13,6 +13,7 @@ import { ArrowLeft, User, Bell, Globe, Shield, Palette } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
 import type { Theme } from '@/contexts/ThemeContext'
 import { cn } from '@/lib/utils'
+import { SettingsSkeleton } from '@/features/settings/components/SettingsSkeleton'
 
 import { ProfileTab } from './components/ProfileTab'
 import { NotificationsTab } from './components/NotificationsTab'
@@ -190,14 +191,7 @@ export default function SettingsPage() {
   }
 
   if (authLoading || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">{t('common.loading')}</span>
-        </div>
-      </div>
-    )
+    return <SettingsSkeleton />
   }
 
   if (!user) {

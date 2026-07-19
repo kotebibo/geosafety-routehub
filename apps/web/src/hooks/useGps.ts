@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface GpsCoords {
   lat: number
@@ -9,6 +10,7 @@ interface GpsCoords {
 }
 
 export function useGps(enabled = true) {
+  const t = useTranslations()
   const [coords, setCoords] = useState<GpsCoords | null>(null)
   const [error, setError] = useState<string | null>(null)
   const watchIdRef = useRef<number | null>(null)
@@ -17,7 +19,7 @@ export function useGps(enabled = true) {
     if (!enabled) return
 
     if (!navigator.geolocation) {
-      setError('თქვენი ბრაუზერი არ უჭერს მხარს GPS-ს')
+      setError(t('gps.notSupported'))
       return
     }
 
@@ -31,12 +33,12 @@ export function useGps(enabled = true) {
         setError(null)
       },
       err => {
-        const messages: Record<number, string> = {
-          1: 'GPS წვდომა უარყოფილია. გთხოვთ ჩართოთ ლოკაციის წვდომა.',
-          2: 'GPS სიგნალი ვერ მოიძებნა.',
-          3: 'GPS მოთხოვნას ვადა გაუვიდა.',
+        const messageKeys: Record<number, string> = {
+          1: 'gps.permissionDenied',
+          2: 'gps.unavailable',
+          3: 'gps.timeout',
         }
-        setError(messages[err.code] || 'GPS შეცდომა')
+        setError(t(messageKeys[err.code] || 'gps.error'))
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
     )
@@ -46,7 +48,7 @@ export function useGps(enabled = true) {
         navigator.geolocation.clearWatch(watchIdRef.current)
       }
     }
-  }, [enabled])
+  }, [enabled, t])
 
   return { coords, error }
 }

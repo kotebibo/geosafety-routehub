@@ -1,8 +1,9 @@
 'use client'
 
 import { useMemo, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { PageHeader, LoadingSpinner, StatCard, EmptyState, DataTable } from '@/shared/components/ui'
+import { PageHeader, StatCard, EmptyState, DataTable } from '@/shared/components/ui'
 import { ComponentErrorBoundary } from '@/shared/components/feedback'
 import {
   Select,
@@ -25,6 +26,7 @@ interface Company {
 
 export default function CompaniesPage() {
   const router = useRouter()
+  const t = useTranslations()
   const {
     companies,
     searchTerm,
@@ -42,23 +44,23 @@ export default function CompaniesPage() {
   const handleDelete = useCallback(
     async (id: string, name: string, e: React.MouseEvent) => {
       e.stopPropagation()
-      if (confirm(`დარწმუნებული ხართ, რომ გსურთ ${name}-ის წაშლა?`)) {
+      if (confirm(t('companies.list.confirmDelete', { name }))) {
         try {
           await deleteCompany(id)
-          alert('კომპანია წაიშალა')
+          alert(t('companies.list.deleteSuccess'))
         } catch {
-          alert('წაშლისას დაფიქსირდა შეცდომა')
+          alert(t('companies.list.deleteError'))
         }
       }
     },
-    [deleteCompany]
+    [deleteCompany, t]
   )
 
   const columns = useMemo<Column<Company>[]>(
     () => [
       {
         id: 'name',
-        header: 'კომპანია',
+        header: t('companies.list.columnCompany'),
         accessorKey: 'name',
         sortable: true,
         cell: ({ value }) => (
@@ -72,7 +74,7 @@ export default function CompaniesPage() {
       },
       {
         id: 'address',
-        header: 'მისამართი',
+        header: t('companies.list.columnAddress'),
         accessorKey: 'address',
         sortable: true,
         cell: ({ value }) => (
@@ -84,7 +86,7 @@ export default function CompaniesPage() {
       },
       {
         id: 'coordinates',
-        header: 'კოორდინატები',
+        header: t('companies.list.columnCoordinates'),
         accessorFn: row =>
           row.lat && row.lng ? `${row.lat.toFixed(4)}, ${row.lng.toFixed(4)}` : null,
       },
@@ -99,12 +101,12 @@ export default function CompaniesPage() {
             className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
           >
             <Trash2 className="w-4 h-4" />
-            წაშლა
+            {t('companies.list.delete')}
           </button>
         ),
       },
     ],
-    [handleDelete]
+    [handleDelete, t]
   )
 
   // Calculate display range
@@ -115,12 +117,12 @@ export default function CompaniesPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">დაფიქსირდა შეცდომა</p>
+          <p className="text-red-600 mb-4">{t('companies.list.errorOccurred')}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover"
           >
-            თავიდან ცდა
+            {t('companies.list.tryAgain')}
           </button>
         </div>
       </div>
@@ -130,10 +132,10 @@ export default function CompaniesPage() {
   return (
     <div className="min-h-screen bg-bg-secondary">
       <PageHeader
-        title="კომპანიები"
-        description="ყველა რეგისტრირებული კომპანია"
+        title={t('companies.list.pageTitle')}
+        description={t('companies.list.pageDescription')}
         action={{
-          label: 'ახალი კომპანია',
+          label: t('companies.list.newCompany'),
           onClick: () => router.push('/companies/new'),
           icon: <Plus className="w-5 h-5" />,
         }}
@@ -142,10 +144,20 @@ export default function CompaniesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <StatCard label="სულ კომპანიები" value={pagination.total} icon={Building2} color="blue" />
-          <StatCard label="ნაჩვენები" value={companies.length} icon={Search} color="green" />
           <StatCard
-            label="გვერდი"
+            label={t('companies.list.statTotal')}
+            value={pagination.total}
+            icon={Building2}
+            color="blue"
+          />
+          <StatCard
+            label={t('companies.list.statShown')}
+            value={companies.length}
+            icon={Search}
+            color="green"
+          />
+          <StatCard
+            label={t('companies.list.statPage')}
             value={`${pagination.page} / ${pagination.totalPages || 1}`}
             icon={Building2}
             color="amber"
@@ -160,7 +172,7 @@ export default function CompaniesPage() {
               type="text"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              placeholder="ძებნა სახელით ან მისამართით..."
+              placeholder={t('companies.list.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary"
             />
           </div>
@@ -170,20 +182,20 @@ export default function CompaniesPage() {
         {companies.length === 0 && searchTerm ? (
           <EmptyState
             icon={<Search className="w-16 h-16" />}
-            title="შედეგები არ მოიძებნა"
-            description={`"${searchTerm}" მოთხოვნით კომპანიები არ მოიძებნა`}
+            title={t('companies.list.noResultsTitle')}
+            description={t('companies.list.noResultsDescription', { query: searchTerm })}
             action={{
-              label: 'გასუფთავება',
+              label: t('companies.list.clearSearch'),
               onClick: () => setSearchTerm(''),
             }}
           />
         ) : pagination.total === 0 && !loading ? (
           <EmptyState
             icon={<Building2 className="w-16 h-16" />}
-            title="კომპანიები არ არის"
-            description="დაამატეთ პირველი კომპანია"
+            title={t('companies.list.emptyTitle')}
+            description={t('companies.list.emptyDescription')}
             action={{
-              label: 'ახალი კომპანია',
+              label: t('companies.list.newCompany'),
               onClick: () => router.push('/companies/new'),
             }}
           />
@@ -195,7 +207,7 @@ export default function CompaniesPage() {
                 columns={columns}
                 loading={loading}
                 onRowClick={row => router.push(`/companies/${row.id}`)}
-                caption="კომპანიების სია"
+                caption={t('companies.list.tableCaption')}
               />
             </ComponentErrorBoundary>
 
@@ -204,7 +216,7 @@ export default function CompaniesPage() {
               <div className="mt-6 flex items-center justify-between">
                 {/* Page size selector */}
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-text-secondary">გვერდზე:</span>
+                  <span className="text-sm text-text-secondary">{t('companies.list.perPage')}</span>
                   <Select
                     value={String(pagination.pageSize)}
                     onValueChange={v => setPageSize(Number(v))}
@@ -222,7 +234,11 @@ export default function CompaniesPage() {
 
                 {/* Page info */}
                 <div className="text-sm text-text-secondary">
-                  {startItem}-{endItem} სულ {pagination.total}-დან
+                  {t('companies.list.pageRange', {
+                    start: startItem,
+                    end: endItem,
+                    total: pagination.total,
+                  })}
                 </div>
 
                 {/* Page navigation */}

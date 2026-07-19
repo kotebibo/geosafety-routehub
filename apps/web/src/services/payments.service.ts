@@ -69,6 +69,12 @@ export interface ContractsResponse {
   boards_found: Array<{ id: string; name: string; count: number }>
 }
 
+export interface SearchedCompany {
+  id: string
+  name: string
+  tax_id: string | null
+}
+
 export const paymentsService = {
   getTransactions: async (params?: {
     status?: string
@@ -168,5 +174,29 @@ export const paymentsService = {
       const err = await response.json()
       throw new Error(err.error || 'Failed to ignore transaction')
     }
+  },
+
+  unignoreTransaction: async (transactionId: string): Promise<void> => {
+    const response = await fetch('/api/payments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'unignore',
+        transactionId,
+      }),
+    })
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error || 'Failed to unignore transaction')
+    }
+  },
+
+  searchCompanies: async (query: string): Promise<SearchedCompany[]> => {
+    const response = await fetch(`/api/companies?search=${encodeURIComponent(query)}`)
+    if (!response.ok) {
+      const err = await response.json()
+      throw new Error(err.error || 'Failed to search companies')
+    }
+    return response.json()
   },
 }

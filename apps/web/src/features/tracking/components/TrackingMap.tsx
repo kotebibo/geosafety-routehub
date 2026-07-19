@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import 'leaflet/dist/leaflet.css'
 import type { ActiveInspector } from '@/services/tracking.service'
 
@@ -17,6 +18,7 @@ export function TrackingMap({
   onSelectInspector,
   locationTrail,
 }: TrackingMapProps) {
+  const t = useTranslations()
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markersRef = useRef<Map<string, any>>(new Map())
@@ -86,13 +88,13 @@ export function TrackingMap({
         const isSelected = inspector.id === selectedInspectorId
 
         const routeInfo = inspector.active_route
-          ? `<br/><strong>Route:</strong> ${inspector.active_route.name || 'Unnamed'}<br/><strong>Progress:</strong> ${inspector.active_route.completed_stops}/${inspector.active_route.total_stops} stops`
-          : '<br/><em>No active route</em>'
+          ? `<br/><strong>${t('tracking.map.route')}:</strong> ${inspector.active_route.name || t('tracking.map.unnamed')}<br/><strong>${t('tracking.map.progress')}:</strong> ${inspector.active_route.completed_stops}/${inspector.active_route.total_stops} ${t('tracking.map.stops')}`
+          : `<br/><em>${t('tracking.map.noActiveRoute')}</em>`
 
         const popupContent = `
           <div style="min-width: 150px">
             <strong>${inspector.full_name}</strong>
-            <br/><span style="color: #666">Last seen: ${minutesAgo}m ago</span>
+            <br/><span style="color: #666">${t('tracking.map.lastSeen', { minutes: minutesAgo })}</span>
             ${routeInfo}
           </div>
         `

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { User, CheckSquare, Square, Loader2 } from 'lucide-react'
 
 interface Inspector {
@@ -37,23 +38,25 @@ export function RouteBuilderSidebar({
   onClearSelection,
   loading,
 }: RouteBuilderSidebarProps) {
+  const t = useTranslations()
+
   return (
     <div className="w-80 bg-bg-primary border-r h-screen overflow-y-auto">
       <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold mb-4">მარშრუტის შექმნა</h2>
+        <h2 className="text-lg font-semibold mb-4">{t('routes.builderSidebar.title')}</h2>
 
         {/* Inspector Selection */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-text-primary">
             <User className="w-4 h-4 inline mr-1" />
-            ინსპექტორი
+            {t('routes.builderSidebar.inspectorLabel')}
           </label>
           <select
             value={selectedInspector}
             onChange={e => onInspectorChange(e.target.value)}
             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">აირჩიეთ ინსპექტორი...</option>
+            <option value="">{t('routes.builderSidebar.selectInspectorPlaceholder')}</option>
             {inspectors.map(inspector => (
               <option key={inspector.id} value={inspector.id}>
                 {inspector.full_name} ({inspector.specialty})
@@ -67,16 +70,18 @@ export function RouteBuilderSidebar({
       {selectedInspector && (
         <div className="p-4">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium">კომპანიები ({companies.length})</h3>
+            <h3 className="font-medium">
+              {t('routes.builderSidebar.companiesCount', { count: companies.length })}
+            </h3>
             <div className="flex gap-2">
               <button onClick={onSelectAll} className="text-xs text-blue-600 hover:text-blue-700">
-                ყველა
+                {t('routes.builderSidebar.selectAll')}
               </button>
               <button
                 onClick={onClearSelection}
                 className="text-xs text-text-secondary hover:text-text-primary"
               >
-                გასუფთავება
+                {t('routes.builderSidebar.clearSelection')}
               </button>
             </div>
           </div>
@@ -87,7 +92,7 @@ export function RouteBuilderSidebar({
             </div>
           ) : companies.length === 0 ? (
             <p className="text-sm text-text-secondary text-center py-8">
-              ამ ინსპექტორს არ აქვს დანიშნული კომპანიები
+              {t('routes.builderSidebar.noAssignedCompanies')}
             </p>
           ) : (
             <div className="space-y-2">
@@ -124,7 +129,9 @@ export function RouteBuilderSidebar({
 
           {selectedCompanies.size > 0 && (
             <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-              <p className="text-sm font-medium text-blue-900">არჩეული: {selectedCompanies.size}</p>
+              <p className="text-sm font-medium text-blue-900">
+                {t('routes.builderSidebar.selectedCount', { count: selectedCompanies.size })}
+              </p>
             </div>
           )}
         </div>

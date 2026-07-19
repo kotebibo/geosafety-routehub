@@ -6,10 +6,7 @@ import { cn } from '@/lib/utils'
 import { Calendar, AlertCircle, Clock, ExternalLink } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useLanguage } from '@/contexts/LanguageContext'
-import {
-  getColorInfo,
-  DEFAULT_STATUS_OPTIONS,
-} from '@/features/boards/components/BoardTable/cells/StatusCell'
+import { getColorInfo, DEFAULT_STATUS_OPTIONS } from '@/features/boards/constants/statusColors'
 import type { MyWorkItem as MyWorkItemType } from '@/services/my-work.service'
 
 interface MyWorkItemProps {

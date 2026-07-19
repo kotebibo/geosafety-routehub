@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase/client'
 
 // Use 'any' type assertion to avoid TypeScript inference issues with Supabase generated types
@@ -8,8 +9,10 @@ const db = supabase as any
 import { Shield } from 'lucide-react'
 
 export default function SetupPDPServicesPage() {
+  const t = useTranslations()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
+  const [messageIsError, setMessageIsError] = useState(false)
   const [results, setResults] = useState<any[]>([])
 
   // The 5 PDP service types/phases
@@ -73,6 +76,7 @@ export default function SetupPDPServicesPage() {
   async function addServiceTypes() {
     setLoading(true)
     setMessage('')
+    setMessageIsError(false)
     setResults([])
 
     try {
@@ -84,7 +88,7 @@ export default function SetupPDPServicesPage() {
         .order('sort_order')
 
       if (existing && existing.length > 0) {
-        setMessage(`Found ${existing.length} existing PDP service types`)
+        setMessage(t('admin.setupPdp.foundExisting', { count: existing.length }))
         setResults(existing)
         setLoading(false)
         return
@@ -94,15 +98,17 @@ export default function SetupPDPServicesPage() {
       const { data, error } = await db.from('service_types').insert(pdpServiceTypes).select()
 
       if (error) {
-        setMessage(`Error: ${error.message}`)
+        setMessage(`${t('admin.setupPdp.errorPrefix')}: ${error.message}`)
+        setMessageIsError(true)
         console.error('Error inserting service types:', error)
         return
       }
 
-      setMessage(`✅ Successfully added ${data?.length || 0} PDP service types!`)
+      setMessage(t('admin.setupPdp.successMessage', { count: data?.length || 0 }))
       setResults(data || [])
     } catch (error) {
-      setMessage(`Failed: ${error}`)
+      setMessage(`${t('admin.setupPdp.failedPrefix')}: ${error}`)
+      setMessageIsError(true)
       console.error('Failed to add service types:', error)
     } finally {
       setLoading(false)
@@ -114,19 +120,19 @@ export default function SetupPDPServicesPage() {
         <div className="flex items-center gap-3 mb-4">
           <Shield className="w-8 h-8 text-monday-primary" />
           <div>
-            <h1 className="text-2xl font-bold">Setup PDP Service Types</h1>
-            <p className="text-text-secondary">Add the 5 Personal Data Protection service phases</p>
+            <h1 className="text-2xl font-bold">{t('admin.setupPdp.pageTitle')}</h1>
+            <p className="text-text-secondary">{t('admin.setupPdp.pageDescription')}</p>
           </div>
         </div>
 
         <div className="bg-monday-primary/10 border border-monday-primary/20 rounded-lg p-4 mb-6">
-          <h2 className="font-semibold mb-2">This will add:</h2>
+          <h2 className="font-semibold mb-2">{t('admin.setupPdp.willAddTitle')}</h2>
           <ol className="list-decimal list-inside space-y-1 text-sm">
-            <li>პირველადი შეფასება (Initial Assessment)</li>
-            <li>დოკუმენტაცია (Documentation)</li>
-            <li>დანერგვა (Implementation)</li>
-            <li>ტრენინგი (Training)</li>
-            <li>სერტიფიცირება (Certification)</li>
+            <li>{t('admin.setupPdp.phase1')}</li>
+            <li>{t('admin.setupPdp.phase2')}</li>
+            <li>{t('admin.setupPdp.phase3')}</li>
+            <li>{t('admin.setupPdp.phase4')}</li>
+            <li>{t('admin.setupPdp.phase5')}</li>
           </ol>
         </div>
 
@@ -135,13 +141,13 @@ export default function SetupPDPServicesPage() {
           disabled={loading}
           className="w-full py-3 bg-monday-primary text-white rounded-lg font-semibold hover:bg-monday-primary-hover disabled:opacity-50"
         >
-          {loading ? 'Adding...' : 'Add PDP Service Types'}
+          {loading ? t('admin.setupPdp.adding') : t('admin.setupPdp.addButton')}
         </button>
 
         {message && (
           <div
             className={`mt-4 p-4 rounded-lg ${
-              message.includes('Error') || message.includes('Failed')
+              messageIsError
                 ? 'bg-color-error/10 text-color-error'
                 : 'bg-color-success/10 text-color-success'
             }`}
@@ -152,14 +158,17 @@ export default function SetupPDPServicesPage() {
 
         {results.length > 0 && (
           <div className="mt-6">
-            <h3 className="font-semibold mb-2">Service Types:</h3>
+            <h3 className="font-semibold mb-2">{t('admin.setupPdp.serviceTypesTitle')}</h3>
             <div className="space-y-2">
               {results.map((st: any) => (
                 <div key={st.id} className="p-3 bg-bg-secondary rounded">
                   <div className="font-medium">{st.name_ka}</div>
                   <div className="text-sm text-text-secondary">{st.name}</div>
                   <div className="text-xs text-text-secondary">
-                    Frequency: {st.default_frequency_days} days | Order: {st.sort_order}
+                    {t('admin.setupPdp.frequencyOrder', {
+                      days: st.default_frequency_days,
+                      order: st.sort_order,
+                    })}
                   </div>
                 </div>
               ))}

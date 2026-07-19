@@ -1,7 +1,9 @@
 import { Fragment } from 'react'
 import { Banknote, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 import type { BankTransaction, ContractInfo } from '@/services/payments.service'
 
 import { formatAmount } from '../helpers'
@@ -34,6 +36,7 @@ interface PaymentTableProps {
   onToggleGroup: (key: string) => void
   onCopy: (text: string, id: string) => void
   onIgnore: (transactionId: string) => void
+  onUnignore: (transactionId: string) => void
   onNavigateToBoard: (boardId: string, itemId?: string) => void
   onNavigateUnmatched: () => void
 }
@@ -60,9 +63,11 @@ export function PaymentTable({
   onToggleGroup,
   onCopy,
   onIgnore,
+  onUnignore,
   onNavigateToBoard,
   onNavigateUnmatched,
 }: PaymentTableProps) {
+  const t = useTranslations()
   return (
     <div className="bg-bg-primary rounded-xl border border-border-light overflow-hidden">
       <div className="overflow-x-auto">
@@ -79,39 +84,58 @@ export function PaymentTable({
           <thead>
             <tr className="border-b border-border-light bg-bg-secondary/50">
               <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                {groupByCompany ? 'კომპანია / თარიღი' : 'შპს'}
+                {groupByCompany
+                  ? t('payments.table.headerCompanyDate')
+                  : t('payments.table.headerCompany')}
               </th>
               <th className="text-right px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                გადახდილი
+                {t('payments.table.headerPaid')}
               </th>
               <th className="text-right px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                მოსალოდნელი
+                {t('payments.table.headerExpected')}
               </th>
               <th className="text-right px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                სხვაობა
+                {t('payments.table.headerDifference')}
               </th>
               <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                დანიშნულება
+                {t('payments.table.headerPurpose')}
               </th>
               <th className="text-left px-4 py-2.5 font-semibold text-text-secondary text-xs">
-                სტატუსი
+                {t('payments.table.headerStatus')}
               </th>
               <th />
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={7} className="text-center py-16">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-monday-primary mx-auto" />
-                  <p className="text-xs text-text-tertiary mt-2">იტვირთება...</p>
-                </td>
-              </tr>
+              Array.from({ length: 8 }).map((_, i) => (
+                <tr key={i} className="border-b border-border-light">
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-3/4" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-full ml-auto" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-full ml-auto" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-full ml-auto" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton variant="bar" className="h-3.5 w-2/3" />
+                  </td>
+                  <td className="px-4 py-2.5">
+                    <Skeleton className="h-4 w-12 rounded-full" />
+                  </td>
+                  <td className="px-4 py-2.5" />
+                </tr>
+              ))
             ) : transactions.length === 0 && grouped.length === 0 ? (
               <tr>
                 <td colSpan={7} className="text-center py-16">
                   <Banknote className="w-8 h-8 text-text-disabled mx-auto mb-2" />
-                  <p className="text-sm text-text-tertiary">ტრანზაქციები არ მოიძებნა</p>
+                  <p className="text-sm text-text-tertiary">{t('payments.table.empty')}</p>
                 </td>
               </tr>
             ) : groupByCompany ? (
@@ -126,6 +150,7 @@ export function PaymentTable({
                       actionLoading={actionLoading}
                       onToggle={() => onToggleGroup(group.key)}
                       onIgnore={onIgnore}
+                      onUnignore={onUnignore}
                       onNavigateToBoard={onNavigateToBoard}
                       onNavigateUnmatched={onNavigateUnmatched}
                     />
@@ -136,6 +161,7 @@ export function PaymentTable({
                           txn={txn}
                           actionLoading={actionLoading}
                           onIgnore={onIgnore}
+                          onUnignore={onUnignore}
                           onNavigateUnmatched={onNavigateUnmatched}
                         />
                       ))}
@@ -156,6 +182,7 @@ export function PaymentTable({
                   actionLoading={actionLoading}
                   onCopy={onCopy}
                   onIgnore={onIgnore}
+                  onUnignore={onUnignore}
                   onNavigateUnmatched={onNavigateUnmatched}
                 />
               ))
@@ -165,10 +192,9 @@ export function PaymentTable({
             {!loading && (transactions.length > 0 || grouped.length > 0) && (
               <tr className="border-t-2 border-border-light bg-bg-secondary/50 font-semibold">
                 <td className="px-4 py-2.5 text-xs text-text-primary">
-                  ჯამი
                   {groupByCompany
-                    ? ` (${grouped.length} კომპანია)`
-                    : ` (${transactions.length} ტრანზაქცია)`}
+                    ? t('payments.table.totalCompanies', { count: grouped.length })
+                    : t('payments.table.totalTransactions', { count: transactions.length })}
                 </td>
                 <td className="px-4 py-2.5 text-right text-sm text-text-primary">
                   {formatAmount(tableTotals.totalPaid)}
@@ -206,7 +232,11 @@ export function PaymentTable({
       {!groupByCompany && totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t border-border-light bg-bg-secondary/30">
           <p className="text-xs text-text-tertiary">
-            {total} ტრანზაქციიდან {(page - 1) * limit + 1}&ndash;{Math.min(page * limit, total)}
+            {t('payments.table.paginationInfo', {
+              total,
+              from: (page - 1) * limit + 1,
+              to: Math.min(page * limit, total),
+            })}
           </p>
           <div className="flex items-center gap-1">
             <button

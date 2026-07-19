@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef, memo } from 'react'
+import { useTranslations } from 'next-intl'
 import { useUsers } from '@/hooks/useUsers'
 import { MultiUserPicker } from '../../MultiUserPicker'
 import { cn } from '@/lib/utils'
@@ -43,6 +44,7 @@ export const PersonCell = memo(function PersonCell({
   readOnly = false,
   onEditStart,
 }: PersonCellProps) {
+  const t = useTranslations()
   const [isEditing, setIsEditing] = useState(false)
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null)
   const { users } = useUsers()
@@ -152,7 +154,7 @@ export const PersonCell = memo(function PersonCell({
             <div className="w-7 h-7 rounded-full border-2 border-dashed border-border-medium flex items-center justify-center">
               <Plus className="w-4 h-4 text-text-tertiary" />
             </div>
-            <span>დაამატე...</span>
+            <span>{t('boards.personCell.addPerson')}</span>
           </div>
         )}
       </button>

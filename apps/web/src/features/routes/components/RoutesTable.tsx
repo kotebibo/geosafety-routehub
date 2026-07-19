@@ -1,6 +1,7 @@
 'use client'
 
 import { Calendar, Clock, MapPin, Route as RouteIcon, Trash2, UserCheck } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui-monday/Toast'
 
 interface Route {
@@ -28,6 +29,7 @@ interface RoutesTableProps {
 
 export function RoutesTable({ routes, inspectors, onDelete, onReassign }: RoutesTableProps) {
   const { showToast } = useToast()
+  const t = useTranslations()
 
   const statusColors = {
     planned: 'bg-blue-100 text-blue-800',
@@ -37,39 +39,39 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
   }
 
   const statusLabels = {
-    planned: 'დაგეგმილი',
-    in_progress: 'მიმდინარე',
-    completed: 'დასრულებული',
-    cancelled: 'გაუქმებული',
+    planned: t('routes.manage.table.statusPlanned'),
+    in_progress: t('routes.manage.table.statusInProgress'),
+    completed: t('routes.manage.table.statusCompleted'),
+    cancelled: t('routes.manage.table.statusCancelled'),
   }
 
   const handleDelete = async (id: string, name: string) => {
-    if (confirm(`დარწმუნებული ხართ, რომ გსურთ "${name}" მარშრუტის წაშლა?`)) {
+    if (confirm(t('routes.manage.table.confirmDelete', { name }))) {
       try {
         await onDelete?.(id)
-        showToast('მარშრუტი წაიშალა', 'success')
+        showToast(t('routes.manage.table.deleteSuccess'), 'success')
       } catch (error) {
-        showToast('წაშლისას დაფიქსირდა შეცდომა', 'error')
+        showToast(t('routes.manage.table.deleteError'), 'error')
       }
     }
   }
 
   const handleReassign = async (routeId: string, currentInspectorId: string) => {
-    const newInspectorId = prompt('ახალი ინსპექტორის ID:', currentInspectorId)
+    const newInspectorId = prompt(t('routes.manage.table.reassignPrompt'), currentInspectorId)
 
     if (newInspectorId && newInspectorId !== currentInspectorId) {
       try {
         await onReassign?.(routeId, newInspectorId)
-        showToast('მარშრუტი გადაინიშნა', 'success')
+        showToast(t('routes.manage.table.reassignSuccess'), 'success')
       } catch (error) {
-        showToast('გადანიშვნისას დაფიქსირდა შეცდომა', 'error')
+        showToast(t('routes.manage.table.reassignError'), 'error')
       }
     }
   }
 
   const getInspectorName = (inspectorId: string) => {
     const inspector = inspectors.find(i => i.id === inspectorId)
-    return inspector?.full_name || 'უცნობი'
+    return inspector?.full_name || t('routes.manage.table.unknownInspector')
   }
 
   return (
@@ -79,22 +81,22 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
           <thead className="bg-bg-secondary border-b">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                მარშრუტი
+                {t('routes.manage.table.headerRoute')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                ინსპექტორი
+                {t('routes.manage.table.headerInspector')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                თარიღი & დრო
+                {t('routes.manage.table.headerDateTime')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                დეტალები
+                {t('routes.manage.table.headerDetails')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-text-secondary uppercase tracking-wider">
-                სტატუსი
+                {t('routes.manage.table.headerStatus')}
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-text-secondary uppercase tracking-wider">
-                მოქმედებები
+                {t('routes.manage.table.headerActions')}
               </th>
             </tr>
           </thead>
@@ -133,11 +135,13 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <MapPin className="w-4 h-4" />
-                      {route.stops?.length || 0} გაჩერება
+                      {t('routes.manage.table.stopsCount', { count: route.stops?.length || 0 })}
                     </div>
                     <div className="flex items-center gap-2 text-sm text-text-secondary">
                       <RouteIcon className="w-4 h-4" />
-                      {route.total_distance_km?.toFixed(1) || '0.0'} კმ
+                      {t('routes.manage.table.distanceKm', {
+                        distance: route.total_distance_km?.toFixed(1) || '0.0',
+                      })}
                     </div>
                   </div>
                 </td>
@@ -155,14 +159,14 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
                       className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
                     >
                       <UserCheck className="w-4 h-4" />
-                      გადანიშვნა
+                      {t('routes.manage.table.reassignAction')}
                     </button>
                     <button
                       onClick={() => handleDelete(route.id, route.name)}
                       className="inline-flex items-center gap-1 px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
-                      წაშლა
+                      {t('routes.manage.table.deleteAction')}
                     </button>
                   </div>
                 </td>
@@ -173,7 +177,7 @@ export function RoutesTable({ routes, inspectors, onDelete, onReassign }: Routes
       </div>
 
       {routes.length === 0 && (
-        <div className="p-12 text-center text-text-secondary">მარშრუტები არ არის</div>
+        <div className="p-12 text-center text-text-secondary">{t('routes.manage.table.empty')}</div>
       )}
     </div>
   )

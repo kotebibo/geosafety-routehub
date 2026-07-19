@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
@@ -19,6 +20,7 @@ import {
   useWorkspacePermissions,
 } from '@/features/workspaces/hooks'
 import { Button } from '@/shared/components/ui'
+import { WorkspaceSettingsSkeleton } from '@/features/workspaces/components/WorkspaceSettingsSkeleton'
 import {
   Select,
   SelectTrigger,
@@ -47,27 +49,28 @@ import { usersService } from '@/services/users.service'
 import { useAddWorkspaceMember } from '@/features/workspaces/hooks'
 import type { WorkspaceRole } from '@/types/workspace'
 
-// Color options
+// Color options (keys reference workspaces.settings.colors.*)
 const COLOR_OPTIONS = [
-  { value: 'blue', label: 'Blue', class: 'bg-monday-primary' },
-  { value: 'green', label: 'Green', class: 'bg-status-done' },
-  { value: 'red', label: 'Red', class: 'bg-status-stuck' },
-  { value: 'yellow', label: 'Yellow', class: 'bg-status-working' },
-  { value: 'purple', label: 'Purple', class: 'bg-purple-500' },
-  { value: 'orange', label: 'Orange', class: 'bg-orange-500' },
+  { value: 'blue', labelKey: 'blue', class: 'bg-monday-primary' },
+  { value: 'green', labelKey: 'green', class: 'bg-status-done' },
+  { value: 'red', labelKey: 'red', class: 'bg-status-stuck' },
+  { value: 'yellow', labelKey: 'yellow', class: 'bg-status-working' },
+  { value: 'purple', labelKey: 'purple', class: 'bg-purple-500' },
+  { value: 'orange', labelKey: 'orange', class: 'bg-orange-500' },
 ]
 
-// Role options
-const ROLE_OPTIONS: { value: WorkspaceRole; label: string; description: string }[] = [
-  { value: 'admin', label: 'Admin', description: 'Can manage members and settings' },
-  { value: 'editor', label: 'Editor', description: 'Can create and archive boards' },
-  { value: 'member', label: 'Member', description: 'Can view and create boards' },
-  { value: 'guest', label: 'Guest', description: 'Read-only access' },
+// Role options (keys reference workspaces.settings.roles.*)
+const ROLE_OPTIONS: { value: WorkspaceRole; labelKey: string; descriptionKey: string }[] = [
+  { value: 'admin', labelKey: 'admin', descriptionKey: 'adminDescription' },
+  { value: 'editor', labelKey: 'editor', descriptionKey: 'editorDescription' },
+  { value: 'member', labelKey: 'member', descriptionKey: 'memberDescription' },
+  { value: 'guest', labelKey: 'guest', descriptionKey: 'guestDescription' },
 ]
 
 type TabType = 'general' | 'members' | 'boards' | 'danger'
 
 export default function WorkspaceSettingsPage() {
+  const t = useTranslations()
   const router = useRouter()
   const params = useParams()
   const workspaceId = params.id as string
@@ -178,24 +181,19 @@ export default function WorkspaceSettingsPage() {
   )
 
   if (workspaceLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">Loading settings...</span>
-        </div>
-      </div>
-    )
+    return <WorkspaceSettingsSkeleton />
   }
 
   if (!workspace) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <h2 className="text-h3 font-semibold text-text-primary mb-2">Workspace not found</h2>
+        <h2 className="text-h3 font-semibold text-text-primary mb-2">
+          {t('workspaces.settings.notFoundTitle')}
+        </h2>
         <Link href="/workspaces">
           <Button variant="primary">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Workspaces
+            {t('workspaces.settings.backToWorkspaces')}
           </Button>
         </Link>
       </div>
@@ -220,7 +218,9 @@ export default function WorkspaceSettingsPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-h2 font-bold text-text-primary">Workspace Settings</h1>
+              <h1 className="text-h2 font-bold text-text-primary">
+                {t('workspaces.settings.title')}
+              </h1>
               <p className="text-text-secondary">{workspace.name}</p>
             </div>
           </div>
@@ -237,7 +237,7 @@ export default function WorkspaceSettingsPage() {
               )}
             >
               <Settings className="w-4 h-4 inline mr-2" />
-              General
+              {t('workspaces.settings.tabs.general')}
             </button>
             <button
               onClick={() => setActiveTab('members')}
@@ -249,7 +249,7 @@ export default function WorkspaceSettingsPage() {
               )}
             >
               <Users className="w-4 h-4 inline mr-2" />
-              Members
+              {t('workspaces.settings.tabs.members')}
             </button>
             <button
               onClick={() => setActiveTab('boards')}
@@ -261,7 +261,7 @@ export default function WorkspaceSettingsPage() {
               )}
             >
               <LayoutDashboard className="w-4 h-4 inline mr-2" />
-              Boards
+              {t('workspaces.settings.tabs.boards')}
             </button>
             {canDelete && (
               <button
@@ -274,7 +274,7 @@ export default function WorkspaceSettingsPage() {
                 )}
               >
                 <Shield className="w-4 h-4 inline mr-2" />
-                Danger Zone
+                {t('workspaces.settings.tabs.danger')}
               </button>
             )}
           </div>
@@ -289,7 +289,7 @@ export default function WorkspaceSettingsPage() {
             {/* Name */}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
-                Workspace Name
+                {t('workspaces.settings.general.nameLabel')}
               </label>
               <input
                 type="text"
@@ -308,7 +308,7 @@ export default function WorkspaceSettingsPage() {
             {/* Description */}
             <div>
               <label className="block text-sm font-medium text-text-primary mb-2">
-                Description
+                {t('workspaces.settings.general.descriptionLabel')}
               </label>
               <textarea
                 value={description || workspace.description || ''}
@@ -321,13 +321,15 @@ export default function WorkspaceSettingsPage() {
                   'w-full max-w-md px-3 py-2 border border-border-default rounded-lg resize-none',
                   'focus:outline-none focus:ring-2 focus:ring-monday-primary/20 focus:border-monday-primary'
                 )}
-                placeholder="Describe this workspace..."
+                placeholder={t('workspaces.settings.general.descriptionPlaceholder')}
               />
             </div>
 
             {/* Color */}
             <div>
-              <label className="block text-sm font-medium text-text-primary mb-2">Color</label>
+              <label className="block text-sm font-medium text-text-primary mb-2">
+                {t('workspaces.settings.general.colorLabel')}
+              </label>
               <div className="flex gap-2">
                 {COLOR_OPTIONS.map(option => (
                   <button
@@ -342,7 +344,7 @@ export default function WorkspaceSettingsPage() {
                       (color || workspace.color) === option.value &&
                         'ring-2 ring-offset-2 ring-monday-primary'
                     )}
-                    title={option.label}
+                    title={t(`workspaces.settings.colors.${option.labelKey}`)}
                   />
                 ))}
               </div>
@@ -352,10 +354,10 @@ export default function WorkspaceSettingsPage() {
             <div className="flex items-center justify-between max-w-md">
               <div>
                 <label className="block text-sm font-medium text-text-primary">
-                  Allow members to create boards
+                  {t('workspaces.settings.general.allowBoardCreationLabel')}
                 </label>
                 <p className="text-sm text-text-tertiary">
-                  When disabled, only admins can create boards
+                  {t('workspaces.settings.general.allowBoardCreationHint')}
                 </p>
               </div>
               <button
@@ -382,7 +384,9 @@ export default function WorkspaceSettingsPage() {
               <div className="pt-4 border-t border-border-light">
                 <Button variant="primary" onClick={handleSave} disabled={updateMutation.isPending}>
                   <Save className="w-4 h-4 mr-2" />
-                  {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+                  {updateMutation.isPending
+                    ? t('workspaces.settings.general.saving')
+                    : t('workspaces.settings.general.saveChanges')}
                 </Button>
               </div>
             )}
@@ -394,12 +398,12 @@ export default function WorkspaceSettingsPage() {
           <div className="bg-bg-primary rounded-lg border border-border-light p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-text-primary">
-                Workspace Members ({members?.length || 0})
+                {t('workspaces.settings.members.heading', { count: members?.length || 0 })}
               </h3>
               {canManageMembers && !showAddMember && (
                 <Button variant="primary" size="sm" onClick={() => setShowAddMember(true)}>
                   <UserPlus className="w-4 h-4 mr-2" />
-                  Add Member
+                  {t('workspaces.settings.members.addMember')}
                 </Button>
               )}
             </div>
@@ -414,7 +418,7 @@ export default function WorkspaceSettingsPage() {
                       type="text"
                       value={memberSearchQuery}
                       onChange={e => setMemberSearchQuery(e.target.value)}
-                      placeholder="Search by name or email..."
+                      placeholder={t('workspaces.settings.members.searchPlaceholder')}
                       autoFocus
                       className={cn(
                         'w-full pl-9 pr-4 py-2 rounded-md',
@@ -432,7 +436,7 @@ export default function WorkspaceSettingsPage() {
                       setMemberSearchQuery('')
                     }}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                 </div>
 
@@ -444,7 +448,7 @@ export default function WorkspaceSettingsPage() {
                       </div>
                     ) : availableUsers.length === 0 ? (
                       <div className="px-4 py-3 text-sm text-text-secondary text-center">
-                        No users found
+                        {t('workspaces.settings.members.noUsersFound')}
                       </div>
                     ) : (
                       availableUsers.slice(0, 5).map(u => (
@@ -463,7 +467,7 @@ export default function WorkspaceSettingsPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-text-primary truncate">
-                              {u.full_name || 'Unknown'}
+                              {u.full_name || t('workspaces.settings.members.unknown')}
                             </div>
                             <div className="text-xs text-text-secondary truncate">{u.email}</div>
                           </div>
@@ -477,7 +481,9 @@ export default function WorkspaceSettingsPage() {
             )}
 
             {membersLoading ? (
-              <div className="py-8 text-center text-text-secondary">Loading members...</div>
+              <div className="py-8 text-center text-text-secondary">
+                {t('workspaces.settings.members.loading')}
+              </div>
             ) : members && members.length > 0 ? (
               <div className="space-y-3">
                 {members.map(member => (
@@ -491,7 +497,7 @@ export default function WorkspaceSettingsPage() {
                       </div>
                       <div>
                         <div className="font-medium text-text-primary">
-                          {member.user?.full_name || 'Unknown User'}
+                          {member.user?.full_name || t('workspaces.settings.members.unknownUser')}
                         </div>
                         <div className="text-sm text-text-tertiary">{member.user?.email}</div>
                       </div>
@@ -500,7 +506,7 @@ export default function WorkspaceSettingsPage() {
                     <div className="flex items-center gap-3">
                       {member.role === 'owner' ? (
                         <span className="px-2 py-1 bg-monday-primary/10 text-monday-primary text-xs font-medium rounded">
-                          Owner
+                          {t('workspaces.settings.roles.owner')}
                         </span>
                       ) : canManageMembers ? (
                         <>
@@ -516,7 +522,7 @@ export default function WorkspaceSettingsPage() {
                             <SelectContent>
                               {ROLE_OPTIONS.map(role => (
                                 <SelectItem key={role.value} value={role.value}>
-                                  {role.label}
+                                  {t(`workspaces.settings.roles.${role.labelKey}`)}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -524,14 +530,14 @@ export default function WorkspaceSettingsPage() {
                           <button
                             onClick={() => handleRemoveMember(member.user_id)}
                             className="p-1 text-text-tertiary hover:text-status-stuck rounded"
-                            title="Remove member"
+                            title={t('workspaces.settings.members.removeMemberTitle')}
                           >
                             <UserMinus className="w-4 h-4" />
                           </button>
                         </>
                       ) : (
                         <span className="px-2 py-1 bg-bg-tertiary text-text-secondary text-xs font-medium rounded capitalize">
-                          {member.role}
+                          {t(`workspaces.settings.roles.${member.role}`)}
                         </span>
                       )}
                     </div>
@@ -539,7 +545,9 @@ export default function WorkspaceSettingsPage() {
                 ))}
               </div>
             ) : (
-              <div className="py-8 text-center text-text-secondary">No members found</div>
+              <div className="py-8 text-center text-text-secondary">
+                {t('workspaces.settings.members.noMembersFound')}
+              </div>
             )}
           </div>
         )}
@@ -548,14 +556,18 @@ export default function WorkspaceSettingsPage() {
         {activeTab === 'boards' && (
           <div className="bg-bg-primary rounded-lg border border-border-light p-6">
             <h3 className="text-lg font-semibold text-text-primary mb-4">
-              Boards ({(activeBoards?.length || 0) + (archivedBoards?.length || 0)})
+              {t('workspaces.settings.boards.heading', {
+                count: (activeBoards?.length || 0) + (archivedBoards?.length || 0),
+              })}
             </h3>
 
             {activeBoardsLoading || archivedBoardsLoading ? (
-              <div className="py-8 text-center text-text-secondary">Loading boards...</div>
+              <div className="py-8 text-center text-text-secondary">
+                {t('workspaces.settings.boards.loading')}
+              </div>
             ) : (activeBoards?.length || 0) + (archivedBoards?.length || 0) === 0 ? (
               <div className="py-8 text-center text-text-secondary">
-                No boards in this workspace
+                {t('workspaces.settings.boards.noBoards')}
               </div>
             ) : (
               <div className="space-y-2">
@@ -572,8 +584,10 @@ export default function WorkspaceSettingsPage() {
                       <div>
                         <div className="font-medium text-text-primary">{board.name}</div>
                         <div className="text-xs text-text-tertiary">
-                          {board.board_type} &middot; Updated{' '}
-                          {new Date(board.updated_at ?? '').toLocaleDateString()}
+                          {board.board_type} &middot;{' '}
+                          {t('workspaces.settings.boards.updatedOn', {
+                            date: new Date(board.updated_at ?? '').toLocaleDateString(),
+                          })}
                         </div>
                       </div>
                     </div>
@@ -583,7 +597,7 @@ export default function WorkspaceSettingsPage() {
                         <button
                           onClick={() => handleArchiveBoard(board.id)}
                           className="p-1.5 text-text-tertiary hover:text-text-primary rounded hover:bg-bg-hover"
-                          title="Archive board"
+                          title={t('workspaces.settings.boards.archiveBoardTitle')}
                         >
                           <Archive className="w-4 h-4" />
                         </button>
@@ -593,7 +607,7 @@ export default function WorkspaceSettingsPage() {
                             setDeleteBoardName(board.name)
                           }}
                           className="p-1.5 text-text-tertiary hover:text-status-stuck rounded hover:bg-bg-hover"
-                          title="Delete board"
+                          title={t('workspaces.settings.boards.deleteBoardTitle')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -607,7 +621,9 @@ export default function WorkspaceSettingsPage() {
                   <>
                     <div className="pt-4 pb-2">
                       <span className="text-sm font-medium text-text-secondary">
-                        Archived ({archivedBoards.length})
+                        {t('workspaces.settings.boards.archivedCount', {
+                          count: archivedBoards.length,
+                        })}
                       </span>
                     </div>
                     {archivedBoards.map(board => (
@@ -622,7 +638,7 @@ export default function WorkspaceSettingsPage() {
                           <div>
                             <div className="font-medium text-text-primary">{board.name}</div>
                             <div className="text-xs text-text-tertiary">
-                              {board.board_type} &middot; Archived
+                              {board.board_type} &middot; {t('workspaces.settings.boards.archived')}
                             </div>
                           </div>
                         </div>
@@ -632,7 +648,7 @@ export default function WorkspaceSettingsPage() {
                             <button
                               onClick={() => handleRestoreBoard(board.id)}
                               className="p-1.5 text-text-tertiary hover:text-status-done rounded hover:bg-bg-hover"
-                              title="Restore board"
+                              title={t('workspaces.settings.boards.restoreBoardTitle')}
                             >
                               <ArchiveRestore className="w-4 h-4" />
                             </button>
@@ -642,7 +658,7 @@ export default function WorkspaceSettingsPage() {
                                 setDeleteBoardName(board.name)
                               }}
                               className="p-1.5 text-text-tertiary hover:text-status-stuck rounded hover:bg-bg-hover"
-                              title="Delete board"
+                              title={t('workspaces.settings.boards.deleteBoardTitle')}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -659,10 +675,13 @@ export default function WorkspaceSettingsPage() {
             {deleteBoardId && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                 <div className="bg-bg-primary rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
-                  <h3 className="text-lg font-semibold text-text-primary mb-2">Delete Board</h3>
+                  <h3 className="text-lg font-semibold text-text-primary mb-2">
+                    {t('workspaces.settings.boards.deleteModal.title')}
+                  </h3>
                   <p className="text-text-secondary mb-4">
-                    Permanently delete <strong>{deleteBoardName}</strong>? All items, groups, and
-                    activity in this board will be lost. This cannot be undone.
+                    {t('workspaces.settings.boards.deleteModal.warningPrefix')}{' '}
+                    <strong>{deleteBoardName}</strong>?{' '}
+                    {t('workspaces.settings.boards.deleteModal.warningSuffix')}
                   </p>
                   <div className="flex gap-3">
                     <Button
@@ -673,7 +692,7 @@ export default function WorkspaceSettingsPage() {
                       }}
                       className="flex-1"
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                     <Button
                       variant="destructive"
@@ -681,7 +700,9 @@ export default function WorkspaceSettingsPage() {
                       disabled={deleteBoardMutation.isPending}
                       className="flex-1"
                     >
-                      {deleteBoardMutation.isPending ? 'Deleting...' : 'Delete Board'}
+                      {deleteBoardMutation.isPending
+                        ? t('workspaces.settings.boards.deleteModal.deleting')
+                        : t('workspaces.settings.boards.deleteModal.confirmButton')}
                     </Button>
                   </div>
                 </div>
@@ -693,23 +714,24 @@ export default function WorkspaceSettingsPage() {
         {/* Danger Zone Tab */}
         {activeTab === 'danger' && canDelete && (
           <div className="bg-bg-primary rounded-lg border border-status-stuck/30 p-6">
-            <h3 className="text-lg font-semibold text-status-stuck mb-2">Danger Zone</h3>
-            <p className="text-text-secondary mb-6">
-              These actions are irreversible. Please be careful.
-            </p>
+            <h3 className="text-lg font-semibold text-status-stuck mb-2">
+              {t('workspaces.settings.danger.title')}
+            </h3>
+            <p className="text-text-secondary mb-6">{t('workspaces.settings.danger.warning')}</p>
 
             <div className="p-4 border border-status-stuck/30 rounded-lg">
               <div className="flex items-start justify-between">
                 <div>
-                  <h4 className="font-medium text-text-primary">Delete this workspace</h4>
+                  <h4 className="font-medium text-text-primary">
+                    {t('workspaces.settings.danger.deleteWorkspaceTitle')}
+                  </h4>
                   <p className="text-sm text-text-tertiary mt-1">
-                    This will permanently delete the workspace, all its boards, and remove all
-                    member access. This cannot be undone.
+                    {t('workspaces.settings.danger.deleteWorkspaceDescription')}
                   </p>
                 </div>
                 <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Delete
+                  {t('workspaces.settings.danger.delete')}
                 </Button>
               </div>
             </div>
@@ -718,16 +740,18 @@ export default function WorkspaceSettingsPage() {
             {showDeleteConfirm && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                 <div className="bg-bg-primary rounded-lg shadow-lg w-full max-w-md mx-4 p-6">
-                  <h3 className="text-lg font-semibold text-text-primary mb-4">Delete Workspace</h3>
+                  <h3 className="text-lg font-semibold text-text-primary mb-4">
+                    {t('workspaces.settings.danger.deleteModal.title')}
+                  </h3>
                   <p className="text-text-secondary mb-4">
-                    This action cannot be undone. Please type <strong>{workspace.name}</strong> to
-                    confirm.
+                    {t('workspaces.settings.danger.deleteModal.typeToConfirm')}{' '}
+                    <strong>{workspace.name}</strong>
                   </p>
                   <input
                     type="text"
                     value={deleteConfirmText}
                     onChange={e => setDeleteConfirmText(e.target.value)}
-                    placeholder="Type workspace name"
+                    placeholder={t('workspaces.settings.danger.deleteModal.placeholder')}
                     className="w-full px-3 py-2 border border-border-default rounded-lg mb-4"
                   />
                   <div className="flex gap-3">
@@ -739,7 +763,7 @@ export default function WorkspaceSettingsPage() {
                       }}
                       className="flex-1"
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </Button>
                     <Button
                       variant="destructive"
@@ -747,7 +771,9 @@ export default function WorkspaceSettingsPage() {
                       disabled={deleteConfirmText !== workspace.name || deleteMutation.isPending}
                       className="flex-1"
                     >
-                      {deleteMutation.isPending ? 'Deleting...' : 'Delete Workspace'}
+                      {deleteMutation.isPending
+                        ? t('workspaces.settings.danger.deleteModal.deleting')
+                        : t('workspaces.settings.danger.deleteModal.confirmButton')}
                     </Button>
                   </div>
                 </div>

@@ -6,6 +6,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import { useToast } from '@/components/ui-monday/Toast'
@@ -18,6 +19,7 @@ import { CompanyInfoCard } from './components/CompanyInfoCard'
 import { LocationsCard } from './components/LocationsCard'
 import { ServicesCard } from './components/ServicesCard'
 import { CheckinsCard } from './components/CheckinsCard'
+import { CompanyDetailSkeleton } from '@/features/companies/components/CompanyDetailSkeleton'
 
 interface Company {
   id: string
@@ -51,30 +53,35 @@ interface CompanyService {
   } | null
 }
 
-const statusConfig: Record<string, { label: string; bg: string; text: string; dot: string }> = {
-  active: {
-    label: '\u10D0\u10E5\u10E2\u10D8\u10E3\u10E0\u10D8',
-    bg: 'bg-emerald-50',
-    text: 'text-emerald-700',
-    dot: 'bg-emerald-500',
-  },
-  inactive: {
-    label: '\u10D0\u10E0\u10D0\u10D0\u10E5\u10E2\u10D8\u10E3\u10E0\u10D8',
-    bg: 'bg-bg-tertiary',
-    text: 'text-text-secondary',
-    dot: 'bg-text-tertiary',
-  },
-  suspended: {
-    label: '\u10E8\u10D4\u10E9\u10D4\u10E0\u10D4\u10D1\u10E3\u10DA\u10D8',
-    bg: 'bg-red-50',
-    text: 'text-red-700',
-    dot: 'bg-red-500',
-  },
+function getStatusConfig(
+  t: ReturnType<typeof useTranslations>
+): Record<string, { label: string; bg: string; text: string; dot: string }> {
+  return {
+    active: {
+      label: t('companies.detail.statusActive'),
+      bg: 'bg-emerald-50',
+      text: 'text-emerald-700',
+      dot: 'bg-emerald-500',
+    },
+    inactive: {
+      label: t('companies.detail.statusInactive'),
+      bg: 'bg-bg-tertiary',
+      text: 'text-text-secondary',
+      dot: 'bg-text-tertiary',
+    },
+    suspended: {
+      label: t('companies.detail.statusSuspended'),
+      bg: 'bg-red-50',
+      text: 'text-red-700',
+      dot: 'bg-red-500',
+    },
+  }
 }
 
 export default function CompanyDetailsPage() {
   const params = useParams()
   const router = useRouter()
+  const t = useTranslations()
   const { showToast } = useToast()
   const companyId = params.id as string
 
@@ -128,14 +135,11 @@ export default function CompanyDetailsPage() {
       }
     } catch (error) {
       console.error('Error fetching company:', error)
-      showToast(
-        '\u10E8\u10D4\u10EA\u10D3\u10DD\u10DB\u10D0 \u10DB\u10DD\u10DC\u10D0\u10EA\u10D4\u10DB\u10D4\u10D1\u10D8\u10E1 \u10E9\u10D0\u10E2\u10D5\u10D8\u10E0\u10D7\u10D5\u10D8\u10E1\u10D0\u10E1',
-        'error'
-      )
+      showToast(t('companies.detail.loadError'), 'error')
     } finally {
       setLoading(false)
     }
-  }, [companyId, showToast])
+  }, [companyId, showToast, t])
 
   useEffect(() => {
     fetchCompanyData()
@@ -161,10 +165,7 @@ export default function CompanyDetailsPage() {
 
   async function handleSaveLocations() {
     if (editableLocations.length === 0) {
-      showToast(
-        '\u10D2\u10D7\u10EE\u10DD\u10D5\u10D7 \u10D3\u10D0\u10D0\u10DB\u10D0\u10E2\u10DD\u10D7 \u10DB\u10D8\u10DC\u10D8\u10DB\u10E3\u10DB \u10D4\u10E0\u10D7\u10D8 \u10DA\u10DD\u10D9\u10D0\u10EA\u10D8\u10D0',
-        'warning'
-      )
+      showToast(t('companies.detail.locationRequired'), 'warning')
       return
     }
 
@@ -212,13 +213,10 @@ export default function CompanyDetailsPage() {
 
       await fetchCompanyData()
       setEditingLocations(false)
-      showToast(
-        '\u10DA\u10DD\u10D9\u10D0\u10EA\u10D8\u10D4\u10D1\u10D8 \u10EC\u10D0\u10E0\u10DB\u10D0\u10E2\u10D4\u10D1\u10D8\u10D7 \u10D2\u10D0\u10DC\u10D0\u10EE\u10DA\u10D3\u10D0',
-        'success'
-      )
+      showToast(t('companies.detail.locationsUpdated'), 'success')
     } catch (error: any) {
       console.error('Error saving locations:', error)
-      showToast('\u10E8\u10D4\u10EA\u10D3\u10DD\u10DB\u10D0: ' + error.message, 'error')
+      showToast(t('companies.detail.saveError', { message: error.message }), 'error')
     } finally {
       setSaving(false)
     }
@@ -226,25 +224,7 @@ export default function CompanyDetailsPage() {
 
   // Loading skeleton
   if (loading) {
-    return (
-      <div className="max-w-5xl mx-auto px-6 py-8 animate-pulse">
-        <div className="h-5 w-20 bg-bg-tertiary rounded mb-6" />
-        <div className="flex items-start gap-6 mb-8">
-          <div className="w-14 h-14 bg-bg-tertiary rounded-xl" />
-          <div className="flex-1">
-            <div className="h-7 w-64 bg-bg-tertiary rounded mb-2" />
-            <div className="h-4 w-40 bg-bg-tertiary rounded" />
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 bg-bg-tertiary rounded-xl" />
-          ))}
-        </div>
-        <div className="h-64 bg-bg-tertiary rounded-xl mb-6" />
-        <div className="h-48 bg-bg-tertiary rounded-xl" />
-      </div>
-    )
+    return <CompanyDetailSkeleton />
   }
 
   if (!company) {
@@ -252,29 +232,22 @@ export default function CompanyDetailsPage() {
       <div className="max-w-5xl mx-auto px-6 py-16 text-center">
         <Building2 className="w-16 h-16 text-text-disabled mx-auto mb-4" />
         <h1 className="text-xl font-semibold text-text-primary mb-2">
-          {
-            '\u10D9\u10DD\u10DB\u10DE\u10D0\u10DC\u10D8\u10D0 \u10D0\u10E0 \u10DB\u10DD\u10D8\u10EB\u10D4\u10D1\u10DC\u10D0'
-          }
+          {t('companies.detail.notFoundTitle')}
         </h1>
-        <p className="text-text-tertiary mb-6">
-          {
-            '\u10DB\u10DD\u10D7\u10EE\u10DD\u10D5\u10DC\u10D8\u10DA\u10D8 \u10D9\u10DD\u10DB\u10DE\u10D0\u10DC\u10D8\u10D0 \u10D0\u10E0 \u10D0\u10E0\u10E1\u10D4\u10D1\u10DD\u10D1\u10E1 \u10D0\u10DC \u10EC\u10D0\u10E8\u10DA\u10D8\u10DA\u10D8\u10D0'
-          }
-        </p>
+        <p className="text-text-tertiary mb-6">{t('companies.detail.notFoundDescription')}</p>
         <button
           onClick={() => router.push('/companies')}
           className="inline-flex items-center gap-2 px-4 py-2 bg-monday-primary text-white rounded-lg hover:bg-monday-primary-hover transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          {
-            '\u10D9\u10DD\u10DB\u10DE\u10D0\u10DC\u10D8\u10D4\u10D1\u10D6\u10D4 \u10D3\u10D0\u10D1\u10E0\u10E3\u10DC\u10D4\u10D1\u10D0'
-          }
+          {t('companies.detail.backToCompanies')}
         </button>
       </div>
     )
   }
 
   const primaryLocation = locations.find(loc => loc.is_primary)
+  const statusConfig = getStatusConfig(t)
   const status = statusConfig[company.status ?? 'inactive'] || statusConfig.inactive
   const overdueServices = services.filter(
     s => s.next_inspection_date && new Date(s.next_inspection_date) < new Date()
@@ -288,7 +261,7 @@ export default function CompanyDetailsPage() {
           onClick={() => router.push('/companies')}
           className="hover:text-text-primary transition-colors"
         >
-          {'\u10D9\u10DD\u10DB\u10DE\u10D0\u10DC\u10D8\u10D4\u10D1\u10D8'}
+          {t('companies.detail.breadcrumbCompanies')}
         </button>
         <ChevronRight className="w-3.5 h-3.5" />
         <span className="text-text-primary font-medium truncate max-w-[200px]">{company.name}</span>
@@ -335,9 +308,7 @@ export default function CompanyDetailsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-text-primary">{locations.length}</p>
-              <p className="text-xs text-text-tertiary">
-                {'\u10DA\u10DD\u10D9\u10D0\u10EA\u10D8\u10D0'}
-              </p>
+              <p className="text-xs text-text-tertiary">{t('companies.detail.statLocations')}</p>
             </div>
           </div>
         </div>
@@ -348,9 +319,7 @@ export default function CompanyDetailsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-text-primary">{services.length}</p>
-              <p className="text-xs text-text-tertiary">
-                {'\u10E1\u10D4\u10E0\u10D5\u10D8\u10E1\u10D8'}
-              </p>
+              <p className="text-xs text-text-tertiary">{t('companies.detail.statServices')}</p>
             </div>
           </div>
         </div>
@@ -374,9 +343,7 @@ export default function CompanyDetailsPage() {
               <p
                 className={`text-xs ${overdueServices.length > 0 ? 'text-red-600' : 'text-text-tertiary'}`}
               >
-                {
-                  '\u10D5\u10D0\u10D3\u10D0\u10D2\u10D0\u10D3\u10D0\u10EA\u10D8\u10DA\u10D4\u10D1\u10E3\u10DA\u10D8'
-                }
+                {t('companies.detail.statOverdue')}
               </p>
             </div>
           </div>
@@ -407,10 +374,7 @@ export default function CompanyDetailsPage() {
         onFinish={() => {
           setEditingServices(false)
           fetchCompanyData()
-          showToast(
-            '\u10E1\u10D4\u10E0\u10D5\u10D8\u10E1\u10D4\u10D1\u10D8 \u10D2\u10D0\u10DC\u10D0\u10EE\u10DA\u10D3\u10D0',
-            'success'
-          )
+          showToast(t('companies.detail.servicesUpdated'), 'success')
         }}
         onCancel={() => {
           setEditingServices(false)

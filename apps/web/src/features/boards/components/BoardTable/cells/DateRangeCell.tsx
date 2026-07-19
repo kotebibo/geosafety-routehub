@@ -1,5 +1,6 @@
 import React, { useState, useMemo, memo, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { Calendar, ArrowRight } from 'lucide-react'
 import type { CellRendererProps } from '../types'
@@ -61,6 +62,7 @@ export const DateRangeCell = memo(function DateRangeCell({
   onEdit,
   onEditStart,
 }: CellRendererProps) {
+  const t = useTranslations()
   const [isOpen, setIsOpen] = useState(false)
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 })
   const buttonRef = useRef<HTMLDivElement>(null)
@@ -181,12 +183,12 @@ export const DateRangeCell = memo(function DateRangeCell({
             <span className="text-text-primary truncate">{displayText}</span>
             {durationDays !== null && (
               <span className="text-[10px] text-text-tertiary flex-shrink-0">
-                ({durationDays}d)
+                {t('boards.dateRangeCell.durationShort', { count: durationDays })}
               </span>
             )}
           </div>
         ) : (
-          <span className="text-text-tertiary">Set dates</span>
+          <span className="text-text-tertiary">{t('boards.dateRangeCell.setDates')}</span>
         )}
       </div>
 
@@ -206,7 +208,7 @@ export const DateRangeCell = memo(function DateRangeCell({
               {/* Start Date */}
               <div>
                 <label className="block text-xs font-medium text-text-secondary mb-1">
-                  Start Date
+                  {t('boards.dateRangeCell.startDate')}
                 </label>
                 <input
                   type="date"
@@ -224,7 +226,7 @@ export const DateRangeCell = memo(function DateRangeCell({
               {/* End Date */}
               <div>
                 <label className="block text-xs font-medium text-text-secondary mb-1">
-                  End Date
+                  {t('boards.dateRangeCell.endDate')}
                 </label>
                 <input
                   type="date"
@@ -245,9 +247,13 @@ export const DateRangeCell = memo(function DateRangeCell({
                       (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
                     )
                     if (diffDays >= 0) {
-                      return `Duration: ${diffDays} day${diffDays !== 1 ? 's' : ''}`
+                      return t('boards.dateRangeCell.duration', { count: diffDays })
                     }
-                    return <span className="text-red-500">End date must be after start date</span>
+                    return (
+                      <span className="text-red-500">
+                        {t('boards.dateRangeCell.endBeforeStartError')}
+                      </span>
+                    )
                   })()}
                 </div>
               )}
@@ -258,13 +264,13 @@ export const DateRangeCell = memo(function DateRangeCell({
                   onClick={handleClear}
                   className="px-3 py-1.5 text-xs text-text-secondary hover:text-text-primary hover:bg-bg-hover rounded transition-colors"
                 >
-                  Clear
+                  {t('boards.dateRangeCell.clear')}
                 </button>
                 <button
                   onClick={handleSave}
                   className="px-3 py-1.5 text-xs bg-monday-primary text-text-inverse rounded hover:bg-[var(--monday-primary-hover)] transition-colors"
                 >
-                  Save
+                  {t('common.save')}
                 </button>
               </div>
             </div>

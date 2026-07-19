@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { AddCompanyWithCompliance } from '@/features/compliance'
 import { companiesService } from '@/features/companies/services'
@@ -14,6 +15,7 @@ import { ArrowLeft } from 'lucide-react'
 
 export default function NewPDPCompanyPage() {
   const router = useRouter()
+  const t = useTranslations()
   const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (data: {
@@ -63,11 +65,11 @@ export default function NewPDPCompanyPage() {
       }
 
       // Step 3: Navigate to the company detail page
-      alert('კომპანია წარმატებით დაემატა!')
+      alert(t('companies.pdp.createSuccess'))
       router.push(`/companies/${company.id}`)
     } catch (err: any) {
       console.error('Error creating company:', err)
-      setError(err.message || 'დაფიქსირდა შეცდომა')
+      setError(err.message || t('companies.pdp.createError'))
     }
   }
 
@@ -85,7 +87,7 @@ export default function NewPDPCompanyPage() {
             className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>უკან დაბრუნება</span>
+            <span>{t('companies.pdp.backButton')}</span>
           </button>
         </div>
       </div>

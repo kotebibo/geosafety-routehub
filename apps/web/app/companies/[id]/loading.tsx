@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/shared/components/feedback'
+import { CompanyDetailSkeleton } from '@/features/companies/components/CompanyDetailSkeleton'
 
 export default function CompanyDetailLoading() {
-  return <PageSkeleton variant="form" />
+  return <CompanyDetailSkeleton />
 }

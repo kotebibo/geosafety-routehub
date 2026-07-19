@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBoardAnalytics } from '@/features/analytics/hooks/useBoardAnalytics'
 import { BoardAnalyticsKPICards } from '@/features/analytics/components/BoardAnalyticsKPICards'
@@ -23,22 +24,23 @@ import {
   RevenueForecastChart,
   CumulativeLossChart,
 } from '@/features/analytics/components/charts'
-import { RefreshCw } from 'lucide-react'
+import { AnalyticsSkeleton } from '@/features/analytics/components/AnalyticsSkeleton'
 
 type Tab = 'finance' | 'inspectors' | 'companies' | 'forecast'
 
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'finance', label: 'ფინანსები' },
-  { key: 'inspectors', label: 'ინსპექტორები' },
-  { key: 'companies', label: 'კომპანიები' },
-  { key: 'forecast', label: 'პროგნოზი' },
-]
-
 export default function AnalyticsPage() {
+  const t = useTranslations()
   const { userRole, loading: authLoading } = useAuth()
   const router = useRouter()
   const analytics = useBoardAnalytics()
   const [activeTab, setActiveTab] = useState<Tab>('finance')
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: 'finance', label: t('analytics.tabs.finance') },
+    { key: 'inspectors', label: t('analytics.tabs.inspectors') },
+    { key: 'companies', label: t('analytics.tabs.companies') },
+    { key: 'forecast', label: t('analytics.tabs.forecast') },
+  ]
 
   const currentRole = userRole?.role || ''
   const isAllowed = currentRole === 'admin' || currentRole === 'dispatcher'
@@ -50,21 +52,15 @@ export default function AnalyticsPage() {
   }, [authLoading, isAllowed, router])
 
   if (authLoading || !isAllowed) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
-      </div>
-    )
+    return <AnalyticsSkeleton />
   }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">ფინანსური ანალიტიკა</h1>
-        <p className="mt-1 text-sm text-text-secondary">
-          კომპანიების, ინსპექტორების და ლოკაციების ფინანსური მონაცემები
-        </p>
+        <h1 className="text-2xl font-bold text-text-primary">{t('analytics.pageTitle')}</h1>
+        <p className="mt-1 text-sm text-text-secondary">{t('analytics.pageDescription')}</p>
       </div>
 
       {/* Global KPIs */}
@@ -196,6 +192,7 @@ function CompaniesTab({ analytics }: { analytics: ReturnType<typeof useBoardAnal
 }
 
 function ForecastTab({ analytics }: { analytics: ReturnType<typeof useBoardAnalytics> }) {
+  const t = useTranslations()
   const forecast = analytics.revenueForecast
   if (!forecast) return null
 
@@ -204,25 +201,27 @@ function ForecastTab({ analytics }: { analytics: ReturnType<typeof useBoardAnaly
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-bg-primary rounded-lg border p-4">
-          <p className="text-xs text-text-tertiary mb-1">მიმდინარე თვიური</p>
+          <p className="text-xs text-text-tertiary mb-1">
+            {t('analytics.forecast.currentMonthly')}
+          </p>
           <p className="text-xl font-bold text-text-primary">
             ₾{forecast.current_monthly.toLocaleString()}
           </p>
         </div>
         <div className="bg-bg-primary rounded-lg border p-4">
-          <p className="text-xs text-text-tertiary mb-1">პროგნოზი 12 თვეში</p>
+          <p className="text-xs text-text-tertiary mb-1">{t('analytics.forecast.forecast12m')}</p>
           <p className="text-xl font-bold text-text-primary">
             ₾{forecast.months[forecast.months.length - 1]?.projected_revenue.toLocaleString() || 0}
           </p>
         </div>
         <div className="bg-bg-primary rounded-lg border p-4">
-          <p className="text-xs text-text-tertiary mb-1">ჯამური დანაკარგი (12 თვე)</p>
+          <p className="text-xs text-text-tertiary mb-1">{t('analytics.forecast.totalLoss12m')}</p>
           <p className="text-xl font-bold text-[#E2445C]">
             ₾{forecast.total_expiring_12m.toLocaleString()}
           </p>
         </div>
         <div className="bg-bg-primary rounded-lg border p-4">
-          <p className="text-xs text-text-tertiary mb-1">შენარჩუნების მაჩვენებელი</p>
+          <p className="text-xs text-text-tertiary mb-1">{t('analytics.forecast.retentionRate')}</p>
           <p className="text-xl font-bold text-text-primary">{forecast.retention_rate_12m}%</p>
         </div>
       </div>
@@ -235,16 +234,26 @@ function ForecastTab({ analytics }: { analytics: ReturnType<typeof useBoardAnaly
 
       {/* Monthly breakdown table */}
       <div className="bg-bg-primary rounded-lg border p-6">
-        <h3 className="text-sm font-semibold text-text-primary mb-4">თვიური დეტალები</h3>
+        <h3 className="text-sm font-semibold text-text-primary mb-4">
+          {t('analytics.forecast.monthlyDetails')}
+        </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-text-tertiary">
-                <th className="pb-2 font-medium">თვე</th>
-                <th className="pb-2 font-medium text-right">პროგნოზი</th>
-                <th className="pb-2 font-medium text-right">ვადაგასული</th>
-                <th className="pb-2 font-medium text-right">კუმ. დანაკარგი</th>
-                <th className="pb-2 font-medium text-right">კონტრაქტები</th>
+                <th className="pb-2 font-medium">{t('analytics.forecast.table.month')}</th>
+                <th className="pb-2 font-medium text-right">
+                  {t('analytics.forecast.table.forecast')}
+                </th>
+                <th className="pb-2 font-medium text-right">
+                  {t('analytics.forecast.table.expired')}
+                </th>
+                <th className="pb-2 font-medium text-right">
+                  {t('analytics.forecast.table.cumulativeLoss')}
+                </th>
+                <th className="pb-2 font-medium text-right">
+                  {t('analytics.forecast.table.contracts')}
+                </th>
               </tr>
             </thead>
             <tbody>

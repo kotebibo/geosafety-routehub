@@ -7,6 +7,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useMemo, useLayoutEffect, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { createPortal } from 'react-dom'
 import { CompanyPicker } from '../../CompanyPicker'
 import { cn } from '@/lib/utils'
@@ -22,6 +23,7 @@ interface CompanyCellProps {
 }
 
 export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: CompanyCellProps) {
+  const t = useTranslations()
   const [isEditing, setIsEditing] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 })
@@ -118,7 +120,9 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
           }}
           className="h-full min-h-[36px] w-full flex items-center gap-2 px-3 text-left hover:bg-bg-hover cursor-pointer"
         >
-          <span className="text-sm text-text-tertiary">აირჩიეთ კომპანია...</span>
+          <span className="text-sm text-text-tertiary">
+            {t('boards.companyCell.selectCompany')}
+          </span>
         </button>
 
         {isEditing &&
@@ -147,7 +151,7 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm text-text-primary truncate">
-            {selectedCompany?.name || 'კომპანია იტვირთება...'}
+            {selectedCompany?.name || t('boards.companyCell.companyLoading')}
           </div>
           {hasMultipleLocations && displayLocation && (
             <div className="flex items-center gap-1 text-xs text-text-secondary truncate">
@@ -175,7 +179,7 @@ export function CompanyCell({ value, onEdit, readOnly = false, onEditStart }: Co
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-sm text-text-primary truncate">
-            {selectedCompany?.name || 'კომპანია იტვირთება...'}
+            {selectedCompany?.name || t('boards.companyCell.companyLoading')}
           </div>
           {hasMultipleLocations && displayLocation && (
             <div className="flex items-center gap-1 text-xs text-text-secondary truncate">

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 
 // Authentication is now enabled
 const DISABLE_AUTH_FOR_DEV = false
@@ -43,15 +44,20 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
     return <>{children}</>
   }
 
-  // While auth is resolving, show a minimal spinner (NOT the full layout)
-  // This is intentionally lightweight — the real LCP gains come from
-  // the auth waterfall optimization and Sidebar lazy-load
+  // While auth is resolving, show a minimal neutral shell (NOT the full layout)
+  // This is intentionally lightweight and page-agnostic — RouteGuard doesn't
+  // know which page it's guarding yet. The real LCP gains come from the auth
+  // waterfall optimization and Sidebar lazy-load.
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-bg-secondary">
-        <div className="text-center">
-          <div className="animate-spin text-4xl mb-4">⚙️</div>
-          <p className="text-text-secondary">იტვირთება...</p>
+      <div className="min-h-screen bg-bg-secondary">
+        <div className="h-14 border-b border-border-light bg-bg-primary flex items-center px-4 md:px-6">
+          <Skeleton variant="bar" className="h-4 w-32" />
+        </div>
+        <div className="px-4 md:px-6 py-6 space-y-3">
+          <Skeleton variant="bar" className="h-6 w-48" />
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
         </div>
       </div>
     )

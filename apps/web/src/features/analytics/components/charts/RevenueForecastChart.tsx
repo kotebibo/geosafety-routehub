@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -18,9 +19,12 @@ interface RevenueForecastChartProps {
 }
 
 export function RevenueForecastChart({ data }: RevenueForecastChartProps) {
+  const t = useTranslations()
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">შემოსავლის პროგნოზი (12 თვე)</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">
+        {t('analytics.charts.revenueForecast.title')}
+      </h3>
       <ResponsiveContainer width="100%" height={350}>
         <ComposedChart data={data.months}>
           <defs>
@@ -61,9 +65,9 @@ export function RevenueForecastChart({ data }: RevenueForecastChartProps) {
             }}
             formatter={(value: any, name: any) => {
               const labels: Record<string, string> = {
-                projected_revenue: 'პროგნოზირებული',
-                expiring_revenue: 'ვადაგასული',
-                active_contracts: 'აქტიური კონტრაქტები',
+                projected_revenue: t('analytics.charts.revenueForecast.projected'),
+                expiring_revenue: t('analytics.charts.revenueForecast.expired'),
+                active_contracts: t('analytics.charts.revenueForecast.activeContracts'),
               }
               const label = labels[name] || name
               if (name === 'active_contracts') return [value, label]
@@ -73,9 +77,9 @@ export function RevenueForecastChart({ data }: RevenueForecastChartProps) {
           <Legend
             formatter={(value: string) => {
               const labels: Record<string, string> = {
-                projected_revenue: 'პროგნოზირებული შემოსავალი',
-                expiring_revenue: 'ვადაგასული შემოსავალი',
-                active_contracts: 'აქტიური კონტრაქტები',
+                projected_revenue: t('analytics.charts.revenueForecast.projectedRevenue'),
+                expiring_revenue: t('analytics.charts.revenueForecast.expiredRevenue'),
+                active_contracts: t('analytics.charts.revenueForecast.activeContracts'),
               }
               return labels[value] || value
             }}

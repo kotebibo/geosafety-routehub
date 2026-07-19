@@ -6,6 +6,8 @@ import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { PageHeader } from '@/shared/components/ui/PageHeader'
+import { CheckinsSkeleton } from '@/features/admin/components/CheckinsSkeleton'
+import { createClient } from '@/lib/supabase'
 import {
   MapPinned,
   RefreshCw,
@@ -28,6 +30,7 @@ import { formatDate, formatTime } from '@/shared/utils/formatDate'
 import { useUsers } from '@/hooks/useUsers'
 import { MultiUserPicker } from '@/features/boards/components'
 import type { LocationCheckin } from '@/types/checkin'
+import { supabase } from '@/lib/supabase/client'
 
 export default function AdminCheckinsPage() {
   const t = useTranslations()
@@ -47,6 +50,8 @@ export default function AdminCheckinsPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [officerPickerOpen, setOfficerPickerOpen] = useState(false)
   const { users } = useUsers()
+  const [exporting, setExporting] = useState(false)
+  const [csvError, setCsvError] = useState(false)
 
   const isAllowed = userRole?.role === 'admin' || userRole?.role === 'dispatcher'
 
@@ -86,6 +91,80 @@ export default function AdminCheckinsPage() {
 
   const isAdmin = userRole?.role === 'admin'
 
+  const downloadCSV = () => {
+    setExporting(true)
+    setCsvError(false)
+
+    try {
+      // 1. Define translation-friendly headers
+      const headers = [
+        t('checkin.page.columnCheckin') || 'Check-in Time',
+        t('checkin.page.columnCheckout') || 'Check-out Time',
+        t('checkin.page.columnDuration') || 'Duration',
+        t('checkin.page.columnOfficer') || 'Officer',
+        t('checkin.page.columnService') || 'Service',
+        t('checkin.page.columnVisitType') || 'Visit Type',
+        t('checkin.page.columnCompanyItem') || 'Company/Item',
+        t('checkin.page.columnLocation') || 'Location',
+        t('checkin.page.columnDistance') || 'Distance',
+        t('checkin.page.columnStatus') || 'Status',
+      ]
+
+      // 2. Map visible data rows to match headers
+      const rows = visibleCheckins.map(c => {
+        const c2 = c as any
+
+        const checkinTime = `${formatDate(c.created_at, language)} ${formatTime(c.created_at, language, { hour: '2-digit', minute: '2-digit' })}`
+        const checkoutTime = c.checked_out_at
+          ? `${formatDate(c.checked_out_at, language)} ${formatTime(c.checked_out_at, language, { hour: '2-digit', minute: '2-digit' })}`
+          : t('checkin.active') || 'Active'
+        const duration =
+          c.duration_minutes != null ? formatDuration(c.duration_minutes, language) : '—'
+        const companyItem = c.company_name || c2.board_item_name || '—'
+        const distance =
+          c.distance_from_location != null
+            ? `${c.distance_from_location}${t('checkin.meters') || 'm'}`
+            : '—'
+        const status = c.location_updated
+          ? t('checkin.page.gpsUpdated') || 'GPS Updated'
+          : c.notes || t('checkin.title') || 'Checked In'
+
+        return [
+          checkinTime,
+          checkoutTime,
+          duration,
+          c.inspector_name || '—',
+          c.service || '—',
+          c.checkin_type || '—',
+          companyItem,
+          c.location_name || '—',
+          distance,
+          status,
+        ].map(field => `"${String(field).replace(/"/g, '""')}"`) // Safe CSV escaping
+      })
+
+      // 3. Assemble CSV string
+      const csvContent = [headers.join(','), ...rows.map(row => row.join(','))].join('\n')
+
+      // 4. Download file with UTF-8 BOM so MS Excel opens non-English characters correctly
+      const blob = new Blob([`\ufeff${csvContent}`], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+
+      link.href = url
+      link.setAttribute('download', `checkins-${new Date().toISOString().split('T')[0]}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Export failed:', err)
+      setCsvError(true)
+    } finally {
+      setExporting(false)
+    }
+  }
+
   const handleDelete = async (id: string) => {
     if (!confirm(t('checkin.confirmDelete'))) return
     try {
@@ -101,11 +180,7 @@ export default function AdminCheckinsPage() {
   }
 
   if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-screen">
-        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
-      </div>
-    )
+    return <CheckinsSkeleton />
   }
 
   const visibleCheckins = search.trim()
@@ -198,25 +273,44 @@ export default function AdminCheckinsPage() {
           </div>
         </div>
 
-        {/* Filters toggle */}
         <div className="flex items-center justify-between mb-4">
-          <button
-            type="button"
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary bg-bg-primary border border-border-light rounded-lg hover:bg-bg-secondary transition-colors"
-          >
-            <Filter className="w-4 h-4" />
-            <span>{t('checkin.page.filters')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={loadCheckins}
-            disabled={loading}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary bg-bg-primary border border-border-light rounded-lg hover:bg-bg-secondary transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>{t('checkin.page.refresh')}</span>
-          </button>
+          {/* Left Side: CSV Export Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={downloadCSV}
+              disabled={exporting}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-text-secondary bg-bg-primary border border-border-light rounded-lg hover:bg-bg-secondary hover:text-text-primary transition-colors disabled:opacity-50"
+            >
+              <span>{t('checkin.page.exportCSV') || 'Export CSV'}</span>
+            </button>
+            {csvError && (
+              <span className="text-xs text-color-error font-medium">
+                {t('checkin.page.exportFailed') || 'Failed to export CSV'}
+              </span>
+            )}
+          </div>
+
+          {/* Right Side: Filters and Refresh Controls */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary bg-bg-primary border border-border-light rounded-lg hover:bg-bg-secondary transition-colors"
+            >
+              <Filter className="w-4 h-4" />
+              <span>{t('checkin.page.filters')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={loadCheckins}
+              disabled={loading}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-text-secondary bg-bg-primary border border-border-light rounded-lg hover:bg-bg-secondary transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <span>{t('checkin.page.refresh')}</span>
+            </button>
+          </div>
         </div>
 
         {/* Filters panel */}

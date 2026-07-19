@@ -6,11 +6,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { CheckCircle, Clock, AlertCircle, Calendar, Search, Filter } from 'lucide-react'
 import { PDPComplianceOverview } from '@/types/compliance'
 import { complianceService } from '@/services/compliance.service'
+import { CompaniesPdpListSkeleton } from './CompaniesPdpListSkeleton'
 
 export function ComplianceDashboard() {
+  const t = useTranslations()
   const [companies, setCompanies] = useState<PDPComplianceOverview[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'pending' | 'certified'>('all')
@@ -55,30 +58,38 @@ export function ComplianceDashboard() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'new':
-        return { text: 'ახალი', color: 'bg-bg-tertiary text-text-primary', icon: Clock }
+        return {
+          text: t('companies.pdp.statusNew'),
+          color: 'bg-bg-tertiary text-text-primary',
+          icon: Clock,
+        }
       case 'in_progress':
-        return { text: 'მიმდინარე', color: 'bg-blue-100 text-blue-800', icon: Clock }
+        return {
+          text: t('companies.pdp.statusInProgress'),
+          color: 'bg-blue-100 text-blue-800',
+          icon: Clock,
+        }
       case 'certified':
       case 'active':
-        return { text: 'სერტიფიცირებული', color: 'bg-green-100 text-green-800', icon: CheckCircle }
+        return {
+          text: t('companies.pdp.certified'),
+          color: 'bg-green-100 text-green-800',
+          icon: CheckCircle,
+        }
       default:
         return { text: status, color: 'bg-bg-tertiary text-text-primary', icon: AlertCircle }
     }
   }
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin text-4xl">⏳</div>
-      </div>
-    )
+    return <CompaniesPdpListSkeleton />
   }
 
   return (
     <div className="space-y-6">
       {/* Header & Filters */}
       <div className="bg-bg-primary rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">პერსონალურ მონაცემთა დაცვა - კომპლაენსი</h2>
+        <h2 className="text-2xl font-bold mb-4">{t('companies.pdp.dashboardTitle')}</h2>
 
         {/* Search & Filter */}
         <div className="flex gap-4 mb-4">
@@ -88,7 +99,7 @@ export function ComplianceDashboard() {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="ძებნა კომპანიის სახელით ან მისამართით..."
+              placeholder={t('companies.pdp.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2 border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -102,7 +113,7 @@ export function ComplianceDashboard() {
                   : 'bg-bg-tertiary text-text-primary hover:bg-bg-hover'
               }`}
             >
-              ყველა ({companies.length})
+              {t('companies.pdp.filterAll')} ({companies.length})
             </button>
             <button
               onClick={() => setFilter('pending')}
@@ -112,7 +123,7 @@ export function ComplianceDashboard() {
                   : 'bg-bg-tertiary text-text-primary hover:bg-bg-hover'
               }`}
             >
-              მიმდინარე
+              {t('companies.pdp.statusInProgress')}
             </button>
             <button
               onClick={() => setFilter('certified')}
@@ -122,7 +133,7 @@ export function ComplianceDashboard() {
                   : 'bg-bg-tertiary text-text-primary hover:bg-bg-hover'
               }`}
             >
-              სერტიფიცირებული
+              {t('companies.pdp.certified')}
             </button>
           </div>
         </div>
@@ -131,7 +142,7 @@ export function ComplianceDashboard() {
         <div className="grid grid-cols-3 gap-4 mt-6">
           <div className="p-4 bg-bg-secondary rounded-lg">
             <div className="text-2xl font-bold text-text-primary">{companies.length}</div>
-            <div className="text-sm text-text-secondary">სულ კომპანიები</div>
+            <div className="text-sm text-text-secondary">{t('companies.pdp.totalCompanies')}</div>
           </div>
           <div className="p-4 bg-blue-50 rounded-lg">
             <div className="text-2xl font-bold text-blue-900">
@@ -141,7 +152,7 @@ export function ComplianceDashboard() {
                 ).length
               }
             </div>
-            <div className="text-sm text-blue-700">მიმდინარე ფაზები</div>
+            <div className="text-sm text-blue-700">{t('companies.pdp.phasesInProgress')}</div>
           </div>
           <div className="p-4 bg-green-50 rounded-lg">
             <div className="text-2xl font-bold text-green-900">
@@ -151,7 +162,7 @@ export function ComplianceDashboard() {
                 ).length
               }
             </div>
-            <div className="text-sm text-green-700">სერტიფიცირებული</div>
+            <div className="text-sm text-green-700">{t('companies.pdp.certified')}</div>
           </div>
         </div>
       </div>
@@ -163,7 +174,7 @@ export function ComplianceDashboard() {
             <div className="text-text-tertiary mb-2">
               <AlertCircle className="w-12 h-12 mx-auto" />
             </div>
-            <p className="text-text-secondary">კომპანიები არ მოიძებნა</p>
+            <p className="text-text-secondary">{t('companies.pdp.noCompaniesFound')}</p>
           </div>
         ) : (
           filteredCompanies.map(company => {
@@ -218,7 +229,9 @@ export function ComplianceDashboard() {
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-xs text-text-secondary">
-                        {company.phases_completed} / 5 ფაზა დასრულებული
+                        {t('companies.pdp.phasesCompletedOfFive', {
+                          count: company.phases_completed,
+                        })}
                       </span>
                     </div>
                   </div>
@@ -228,7 +241,7 @@ export function ComplianceDashboard() {
                     <div className="flex items-center gap-2 text-sm text-text-secondary p-3 bg-blue-50 rounded-lg">
                       <Calendar className="w-4 h-4 text-blue-600" />
                       <span>
-                        შემდეგი შემოწმება:{' '}
+                        {t('companies.pdp.nextCheckup')}:{' '}
                         <strong>
                           {new Date(company.next_checkup_date).toLocaleDateString('ka-GE', {
                             year: 'numeric',

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslations } from 'next-intl'
 import { X, Megaphone, Send } from 'lucide-react'
 import { useToast } from '@/components/ui-monday/Toast'
 import type { AnnouncementPriority } from '@/types/announcement'
@@ -12,6 +13,7 @@ interface CreateAnnouncementModalProps {
 }
 
 export function CreateAnnouncementModal({ onClose, onSuccess }: CreateAnnouncementModalProps) {
+  const t = useTranslations()
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [title, setTitle] = useState('')
@@ -31,7 +33,7 @@ export function CreateAnnouncementModal({ onClose, onSuccess }: CreateAnnounceme
     e.preventDefault()
 
     if (!title.trim() || !content.trim()) {
-      showToast('გთხოვთ შეავსოთ ყველა ველი', 'warning')
+      showToast(t('news.createModal.fillAllFields'), 'warning')
       return
     }
 
@@ -48,11 +50,11 @@ export function CreateAnnouncementModal({ onClose, onSuccess }: CreateAnnounceme
         throw new Error(err.error || 'Failed to create announcement')
       }
 
-      showToast('განცხადება წარმატებით გამოქვეყნდა', 'success')
+      showToast(t('news.createModal.publishSuccess'), 'success')
       onSuccess()
       onClose()
     } catch (error: any) {
-      showToast(error.message || 'შეცდომა', 'error')
+      showToast(error.message || t('news.createModal.genericError'), 'error')
     } finally {
       setLoading(false)
     }
@@ -75,8 +77,8 @@ export function CreateAnnouncementModal({ onClose, onSuccess }: CreateAnnounceme
               <Megaphone className="w-5 h-5 text-monday-primary" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-text-primary">ახალი განცხადება</h2>
-              <p className="text-xs text-text-secondary">ყველა მომხმარებელი მიიღებს შეტყობინებას</p>
+              <h2 className="text-lg font-bold text-text-primary">{t('news.createModal.title')}</h2>
+              <p className="text-xs text-text-secondary">{t('news.createModal.subtitle')}</p>
             </div>
           </div>
           <button
@@ -91,13 +93,15 @@ export function CreateAnnouncementModal({ onClose, onSuccess }: CreateAnnounceme
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1.5">სათაური</label>
+            <label className="block text-sm font-medium text-text-primary mb-1.5">
+              {t('news.createModal.titleLabel')}
+            </label>
             <input
               type="text"
               value={title}
               onChange={e => setTitle(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-border-medium rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary/40 focus:border-monday-primary"
-              placeholder="განცხადების სათაური"
+              placeholder={t('news.createModal.titlePlaceholder')}
               maxLength={200}
               autoFocus
             />
@@ -105,23 +109,25 @@ export function CreateAnnouncementModal({ onClose, onSuccess }: CreateAnnounceme
 
           {/* Priority */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1.5">პრიორიტეტი</label>
+            <label className="block text-sm font-medium text-text-primary mb-1.5">
+              {t('news.createModal.priorityLabel')}
+            </label>
             <div className="flex gap-2">
               {(
                 [
                   {
                     value: 'normal',
-                    label: 'ჩვეულებრივი',
+                    label: t('news.priority.normal'),
                     style: 'border-border-medium bg-bg-primary text-text-primary',
                   },
                   {
                     value: 'important',
-                    label: 'მნიშვნელოვანი',
+                    label: t('news.priority.important'),
                     style: 'border-amber-300 bg-amber-50 text-amber-700',
                   },
                   {
                     value: 'urgent',
-                    label: 'სასწრაფო',
+                    label: t('news.priority.urgent'),
                     style: 'border-red-300 bg-red-50 text-red-700',
                   },
                 ] as const
@@ -144,12 +150,14 @@ export function CreateAnnouncementModal({ onClose, onSuccess }: CreateAnnounceme
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-medium text-text-primary mb-1.5">შინაარსი</label>
+            <label className="block text-sm font-medium text-text-primary mb-1.5">
+              {t('news.createModal.contentLabel')}
+            </label>
             <textarea
               value={content}
               onChange={e => setContent(e.target.value)}
               className="w-full px-3.5 py-2.5 border border-border-medium rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-monday-primary/40 focus:border-monday-primary resize-none"
-              placeholder="განცხადების ტექსტი..."
+              placeholder={t('news.createModal.contentPlaceholder')}
               rows={8}
               maxLength={5000}
             />
@@ -164,7 +172,7 @@ export function CreateAnnouncementModal({ onClose, onSuccess }: CreateAnnounceme
               className="px-4 py-2.5 text-sm text-text-secondary hover:bg-bg-hover rounded-lg transition-colors"
               disabled={loading}
             >
-              გაუქმება
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
@@ -172,7 +180,7 @@ export function CreateAnnouncementModal({ onClose, onSuccess }: CreateAnnounceme
               disabled={loading}
             >
               <Send className="w-4 h-4" />
-              {loading ? 'იგზავნება...' : 'გამოქვეყნება'}
+              {loading ? t('news.createModal.sending') : t('news.createModal.publish')}
             </button>
           </div>
         </form>

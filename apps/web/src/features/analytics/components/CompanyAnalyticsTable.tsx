@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { Search } from 'lucide-react'
 import type { CompanyRow } from '@/services/board-analytics.service'
 
@@ -9,6 +10,7 @@ interface CompanyAnalyticsTableProps {
 }
 
 export function CompanyAnalyticsTable({ data }: CompanyAnalyticsTableProps) {
+  const t = useTranslations()
   const [search, setSearch] = useState('')
   const [sortKey, setSortKey] = useState<keyof CompanyRow>('monthly')
   const [sortAsc, setSortAsc] = useState(false)
@@ -50,12 +52,14 @@ export function CompanyAnalyticsTable({ data }: CompanyAnalyticsTableProps) {
   return (
     <div className="bg-bg-primary rounded-lg border">
       <div className="px-6 py-4 border-b flex items-center justify-between gap-4">
-        <h3 className="text-sm font-semibold text-text-primary">კომპანიების ცხრილი</h3>
+        <h3 className="text-sm font-semibold text-text-primary">
+          {t('analytics.companyTable.title')}
+        </h3>
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-tertiary" />
           <input
             type="text"
-            placeholder="ძებნა..."
+            placeholder={t('analytics.companyTable.searchPlaceholder')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="pl-8 pr-3 py-1.5 text-xs border rounded-md bg-bg-secondary text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-1 focus:ring-blue-500 w-48"
@@ -67,25 +71,32 @@ export function CompanyAnalyticsTable({ data }: CompanyAnalyticsTableProps) {
           <thead>
             <tr className="border-b bg-bg-secondary/50">
               <th className={`text-left ${thClass}`} onClick={() => handleSort('name')}>
-                კომპანია{sortIcon('name')}
+                {t('analytics.companyTable.columns.company')}
+                {sortIcon('name')}
               </th>
               <th className={`text-left ${thClass}`} onClick={() => handleSort('service_type')}>
-                სერვისი{sortIcon('service_type')}
+                {t('analytics.companyTable.columns.service')}
+                {sortIcon('service_type')}
               </th>
               <th className={`text-right ${thClass}`} onClick={() => handleSort('monthly')}>
-                ყოველთვიური{sortIcon('monthly')}
+                {t('analytics.companyTable.columns.monthly')}
+                {sortIcon('monthly')}
               </th>
               <th className={`text-right ${thClass}`} onClick={() => handleSort('invoice')}>
-                ინვოისი{sortIcon('invoice')}
+                {t('analytics.companyTable.columns.invoice')}
+                {sortIcon('invoice')}
               </th>
               <th className={`text-right ${thClass}`} onClick={() => handleSort('vat')}>
-                დღგ{sortIcon('vat')}
+                {t('analytics.companyTable.columns.vat')}
+                {sortIcon('vat')}
               </th>
               <th className={`text-left ${thClass}`} onClick={() => handleSort('payment_method')}>
-                გადახდა{sortIcon('payment_method')}
+                {t('analytics.companyTable.columns.payment')}
+                {sortIcon('payment_method')}
               </th>
               <th className={`text-left ${thClass}`} onClick={() => handleSort('end_date')}>
-                ვადა{sortIcon('end_date')}
+                {t('analytics.companyTable.columns.expiry')}
+                {sortIcon('end_date')}
               </th>
             </tr>
           </thead>
@@ -125,7 +136,7 @@ export function CompanyAnalyticsTable({ data }: CompanyAnalyticsTableProps) {
       </div>
       {filtered.length > 50 && (
         <div className="px-4 py-2 text-xs text-text-tertiary border-t">
-          ნაჩვენებია 50 / {filtered.length}
+          {t('analytics.companyTable.shownCount', { shown: 50, total: filtered.length })}
         </div>
       )}
     </div>

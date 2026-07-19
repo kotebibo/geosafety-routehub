@@ -2,14 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTracking } from '@/features/tracking/hooks/useTracking'
 import { TrackingMap } from '@/features/tracking/components/TrackingMap'
 import { InspectorTrackingPanel } from '@/features/tracking/components/InspectorTrackingPanel'
 import { trackingService } from '@/services/tracking.service'
-import { RefreshCw } from 'lucide-react'
+import { TrackingSkeleton } from '@/features/tracking/components/TrackingSkeleton'
 
 export default function TrackingPage() {
+  const t = useTranslations()
   const { userRole, loading: authLoading } = useAuth()
   const router = useRouter()
   const currentRole = userRole?.role || ''
@@ -39,11 +41,7 @@ export default function TrackingPage() {
   }, [selectedInspectorId])
 
   if (authLoading || !isAllowed) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
-      </div>
-    )
+    return <TrackingSkeleton />
   }
 
   return (
@@ -65,12 +63,8 @@ export default function TrackingPage() {
         {inspectors.length === 0 && !isLoading && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="bg-bg-primary/90 rounded-lg px-6 py-4 text-center shadow-sm">
-              <p className="text-text-secondary text-sm">
-                No active officers in the last 30 minutes
-              </p>
-              <p className="text-text-tertiary text-xs mt-1">
-                Officers will appear here when they start tracking
-              </p>
+              <p className="text-text-secondary text-sm">{t('tracking.noActiveOfficers')}</p>
+              <p className="text-text-tertiary text-xs mt-1">{t('tracking.officersWillAppear')}</p>
             </div>
           </div>
         )}

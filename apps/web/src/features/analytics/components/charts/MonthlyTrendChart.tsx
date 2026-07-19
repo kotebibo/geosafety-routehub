@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -16,9 +17,12 @@ interface MonthlyTrendChartProps {
 }
 
 export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
+  const t = useTranslations()
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">ყოველთვიური ტრენდი</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">
+        {t('analytics.charts.monthlyTrend.title')}
+      </h3>
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={data}>
           <defs>
@@ -63,7 +67,9 @@ export function MonthlyTrendChart({ data }: MonthlyTrendChartProps) {
             }}
             formatter={(value: any, name: any) => [
               name === 'revenue' ? `₾${value.toLocaleString()}` : value,
-              name === 'revenue' ? 'შემოსავალი' : 'ახალი კონტრაქტები',
+              name === 'revenue'
+                ? t('analytics.charts.common.revenue')
+                : t('analytics.charts.monthlyTrend.newContracts'),
             ]}
           />
           <Area

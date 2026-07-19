@@ -7,6 +7,7 @@
 'use client'
 
 import React, { useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 import { MapPin } from 'lucide-react'
 import { useCompanyLocations } from '@/hooks/useCompanyLocations'
 import { OverflowTooltip } from './OverflowTooltip'
@@ -25,6 +26,7 @@ export function CompanyAddressCell({
   row,
   readOnly = true, // Always read-only as it's derived
 }: CompanyAddressCellProps) {
+  const t = useTranslations()
   // Try to get company value from row data if companyColumnId is provided
   const companyValue = useMemo(() => {
     if (value) {
@@ -85,7 +87,7 @@ export function CompanyAddressCell({
   if (!displayAddress) {
     return (
       <div className="h-full min-h-[36px] flex items-center px-3 text-text-tertiary text-sm">
-        მისამართი არ არის
+        {t('boards.companyAddressCell.noAddress')}
       </div>
     )
   }

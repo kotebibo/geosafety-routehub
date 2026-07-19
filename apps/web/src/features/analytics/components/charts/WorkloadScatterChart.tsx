@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import {
   ResponsiveContainer,
   ScatterChart,
@@ -17,10 +18,14 @@ interface WorkloadScatterChartProps {
 }
 
 export function WorkloadScatterChart({ data }: WorkloadScatterChartProps) {
+  const t = useTranslations()
+  const locationsLabel = t('analytics.charts.common.locations')
+  const revenueLabel = t('analytics.charts.common.revenue')
+
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
       <h3 className="text-sm font-semibold text-text-primary mb-4">
-        ინსპექტორი: ლოკაციები vs შემოსავალი
+        {t('analytics.charts.workloadScatter.title')}
       </h3>
       <ResponsiveContainer width="100%" height={350}>
         <ScatterChart margin={{ bottom: 10, left: 10, right: 20 }}>
@@ -28,13 +33,13 @@ export function WorkloadScatterChart({ data }: WorkloadScatterChartProps) {
           <XAxis
             type="number"
             dataKey="locations"
-            name="ლოკაციები"
+            name={locationsLabel}
             tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
             allowDecimals={false}
             label={{
-              value: 'ლოკაციები',
+              value: locationsLabel,
               position: 'insideBottom',
               offset: -5,
               fill: 'var(--text-tertiary)',
@@ -44,7 +49,7 @@ export function WorkloadScatterChart({ data }: WorkloadScatterChartProps) {
           <YAxis
             type="number"
             dataKey="revenue"
-            name="შემოსავალი"
+            name={revenueLabel}
             tick={{ fill: 'var(--text-tertiary)', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
@@ -60,7 +65,7 @@ export function WorkloadScatterChart({ data }: WorkloadScatterChartProps) {
               color: 'var(--text-primary)',
             }}
             formatter={(value: any, name: any) => [
-              name === 'შემოსავალი' ? `₾${value.toLocaleString()}` : value,
+              name === revenueLabel ? `₾${value.toLocaleString()}` : value,
               name,
             ]}
             labelFormatter={(_: any, payload: any) => payload?.[0]?.payload?.name || ''}

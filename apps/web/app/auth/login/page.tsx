@@ -7,16 +7,11 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useTranslations } from 'next-intl'
 import { createClient } from '@/lib/supabase'
 import { LogIn, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
+import { AuthSkeleton } from '@/features/auth/components/AuthSkeleton'
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-bg-secondary">
-          <div className="animate-spin text-4xl">⚙️</div>
-        </div>
-      }
-    >
+    <Suspense fallback={<AuthSkeleton />}>
       <LoginForm />
     </Suspense>
   )
@@ -40,14 +35,10 @@ function LoginForm() {
   // Show session expired message if redirected from expired session
   useEffect(() => {
     if (sessionStorage.getItem('routehub-session-expired')) {
-      setError(
-        language === 'ka'
-          ? 'სესია ამოიწურა, გთხოვთ თავიდან შეხვიდეთ'
-          : 'Session expired, please sign in again'
-      )
+      setError(t('login.sessionExpired'))
       sessionStorage.removeItem('routehub-session-expired')
     }
-  }, [language])
+  }, [t])
 
   const handleForgotPassword = async () => {
     if (!email) {

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useTranslations } from 'next-intl'
 
 import { cn } from '@/lib/utils'
 import { MessageSquare, Clock, Reply, Trash2, Edit2, Download, SmilePlus } from 'lucide-react'
@@ -58,6 +59,7 @@ export function CommentThread({
   onDelete,
   reactions,
 }: CommentThreadProps) {
+  const t = useTranslations()
   const isPanel = variant === 'panel'
 
   if (loading) {
@@ -88,10 +90,14 @@ export function CommentThread({
         <span
           className={cn('font-medium text-text-primary mb-1', isPanel ? 'text-base' : 'text-lg')}
         >
-          {isPanel ? 'განახლებები არ არის' : 'No updates yet'}
+          {isPanel
+            ? t('boards.updates.comments.emptyTitlePanel')
+            : t('boards.updates.comments.emptyTitleModal')}
         </span>
         <span className="text-sm text-text-secondary">
-          {isPanel ? 'დაამატეთ პირველი განახლება' : 'Be the first to add an update to this item'}
+          {isPanel
+            ? t('boards.updates.comments.emptyDescriptionPanel')
+            : t('boards.updates.comments.emptyDescriptionModal')}
         </span>
       </div>
     )

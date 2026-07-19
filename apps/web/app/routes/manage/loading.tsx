@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/shared/components/feedback'
+import { RoutesManageSkeleton } from '@/features/routes/components/RoutesManageSkeleton'
 
 export default function RoutesLoading() {
-  return <PageSkeleton variant="table" rows={8} />
+  return <RoutesManageSkeleton />
 }

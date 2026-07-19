@@ -6,6 +6,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   Plus,
   MapPin,
@@ -42,6 +43,7 @@ const emptyLocation: LocationFormData = {
 }
 
 export function LocationManager({ locations, onChange, disabled = false }: LocationManagerProps) {
+  const t = useTranslations()
   const { showToast } = useToast()
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editingData, setEditingData] = useState<LocationFormData | null>(null)
@@ -51,7 +53,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
   // Add a new location
   const handleAdd = () => {
     if (!newLocation.name.trim() || !newLocation.address.trim()) {
-      showToast('გთხოვთ შეავსოთ სახელი და მისამართი', 'warning')
+      showToast(t('companies.locationManager.nameAddressRequired'), 'warning')
       return
     }
 
@@ -79,7 +81,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
     if (editingIndex === null || !editingData) return
 
     if (!editingData.name.trim() || !editingData.address.trim()) {
-      showToast('გთხოვთ შეავსოთ სახელი და მისამართი', 'warning')
+      showToast(t('companies.locationManager.nameAddressRequired'), 'warning')
       return
     }
 
@@ -108,7 +110,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
   // Delete a location
   const handleDelete = (index: number) => {
     if (locations.length === 1) {
-      showToast('კომპანიას უნდა ჰქონდეს მინიმუმ ერთი ლოკაცია', 'warning')
+      showToast(t('companies.locationManager.minOneLocation'), 'warning')
       return
     }
 
@@ -138,7 +140,9 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Building2 className="w-5 h-5 text-text-secondary" />
-          <h3 className="text-lg font-medium text-text-primary">ლოკაციები / ფილიალები</h3>
+          <h3 className="text-lg font-medium text-text-primary">
+            {t('companies.locationManager.title')}
+          </h3>
           <span className="text-sm text-text-secondary">({locations.length})</span>
         </div>
         {!disabled && !isAdding && (
@@ -148,7 +152,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
             className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            დამატება
+            {t('companies.locationManager.add')}
           </button>
         )}
       </div>
@@ -184,7 +188,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                     <span className="font-medium text-text-primary">{location.name}</span>
                     {location.is_primary && (
                       <span className="text-xs bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded">
-                        მთავარი
+                        {t('companies.locationManager.primary')}
                       </span>
                     )}
                   </div>
@@ -203,7 +207,11 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                 {!disabled && (
                   <div className="flex items-center gap-1">
                     {!location.is_primary && (
-                      <Tooltip content="მთავარად დაყენება" side="top" delayDuration={200}>
+                      <Tooltip
+                        content={t('companies.locationManager.setAsPrimary')}
+                        side="top"
+                        delayDuration={200}
+                      >
                         <button
                           type="button"
                           onClick={() => handleSetPrimary(index)}
@@ -213,7 +221,11 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                         </button>
                       </Tooltip>
                     )}
-                    <Tooltip content="რედაქტირება" side="top" delayDuration={200}>
+                    <Tooltip
+                      content={t('companies.locationManager.edit')}
+                      side="top"
+                      delayDuration={200}
+                    >
                       <button
                         type="button"
                         onClick={() => handleEditStart(index)}
@@ -222,7 +234,11 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                         <Edit2 className="w-4 h-4" />
                       </button>
                     </Tooltip>
-                    <Tooltip content="წაშლა" side="top" delayDuration={200}>
+                    <Tooltip
+                      content={t('companies.locationManager.delete')}
+                      side="top"
+                      delayDuration={200}
+                    >
                       <button
                         type="button"
                         onClick={() => handleDelete(index)}
@@ -242,9 +258,9 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
         {locations.length === 0 && !isAdding && (
           <div className="border-2 border-dashed border-border-medium rounded-lg p-8 text-center">
             <MapPin className="w-12 h-12 text-text-tertiary mx-auto mb-3" />
-            <p className="text-text-secondary mb-2">ლოკაციები არ არის დამატებული</p>
+            <p className="text-text-secondary mb-2">{t('companies.locationManager.emptyTitle')}</p>
             <p className="text-sm text-text-secondary mb-4">
-              დაამატეთ მინიმუმ ერთი ლოკაცია კომპანიისთვის
+              {t('companies.locationManager.emptyDescription')}
             </p>
             {!disabled && (
               <button
@@ -253,7 +269,7 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
                 className="inline-flex items-center gap-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 <Plus className="w-4 h-4" />
-                პირველი ლოკაციის დამატება
+                {t('companies.locationManager.addFirst')}
               </button>
             )}
           </div>
@@ -262,7 +278,9 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
         {/* Add New Location Form */}
         {isAdding && (
           <div className="border-2 border-blue-300 border-dashed rounded-lg p-4 bg-blue-50">
-            <h4 className="font-medium text-text-primary mb-3">ახალი ლოკაცია</h4>
+            <h4 className="font-medium text-text-primary mb-3">
+              {t('companies.locationManager.newLocation')}
+            </h4>
             <LocationForm
               data={newLocation}
               onChange={setNewLocation}
@@ -279,9 +297,8 @@ export function LocationManager({ locations, onChange, disabled = false }: Locat
 
       {/* Help Text */}
       <p className="text-xs text-text-secondary">
-        <Star className="w-3 h-3 inline text-yellow-500 fill-yellow-500" /> მთავარი ლოკაცია
-        გამოჩნდება როგორც ნაგულისხმევი მისამართი. თუ კომპანიას აქვს მხოლოდ ერთი ლოკაცია, ის
-        ავტომატურად იქნება მთავარი.
+        <Star className="w-3 h-3 inline text-yellow-500 fill-yellow-500" />{' '}
+        {t('companies.locationManager.helpText')}
       </p>
     </div>
   )
@@ -303,29 +320,34 @@ function LocationForm({
   onCancel,
   showPrimaryToggle = true,
 }: LocationFormProps) {
+  const t = useTranslations()
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-3">
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">სახელი *</label>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            {t('companies.locationManager.formName')} *
+          </label>
           <input
             type="text"
             value={data.name}
             onChange={e => onChange({ ...data, name: e.target.value })}
-            placeholder="მაგ: მთავარი ოფისი, ფილიალი #1"
+            placeholder={t('companies.locationManager.formNamePlaceholder')}
             className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
 
         {/* Address */}
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">მისამართი *</label>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            {t('companies.locationManager.formAddress')} *
+          </label>
           <input
             type="text"
             value={data.address}
             onChange={e => onChange({ ...data, address: e.target.value })}
-            placeholder="მაგ: რუსთაველის გამზ. 12"
+            placeholder={t('companies.locationManager.formAddressPlaceholder')}
             className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
           />
         </div>
@@ -333,7 +355,7 @@ function LocationForm({
         {/* Contact Name */}
         <div>
           <label className="block text-sm font-medium text-text-primary mb-1">
-            საკონტაქტო პირი
+            {t('companies.locationManager.formContactName')}
           </label>
           <input
             type="text"
@@ -345,7 +367,9 @@ function LocationForm({
 
         {/* Contact Phone */}
         <div>
-          <label className="block text-sm font-medium text-text-primary mb-1">ტელეფონი</label>
+          <label className="block text-sm font-medium text-text-primary mb-1">
+            {t('companies.locationManager.formContactPhone')}
+          </label>
           <input
             type="tel"
             value={data.contact_phone || ''}
@@ -357,12 +381,14 @@ function LocationForm({
 
       {/* Notes */}
       <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">შენიშვნა</label>
+        <label className="block text-sm font-medium text-text-primary mb-1">
+          {t('companies.locationManager.formNotes')}
+        </label>
         <input
           type="text"
           value={data.notes || ''}
           onChange={e => onChange({ ...data, notes: e.target.value })}
-          placeholder="დამატებითი ინფორმაცია"
+          placeholder={t('companies.locationManager.formNotesPlaceholder')}
           className="w-full px-3 py-2 border border-border-medium rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
         />
       </div>
@@ -377,7 +403,9 @@ function LocationForm({
               onChange={e => onChange({ ...data, is_primary: e.target.checked })}
               className="w-4 h-4 rounded border-border-medium text-yellow-600 focus:ring-yellow-500"
             />
-            <span className="text-sm text-text-primary">მთავარი ლოკაცია</span>
+            <span className="text-sm text-text-primary">
+              {t('companies.locationManager.primaryLocationLabel')}
+            </span>
           </label>
         ) : (
           <div />
@@ -390,7 +418,7 @@ function LocationForm({
             className="flex items-center gap-1 px-3 py-1.5 text-sm text-text-secondary hover:bg-bg-hover rounded-lg"
           >
             <X className="w-4 h-4" />
-            გაუქმება
+            {t('companies.locationManager.cancel')}
           </button>
           <button
             type="button"
@@ -398,7 +426,7 @@ function LocationForm({
             className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
             <Check className="w-4 h-4" />
-            შენახვა
+            {t('companies.locationManager.save')}
           </button>
         </div>
       </div>

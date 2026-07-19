@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useCallback, useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import {
@@ -35,6 +36,7 @@ export function FilePreviewModal({
   onNavigate,
   currentIndex = 0,
 }: FilePreviewModalProps) {
+  const t = useTranslations()
   const [zoom, setZoom] = useState(1)
   const [rotation, setRotation] = useState(0)
 
@@ -130,13 +132,13 @@ export function FilePreviewModal({
           <FileText className="w-10 h-10 text-white/60" />
         </div>
         <p className="text-white/80 text-sm font-medium">{file.name}</p>
-        <p className="text-white/40 text-xs">Preview not available for this file type</p>
+        <p className="text-white/40 text-xs">{t('boards.filePreviewModal.previewNotAvailable')}</p>
         <button
           onClick={handleDownload}
           className="mt-2 flex items-center gap-2 px-5 py-2.5 bg-monday-primary text-white rounded-lg hover:bg-[var(--monday-primary-hover)] transition-colors text-sm font-medium"
         >
           <Download className="w-4 h-4" />
-          Download file
+          {t('boards.filePreviewModal.downloadFile')}
         </button>
       </div>
     )
@@ -164,7 +166,7 @@ export function FilePreviewModal({
               <button
                 onClick={() => setZoom(z => Math.max(z - 0.25, 0.25))}
                 className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                title="Zoom out"
+                title={t('boards.filePreviewModal.zoomOut')}
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
@@ -174,14 +176,14 @@ export function FilePreviewModal({
               <button
                 onClick={() => setZoom(z => Math.min(z + 0.25, 5))}
                 className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                title="Zoom in"
+                title={t('boards.filePreviewModal.zoomIn')}
               >
                 <ZoomIn className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setRotation(r => r + 90)}
                 className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                title="Rotate"
+                title={t('boards.filePreviewModal.rotate')}
               >
                 <RotateCw className="w-4 h-4" />
               </button>
@@ -191,7 +193,7 @@ export function FilePreviewModal({
                   setRotation(0)
                 }}
                 className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
-                title="Reset"
+                title={t('boards.filePreviewModal.reset')}
               >
                 <Maximize2 className="w-4 h-4" />
               </button>
@@ -204,7 +206,7 @@ export function FilePreviewModal({
             className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
           >
             <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">ჩამოტვირთვა</span>
+            <span className="hidden sm:inline">{t('boards.filePreviewModal.download')}</span>
           </button>
           <button
             onClick={onClose}

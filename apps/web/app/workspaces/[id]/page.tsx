@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
@@ -13,6 +14,8 @@ import {
 } from '@/features/workspaces/hooks'
 import { CreateBoardModal } from '@/features/boards/components'
 import { Button } from '@/shared/components/ui'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
+import { WorkspaceDetailSkeleton } from '@/features/workspaces/components/WorkspaceDetailSkeleton'
 import {
   Plus,
   MoreHorizontal,
@@ -39,6 +42,7 @@ const BOARD_COLORS: Record<string, string> = {
 }
 
 export default function WorkspaceDetailPage() {
+  const t = useTranslations()
   const router = useRouter()
   const params = useParams()
   const workspaceId = params.id as string
@@ -78,27 +82,20 @@ export default function WorkspaceDetailPage() {
   }
 
   if (workspaceLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">Loading workspace...</span>
-        </div>
-      </div>
-    )
+    return <WorkspaceDetailSkeleton />
   }
 
   if (!workspace) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <h2 className="text-h3 font-semibold text-text-primary mb-2">Workspace not found</h2>
-        <p className="text-text-secondary mb-6">
-          The workspace you're looking for doesn't exist or you don't have access.
-        </p>
+        <h2 className="text-h3 font-semibold text-text-primary mb-2">
+          {t('workspaces.detail.notFoundTitle')}
+        </h2>
+        <p className="text-text-secondary mb-6">{t('workspaces.detail.notFoundDescription')}</p>
         <Link href="/workspaces">
           <Button variant="primary">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Workspaces
+            {t('workspaces.detail.backToWorkspaces')}
           </Button>
         </Link>
       </div>
@@ -111,7 +108,7 @@ export default function WorkspaceDetailPage() {
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm text-text-secondary mb-6">
           <Link href="/workspaces" className="hover:text-monday-primary">
-            Workspaces
+            {t('workspaces.detail.breadcrumb')}
           </Link>
           <span>/</span>
           <span className="text-text-primary">{workspace.name}</span>
@@ -142,12 +139,12 @@ export default function WorkspaceDetailPage() {
             <Link href={`/workspaces/${workspaceId}/settings`}>
               <Button variant="ghost">
                 <Settings className="w-5 h-5 mr-2" />
-                Settings
+                {t('workspaces.detail.settings')}
               </Button>
             </Link>
             <Button variant="primary" onClick={() => setIsCreateBoardModalOpen(true)}>
               <Plus className="w-5 h-5 mr-2" />
-              Create Board
+              {t('workspaces.detail.createBoard')}
             </Button>
           </div>
         </div>
@@ -155,13 +152,24 @@ export default function WorkspaceDetailPage() {
         {/* Active Boards */}
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-text-primary mb-4">
-            Boards ({activeBoards?.length || 0})
+            {t('workspaces.detail.boardsHeading', { count: activeBoards?.length || 0 })}
           </h2>
 
           {activeBoardsLoading ? (
-            <div className="flex items-center gap-3 py-8">
-              <div className="w-6 h-6 border-3 border-monday-primary border-t-transparent rounded-full animate-spin" />
-              <span className="text-text-secondary">Loading boards...</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-44 rounded-lg overflow-hidden bg-bg-primary border border-border-light"
+                >
+                  <Skeleton className="h-2 w-full rounded-none" />
+                  <div className="p-5 space-y-3">
+                    <Skeleton variant="bar" className="h-5 w-3/4" />
+                    <Skeleton variant="bar" className="h-3 w-full" />
+                    <Skeleton variant="bar" className="h-3 w-2/3" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : activeBoards && activeBoards.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -189,7 +197,7 @@ export default function WorkspaceDetailPage() {
                   <Plus className="w-6 h-6 text-text-tertiary group-hover:text-monday-primary transition-colors" />
                 </div>
                 <span className="text-text-secondary group-hover:text-text-primary font-medium transition-colors">
-                  Create Board
+                  {t('workspaces.detail.createBoard')}
                 </span>
               </button>
             </div>
@@ -197,14 +205,14 @@ export default function WorkspaceDetailPage() {
             <div className="flex flex-col items-center justify-center py-16 bg-bg-primary rounded-lg border border-border-light">
               <LayoutDashboard className="w-12 h-12 text-text-tertiary mb-4" />
               <h3 className="text-lg font-semibold text-text-primary mb-2">
-                No boards in this workspace
+                {t('workspaces.detail.noBoardsTitle')}
               </h3>
               <p className="text-text-secondary text-center max-w-md mb-4">
-                Create your first board to start organizing your work.
+                {t('workspaces.detail.noBoardsDescription')}
               </p>
               <Button variant="primary" onClick={() => setIsCreateBoardModalOpen(true)}>
                 <Plus className="w-5 h-5 mr-2" />
-                Create Board
+                {t('workspaces.detail.createBoard')}
               </Button>
             </div>
           )}
@@ -218,7 +226,9 @@ export default function WorkspaceDetailPage() {
               className="flex items-center gap-2 text-text-secondary hover:text-text-primary mb-4"
             >
               <Archive className="w-4 h-4" />
-              <span className="font-medium">Archived ({archivedBoards.length})</span>
+              <span className="font-medium">
+                {t('workspaces.detail.archivedCount', { count: archivedBoards.length })}
+              </span>
               <ChevronDown
                 className={cn('w-4 h-4 transition-transform', showArchived && 'rotate-180')}
               />
@@ -269,6 +279,7 @@ function BoardCard({
   onArchive?: () => void
   onRestore?: () => void
 }) {
+  const t = useTranslations()
   const [showMenu, setShowMenu] = useState(false)
 
   return (
@@ -313,7 +324,7 @@ function BoardCard({
             {board.is_public && (
               <div className="flex items-center gap-1">
                 <Users className="w-3 h-3" />
-                <span>Shared</span>
+                <span>{t('workspaces.detail.shared')}</span>
               </div>
             )}
           </div>
@@ -337,7 +348,7 @@ function BoardCard({
               className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
             >
               <ArchiveRestore className="w-4 h-4" />
-              Restore
+              {t('workspaces.detail.restore')}
             </button>
           ) : (
             <button
@@ -348,7 +359,7 @@ function BoardCard({
               className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
             >
               <Archive className="w-4 h-4" />
-              Archive
+              {t('workspaces.detail.archive')}
             </button>
           )}
         </div>

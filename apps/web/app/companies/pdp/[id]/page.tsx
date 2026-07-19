@@ -6,10 +6,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Building2, MapPin, Phone, Mail, User } from 'lucide-react'
 import { PhaseProgressTracker } from '@/features/compliance'
 import { companiesService } from '@/features/companies/services'
+import { CompanyPdpDetailSkeleton } from '@/features/companies/components/CompanyPdpDetailSkeleton'
 
 interface Company {
   id: string
@@ -23,6 +25,7 @@ interface Company {
 
 export default function PDPCompanyDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter()
+  const t = useTranslations()
   const [company, setCompany] = useState<Company | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -42,11 +45,7 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-bg-secondary flex items-center justify-center">
-        <div className="animate-spin text-4xl">⏳</div>
-      </div>
-    )
+    return <CompanyPdpDetailSkeleton />
   }
 
   if (!company) {
@@ -54,12 +53,14 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
       <div className="min-h-screen bg-bg-secondary flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">🏢</div>
-          <h2 className="text-2xl font-semibold text-text-primary mb-2">კომპანია ვერ მოიძებნა</h2>
+          <h2 className="text-2xl font-semibold text-text-primary mb-2">
+            {t('companies.pdp.companyNotFound')}
+          </h2>
           <button
             onClick={() => router.push('/companies/pdp')}
             className="text-monday-primary hover:text-monday-primary-hover"
           >
-            უკან დაბრუნება
+            {t('companies.pdp.backButton')}
           </button>
         </div>
       </div>
@@ -76,7 +77,7 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
             className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>უკან დაბრუნება</span>
+            <span>{t('companies.pdp.backButton')}</span>
           </button>
         </div>
       </div>
@@ -92,7 +93,7 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-text-primary">{company.name}</h1>
-                  <p className="text-sm text-text-secondary">პერსონალურ მონაცემთა დაცვა</p>
+                  <p className="text-sm text-text-secondary">{t('companies.pdp.title')}</p>
                 </div>
               </div>
 
@@ -100,7 +101,9 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-text-tertiary flex-shrink-0 mt-0.5" />
                   <div>
-                    <div className="text-sm font-medium text-text-primary">მისამართი</div>
+                    <div className="text-sm font-medium text-text-primary">
+                      {t('companies.pdp.address')}
+                    </div>
                     <div className="text-sm text-text-secondary">{company.address}</div>
                   </div>
                 </div>
@@ -109,7 +112,9 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
                   <div className="flex items-start gap-3">
                     <User className="w-5 h-5 text-text-tertiary flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="text-sm font-medium text-text-primary">საკონტაქტო პირი</div>
+                      <div className="text-sm font-medium text-text-primary">
+                        {t('companies.pdp.contactPerson')}
+                      </div>
                       <div className="text-sm text-text-secondary">{company.contact_name}</div>
                     </div>
                   </div>
@@ -119,7 +124,9 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
                   <div className="flex items-start gap-3">
                     <Phone className="w-5 h-5 text-text-tertiary flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="text-sm font-medium text-text-primary">ტელეფონი</div>
+                      <div className="text-sm font-medium text-text-primary">
+                        {t('companies.pdp.phone')}
+                      </div>
                       <div className="text-sm text-text-secondary">{company.contact_phone}</div>
                     </div>
                   </div>
@@ -129,7 +136,9 @@ export default function PDPCompanyDetailPage({ params }: { params: { id: string 
                   <div className="flex items-start gap-3">
                     <Mail className="w-5 h-5 text-text-tertiary flex-shrink-0 mt-0.5" />
                     <div>
-                      <div className="text-sm font-medium text-text-primary">ელ. ფოსტა</div>
+                      <div className="text-sm font-medium text-text-primary">
+                        {t('companies.pdp.email')}
+                      </div>
                       <div className="text-sm text-text-secondary">{company.contact_email}</div>
                     </div>
                   </div>

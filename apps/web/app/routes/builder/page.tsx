@@ -6,23 +6,29 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase/client'
 import dynamic from 'next/dynamic'
 import { SaveRouteModal } from '@/features/routes/components/SaveRouteModal'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
+
+function MapLoading() {
+  return (
+    <div className="w-full h-full relative bg-bg-secondary">
+      <Skeleton variant="rect" className="absolute inset-0 h-full w-full rounded-none" />
+      <div className="absolute top-4 left-4">
+        <Skeleton variant="bar" className="h-8 w-40" />
+      </div>
+    </div>
+  )
+}
 
 // Import map dynamically (client-side only) - Using FIXED version
 const RouteMap = dynamic(
   () => import('@/features/locations/components/RouteMapFixed').then(mod => mod.RouteMapFixed),
   {
     ssr: false,
-    loading: () => (
-      <div className="w-full h-full flex items-center justify-center bg-bg-tertiary">
-        <div className="text-center">
-          <div className="animate-spin text-4xl mb-2">🗺️</div>
-          <p className="text-text-secondary">რუკის ჩატვირთვა...</p>
-        </div>
-      </div>
-    ),
+    loading: MapLoading,
   }
 )
 
@@ -48,6 +54,7 @@ interface OptimizedRouteData {
 }
 
 export default function RouteBuilderPage() {
+  const t = useTranslations()
   const [companies, setCompanies] = useState<Company[]>([])
   const [selectedCompanies, setSelectedCompanies] = useState<Company[]>([])
   const [optimizedRoute, setOptimizedRoute] = useState<RouteStop[]>([])
@@ -92,7 +99,7 @@ export default function RouteBuilderPage() {
 
   async function optimizeRoute() {
     if (selectedCompanies.length < 2) {
-      alert('აირჩიეთ მინიმუმ 2 კომპანია')
+      alert(t('routes.builder.selectAtLeastTwo'))
       return
     }
 
@@ -103,7 +110,7 @@ export default function RouteBuilderPage() {
         data: { session },
       } = await supabase.auth.getSession()
       if (!session) {
-        alert('გთხოვთ გაიაროთ ავტორიზაცია')
+        alert(t('routes.builder.pleaseAuthenticate'))
         setLoading(false)
         return
       }
@@ -154,7 +161,7 @@ export default function RouteBuilderPage() {
       }
     } catch (error) {
       console.error('Optimization error:', error)
-      alert('ოპტიმიზაცია ვერ მოხერხდა')
+      alert(t('routes.builder.optimizationFailed'))
     } finally {
       setLoading(false)
     }
@@ -167,7 +174,7 @@ export default function RouteBuilderPage() {
     startTime: string
   }) {
     if (optimizedRoute.length === 0) {
-      alert('გთხოვთ ჯერ შექმენით მარშრუტი')
+      alert(t('routes.builder.createRouteFirst'))
       return
     }
 
@@ -175,7 +182,7 @@ export default function RouteBuilderPage() {
       data: { session },
     } = await supabase.auth.getSession()
     if (!session) {
-      alert('გთხოვთ გაიაროთ ავტორიზაცია')
+      alert(t('routes.builder.pleaseAuthenticate'))
       return
     }
 
@@ -207,13 +214,13 @@ export default function RouteBuilderPage() {
     const result = await response.json()
 
     if (result.success) {
-      alert(`✅ მარშრუტი შენახულია!\nID: ${result.route.id}`)
+      alert(t('routes.builder.routeSaved', { id: result.route.id }))
       // Optionally clear the route
       // setSelectedCompanies([]);
       // setOptimizedRoute([]);
       // setRouteGeometry(null);
     } else {
-      throw new Error(result.error || 'შენახვა ვერ მოხერხდა')
+      throw new Error(result.error || t('routes.builder.saveFailed'))
     }
   }
 
@@ -236,12 +243,12 @@ export default function RouteBuilderPage() {
       {/* Top Bar */}
       <div className="bg-bg-primary border-b px-6 py-4 flex items-center justify-between flex-shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">მარშრუტის შექმნა</h1>
-          <p className="text-sm text-text-secondary">აირჩიეთ ობიექტები რუკაზე</p>
+          <h1 className="text-2xl font-bold text-text-primary">{t('routes.builder.title')}</h1>
+          <p className="text-sm text-text-secondary">{t('routes.builder.subtitle')}</p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-sm text-text-secondary">
-            არჩეული:{' '}
+            {t('routes.builder.selectedLabel')}{' '}
             <span className="font-bold text-monday-primary">{selectedCompanies.length}</span>
           </div>
           {selectedCompanies.length >= 2 && (
@@ -250,7 +257,7 @@ export default function RouteBuilderPage() {
               disabled={loading}
               className="px-6 py-2 bg-monday-primary text-white rounded-lg font-semibold hover:bg-monday-primary-hover disabled:opacity-50"
             >
-              {loading ? '⏳ ოპტიმიზაცია...' : '🚀 ოპტიმიზაცია'}
+              {loading ? t('routes.builder.optimizing') : t('routes.builder.optimizeButton')}
             </button>
           )}
         </div>
@@ -264,7 +271,7 @@ export default function RouteBuilderPage() {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="🔍 ძიება..."
+              placeholder={t('routes.builder.searchPlaceholder')}
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-monday-primary focus:border-transparent"
             />
           </div>
@@ -316,9 +323,13 @@ export default function RouteBuilderPage() {
         {/* Right Sidebar - Route Details */}
         <div className="w-96 bg-bg-primary border-l flex flex-col h-full">
           <div className="p-4 border-b">
-            <h2 className="text-lg font-bold text-text-primary">მარშრუტი</h2>
+            <h2 className="text-lg font-bold text-text-primary">
+              {t('routes.builder.routePanelTitle')}
+            </h2>
             {optimizedRoute.length > 0 && (
-              <div className="mt-2 text-sm text-green-600 font-medium">✅ ოპტიმიზირებული</div>
+              <div className="mt-2 text-sm text-green-600 font-medium">
+                {t('routes.builder.optimizedBadge')}
+              </div>
             )}
           </div>
 
@@ -326,8 +337,8 @@ export default function RouteBuilderPage() {
             {displayedRoute.length === 0 ? (
               <div className="p-8 text-center text-text-tertiary">
                 <div className="text-4xl mb-3">📍</div>
-                <p>აირჩიეთ ობიექტები</p>
-                <p className="text-sm mt-1">მარცხნივ სიიდან ან რუკაზე</p>
+                <p>{t('routes.builder.emptySelectTitle')}</p>
+                <p className="text-sm mt-1">{t('routes.builder.emptySelectSubtitle')}</p>
               </div>
             ) : (
               <div className="p-4 space-y-3">
@@ -355,7 +366,9 @@ export default function RouteBuilderPage() {
                         </div>
                         {stop.distance && index > 0 && (
                           <div className="text-xs text-monday-primary mt-2">
-                            🚗 ~{stop.distance.toFixed(1)} კმ წინა პუნქტიდან
+                            {t('routes.builder.distanceFromPrevious', {
+                              distance: stop.distance.toFixed(1),
+                            })}
                           </div>
                         )}
                       </div>
@@ -365,15 +378,21 @@ export default function RouteBuilderPage() {
 
                 {optimizedRoute.length > 0 && (
                   <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="text-sm font-semibold text-green-800 mb-2">📊 სტატისტიკა</div>
+                    <div className="text-sm font-semibold text-green-800 mb-2">
+                      {t('routes.builder.statsTitle')}
+                    </div>
                     <div className="text-xs text-green-700 space-y-1">
-                      <div>• სულ ობიექტი: {optimizedRoute.length}</div>
                       <div>
-                        • სრული მანძილი: ~
-                        {optimizedRoute.reduce((sum, s) => sum + (s.distance || 0), 0).toFixed(1)}{' '}
-                        კმ
+                        {t('routes.builder.statsTotalObjects', { count: optimizedRoute.length })}
                       </div>
-                      <div>• დაზოგილი: ~15-25%</div>
+                      <div>
+                        {t('routes.builder.statsTotalDistance', {
+                          distance: optimizedRoute
+                            .reduce((sum, s) => sum + (s.distance || 0), 0)
+                            .toFixed(1),
+                        })}
+                      </div>
+                      <div>{t('routes.builder.statsSaved')}</div>
                     </div>
                   </div>
                 )}
@@ -388,7 +407,7 @@ export default function RouteBuilderPage() {
                 disabled={optimizedRoute.length === 0}
                 className="w-full py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                💾 მარშრუტის შენახვა
+                {t('routes.builder.saveRoute')}
               </button>
               <button
                 onClick={() => {
@@ -398,7 +417,7 @@ export default function RouteBuilderPage() {
                 }}
                 className="w-full py-2 bg-bg-tertiary text-text-primary rounded-lg font-semibold hover:bg-border-medium"
               >
-                🗑️ გასუფთავება
+                {t('routes.builder.clear')}
               </button>
             </div>
           )}
@@ -410,7 +429,9 @@ export default function RouteBuilderPage() {
         isOpen={showSaveModal}
         onClose={() => setShowSaveModal(false)}
         onSave={handleSaveRoute}
-        defaultName={`მარშრუტი ${new Date().toLocaleDateString('ka-GE')}`}
+        defaultName={t('routes.builder.defaultRouteName', {
+          date: new Date().toLocaleDateString('ka-GE'),
+        })}
       />
     </div>
   )

@@ -1,8 +1,22 @@
 import { ChevronLeft, ChevronRight, Calendar, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { cn } from '@/lib/utils'
 
-import { MONTHS_KA } from '../helpers'
+const MONTH_KEYS = [
+  'january',
+  'february',
+  'march',
+  'april',
+  'may',
+  'june',
+  'july',
+  'august',
+  'september',
+  'october',
+  'november',
+  'december',
+]
 
 interface PaymentMonthTabsProps {
   selectedYear: number
@@ -27,6 +41,7 @@ export function PaymentMonthTabs({
   onSelectYear,
   onClearDateFilter,
 }: PaymentMonthTabsProps) {
+  const t = useTranslations()
   const now = new Date()
 
   return (
@@ -52,10 +67,10 @@ export function PaymentMonthTabs({
                 : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
             )}
           >
-            ყველა
+            {t('payments.monthTabs.all')}
           </button>
           <div className="w-px h-4 bg-border-light mx-0.5" />
-          {MONTHS_KA.map((name, i) => {
+          {MONTH_KEYS.map((monthKey, i) => {
             const isSelected = selectedMonth === i && !dateFrom && !dateTo
             const isCurrent = now.getMonth() === i && now.getFullYear() === selectedYear
             return (
@@ -74,7 +89,7 @@ export function PaymentMonthTabs({
                       : 'text-text-secondary hover:text-text-primary hover:bg-bg-secondary'
                 )}
               >
-                {name}
+                {t(`payments.monthTabs.months.${monthKey}`)}
               </button>
             )
           })}
@@ -110,7 +125,7 @@ export function PaymentMonthTabs({
         <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
           <Calendar className="w-4 h-4" />
           <span>
-            ფილტრი: {dateFrom || '...'} — {dateTo || '...'}
+            {t('payments.monthTabs.filterLabel', { from: dateFrom || '...', to: dateTo || '...' })}
           </span>
           <button onClick={onClearDateFilter} className="ml-auto p-0.5 hover:bg-blue-100 rounded">
             <X className="w-3.5 h-3.5" />

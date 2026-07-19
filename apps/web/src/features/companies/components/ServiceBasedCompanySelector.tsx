@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Search, Calendar, AlertCircle } from 'lucide-react'
 import { DEPLOYMENT_CONFIG, getEnabledServices, getServiceName } from '@/config/features'
 import { FeatureGate, FeatureGateInverse } from '@/components/FeatureGate'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 
 interface ServiceType {
   id: string
@@ -276,9 +277,14 @@ export function ServiceBasedCompanySelector({
           {/* Company Services List */}
           <div className="flex-1 overflow-y-auto">
             {loading ? (
-              <div className="p-8 text-center text-text-secondary">
-                <div className="animate-spin text-3xl mb-2">⏳</div>
-                <p>ჩატვირთვა...</p>
+              <div className="divide-y">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="p-4">
+                    <Skeleton variant="bar" className="h-4 w-1/2 mb-2" />
+                    <Skeleton variant="bar" className="h-3 w-3/4 mb-2" />
+                    <Skeleton className="h-5 w-20 rounded" />
+                  </div>
+                ))}
               </div>
             ) : sortedServices.length === 0 ? (
               <div className="p-8 text-center text-text-secondary">

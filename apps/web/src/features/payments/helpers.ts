@@ -1,20 +1,5 @@
 import type { ContractInfo } from '@/services/payments.service'
 
-export const MONTHS_KA = [
-  'იანვარი',
-  'თებერვალი',
-  'მარტი',
-  'აპრილი',
-  'მაისი',
-  'ივნისი',
-  'ივლისი',
-  'აგვისტო',
-  'სექტემბერი',
-  'ოქტომბერი',
-  'ნოემბერი',
-  'დეკემბერი',
-]
-
 export function getMonthRange(year: number, month: number) {
   const from = `${year}-${String(month + 1).padStart(2, '0')}-01`
   const lastDay = new Date(year, month + 1, 0).getDate()

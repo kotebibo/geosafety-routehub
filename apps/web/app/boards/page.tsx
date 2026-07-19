@@ -1,16 +1,19 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useUserBoards } from '@/features/boards/hooks'
 import { Button } from '@/shared/components/ui'
 import { CreateBoardModal, BoardAccessModal } from '@/features/boards/components'
+import { BoardsListSkeleton } from '@/features/boards/components/BoardsListSkeleton'
 import { Plus, MoreHorizontal, Trash2, Copy, ExternalLink, Users, Folder, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Board } from '@/features/boards/types/board'
 
 export default function BoardsPage() {
+  const t = useTranslations()
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
@@ -88,14 +91,7 @@ export default function BoardsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 border-4 border-monday-primary border-t-transparent rounded-full animate-spin" />
-          <span className="text-text-secondary">Loading boards...</span>
-        </div>
-      </div>
-    )
+    return <BoardsListSkeleton />
   }
 
   return (
@@ -104,13 +100,13 @@ export default function BoardsPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-h1 font-bold text-text-primary mb-2">My Boards</h1>
-            <p className="text-text-secondary">Create and manage your custom boards</p>
+            <h1 className="text-h1 font-bold text-text-primary mb-2">{t('boards.list.title')}</h1>
+            <p className="text-text-secondary">{t('boards.list.subtitle')}</p>
           </div>
 
           <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
             <Plus className="w-5 h-5 mr-2" />
-            Create Board
+            {t('boards.list.createBoard')}
           </Button>
         </div>
 
@@ -121,14 +117,15 @@ export default function BoardsPage() {
             <div className="w-24 h-24 rounded-full bg-bg-primary border-2 border-border-light flex items-center justify-center mb-6">
               <Plus className="w-12 h-12 text-text-tertiary" />
             </div>
-            <h2 className="text-h3 font-semibold text-text-primary mb-2">No boards yet</h2>
+            <h2 className="text-h3 font-semibold text-text-primary mb-2">
+              {t('boards.list.emptyTitle')}
+            </h2>
             <p className="text-text-secondary text-center max-w-md mb-6">
-              Create your first board to start organizing your work. Choose from templates or build
-              from scratch.
+              {t('boards.list.emptyDescription')}
             </p>
             <Button variant="primary" onClick={() => setIsCreateModalOpen(true)}>
               <Plus className="w-5 h-5 mr-2" />
-              Create Your First Board
+              {t('boards.list.createFirstBoard')}
             </Button>
           </div>
         ) : (
@@ -158,7 +155,7 @@ export default function BoardsPage() {
                 <Plus className="w-8 h-8 text-text-tertiary group-hover:text-monday-primary transition-colors" />
               </div>
               <span className="text-text-secondary group-hover:text-text-primary font-medium transition-colors">
-                Create New Board
+                {t('boards.list.createNewBoard')}
               </span>
             </button>
           </div>
@@ -169,21 +166,21 @@ export default function BoardsPage() {
           <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">{boards.length}</div>
-              <div className="text-text-secondary text-sm">Total Boards</div>
+              <div className="text-text-secondary text-sm">{t('boards.list.totalBoards')}</div>
             </div>
 
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">
                 {boards.filter(b => b.is_public).length}
               </div>
-              <div className="text-text-secondary text-sm">Shared Boards</div>
+              <div className="text-text-secondary text-sm">{t('boards.list.sharedBoards')}</div>
             </div>
 
             <div className="bg-bg-primary border border-border-light rounded-lg p-6">
               <div className="text-3xl font-bold text-text-primary mb-1">
                 {boards.filter(b => b.owner_id === user?.id).length}
               </div>
-              <div className="text-text-secondary text-sm">Boards You Own</div>
+              <div className="text-text-secondary text-sm">{t('boards.list.boardsYouOwn')}</div>
             </div>
           </div>
         )}
@@ -226,6 +223,7 @@ function BoardCard({
   isOwner: boolean
   onAccessClick: () => void
 }) {
+  const t = useTranslations()
   const [showMenu, setShowMenu] = useState(false)
 
   return (
@@ -268,12 +266,12 @@ function BoardCard({
           {board.workspace_id && (
             <div className="flex items-center gap-1">
               <Folder className="w-3 h-3" />
-              <span className="truncate max-w-[80px]">Workspace</span>
+              <span className="truncate max-w-[80px]">{t('boards.list.workspace')}</span>
             </div>
           )}
           <div className="flex items-center gap-1">
             <User className="w-3 h-3" />
-            <span>{isOwner ? 'You' : 'Shared'}</span>
+            <span>{isOwner ? t('boards.list.you') : t('boards.list.shared')}</span>
           </div>
         </div>
 
@@ -282,7 +280,7 @@ function BoardCard({
             {board.is_public && (
               <div className="flex items-center gap-1">
                 <Users className="w-3 h-3" />
-                <span>Public</span>
+                <span>{t('boards.list.public')}</span>
               </div>
             )}
             <span className="capitalize bg-bg-secondary px-1.5 py-0.5 rounded">
@@ -302,11 +300,11 @@ function BoardCard({
         >
           <button className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2">
             <ExternalLink className="w-4 h-4" />
-            Open in New Tab
+            {t('boards.list.openInNewTab')}
           </button>
           <button className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2">
             <Copy className="w-4 h-4" />
-            Duplicate
+            {t('boards.list.duplicate')}
           </button>
           <button
             onClick={() => {
@@ -316,12 +314,12 @@ function BoardCard({
             className="w-full px-4 py-2 text-left text-sm text-text-primary hover:bg-bg-hover flex items-center gap-2"
           >
             <Users className="w-4 h-4" />
-            Access
+            {t('boards.list.access')}
           </button>
           <div className="my-1 border-t border-border-light" />
           <button className="w-full px-4 py-2 text-left text-sm text-status-stuck hover:bg-bg-hover flex items-center gap-2">
             <Trash2 className="w-4 h-4" />
-            Delete
+            {t('boards.list.delete')}
           </button>
         </div>
       )}

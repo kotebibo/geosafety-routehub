@@ -5,7 +5,9 @@ import {
   ExternalLink,
   Link2,
   EyeOff,
+  RotateCcw,
 } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import { cn } from '@/lib/utils'
 import type { ContractInfo } from '@/services/payments.service'
@@ -20,6 +22,7 @@ interface PaymentGroupRowProps {
   actionLoading: string | null
   onToggle: () => void
   onIgnore: (transactionId: string) => void
+  onUnignore: (transactionId: string) => void
   onNavigateToBoard: (boardId: string, itemId?: string) => void
   onNavigateUnmatched: () => void
 }
@@ -31,9 +34,11 @@ export function PaymentGroupRow({
   actionLoading,
   onToggle,
   onIgnore,
+  onUnignore,
   onNavigateToBoard,
   onNavigateUnmatched,
 }: PaymentGroupRowProps) {
+  const t = useTranslations()
   const diff = group.totalExpected != null ? group.totalPaid - group.totalExpected : null
 
   return (
@@ -67,7 +72,7 @@ export function PaymentGroupRow({
                   : null
                 onNavigateToBoard(group.boardId!, contractItemId || undefined)
               }}
-              title="ხელშეკრულების ბორდზე გადასვლა"
+              title={t('payments.table.viewContract')}
               className="p-0.5 rounded hover:bg-bg-primary text-text-tertiary hover:text-monday-primary flex-shrink-0"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -110,34 +115,48 @@ export function PaymentGroupRow({
       <td />
       <td />
       <td className="px-3 py-2.5">
-        {group.transactions.some(t => t.status !== 'ignored') && (
-          <div className="flex items-center gap-1">
-            {group.transactions.some(t => t.status === 'unmatched') && (
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  onNavigateUnmatched()
-                }}
-                title="დაკავშირება"
-                className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
-              >
-                <Link2 className="w-3.5 h-3.5" />
-              </button>
-            )}
-            {group.transactions.length === 1 && (
-              <button
-                onClick={e => {
-                  e.stopPropagation()
-                  onIgnore(group.transactions[0].id)
-                }}
-                title="იგნორირება"
-                disabled={actionLoading === group.transactions[0].id}
-                className="p-1 rounded hover:bg-bg-secondary text-text-tertiary hover:text-red-500 disabled:opacity-30"
-              >
-                <EyeOff className="w-3.5 h-3.5" />
-              </button>
-            )}
-          </div>
+        {group.transactions.length === 1 && group.transactions[0].status === 'ignored' ? (
+          <button
+            onClick={e => {
+              e.stopPropagation()
+              onUnignore(group.transactions[0].id)
+            }}
+            title={t('payments.table.unignoreAction')}
+            disabled={actionLoading === group.transactions[0].id}
+            className="p-1 rounded hover:bg-bg-secondary text-text-tertiary hover:text-monday-primary disabled:opacity-30"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        ) : (
+          group.transactions.some(t => t.status !== 'ignored') && (
+            <div className="flex items-center gap-1">
+              {group.transactions.some(t => t.status === 'unmatched') && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation()
+                    onNavigateUnmatched()
+                  }}
+                  title={t('payments.table.linkAction')}
+                  className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
+                >
+                  <Link2 className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {group.transactions.length === 1 && (
+                <button
+                  onClick={e => {
+                    e.stopPropagation()
+                    onIgnore(group.transactions[0].id)
+                  }}
+                  title={t('payments.table.ignoreAction')}
+                  disabled={actionLoading === group.transactions[0].id}
+                  className="p-1 rounded hover:bg-bg-secondary text-text-tertiary hover:text-red-500 disabled:opacity-30"
+                >
+                  <EyeOff className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          )
         )}
       </td>
     </tr>

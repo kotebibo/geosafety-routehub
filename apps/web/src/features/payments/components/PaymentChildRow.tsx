@@ -1,4 +1,5 @@
-import { Link2, EyeOff } from 'lucide-react'
+import { Link2, EyeOff, RotateCcw } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 import type { BankTransaction } from '@/services/payments.service'
 
@@ -9,6 +10,7 @@ interface PaymentChildRowProps {
   txn: BankTransaction
   actionLoading: string | null
   onIgnore: (transactionId: string) => void
+  onUnignore: (transactionId: string) => void
   onNavigateUnmatched: () => void
 }
 
@@ -16,8 +18,10 @@ export function PaymentChildRow({
   txn,
   actionLoading,
   onIgnore,
+  onUnignore,
   onNavigateUnmatched,
 }: PaymentChildRowProps) {
+  const t = useTranslations()
   return (
     <tr className="border-b border-border-light/50 hover:bg-bg-secondary/30 transition-colors">
       {/* Indent + date */}
@@ -52,19 +56,28 @@ export function PaymentChildRow({
       {/* Status */}
       <td className="px-4 py-2">
         <div className="flex items-center gap-1 flex-wrap">
-          {getStatusBadge(txn.status)}
-          {getSourceBadge(txn.match_source)}
+          {getStatusBadge(txn.status, t)}
+          {getSourceBadge(txn.match_source, t)}
         </div>
       </td>
 
       {/* Actions */}
       <td className="px-3 py-2">
-        {txn.status !== 'ignored' && (
+        {txn.status === 'ignored' ? (
+          <button
+            onClick={() => onUnignore(txn.id)}
+            title={t('payments.table.unignoreAction')}
+            disabled={actionLoading === txn.id}
+            className="p-1 rounded hover:bg-bg-secondary text-text-tertiary hover:text-monday-primary disabled:opacity-30"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
+        ) : (
           <div className="flex items-center gap-1">
             {txn.status === 'unmatched' && (
               <button
                 onClick={onNavigateUnmatched}
-                title="დაკავშირება"
+                title={t('payments.table.linkAction')}
                 className="p-1 rounded hover:bg-bg-secondary text-monday-primary"
               >
                 <Link2 className="w-3.5 h-3.5" />
@@ -72,7 +85,7 @@ export function PaymentChildRow({
             )}
             <button
               onClick={() => onIgnore(txn.id)}
-              title="იგნორირება"
+              title={t('payments.table.ignoreAction')}
               disabled={actionLoading === txn.id}
               className="p-1 rounded hover:bg-bg-secondary text-text-tertiary hover:text-red-500 disabled:opacity-30"
             >

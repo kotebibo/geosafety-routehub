@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useMemo } from 'react'
 import L from 'leaflet'
+import { useTranslations } from 'next-intl'
 import 'leaflet/dist/leaflet.css'
 import type { CoordinateItem } from '../types'
 
@@ -39,6 +40,7 @@ function createMarkerIcon(color: string, shape: 'circle' | 'diamond'): L.DivIcon
 }
 
 export function ComparisonMap({ items }: ComparisonMapProps) {
+  const t = useTranslations()
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
   const layerGroup = useRef<L.LayerGroup | null>(null)
@@ -145,18 +147,18 @@ export function ComparisonMap({ items }: ComparisonMapProps) {
       const popupContent = `
         <div style="padding:8px;min-width:200px;font-family:system-ui,sans-serif;">
           <div style="font-weight:600;font-size:13px;color:#111827;margin-bottom:6px;">${item.name}</div>
-          ${item.address ? `<div style="font-size:11px;color:#6B7280;margin-bottom:4px;">მისამართი: ${item.address}</div>` : ''}
-          ${item.sk ? `<div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">ს/კ: ${item.sk}</div>` : ''}
+          ${item.address ? `<div style="font-size:11px;color:#6B7280;margin-bottom:4px;">${t('coordinatesMap.comparisonMap.addressLabel')} ${item.address}</div>` : ''}
+          ${item.sk ? `<div style="font-size:11px;color:#9CA3AF;margin-bottom:6px;">${t('coordinatesMap.comparisonMap.skLabel')} ${item.sk}</div>` : ''}
           <div style="font-size:11px;color:#6B7280;margin-bottom:2px;">
             <span style="display:inline-block;width:8px;height:8px;background:#3B82F6;border-radius:50%;margin-right:4px;"></span>
-            GPS: ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)}
+            ${t('coordinatesMap.comparisonMap.gpsLabel')} ${gpsLat.toFixed(5)}, ${gpsLng.toFixed(5)}
           </div>
           <div style="font-size:11px;color:#6B7280;margin-bottom:6px;">
             <span style="display:inline-block;width:8px;height:8px;background:#F97316;transform:rotate(45deg);margin-right:4px;"></span>
-            გეოკოდ.: ${addrLat.toFixed(5)}, ${addrLng.toFixed(5)}
+            ${t('coordinatesMap.comparisonMap.geocodedLabel')} ${addrLat.toFixed(5)}, ${addrLng.toFixed(5)}
           </div>
           <div style="font-size:12px;font-weight:600;color:${lineColor};padding:4px 8px;background:${lineColor}15;border-radius:4px;display:inline-block;">
-            ${dist.toFixed(2)} კმ
+            ${dist.toFixed(2)} ${t('coordinatesMap.comparisonMap.kmUnit')}
           </div>
         </div>
       `
@@ -194,31 +196,43 @@ export function ComparisonMap({ items }: ComparisonMapProps) {
       <div className="absolute top-3 right-3 z-[1000] flex flex-col gap-2">
         {/* Legend */}
         <div className="bg-bg-primary/95 backdrop-blur-sm rounded-lg shadow-lg border border-border-primary p-3 text-xs">
-          <div className="font-semibold text-text-primary mb-2">ლეგენდა</div>
+          <div className="font-semibold text-text-primary mb-2">
+            {t('coordinatesMap.comparisonMap.legend.title')}
+          </div>
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <span className="inline-block w-2.5 h-2.5 bg-blue-500 rounded-full border border-white" />
-              <span className="text-text-secondary">GPS კოორდინატი</span>
+              <span className="text-text-secondary">
+                {t('coordinatesMap.comparisonMap.legend.gpsCoordinate')}
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <span
                 className="inline-block w-2.5 h-2.5 bg-orange-500 border border-white"
                 style={{ transform: 'rotate(45deg)' }}
               />
-              <span className="text-text-secondary">გეოკოდირებული</span>
+              <span className="text-text-secondary">
+                {t('coordinatesMap.comparisonMap.legend.geocoded')}
+              </span>
             </div>
             <div className="border-t border-border-primary pt-1.5 mt-1.5 space-y-1">
               <div className="flex items-center gap-2">
                 <span className="inline-block w-4 h-0.5 bg-emerald-500" />
-                <span className="text-text-secondary">≤ 1 კმ</span>
+                <span className="text-text-secondary">
+                  {t('coordinatesMap.comparisonMap.distance.close')}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="inline-block w-4 h-0.5 bg-amber-500" />
-                <span className="text-text-secondary">1–5 კმ</span>
+                <span className="text-text-secondary">
+                  {t('coordinatesMap.comparisonMap.distance.medium')}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="inline-block w-4 h-0.5 bg-red-500 border-dashed" />
-                <span className="text-text-secondary">&gt; 5 კმ</span>
+                <span className="text-text-secondary">
+                  {t('coordinatesMap.comparisonMap.distance.far')}
+                </span>
               </div>
             </div>
           </div>
@@ -226,14 +240,16 @@ export function ComparisonMap({ items }: ComparisonMapProps) {
 
         {/* Filters */}
         <div className="bg-bg-primary/95 backdrop-blur-sm rounded-lg shadow-lg border border-border-primary p-3 text-xs">
-          <div className="font-semibold text-text-primary mb-2">ფილტრი</div>
+          <div className="font-semibold text-text-primary mb-2">
+            {t('coordinatesMap.comparisonMap.filter.title')}
+          </div>
           <div className="space-y-1">
             {(
               [
-                ['all', 'ყველა', stats?.total],
-                ['close', '≤ 1 კმ', stats?.close],
-                ['medium', '1–5 კმ', stats?.medium],
-                ['far', '> 5 კმ', stats?.far],
+                ['all', t('coordinatesMap.comparisonMap.distance.all'), stats?.total],
+                ['close', t('coordinatesMap.comparisonMap.distance.close'), stats?.close],
+                ['medium', t('coordinatesMap.comparisonMap.distance.medium'), stats?.medium],
+                ['far', t('coordinatesMap.comparisonMap.distance.far'), stats?.far],
               ] as const
             ).map(([key, label, count]) => (
               <button
@@ -256,18 +272,30 @@ export function ComparisonMap({ items }: ComparisonMapProps) {
               onChange={e => setShowLines(e.target.checked)}
               className="rounded border-border-primary"
             />
-            <span className="text-text-secondary">ხაზები</span>
+            <span className="text-text-secondary">
+              {t('coordinatesMap.comparisonMap.filter.lines')}
+            </span>
           </label>
         </div>
 
         {/* Stats */}
         {stats && (
           <div className="bg-bg-primary/95 backdrop-blur-sm rounded-lg shadow-lg border border-border-primary p-3 text-xs">
-            <div className="font-semibold text-text-primary mb-1.5">სტატისტიკა</div>
+            <div className="font-semibold text-text-primary mb-1.5">
+              {t('coordinatesMap.comparisonMap.stats.title')}
+            </div>
             <div className="space-y-0.5 text-text-secondary">
-              <div>სულ: {stats.total}</div>
-              <div>საშუალო: {stats.avg} კმ</div>
-              <div>მაქს.: {stats.max} კმ</div>
+              <div>
+                {t('coordinatesMap.comparisonMap.stats.total')} {stats.total}
+              </div>
+              <div>
+                {t('coordinatesMap.comparisonMap.stats.average')} {stats.avg}{' '}
+                {t('coordinatesMap.comparisonMap.kmUnit')}
+              </div>
+              <div>
+                {t('coordinatesMap.comparisonMap.stats.max')} {stats.max}{' '}
+                {t('coordinatesMap.comparisonMap.kmUnit')}
+              </div>
             </div>
           </div>
         )}

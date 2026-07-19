@@ -5,7 +5,7 @@
 --
 -- QUEUED for the "save planned route" step — safe to run early (purely additive,
 -- nullable column, no data change). Must be applied to ALL THREE instances:
---   node scripts/run-migration.mjs 103_route_stops_board_item_id.sql
+--   node scripts/run-migration.mjs 105_route_stops_board_item_id.sql
 --
 -- ROLLBACK (run manually if needed):
 --   ALTER TABLE public.route_stops DROP COLUMN IF EXISTS board_item_id;

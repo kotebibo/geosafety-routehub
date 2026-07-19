@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { PageHeader, LoadingSpinner } from '@/shared/components/ui'
+import { PageHeader } from '@/shared/components/ui'
 import {
   AssignmentStatCards,
   CompanyAssignmentTable,
   InspectorWorkloadPanel,
 } from '@/features/assignments/components'
+import { AssignmentsSkeleton } from '@/features/assignments/components/AssignmentsSkeleton'
 import { useCompanyAssignments } from '@/features/assignments/hooks'
 import { DEPLOYMENT_CONFIG } from '@/config/features'
 
@@ -21,7 +22,7 @@ export default function AssignmentsPage() {
     useCompanyAssignments(selectedServiceType)
 
   if (loading) {
-    return <LoadingSpinner message={t('assignments.loadingCompanies')} />
+    return <AssignmentsSkeleton />
   }
 
   if (error) {

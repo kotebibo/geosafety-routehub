@@ -6,6 +6,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -44,6 +45,7 @@ interface LocationsMapProps {
 }
 
 export function LocationsMap({ companies }: LocationsMapProps) {
+  const t = useTranslations()
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
   const markersRef = useRef<Map<string, L.Marker>>(new Map())
@@ -187,7 +189,7 @@ export function LocationsMap({ companies }: LocationsMapProps) {
             font-weight: bold;
             margin-top: 8px;
           ">
-            ${company.priority === 'high' ? '🔴 მაღალი' : company.priority === 'medium' ? '🟡 საშუალო' : '🟢 დაბალი'}
+            ${company.priority === 'high' ? `🔴 ${t('locations.map.priorityHigh')}` : company.priority === 'medium' ? `🟡 ${t('locations.map.priorityMedium')}` : `🟢 ${t('locations.map.priorityLow')}`}
           </div>
         `
 
@@ -243,7 +245,7 @@ export function LocationsMap({ companies }: LocationsMapProps) {
                   color: #374151;
                   margin-bottom: 6px;
                 ">
-                  სერვისები (${company.services.length})
+                  ${t('locations.map.servicesLabel', { count: company.services.length })}
                 </div>
                 ${servicesHtml}
               </div>

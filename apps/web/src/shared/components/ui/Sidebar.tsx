@@ -81,8 +81,7 @@ interface SidebarProps {
 
 interface NavItem {
   href: string
-  label: string
-  labelEn: string
+  labelKey: string
   icon: React.ComponentType<{ className?: string }>
   permission: string
 }
@@ -100,12 +99,12 @@ const BOARD_COLORS: Record<string, string> = {
 
 // Color picker options for boards
 const COLOR_OPTIONS = [
-  { value: 'blue', label: 'Blue', class: 'bg-monday-primary' },
-  { value: 'green', label: 'Green', class: 'bg-status-done' },
-  { value: 'red', label: 'Red', class: 'bg-status-stuck' },
-  { value: 'yellow', label: 'Yellow', class: 'bg-status-working' },
-  { value: 'purple', label: 'Purple', class: 'bg-purple-500' },
-  { value: 'orange', label: 'Orange', class: 'bg-orange-500' },
+  { value: 'blue', labelKey: 'sidebar.color.blue', class: 'bg-monday-primary' },
+  { value: 'green', labelKey: 'sidebar.color.green', class: 'bg-status-done' },
+  { value: 'red', labelKey: 'sidebar.color.red', class: 'bg-status-stuck' },
+  { value: 'yellow', labelKey: 'sidebar.color.yellow', class: 'bg-status-working' },
+  { value: 'purple', labelKey: 'sidebar.color.purple', class: 'bg-purple-500' },
+  { value: 'orange', labelKey: 'sidebar.color.orange', class: 'bg-orange-500' },
 ]
 
 // Board type for menu state
@@ -775,78 +774,67 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
   const navItems: NavItem[] = [
     {
       href: '/',
-      label: 'მთავარი',
-      labelEn: 'Home',
+      labelKey: 'nav.home',
       icon: Home,
       permission: 'pages:dashboard',
     },
     {
       href: '/my-work',
-      label: 'ჩემი სამუშაო',
-      labelEn: 'My Work',
+      labelKey: 'nav.myWork',
       icon: ClipboardCheck,
       permission: 'pages:my_work',
     },
     {
       href: '/news',
-      label: 'სიახლეები',
-      labelEn: 'News',
+      labelKey: 'nav.news',
       icon: Megaphone,
       permission: 'pages:news',
     },
     {
       href: '/analytics',
-      label: 'ფინანსური ანალიტიკა',
-      labelEn: 'Financial Analytics',
+      labelKey: 'nav.analytics',
       icon: BarChart3,
       permission: 'pages:analytics',
     },
     {
       href: '/tracking',
-      label: 'ტრეკინგი',
-      labelEn: 'Live Tracking',
+      labelKey: 'nav.tracking',
       icon: Navigation,
       permission: 'pages:tracking',
     },
     {
       href: '/coordinates-map',
-      label: 'კოორდინატების რუკა',
-      labelEn: 'Coordinates Map',
+      labelKey: 'nav.coordinatesMap',
       icon: Globe,
       permission: 'pages:coordinates_map',
     },
     {
       href: '/admin/checkins',
-      label: 'ჩეკ-ინები',
-      labelEn: 'Check-ins',
+      labelKey: 'nav.checkins',
       icon: MapPinned,
       permission: 'pages:checkins_admin',
     },
     {
       href: '/companies',
-      label: 'კომპანიები',
-      labelEn: 'Companies',
+      labelKey: 'nav.companies',
       icon: Building2,
       permission: 'pages:companies',
     },
     {
       href: '/inspectors',
-      label: 'ოფიცრები',
-      labelEn: 'Officers',
+      labelKey: 'nav.officers',
       icon: Users,
       permission: 'pages:officers',
     },
     {
       href: '/routes/manage',
-      label: 'მარშრუტები',
-      labelEn: 'Routes',
+      labelKey: 'nav.routes',
       icon: Route,
       permission: 'pages:routes',
     },
     {
       href: '/routes/builder',
-      label: 'მარშრუტის შექმნა',
-      labelEn: 'Route Builder',
+      labelKey: 'nav.routeBuilder',
       icon: MapIcon,
       permission: 'pages:route_builder',
     },
@@ -861,50 +849,43 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     },
     {
       href: '/admin/assignments',
-      label: 'დანიშვნები',
-      labelEn: 'Assignments',
+      labelKey: 'nav.assignments',
       icon: UserCog,
       permission: 'pages:assignments',
     },
     {
       href: '/payments',
-      label: 'გადახდები',
-      labelEn: 'Payments',
+      labelKey: 'nav.payments',
       icon: Banknote,
       permission: 'pages:payments',
     },
     {
       href: '/chat',
-      label: 'ასისტენტი',
-      labelEn: 'Assistant',
+      labelKey: 'nav.assistant',
       icon: Bot,
       permission: 'pages:payments',
     },
     {
       href: '/admin/users',
-      label: 'მომხმარებლები',
-      labelEn: 'User Management',
+      labelKey: 'nav.users',
       icon: Shield,
       permission: 'pages:user_management',
     },
     {
       href: '/admin/roles',
-      label: 'როლები',
-      labelEn: 'Roles & Permissions',
+      labelKey: 'nav.roles',
       icon: KeyRound,
       permission: 'pages:roles',
     },
     {
       href: '/health',
-      label: 'სისტემის ჯანმრთელობა',
-      labelEn: 'System Health',
+      labelKey: 'nav.health',
       icon: Activity,
       permission: 'pages:settings',
     },
     {
       href: '/settings',
-      label: 'პარამეტრები',
-      labelEn: 'Settings',
+      labelKey: 'nav.settings',
       icon: Settings,
       permission: 'pages:settings',
     },
@@ -972,7 +953,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                     const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
                     const badge = item.href === '/news' && unreadNews > 0 ? unreadNews : 0
 
-                    const label = language === 'en' ? item.labelEn : item.label
+                    const label = t(item.labelKey)
 
                     const link = (
                       <Link
@@ -1634,7 +1615,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
                   {COLOR_OPTIONS.map(color => (
                     <Tooltip
                       key={color.value}
-                      content={color.label}
+                      content={t(color.labelKey)}
                       side="bottom"
                       delayDuration={200}
                     >

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { ResponsiveContainer, PieChart, Pie, Cell, Legend, Tooltip } from 'recharts'
 
 interface RevenueShareItem {
@@ -27,6 +28,7 @@ const COLORS = [
 ]
 
 export function RevenueShareChart({ data }: RevenueShareChartProps) {
+  const t = useTranslations()
   const sorted = [...data].sort((a, b) => b.total_amount - a.total_amount)
   const top = sorted.slice(0, 10)
   const rest = sorted.slice(10)
@@ -40,7 +42,7 @@ export function RevenueShareChart({ data }: RevenueShareChartProps) {
 
   if (restTotal > 0) {
     chartData.push({
-      name: 'სხვა',
+      name: t('analytics.charts.revenueShare.other'),
       value: Math.round(restTotal * 100) / 100,
       color: '#C3C6D4',
     })
@@ -50,10 +52,12 @@ export function RevenueShareChart({ data }: RevenueShareChartProps) {
 
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
-      <h3 className="text-sm font-semibold text-text-primary mb-4">შემოსავლის წილი (%)</h3>
+      <h3 className="text-sm font-semibold text-text-primary mb-4">
+        {t('analytics.charts.revenueShare.title')}
+      </h3>
       {data.length === 0 ? (
         <div className="h-[350px] flex items-center justify-center text-sm text-text-tertiary">
-          მონაცემები არ არის
+          {t('analytics.charts.common.noData')}
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={350}>
@@ -82,7 +86,7 @@ export function RevenueShareChart({ data }: RevenueShareChartProps) {
               }}
               formatter={(value: any) => [
                 `₾${value} (${total > 0 ? Math.round((value / total) * 100) : 0}%)`,
-                'თანხა',
+                t('analytics.charts.common.amount'),
               ]}
             />
             <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -102,7 +106,7 @@ export function RevenueShareChart({ data }: RevenueShareChartProps) {
               dominantBaseline="middle"
               className="text-xs fill-text-secondary"
             >
-              ჯამი
+              {t('analytics.charts.revenueShare.total')}
             </text>
           </PieChart>
         </ResponsiveContainer>

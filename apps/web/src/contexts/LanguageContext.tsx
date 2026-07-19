@@ -7,9 +7,32 @@ import enMessages from '../../messages/en.json'
 
 export type Language = 'ka' | 'en'
 
-const messages: Record<Language, Record<string, unknown>> = {
-  ka: kaMessages,
-  en: enMessages,
+type Messages = Record<string, unknown>
+
+// Deep-merge: values from `primary` win, `fallback` fills gaps. Keeps a
+// missing key from rendering as a raw dotted key — the other language's
+// text shows instead.
+function mergeMessages(fallback: Messages, primary: Messages): Messages {
+  const result: Messages = { ...fallback }
+  for (const [key, value] of Object.entries(primary)) {
+    const existing = result[key]
+    if (
+      value !== null &&
+      typeof value === 'object' &&
+      existing !== null &&
+      typeof existing === 'object'
+    ) {
+      result[key] = mergeMessages(existing as Messages, value as Messages)
+    } else {
+      result[key] = value
+    }
+  }
+  return result
+}
+
+const messages: Record<Language, Messages> = {
+  ka: mergeMessages(enMessages, kaMessages),
+  en: mergeMessages(kaMessages, enMessages),
 }
 
 interface LanguageContextType {

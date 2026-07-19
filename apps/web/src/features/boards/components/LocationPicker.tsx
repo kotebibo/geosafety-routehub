@@ -6,6 +6,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, type CSSProperties } from 'react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { Search, X, MapPin, Star, ChevronLeft } from 'lucide-react'
 import type { CompanyLocation } from '@/types/company'
@@ -32,6 +33,7 @@ export function LocationPicker({
   onClose,
   positionStyle,
 }: LocationPickerProps) {
+  const t = useTranslations()
   const [search, setSearch] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -64,10 +66,12 @@ export function LocationPicker({
           className="flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary"
         >
           <ChevronLeft className="w-4 h-4" />
-          <span>უკან</span>
+          <span>{t('boards.picker.back')}</span>
         </button>
         <div className="mt-1 font-medium text-text-primary truncate">{companyName}</div>
-        <div className="text-xs text-text-tertiary">აირჩიეთ ლოკაცია ({locations.length})</div>
+        <div className="text-xs text-text-tertiary">
+          {t('boards.picker.selectLocation', { count: locations.length })}
+        </div>
       </div>
 
       {/* Search Input */}
@@ -79,7 +83,7 @@ export function LocationPicker({
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="ლოკაციის ძებნა..."
+            placeholder={t('boards.picker.locationSearchPlaceholder')}
             className="w-full pl-8 pr-2 py-1.5 text-sm bg-bg-primary text-text-primary border border-border-light rounded focus:outline-none focus:border-monday-primary placeholder:text-text-tertiary"
           />
         </div>
@@ -101,7 +105,7 @@ export function LocationPicker({
             )}
           >
             <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-            <span>მთავარი ლოკაციის გამოყენება</span>
+            <span>{t('boards.picker.usePrimaryLocation')}</span>
             {value === null && (
               <svg
                 className="w-4 h-4 ml-auto text-yellow-600"
@@ -123,7 +127,7 @@ export function LocationPicker({
       <div className="max-h-48 overflow-y-auto">
         {filteredLocations.length === 0 ? (
           <div className="px-4 py-6 text-center text-sm text-text-tertiary">
-            ლოკაცია არ მოიძებნა
+            {t('boards.picker.noLocationsFound')}
           </div>
         ) : (
           <div className="py-1">

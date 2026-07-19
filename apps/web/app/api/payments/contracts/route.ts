@@ -161,13 +161,26 @@ export async function GET() {
     await requireAdminOrDispatcher()
     const supabase = createServerClient() as any
 
-    // Find all contract-related boards (active, one-time, paused, ended)
+    // Resolve the "ხელშეკრულებები" workspace once — never hardcode a workspace
+    // id, it differs per Supabase instance.
+    const { data: workspace, error: workspaceError } = await supabase
+      .from('workspaces')
+      .select('id')
+      .ilike('name', 'ხელშეკრულებები')
+      .limit(1)
+      .maybeSingle()
+
+    if (workspaceError) throw workspaceError
+    if (!workspace) {
+      return NextResponse.json({ contracts: {}, boards_found: 0 })
+    }
+
+    // Find all boards in that workspace (active, one-time, paused, ended,
+    // plus the unrelated "additional services" board we exclude below)
     const { data: boards, error: boardError } = await supabase
       .from('boards')
       .select('id, name')
-      .or(
-        'name.ilike.%ხელშეკრულებ%,name.ilike.%შეწყვეტილ%,name.ilike.%დასრულებულ%,name.ilike.%შეჩერებული%,name.ilike.%ერთჯერადი%'
-      )
+      .eq('workspace_id', workspace.id)
 
     if (boardError) throw boardError
     if (!boards || boards.length === 0) {
@@ -179,55 +192,57 @@ export async function GET() {
 
     // Fetch columns and items for ALL boards in parallel
     const boardData = await Promise.all(
-      boards.map(async (board: { id: string; name: string }) => {
-        const boardName = board.name.toLowerCase()
-        const contractSource: ContractInfo['contract_source'] = boardName.includes('ერთჯერადი')
-          ? 'one_time'
-          : boardName.includes('შეჩერებული')
-            ? 'paused'
-            : boardName.includes('შეწყვეტილ') || boardName.includes('დასრულებულ')
-              ? 'ended'
-              : 'active'
+      boards
+        .filter((board: { id: string; name: string }) => !board.name.includes('დამატებითი'))
+        .map(async (board: { id: string; name: string }) => {
+          const boardName = board.name.toLowerCase()
+          const contractSource: ContractInfo['contract_source'] = boardName.includes('ერთჯერადი')
+            ? 'one_time'
+            : boardName.includes('შეჩერებული')
+              ? 'paused'
+              : boardName.includes('შეწყვეტილ') || boardName.includes('დასრულებულ')
+                ? 'ended'
+                : 'active'
 
-        // Fetch columns and first page of items in parallel
-        const [colResult, itemResult] = await Promise.all([
-          supabase
-            .from('board_columns')
-            .select('column_id, column_name, column_name_ka, column_type, config')
-            .eq('board_id', board.id)
-            .order('position'),
-          supabase
-            .from('board_items')
-            .select('id, name, data')
-            .eq('board_id', board.id)
-            .is('deleted_at', null)
-            .range(0, 999),
-        ])
-
-        const columns = colResult.data || []
-        let allItems = itemResult.data || []
-        if (itemResult.error) throw itemResult.error
-
-        // Paginate remaining items if needed
-        if (allItems.length === 1000) {
-          let from = 1000
-          while (true) {
-            const { data, error } = await supabase
+          // Fetch columns and first page of items in parallel
+          const [colResult, itemResult] = await Promise.all([
+            supabase
+              .from('board_columns')
+              .select('column_id, column_name, column_name_ka, column_type, config')
+              .eq('board_id', board.id)
+              .order('position'),
+            supabase
               .from('board_items')
               .select('id, name, data')
               .eq('board_id', board.id)
               .is('deleted_at', null)
-              .range(from, from + 999)
-            if (error) throw error
-            if (!data || data.length === 0) break
-            allItems = allItems.concat(data)
-            if (data.length < 1000) break
-            from += 1000
-          }
-        }
+              .range(0, 999),
+          ])
 
-        return { board, contractSource, columns, items: allItems }
-      })
+          const columns = colResult.data || []
+          let allItems = itemResult.data || []
+          if (itemResult.error) throw itemResult.error
+
+          // Paginate remaining items if needed
+          if (allItems.length === 1000) {
+            let from = 1000
+            while (true) {
+              const { data, error } = await supabase
+                .from('board_items')
+                .select('id, name, data')
+                .eq('board_id', board.id)
+                .is('deleted_at', null)
+                .range(from, from + 999)
+              if (error) throw error
+              if (!data || data.length === 0) break
+              allItems = allItems.concat(data)
+              if (data.length < 1000) break
+              from += 1000
+            }
+          }
+
+          return { board, contractSource, columns, items: allItems }
+        })
     )
 
     for (const { board, contractSource, columns, items } of boardData) {

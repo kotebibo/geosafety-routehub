@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   ResponsiveContainer,
   BarChart,
@@ -38,6 +39,7 @@ interface ActivityBreakdownChartProps {
 }
 
 export function ActivityBreakdownChart({ data }: ActivityBreakdownChartProps) {
+  const t = useTranslations()
   const [metric, setMetric] = useState<MetricKey>('count')
   const top = data.slice(0, 20)
   const chartData = [...top].reverse() // Reverse for horizontal bar (top item at top)
@@ -45,7 +47,9 @@ export function ActivityBreakdownChart({ data }: ActivityBreakdownChartProps) {
   return (
     <div className="bg-bg-primary rounded-lg border p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-text-primary">საქმიანობა</h3>
+        <h3 className="text-sm font-semibold text-text-primary">
+          {t('analytics.charts.activityBreakdown.title')}
+        </h3>
         <div className="flex gap-1 bg-bg-secondary rounded-md p-0.5">
           <button
             onClick={() => setMetric('count')}
@@ -55,7 +59,7 @@ export function ActivityBreakdownChart({ data }: ActivityBreakdownChartProps) {
                 : 'text-text-tertiary hover:text-text-secondary'
             }`}
           >
-            რაოდენობა
+            {t('analytics.charts.activityBreakdown.count')}
           </button>
           <button
             onClick={() => setMetric('revenue')}
@@ -65,7 +69,7 @@ export function ActivityBreakdownChart({ data }: ActivityBreakdownChartProps) {
                 : 'text-text-tertiary hover:text-text-secondary'
             }`}
           >
-            შემოსავალი
+            {t('analytics.charts.activityBreakdown.revenue')}
           </button>
         </div>
       </div>
@@ -90,7 +94,9 @@ export function ActivityBreakdownChart({ data }: ActivityBreakdownChartProps) {
           <Tooltip
             formatter={(value: any) => [
               metric === 'revenue' ? `₾${value.toLocaleString()}` : value,
-              metric === 'revenue' ? 'შემოსავალი' : 'კომპანიები',
+              metric === 'revenue'
+                ? t('analytics.charts.activityBreakdown.revenue')
+                : t('analytics.charts.common.companies'),
             ]}
             contentStyle={{
               backgroundColor: 'var(--bg-secondary)',

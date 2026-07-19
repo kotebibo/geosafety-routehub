@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTranslations } from 'next-intl'
 import { getSupabase } from '@/lib/supabase'
-import { Lock, AlertCircle, CheckCircle, Globe, Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Lock, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
+import { AuthSkeleton } from '@/features/auth/components/AuthSkeleton'
 
 type SessionState = 'checking' | 'ready' | 'missing'
 
@@ -38,6 +39,10 @@ export default function ResetPasswordPage() {
       setSessionState(session ? 'ready' : 'missing')
     })()
   }, [])
+
+  if (sessionState === 'checking') {
+    return <AuthSkeleton />
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,11 +101,7 @@ export default function ResetPasswordPage() {
           <h2 className="text-3xl font-bold text-text-primary">{t('reset.title')}</h2>
         </div>
 
-        {sessionState === 'checking' ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 className="w-8 h-8 animate-spin text-monday-primary" />
-          </div>
-        ) : sessionState === 'missing' ? (
+        {sessionState === 'missing' ? (
           <div className="space-y-6">
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />

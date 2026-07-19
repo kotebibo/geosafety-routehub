@@ -1,5 +1,5 @@
-import { PageSkeleton } from '@/shared/components/feedback'
+import { BoardPageSkeleton } from '@/features/boards/components/BoardPageSkeleton'
 
 export default function BoardDetailLoading() {
-  return <PageSkeleton variant="board" showHeader={false} />
+  return <BoardPageSkeleton />
 }

@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 import { useAuth } from '@/contexts/AuthContext'
 import { AlertCircle, Download } from 'lucide-react'
@@ -19,9 +20,11 @@ import {
   useGroupedTransactions,
 } from '@/features/payments/hooks'
 import { exportTransactionsCSV } from '@/features/payments/helpers'
+import { PaymentsListSkeleton } from '@/features/payments/components/PaymentsListSkeleton'
 
 export default function PaymentsPage() {
   const router = useRouter()
+  const t = useTranslations()
   const { isAdmin, isDispatcher, loading: authLoading } = useAuth()
 
   const filters = usePaymentFilters()
@@ -58,6 +61,7 @@ export default function PaymentsPage() {
     selectedMonth: filters.selectedMonth,
     statusFilter: filters.statusFilter,
     matchSourceFilter: filters.matchSourceFilter,
+    searchQuery: filters.searchDebounced,
   })
 
   // Auth guard
@@ -68,11 +72,7 @@ export default function PaymentsPage() {
   }, [authLoading, isAdmin, isDispatcher, router])
 
   if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-monday-primary" />
-      </div>
-    )
+    return <PaymentsListSkeleton />
   }
 
   const totalPages = filters.groupByCompany ? 1 : Math.ceil(data.total / filters.limit)
@@ -102,10 +102,8 @@ export default function PaymentsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">გადახდები</h1>
-          <p className="text-sm text-text-secondary mt-0.5">
-            ტრანზაქციების თვალყურის დევნება და ანალიზი
-          </p>
+          <h1 className="text-2xl font-bold text-text-primary">{t('payments.title')}</h1>
+          <p className="text-sm text-text-secondary mt-0.5">{t('payments.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -113,14 +111,14 @@ export default function PaymentsPage() {
             className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-bg-primary text-text-secondary border border-border-light hover:bg-bg-secondary transition-colors text-sm"
           >
             <Download className="w-4 h-4" />
-            CSV
+            {t('payments.exportCsv')}
           </button>
           <button
             onClick={handleNavigateUnmatched}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors text-sm font-medium"
           >
             <AlertCircle className="w-4 h-4" />
-            დაუკავშირებელი ({data.stats?.unmatched_count || 0})
+            {t('payments.unmatchedButton', { count: data.stats?.unmatched_count || 0 })}
           </button>
         </div>
       </div>
@@ -185,6 +183,7 @@ export default function PaymentsPage() {
         onToggleGroup={filters.toggleGroup}
         onCopy={data.handleCopy}
         onIgnore={data.handleIgnore}
+        onUnignore={data.handleUnignore}
         onNavigateToBoard={handleNavigateToBoard}
         onNavigateUnmatched={handleNavigateUnmatched}
       />

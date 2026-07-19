@@ -6,9 +6,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import { CheckCircle, Circle, Clock, Calendar, FileText } from 'lucide-react'
 import { COMPLIANCE_PHASES, PDPCompliancePhase } from '@/types/compliance'
 import { complianceService } from '@/services/compliance.service'
+import { Skeleton } from '@/shared/components/ui/Skeleton'
 
 interface PhaseProgressTrackerProps {
   companyId: string
@@ -16,6 +18,7 @@ interface PhaseProgressTrackerProps {
 }
 
 export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTrackerProps) {
+  const t = useTranslations()
   const [compliance, setCompliance] = useState<PDPCompliancePhase | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -32,13 +35,13 @@ export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTr
       const { data, error: err } = await complianceService.getCompanyCompliance(companyId)
 
       if (err) {
-        setError('Failed to load compliance data')
+        setError(t('companies.pdp.loadComplianceError'))
         console.error(err)
       } else {
         setCompliance(data)
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      setError(t('companies.pdp.unexpectedError'))
       console.error(err)
     } finally {
       setLoading(false)
@@ -48,8 +51,27 @@ export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTr
   if (loading) {
     return (
       <div className="bg-bg-primary rounded-lg shadow p-6">
-        <div className="flex items-center justify-center h-40">
-          <div className="animate-spin text-4xl">⏳</div>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <Skeleton variant="bar" className="h-5 w-40 mb-2" />
+            <Skeleton variant="bar" className="h-3 w-24" />
+          </div>
+          <div className="text-right">
+            <Skeleton variant="bar" className="h-6 w-12 mb-2 ml-auto" />
+            <Skeleton variant="bar" className="h-3 w-16 ml-auto" />
+          </div>
+        </div>
+        <Skeleton className="h-2 w-full rounded-full mb-4" />
+        <div className="space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-4">
+              <Skeleton variant="circle" className="w-12 h-12 flex-shrink-0" />
+              <div className="flex-1">
+                <Skeleton variant="bar" className="h-4 w-1/2 mb-2" />
+                <Skeleton variant="bar" className="h-3 w-3/4" />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     )
@@ -58,7 +80,9 @@ export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTr
   if (error || !compliance) {
     return (
       <div className="bg-bg-primary rounded-lg shadow p-6">
-        <div className="text-center text-text-secondary">{error || 'No compliance data found'}</div>
+        <div className="text-center text-text-secondary">
+          {error || t('companies.pdp.noComplianceData')}
+        </div>
       </div>
     )
   }
@@ -75,14 +99,16 @@ export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTr
       <div className="p-6 border-b">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold">Compliance Progress</h3>
+            <h3 className="text-lg font-semibold">{t('companies.pdp.complianceProgress')}</h3>
             {companyName && <p className="text-sm text-text-secondary">{companyName}</p>}
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-blue-600">
               {Math.round(progressPercentage)}%
             </div>
-            <div className="text-xs text-text-secondary">{completedPhases} of 5 phases</div>
+            <div className="text-xs text-text-secondary">
+              {t('companies.pdp.phasesOfFive', { count: completedPhases })}
+            </div>
           </div>
         </div>
 
@@ -136,11 +162,11 @@ export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTr
               <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium text-text-primary">
-                    ფაზა {phase.number}: {phase.nameKa}
+                    {t('companies.pdp.phaseLabel', { number: phase.number })}: {phase.nameKa}
                   </span>
                   {isCompleted && (
                     <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full">
-                      დასრულებული
+                      {t('companies.pdp.completed')}
                     </span>
                   )}
                 </div>
@@ -150,7 +176,7 @@ export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTr
                   <div className="flex items-center gap-2 text-sm text-text-primary">
                     <Calendar className="w-4 h-4" />
                     <span>
-                      {isCompleted ? 'დასრულდა: ' : 'დაგეგმილია: '}
+                      {isCompleted ? t('companies.pdp.completedOn') : t('companies.pdp.plannedFor')}{' '}
                       {new Date(date).toLocaleDateString('ka-GE', {
                         year: 'numeric',
                         month: 'long',
@@ -180,14 +206,14 @@ export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTr
               <CheckCircle className="w-7 h-7 text-green-600" />
             </div>
             <div>
-              <div className="font-semibold text-green-900">სერტიფიცირებული</div>
+              <div className="font-semibold text-green-900">{t('companies.pdp.certified')}</div>
               <div className="text-sm text-green-700">
-                სერტიფიკატის თარიღი:{' '}
+                {t('companies.pdp.certificationDate')}:{' '}
                 {new Date(compliance.certification_date).toLocaleDateString('ka-GE')}
               </div>
               {compliance.certificate_number && (
                 <div className="text-xs text-green-600 mt-1">
-                  სერტიფიკატის ნომერი: {compliance.certificate_number}
+                  {t('companies.pdp.certificateNumber')}: {compliance.certificate_number}
                 </div>
               )}
             </div>
@@ -201,7 +227,7 @@ export function PhaseProgressTracker({ companyId, companyName }: PhaseProgressTr
           <div className="flex items-center gap-3">
             <Calendar className="w-6 h-6 text-blue-600" />
             <div>
-              <div className="font-medium text-blue-900">შემდეგი შემოწმება</div>
+              <div className="font-medium text-blue-900">{t('companies.pdp.nextCheckup')}</div>
               <div className="text-sm text-blue-700">
                 {new Date(compliance.next_checkup_date).toLocaleDateString('ka-GE', {
                   year: 'numeric',
