@@ -10,12 +10,14 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { usersService, User, CustomRole } from '@/services/users.service'
+import { OfficerTransportModal } from '@/features/routing/components/OfficerTransportModal'
 import {
   Users,
   Shield,
   Search,
   Plus,
   Edit2,
+  Car,
   Trash2,
   Check,
   X,
@@ -54,6 +56,9 @@ export default function UserManagementPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterRole, setFilterRole] = useState<string>('all')
   const [filterStatus, setFilterStatus] = useState<string>('all')
+
+  // Officer transport modal
+  const [transportUser, setTransportUser] = useState<{ id: string; name: string } | null>(null)
 
   // Edit mode state
   const [editingUserId, setEditingUserId] = useState<string | null>(null)
@@ -751,6 +756,20 @@ export default function UserManagementPage() {
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
+                            {user.role?.role === 'officer' && (
+                              <button
+                                onClick={() =>
+                                  setTransportUser({
+                                    id: user.id,
+                                    name: user.full_name || user.email,
+                                  })
+                                }
+                                className="p-1.5 text-text-tertiary hover:text-monday-primary hover:bg-monday-primary/10 rounded"
+                                title={t('routing.transport')}
+                              >
+                                <Car className="w-4 h-4" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleToggleUserStatus(user)}
                               className={cn(
@@ -787,6 +806,14 @@ export default function UserManagementPage() {
           {t('admin.users.showingCount', { shown: filteredUsers.length, total: users.length })}
         </div>
       </div>
+
+      {transportUser && (
+        <OfficerTransportModal
+          officerId={transportUser.id}
+          officerName={transportUser.name}
+          onClose={() => setTransportUser(null)}
+        />
+      )}
     </div>
   )
 }
