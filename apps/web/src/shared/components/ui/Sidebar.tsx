@@ -840,8 +840,7 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     },
     {
       href: '/routing',
-      label: 'მარშრუტიზაცია',
-      labelEn: 'Routing',
+      labelKey: 'nav.routing',
       icon: Waypoints,
       // TODO: switch to a dedicated pages:routing permission once the
       // page-permissions migration lands on all three instances

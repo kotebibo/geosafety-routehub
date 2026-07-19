@@ -26,7 +26,8 @@
     "users": "Users",
     "roles": "Roles",
     "health": "Health",
-    "payments": "Payments"
+    "payments": "Payments",
+    "routing": "Routing"
   },
   "header": {
     "search": "Search...",
