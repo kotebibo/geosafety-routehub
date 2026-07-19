@@ -1,5 +1,6 @@
 [
-  { "name": "Team1", "ref": "rjnraabxbpvonhowdfuc", "token": "sbp_..." },
-  { "name": "Team2", "ref": "omnadlyhbkafcwsfqaac", "token": "sbp_..." },
-  { "name": "Team3", "ref": "nlpzpprrlezruqsuvogv", "token": "sbp_..." }
+  { "name": "Staging", "env": "stage", "ref": "vpyntduutnmpawxtzfvj", "token": "sbp_..." },
+  { "name": "Team1", "env": "prod", "ref": "rjnraabxbpvonhowdfuc", "token": "sbp_..." },
+  { "name": "Team2", "env": "prod", "ref": "omnadlyhbkafcwsfqaac", "token": "sbp_..." },
+  { "name": "Team3", "env": "prod", "ref": "nlpzpprrlezruqsuvogv", "token": "sbp_..." }
 ]
