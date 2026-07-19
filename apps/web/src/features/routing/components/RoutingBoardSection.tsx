@@ -4,9 +4,11 @@ import { useState, useMemo } from 'react'
 import { ChevronDown, Loader2, User, Check, Route as RouteIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/contexts/AuthContext'
 import { UrgencyBadge } from './UrgencyBadge'
 import { ItemDetailPopup } from './ItemDetailPopup'
 import { InspectorLocationControl } from './InspectorLocationControl'
+import { AssignOfficerControl } from './AssignOfficerControl'
 import { RoutePlanningPopup } from './RoutePlanningPopup'
 import { useRoutingItems, type RoutingItem } from '../hooks/useRoutingData'
 import type { Board } from '@/types/board'
@@ -39,6 +41,7 @@ interface RoutingBoardSectionProps {
 
 export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
   const [expanded, setExpanded] = useState(false)
+  const { isAdmin } = useAuth()
 
   return (
     <div
@@ -73,6 +76,8 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
         >
           {board.name}
         </span>
+        {/* Admin assigns the officer this board belongs to */}
+        {isAdmin && <AssignOfficerControl board={board} />}
         {/* Inspector starting location for this board */}
         <InspectorLocationControl board={board} />
         <ChevronDown

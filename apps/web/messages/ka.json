@@ -2034,6 +2034,12 @@
     "improved": "{pct}%-ით ოპტიმიზებული",
     "openInMaps": "Google Maps-ში გახსნა",
     "saveDraft": "შენახვა",
-    "draftSaved": "მარშრუტი შენახულია (დროებით ლოკალურად)"
+    "draftSaved": "მარშრუტი შენახულია (დროებით ლოკალურად)",
+    "assignOfficer": "ოფიცრის მინიჭება",
+    "unassignOfficer": "მინიჭების მოხსნა",
+    "noOfficers": "ოფიცრები არ არის",
+    "officerAssigned": "ოფიცერი მიენიჭა",
+    "officerUnassigned": "მინიჭება მოიხსნა",
+    "officerAssignFailed": "მინიჭება ვერ მოხერხდა"
   }
 }
