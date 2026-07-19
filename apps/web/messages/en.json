@@ -2040,6 +2040,14 @@
     "noOfficers": "No officers",
     "officerAssigned": "Officer assigned",
     "officerUnassigned": "Officer unassigned",
-    "officerAssignFailed": "Could not assign officer"
+    "officerAssignFailed": "Could not assign officer",
+    "transport": "Transport",
+    "carModel": "Car model",
+    "engine": "Engine",
+    "optional": "optional",
+    "consumptionPer100": "Consumption per 100 km",
+    "transportSaved": "Transport saved",
+    "transportSaveFailed": "Could not save",
+    "transportConsumptionInvalid": "Invalid consumption"
   }
 }

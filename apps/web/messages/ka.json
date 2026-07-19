@@ -2040,6 +2040,14 @@
     "noOfficers": "ოფიცრები არ არის",
     "officerAssigned": "ოფიცერი მიენიჭა",
     "officerUnassigned": "მინიჭება მოიხსნა",
-    "officerAssignFailed": "მინიჭება ვერ მოხერხდა"
+    "officerAssignFailed": "მინიჭება ვერ მოხერხდა",
+    "transport": "ტრანსპორტი",
+    "carModel": "მანქანის მოდელი",
+    "engine": "ძრავა",
+    "optional": "არჩევითი",
+    "consumptionPer100": "მოხმარება 100 კმ-ზე",
+    "transportSaved": "ტრანსპორტი შენახულია",
+    "transportSaveFailed": "შენახვა ვერ მოხერხდა",
+    "transportConsumptionInvalid": "მოხმარება არასწორია"
   }
 }
