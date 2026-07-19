@@ -61,6 +61,18 @@ export interface BoardSettings {
   }
   is_favorite?: boolean
   is_archived?: boolean
+  // Routing feature: the inspector's starting point for planning routes on
+  // this board. Either the live GPS position or a manually entered address.
+  routing_start?: RoutingStartLocation
+}
+
+export interface RoutingStartLocation {
+  mode: 'gps' | 'manual'
+  lat: number
+  lng: number
+  /** Human-readable address for manual entries */
+  address?: string
+  updated_at: string
 }
 
 // Board Item (row in a board)
