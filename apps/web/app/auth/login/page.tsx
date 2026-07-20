@@ -26,8 +26,8 @@ function LoginForm() {
   const { language, setLanguage } = useLanguage()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [errorKey, setErrorKey] = useState<string | null>(null)
+  const [successKey, setSuccessKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [resetLoading, setResetLoading] = useState(false)
@@ -35,17 +35,17 @@ function LoginForm() {
   // Show session expired message if redirected from expired session
   useEffect(() => {
     if (sessionStorage.getItem('routehub-session-expired')) {
-      setError(t('login.sessionExpired'))
+      setErrorKey('login.sessionExpired')
       sessionStorage.removeItem('routehub-session-expired')
     }
-  }, [t])
+  }, [])
 
   const handleForgotPassword = async () => {
     if (!email) {
-      setError(t('login.enterEmailFirst'))
+      setErrorKey('login.enterEmailFirst')
       return
     }
-    setError('')
+    setErrorKey(null)
     setResetLoading(true)
     try {
       const supabase = createClient()
@@ -53,9 +53,9 @@ function LoginForm() {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       })
       if (error) throw error
-      setSuccess(t('login.resetEmailSent'))
+      setSuccessKey('login.resetEmailSent')
     } catch (err) {
-      setError(t('login.resetError'))
+      setErrorKey('login.resetError')
     } finally {
       setResetLoading(false)
     }
@@ -63,8 +63,8 @@ function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
+    setErrorKey(null)
+    setSuccessKey(null)
     setLoading(true)
 
     try {
@@ -72,18 +72,19 @@ function LoginForm() {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          setError(t('login.invalidCredentials'))
+          setErrorKey('login.invalidCredentials')
         } else if (error.message.includes('Email not confirmed')) {
-          setError(t('login.emailNotConfirmed'))
+          setErrorKey('login.emailNotConfirmed')
         } else {
-          setError(error.message)
+          console.error('Sign in error:', error.message)
+          setErrorKey('login.genericError')
         }
       } else {
         router.push(returnUrl)
         router.refresh()
       }
     } catch (err) {
-      setError(t('login.signinError'))
+      setErrorKey('login.signinError')
     } finally {
       setLoading(false)
     }
@@ -115,18 +116,18 @@ function LoginForm() {
         {/* Form */}
         <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
           {/* Error Message */}
-          {error && (
+          {errorKey && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{error}</p>
+              <p className="text-sm text-red-800">{t(errorKey)}</p>
             </div>
           )}
 
           {/* Success Message */}
-          {success && (
+          {successKey && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-green-800">{success}</p>
+              <p className="text-sm text-green-800">{t(successKey)}</p>
             </div>
           )}
 

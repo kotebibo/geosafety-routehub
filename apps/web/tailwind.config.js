@@ -88,8 +88,8 @@ module.exports = {
         // Extended Palette
         'grass-green': 'var(--color-grass-green)',
         'bright-blue': 'var(--color-bright-blue)',
-        'purple': 'var(--color-purple)',
-        'orange': 'var(--color-orange)',
+        'monday-purple': 'var(--color-purple)',
+        'monday-orange': 'var(--color-orange)',
       },
       boxShadow: {
         'monday-xs': 'var(--shadow-xs)',
