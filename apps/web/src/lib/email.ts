@@ -48,6 +48,45 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
   }
 }
 
+export async function sendTwoFactorEmail(
+  to: string,
+  { code, verifyLink }: { code: string; verifyLink?: string }
+): Promise<boolean> {
+  const text = [
+    'RouteHub — შესვლის დადასტურება',
+    '',
+    `თქვენი დამადასტურებელი კოდია: ${code}`,
+    ...(verifyLink
+      ? ['', 'ან უბრალოდ გახსენით ეს ბმული იმავე მოწყობილობაზე, სადაც შესვლას ცდილობთ:', verifyLink]
+      : []),
+    '',
+    'კოდი და ბმული ძალაშია 10 წუთის განმავლობაში. თუ თქვენ არ ცდილობდით შესვლას, უგულებელყავით ეს წერილი.',
+  ].join('\n')
+
+  const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f3f4f6;">
+  <div style="max-width:480px;margin:0 auto;padding:24px;">
+    <div style="background:#6161FF;color:white;padding:24px;border-radius:12px 12px 0 0;">
+      <h1 style="margin:0;font-size:18px;">RouteHub — შესვლის დადასტურება</h1>
+    </div>
+    <div style="background:white;padding:24px;border:1px solid #e5e7eb;border-top:none;">
+      <p style="color:#374151;line-height:1.6;">თქვენი დამადასტურებელი კოდია:</p>
+      <p style="font-size:32px;font-weight:bold;letter-spacing:0.3em;text-align:center;color:#111;margin:16px 0;">${code}</p>
+      ${
+        verifyLink
+          ? `<p style="color:#374151;line-height:1.6;">ან გახსენით ეს ბმული იმავე მოწყობილობაზე, სადაც შესვლას ცდილობთ:</p>
+      <a href="${verifyLink}" style="display:inline-block;margin-top:8px;padding:12px 24px;background:#6161FF;color:white;text-decoration:none;border-radius:8px;">შესვლის დადასტურება</a>`
+          : ''
+      }
+      <p style="color:#9ca3af;font-size:12px;margin-top:24px;">კოდი და ბმული ძალაშია 10 წუთის განმავლობაში. თუ თქვენ არ ცდილობდით შესვლას, უგულებელყავით ეს წერილი.</p>
+    </div>
+  </div>
+</body></html>`
+
+  return sendEmail({ to, subject: 'RouteHub — შესვლის დადასტურების კოდი', text, html })
+}
+
 export function generateAnnouncementEmail(announcement: {
   title: string
   content: string

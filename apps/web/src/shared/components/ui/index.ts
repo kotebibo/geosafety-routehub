@@ -18,6 +18,7 @@ export { Sidebar } from './Sidebar'
 // Form Elements
 export { Badge, badgeVariants } from './badge'
 export { Input } from './input'
+export { Toggle } from './Toggle'
 export * from './dropdown-menu'
 export * from './select'
 

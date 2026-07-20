@@ -95,6 +95,60 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_audit_log: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          ip: string | null
+          metadata: Json
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip?: string | null
+          metadata?: Json
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      auth_rate_limits: {
+        Row: {
+          count: number
+          identifier: string
+          locked_until: string | null
+          scope: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          identifier: string
+          locked_until?: string | null
+          scope: string
+          window_start?: string
+        }
+        Update: {
+          count?: number
+          identifier?: string
+          locked_until?: string | null
+          scope?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       board_columns: {
         Row: {
           board_id: string | null
@@ -1643,6 +1697,54 @@ export type Database = {
           },
         ]
       }
+      login_2fa_challenges: {
+        Row: {
+          attempt_count: number
+          code_hash: string
+          consumed_at: string | null
+          cookie_token_hash: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          ip: string | null
+          link_token_hash: string
+          purpose: string
+          resend_count: number
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_count?: number
+          code_hash: string
+          consumed_at?: string | null
+          cookie_token_hash?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip?: string | null
+          link_token_hash: string
+          purpose: string
+          resend_count?: number
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_count?: number
+          code_hash?: string
+          consumed_at?: string | null
+          cookie_token_hash?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip?: string | null
+          link_token_hash?: string
+          purpose?: string
+          resend_count?: number
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string | null
@@ -2201,6 +2303,8 @@ export type Database = {
           id: string
           is_active: boolean | null
           last_login_at: string | null
+          mfa_enabled: boolean
+          mfa_enrolled_at: string | null
           phone: string | null
           updated_at: string | null
         }
@@ -2212,6 +2316,8 @@ export type Database = {
           id: string
           is_active?: boolean | null
           last_login_at?: string | null
+          mfa_enabled?: boolean
+          mfa_enrolled_at?: string | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -2223,6 +2329,8 @@ export type Database = {
           id?: string
           is_active?: boolean | null
           last_login_at?: string | null
+          mfa_enabled?: boolean
+          mfa_enrolled_at?: string | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -2581,6 +2689,19 @@ export type Database = {
             Args: { check_board_id: string; check_user_id: string }
             Returns: boolean
           }
+      check_and_bump_rate_limit: {
+        Args: {
+          p_identifier: string
+          p_lockout_seconds: number
+          p_max: number
+          p_scope: string
+          p_window_seconds: number
+        }
+        Returns: {
+          allowed: boolean
+          retry_after_seconds: number
+        }[]
+      }
       cleanup_stale_presence: { Args: never; Returns: undefined }
       create_item_update: {
         Args: { p_content: string; p_item_id: string; p_user_id: string }

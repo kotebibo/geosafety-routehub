@@ -41,8 +41,8 @@ export function Header({ className, onMenuToggle }: HeaderProps) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
-  // Don't show header on login page
-  if (pathname === '/auth/login' || pathname === '/auth/register') {
+  // Don't show header on auth pages (login, register, forgot/reset password)
+  if (pathname?.startsWith('/auth/')) {
     return null
   }
 

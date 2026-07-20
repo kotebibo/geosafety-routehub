@@ -138,7 +138,40 @@
     "enterEmailFirst": "Please enter your email first",
     "resetEmailSent": "Password reset link has been sent to your email",
     "resetError": "Password reset failed. Please try again.",
-    "sessionExpired": "Your session has expired. Please sign in again."
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "tooManyAttempts": "Too many attempts. Please try again later.",
+    "twoFactor": {
+      "title": "Two-Factor Verification",
+      "subtitle": "Enter the code sent to your email, or use the link in the email.",
+      "codeLabel": "Verification Code",
+      "submit": "Verify",
+      "verifying": "Verifying...",
+      "confirmLink": "Confirm Sign In",
+      "resend": "Resend code",
+      "resendIn": "Resend available in {seconds}s",
+      "invalidCode": "The code is incorrect or has expired.",
+      "tooManyAttempts": "Too many attempts. Please try again later.",
+      "resendError": "Failed to resend the code. Please try again.",
+      "verifyError": "Verification failed. Please try again."
+    }
+  },
+  "forgot": {
+    "title": "Password Recovery",
+    "subtitle": "Enter your email and we'll send you a verification code",
+    "sendCode": "Send Code",
+    "sending": "Sending...",
+    "sendError": "Failed to send the code. Please try again.",
+    "tooManyRequests": "Too many attempts. Please wait a moment and try again.",
+    "codeSentTo": "A 6-digit code has been sent to {email}",
+    "linkHint": "Check your email — enter the code below, or simply open the link in the email.",
+    "codeLabel": "Verification Code",
+    "verify": "Verify Code",
+    "verifying": "Verifying...",
+    "invalidCode": "The code is incorrect or has expired. Please try again or request a new code.",
+    "resend": "Resend code",
+    "resendIn": "Resend available in {seconds}s",
+    "changeEmail": "Change email",
+    "backToLogin": "Back to login"
   },
   "reset": {
     "title": "Reset Password",
@@ -226,7 +259,20 @@
       "passwordSent": "Password reset link has been sent to your email",
       "sessions": "Active Sessions",
       "sessionsDesc": "Sign out from all other devices",
-      "signOutAll": "Sign Out All"
+      "signOutAll": "Sign Out All",
+      "twoFactor": {
+        "title": "Two-Factor Authentication",
+        "description": "Require a code sent to your email each time you sign in.",
+        "enterCode": "Enter the 6-digit code we sent to your email to confirm.",
+        "confirm": "Confirm",
+        "confirmPassword": "Enter your current password to turn off two-factor authentication.",
+        "disable": "Turn Off",
+        "enabledSuccess": "Two-factor authentication has been enabled.",
+        "disabledSuccess": "Two-factor authentication has been turned off.",
+        "invalidCode": "The code is incorrect or has expired.",
+        "incorrectPassword": "Incorrect password.",
+        "genericError": "Something went wrong. Please try again."
+      }
     },
     "saved": "Saved",
     "saving": "Saving...",

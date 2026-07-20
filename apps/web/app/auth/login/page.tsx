@@ -1,12 +1,12 @@
 'use client'
 
 import { Suspense, useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTranslations } from 'next-intl'
-import { createClient } from '@/lib/supabase'
-import { LogIn, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
+import { LogIn, AlertCircle, Globe, Eye, EyeOff } from 'lucide-react'
 import { AuthSkeleton } from '@/features/auth/components/AuthSkeleton'
 
 export default function LoginPage() {
@@ -27,10 +27,8 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [errorKey, setErrorKey] = useState<string | null>(null)
-  const [successKey, setSuccessKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const [resetLoading, setResetLoading] = useState(false)
 
   // Show session expired message if redirected from expired session
   useEffect(() => {
@@ -40,40 +38,28 @@ function LoginForm() {
     }
   }, [])
 
-  const handleForgotPassword = async () => {
-    if (!email) {
-      setErrorKey('login.enterEmailFirst')
-      return
-    }
-    setErrorKey(null)
-    setResetLoading(true)
-    try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
-      })
-      if (error) throw error
-      setSuccessKey('login.resetEmailSent')
-    } catch (err) {
-      setErrorKey('login.resetError')
-    } finally {
-      setResetLoading(false)
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorKey(null)
-    setSuccessKey(null)
     setLoading(true)
 
     try {
-      const { error } = await signIn(email, password)
+      const { error, mfaRequired } = await signIn(email, password)
+
+      if (mfaRequired) {
+        router.push(`/auth/2fa?from=${encodeURIComponent(returnUrl)}`)
+        return
+      }
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
+        if (error.retryAfterSeconds) {
+          setErrorKey('login.tooManyAttempts')
+        } else if (
+          error.message?.includes('Invalid credentials') ||
+          error.message?.includes('Invalid login credentials')
+        ) {
           setErrorKey('login.invalidCredentials')
-        } else if (error.message.includes('Email not confirmed')) {
+        } else if (error.message?.includes('Email not confirmed')) {
           setErrorKey('login.emailNotConfirmed')
         } else {
           console.error('Sign in error:', error.message)
@@ -120,14 +106,6 @@ function LoginForm() {
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
               <p className="text-sm text-red-800">{t(errorKey)}</p>
-            </div>
-          )}
-
-          {/* Success Message */}
-          {successKey && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-green-800">{t(successKey)}</p>
             </div>
           )}
 
@@ -179,14 +157,12 @@ function LoginForm() {
                 </button>
               </div>
               <div className="mt-1 text-right">
-                <button
-                  type="button"
-                  onClick={handleForgotPassword}
-                  disabled={resetLoading}
-                  className="text-xs text-monday-primary hover:text-monday-primary-hover font-medium disabled:opacity-50"
+                <Link
+                  href={`/auth/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ''}`}
+                  className="text-xs text-monday-primary hover:text-monday-primary-hover font-medium"
                 >
-                  {resetLoading ? t('common.loading') : t('login.forgotPassword')}
-                </button>
+                  {t('login.forgotPassword')}
+                </Link>
               </div>
             </div>
           </div>
