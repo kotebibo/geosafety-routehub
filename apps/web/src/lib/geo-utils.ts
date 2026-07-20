@@ -23,6 +23,30 @@ export function isWithinRadius(
   return effectiveDistance <= radiusMeters
 }
 
+// A checkin column can target multiple coordinates (e.g. a site with several
+// gates/buildings). The inspector may check in from the radius of ANY of them,
+// so we geofence against the nearest target. Returns null when there are no
+// targets (GPS-only mode).
+export function nearestWithinRadius(
+  lat: number,
+  lng: number,
+  targets: Array<{ lat: number; lng: number }>,
+  accuracyMeters: number | null | undefined,
+  radiusMeters: number
+): { distance: number; within: boolean; target: { lat: number; lng: number } } | null {
+  if (targets.length === 0) return null
+  let best: { distance: number; target: { lat: number; lng: number } } | null = null
+  for (const t of targets) {
+    const distance = Math.round(haversineMeters(lat, lng, t.lat, t.lng))
+    if (!best || distance < best.distance) best = { distance, target: t }
+  }
+  return {
+    distance: best!.distance,
+    within: isWithinRadius(best!.distance, accuracyMeters, radiusMeters),
+    target: best!.target,
+  }
+}
+
 export function formatDuration(minutes: number, language: 'ka' | 'en' = 'ka'): string {
   const [hUnit, mUnit] = language === 'en' ? ['h', 'm'] : ['სთ', 'წთ']
   if (minutes < 60) return `${minutes}${mUnit}`
@@ -126,7 +150,9 @@ function extractDecimalPair(text: string): { lat: number; lng: number } | null {
   return null
 }
 
-export function parseCoordinates(value: unknown): { lat: number; lng: number } | null {
+// Parse ONE coordinate from a single entry — an object `{ lat, lng }` or a
+// string holding a Google Maps URL, a DMS block, or a decimal pair.
+function parseSingleCoordinate(value: unknown): { lat: number; lng: number } | null {
   if (!value) return null
 
   if (typeof value === 'object' && value !== null) {
@@ -157,4 +183,50 @@ export function parseCoordinates(value: unknown): { lat: number; lng: number } |
 
   // 4. Short links (maps.app.goo.gl) — no coords in URL, can't parse client-side
   return null
+}
+
+function dedupeCoords(
+  list: Array<{ lat: number; lng: number } | null>
+): Array<{ lat: number; lng: number }> {
+  const seen = new Set<string>()
+  const out: Array<{ lat: number; lng: number }> = []
+  for (const c of list) {
+    if (!c) continue
+    // ~1m precision — two entries describing the same spot (e.g. a DMS block and
+    // its query= URL) collapse to one target instead of a phantom second point.
+    const key = `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(c)
+  }
+  return out
+}
+
+// Parse ALL coordinates from a coordinates-column cell. One entry per line (or
+// `;`) — each entry contributes at most one point (within an entry, query= URLs
+// still win over an accompanying DMS block, so a single location isn't
+// double-counted). Returns [] for GPS-only / unparseable cells.
+export function parseCoordinatesList(value: unknown): Array<{ lat: number; lng: number }> {
+  if (!value) return []
+
+  if (Array.isArray(value)) {
+    return dedupeCoords(value.map(parseSingleCoordinate))
+  }
+
+  if (typeof value === 'string') {
+    const entries = value.split(/[\n;]+/)
+    const parsed = dedupeCoords(entries.map(parseSingleCoordinate))
+    if (parsed.length > 0) return parsed
+    // Safety net: an entry that itself spans lines (e.g. Latitude and Longitude
+    // on separate lines) fails per-line — retry against the whole string.
+    const whole = parseSingleCoordinate(value)
+    return whole ? [whole] : []
+  }
+
+  const single = parseSingleCoordinate(value)
+  return single ? [single] : []
+}
+
+export function parseCoordinates(value: unknown): { lat: number; lng: number } | null {
+  return parseCoordinatesList(value)[0] ?? null
 }

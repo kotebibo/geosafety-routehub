@@ -26,11 +26,10 @@ import {
   useDeleteCheckin,
 } from '@/features/boards/hooks/useCheckinQueries'
 import {
-  parseCoordinates,
-  haversineMeters,
+  parseCoordinatesList,
+  nearestWithinRadius,
   formatDuration,
   formatElapsed,
-  isWithinRadius,
   CHECKIN_RADIUS_METERS,
 } from '@/lib/geo-utils'
 import { getEffectiveVisitTypes, OTHER_VISIT_TYPE } from '@/features/boards/constants/checkin'
@@ -110,20 +109,27 @@ export function CheckinBottomSheet({
     [checkins, user?.id]
   )
 
-  // Resolve target coordinates from column config
-  const targetCoords = useMemo(() => {
+  // Resolve target coordinates from column config — a cell may hold several,
+  // and the inspector can check in near any of them.
+  const targetCoordsList = useMemo(() => {
     const coordsColumnId = column.config?.coordinates_column_id
-    if (!coordsColumnId || !row.data) return null
-    return parseCoordinates(row.data[coordsColumnId])
+    if (!coordsColumnId || !row.data) return []
+    return parseCoordinatesList(row.data[coordsColumnId])
   }, [column.config, row.data])
 
-  const distance = useMemo(() => {
-    if (!coords || !targetCoords) return null
-    return Math.round(haversineMeters(coords.lat, coords.lng, targetCoords.lat, targetCoords.lng))
-  }, [coords, targetCoords])
+  const nearest = useMemo(() => {
+    if (!coords) return null
+    return nearestWithinRadius(
+      coords.lat,
+      coords.lng,
+      targetCoordsList,
+      coords.accuracy,
+      CHECKIN_RADIUS_METERS
+    )
+  }, [coords, targetCoordsList])
 
-  const withinRadius =
-    distance !== null && isWithinRadius(distance, coords?.accuracy, CHECKIN_RADIUS_METERS)
+  const distance = nearest?.distance ?? null
+  const withinRadius = nearest?.within ?? false
   const canCheckin =
     coords &&
     (distance === null || withinRadius) &&
@@ -229,7 +235,7 @@ export function CheckinBottomSheet({
           </div>
 
           {/* Geofence info */}
-          {targetCoords && coords && distance !== null && (
+          {targetCoordsList.length > 0 && coords && distance !== null && (
             <div
               className={`flex items-center gap-2 p-3 rounded-lg ${withinRadius ? 'bg-green-500/10 border border-green-500/30' : 'bg-red-500/10 border border-red-500/30'}`}
             >
@@ -250,7 +256,7 @@ export function CheckinBottomSheet({
             </div>
           )}
 
-          {!targetCoords && (
+          {targetCoordsList.length === 0 && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
               <Navigation className="w-4 h-4 text-blue-500" />
               <span className="text-xs text-blue-500">{t('checkin.noCoordsMode')}</span>
