@@ -172,6 +172,26 @@ describe('parseCoordinatesList', () => {
     ])
   })
 
+  it('parses several space-separated comma pairs on one line (reported bug)', () => {
+    // A single-line cell with pairs separated only by spaces used to yield just
+    // the first pair, so check-in geofenced against one point only.
+    const text = '41.7099, 44.8271 41.7180, 44.8100 41.711811702707, 44.756197455417585'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.7099, lng: 44.8271 },
+      { lat: 41.718, lng: 44.81 },
+      { lat: 41.711811702707, lng: 44.756197455417585 },
+    ])
+  })
+
+  it('does not mistake the gap between two pairs for a coordinate', () => {
+    // Between "44.8271" and "41.7180" there is no comma, so no phantom pair.
+    const text = '41.7099, 44.8271 41.7180, 44.8100'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.7099, lng: 44.8271 },
+      { lat: 41.718, lng: 44.81 },
+    ])
+  })
+
   it('does not double-count a DMS block and its query= URL for the same entry', () => {
     // Real production format: DMS + query= URL describing one location, one line
     const text =
