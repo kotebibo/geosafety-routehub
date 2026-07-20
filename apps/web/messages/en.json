@@ -134,6 +134,7 @@
     "emailNotConfirmed": "Please confirm your email before signing in",
     "signupError": "Registration error. Please try again.",
     "signinError": "Sign in error. Please try again.",
+    "genericError": "Something went wrong. Please try again.",
     "enterEmailFirst": "Please enter your email first",
     "resetEmailSent": "Password reset link has been sent to your email",
     "resetError": "Password reset failed. Please try again.",
