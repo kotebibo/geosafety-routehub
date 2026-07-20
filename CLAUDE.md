@@ -15,36 +15,67 @@ Be direct and honest. No fluff, no excessive praise, no sugar-coating:
 
 ## Deployment & Workflow
 
-**One branch: `master`.** Three Vercel projects deploy from it, differing only
-in env vars (each points at its own Supabase instance):
+**Branch flow: `feature → stage → master`.** `stage` is the shared integration/
+test branch (backed by the STAGE Supabase). `master` is the weekly release — the
+three prod Vercel projects deploy from it, differing only in env vars (each
+points at its own Supabase instance):
 
-| Domain                | Vercel project         | Supabase          |
+| Branch/Domain         | Vercel project         | Supabase          |
 | --------------------- | ---------------------- | ----------------- |
+| `stage` (test)        | (stage project)        | STAGE             |
 | geosafety.routehub.ge | geosafety-routehub-web | Team1             |
 | team2.routehub.ge     | routehub-web-2         | Team2 (Frankfurt) |
 | team3.routehub.ge     | routehub-web-3         | Team3             |
 
-- Work on feature branches, PR into `master`. Never hardcode anything
-  instance-specific — it belongs in Vercel env vars.
-- **Before every commit**: `git pull --rebase origin master` first — others
-  push to master too; committing on a stale base invites conflicts.
-- **Before every commit/push** (from `apps/web`): `npx vitest run`,
-  `npx tsc --noEmit`, `npx next build` — all three must pass.
+- **Every feature merges into `stage` first** and is tested there against
+  stage-db. Use the **`/merge-stage`** skill — it refreshes stage, renumbers any
+  colliding migrations, surfaces conflicts, runs the checks, and applies new
+  migrations to stage-db.
+- **Once a week, `stage → master`** via the **`/stage-to-master`** skill (merge,
+  test, push). Merging to master deploys to all three prod domains.
+- **Production is rolled out on a single agreed day**, not on every master merge.
+  Prod database migrations ship that day via **`/migration-prod`**.
+- Never hardcode anything instance-specific — it belongs in Vercel env vars.
+- **Before committing**: `git pull --rebase origin <current-branch>` first —
+  others push too; committing on a stale base invites conflicts.
+- **Checks (from `apps/web`)**: `node scripts/check-i18n-keys.mjs`,
+  `npx tsc --noEmit`, `npx vitest run`, `npx next build`. The `pre-push` hook runs
+  the first three; CI (`.github/workflows/ci.yml`) runs all four on every PR and
+  on pushes to `stage`/`master`.
 - Cron schedules live in the root `vercel.json` (UTC — Georgia is UTC+4).
 
 ### Database migrations
 
-The three Supabase instances share a schema but hold separate data.
-**Every migration must be applied to all three.** Add the SQL file to
-`supabase/migrations/`, then:
+The four instances (STAGE + Team1/Team2/Team3) share a schema but hold separate
+data. Migrations are **staging-first** and tracked per instance in a
+`_applied_migrations` ledger — `scripts/run-migration.mjs` records each file it
+applies, so `--status` shows the applied/pending matrix and `--pending` applies
+only what an instance is missing. (Requires `scripts/instances.json` — copy
+`instances.example.json` and fill in Management API tokens.)
 
 ```
-node scripts/run-migration.mjs <migration-file>.sql
+node scripts/run-migration.mjs --status                 # applied/pending matrix
+node scripts/run-migration.mjs --pending --stage        # /migration-stage
+node scripts/run-migration.mjs --pending --prod         # /migration-prod (prod day, owner go-ahead)
+node scripts/run-migration.mjs <NNN_name>.sql --stage   # one file → stage
 ```
 
-(Requires `scripts/instances.json` — copy `instances.example.json` and fill
-in Supabase Management API tokens.) A migration applied to only one instance
-is a production bug on the other two.
+- **Stage first, always.** Add the SQL to `supabase/migrations/`, apply to stage
+  (`/migration-stage`), test. Prod gets it later via `/migration-prod`, which only
+  ships files stage has already applied. A migration on only some prod instances
+  is a production bug on the others — `--pending --prod` covers all three.
+- **Numbering.** Files are `NNN_name.sql`. If a feature's migration number is
+  already taken on `stage`, the file already on stage **wins** and the incoming
+  one is renumbered upward to the next free number (handled by `/merge-stage`).
+  Never reuse or reorder an applied number.
+- **One-time ledger adoption** (already done for STAGE): baseline the instances
+  that predate the ledger so old migrations aren't re-run —
+  `--baseline --stage` (all repo files) and, on prod day,
+  `--baseline --prod --upto=104` before the first `--pending --prod`.
+- Every migration must be **idempotent** (`IF [NOT] EXISTS`, `DROP POLICY` before
+  `CREATE POLICY`, …). Never `--prune`; never delete+reinsert on boards with
+  check-ins. The **`migration-guardian`** agent gives a read-only pending/collision
+  analysis without touching anything.
 
 ### Monday.com → RouteHub tools (`scripts/monday/`)
 

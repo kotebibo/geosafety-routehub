@@ -1,0 +1,8 @@
+set -e
+
+# Fast, high-signal gates before code leaves the machine. The full production
+# build runs in CI (too slow to block every push here).
+cd apps/web
+node scripts/check-i18n-keys.mjs
+npx tsc --noEmit
+npx vitest run
