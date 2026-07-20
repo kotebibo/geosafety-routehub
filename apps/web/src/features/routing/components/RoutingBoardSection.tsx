@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ChevronDown, Loader2, User, Check, Route as RouteIcon } from 'lucide-react'
+import { ChevronDown, Loader2, User, Check, Route as RouteIcon, CalendarDays } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
@@ -9,6 +9,7 @@ import { UrgencyBadge } from './UrgencyBadge'
 import { ItemDetailPopup } from './ItemDetailPopup'
 import { InspectorLocationControl } from './InspectorLocationControl'
 import { AssignOfficerControl } from './AssignOfficerControl'
+import { WeeklyPlanner } from './WeeklyPlanner'
 import { RoutePlanningPopup } from './RoutePlanningPopup'
 import { useRoutingItems, type RoutingItem } from '../hooks/useRoutingData'
 import type { Board } from '@/types/board'
@@ -40,7 +41,9 @@ interface RoutingBoardSectionProps {
 }
 
 export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
+  const t = useTranslations()
   const [expanded, setExpanded] = useState(false)
+  const [weekPlanning, setWeekPlanning] = useState(false)
   const { isAdmin } = useAuth()
 
   return (
@@ -78,8 +81,23 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
         </span>
         {/* Admin assigns the officer this board belongs to */}
         {isAdmin && <AssignOfficerControl board={board} />}
-        {/* Inspector starting location for this board */}
-        <InspectorLocationControl board={board} />
+        {/* Weekly route planner */}
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation()
+            setWeekPlanning(true)
+          }}
+          title={t('routing.weekPlanning')}
+          className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-bg-tertiary text-text-tertiary hover:bg-bg-hover transition-colors flex-shrink-0"
+        >
+          <CalendarDays className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">{t('routing.planWeekShort')}</span>
+        </button>
+        {/* Inspector starting location for this board — admin-only, like the
+            officer profile fields (car/engine/fuel/location). Officers can't
+            change routing locations, they only execute the planned routes. */}
+        {isAdmin && <InspectorLocationControl board={board} />}
         <ChevronDown
           className={cn(
             'w-4 h-4 text-text-tertiary transition-transform flex-shrink-0',
@@ -90,6 +108,7 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
 
       {/* Items load lazily — the inner component mounts (and fetches) only on expand */}
       {expanded && <BoardItemsList board={board} />}
+      {weekPlanning && <WeeklyPlanner board={board} onClose={() => setWeekPlanning(false)} />}
     </div>
   )
 }

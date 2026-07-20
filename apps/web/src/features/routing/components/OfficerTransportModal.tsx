@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Car, X, Loader2, Check } from 'lucide-react'
+import { Car, X, Loader2, Check, Home, type LucideIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui-monday/Toast'
 import { useOfficerTransport, useSaveOfficerTransport } from '../hooks/useOfficerTransport'
+import { LocationSearchField, type PickedLocation } from './LocationSearchField'
 
 interface OfficerTransportModalProps {
   officerId: string
@@ -26,6 +27,8 @@ export function OfficerTransportModal({
   const [carModel, setCarModel] = useState('')
   const [engine, setEngine] = useState('')
   const [consumption, setConsumption] = useState('')
+  const [home, setHome] = useState<PickedLocation | null>(null)
+  const [startLoc, setStartLoc] = useState<PickedLocation | null>(null)
 
   useEffect(() => {
     if (data) {
@@ -33,6 +36,16 @@ export function OfficerTransportModal({
       setEngine(data.engine ?? '')
       setConsumption(
         data.consumption_l_per_100km != null ? String(data.consumption_l_per_100km) : ''
+      )
+      setHome(
+        data.home_lat != null && data.home_lng != null
+          ? { lat: data.home_lat, lng: data.home_lng, address: data.home_address }
+          : null
+      )
+      setStartLoc(
+        data.start_lat != null && data.start_lng != null
+          ? { lat: data.start_lat, lng: data.start_lng, address: data.start_address }
+          : null
       )
     }
   }, [data])
@@ -49,6 +62,12 @@ export function OfficerTransportModal({
         car_model: carModel.trim() || null,
         engine: engine.trim() || null,
         consumption_l_per_100km: consumptionNum,
+        home_lat: home?.lat ?? null,
+        home_lng: home?.lng ?? null,
+        home_address: home?.address ?? null,
+        start_lat: startLoc?.lat ?? null,
+        start_lng: startLoc?.lng ?? null,
+        start_address: startLoc?.address ?? null,
       })
       showToast(t('routing.transportSaved'), 'success')
       onClose()
@@ -68,7 +87,7 @@ export function OfficerTransportModal({
             </div>
             <div className="min-w-0">
               <h3 className="text-base font-semibold text-text-primary truncate">
-                {t('routing.transport')}
+                {t('routing.officerProfile')}
               </h3>
               <p className="text-xs text-text-tertiary truncate">{officerName}</p>
             </div>
@@ -82,13 +101,28 @@ export function OfficerTransportModal({
           </button>
         </div>
 
-        <div className="px-5 py-4 space-y-3">
+        <div className="px-5 py-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="w-6 h-6 text-text-tertiary animate-spin" />
             </div>
           ) : (
             <>
+              {/* Locations (optional) */}
+              <SectionLabel icon={Home}>{t('routing.locationsSection')}</SectionLabel>
+              <LocationSearchField
+                label={`${t('routing.homeLocation')} (${t('routing.optional')})`}
+                value={home}
+                onChange={setHome}
+              />
+              <LocationSearchField
+                label={`${t('routing.routeStartLocation')} (${t('routing.optional')})`}
+                value={startLoc}
+                onChange={setStartLoc}
+              />
+
+              {/* Vehicle (optional) */}
+              <SectionLabel icon={Car}>{t('routing.vehicleSection')}</SectionLabel>
               <Field label={t('routing.carModel')}>
                 <input
                   value={carModel}
@@ -157,6 +191,17 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="block text-xs font-medium text-text-secondary mb-1">{label}</label>
       {children}
+    </div>
+  )
+}
+
+function SectionLabel({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-1.5 pt-2 first:pt-0">
+      <Icon className="w-3.5 h-3.5 text-text-tertiary" />
+      <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
+        {children}
+      </span>
     </div>
   )
 }

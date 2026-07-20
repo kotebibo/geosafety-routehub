@@ -52,6 +52,7 @@ import {
   Activity,
   ClipboardCheck,
   Waypoints,
+  Gauge,
 } from 'lucide-react'
 import {
   DndContext,
@@ -845,6 +846,14 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       // TODO: switch to a dedicated pages:routing permission once the
       // page-permissions migration lands on all three instances
       permission: 'pages:routes',
+    },
+    {
+      href: '/admin/route-analytics',
+      labelKey: 'nav.routeAnalytics',
+      icon: Gauge,
+      // Admin-only: reuse the admin-scoped user_management permission until a
+      // dedicated pages:route_analytics permission is seeded on all instances.
+      permission: 'pages:user_management',
     },
     {
       href: '/admin/assignments',

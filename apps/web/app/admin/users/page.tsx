@@ -12,6 +12,10 @@ import { useAuth } from '@/contexts/AuthContext'
 import { usersService, User, CustomRole } from '@/services/users.service'
 import { OfficerTransportModal } from '@/features/routing/components/OfficerTransportModal'
 import {
+  LocationSearchField,
+  type PickedLocation,
+} from '@/features/routing/components/LocationSearchField'
+import {
   Users,
   Shield,
   Search,
@@ -80,6 +84,17 @@ export default function UserManagementPage() {
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
   const [showCreatePassword, setShowCreatePassword] = useState(false)
+
+  // Optional routing profile captured at officer-creation time (also editable
+  // later via the 🚗 modal). Only saved when the new user is an officer.
+  const emptyProfile = {
+    home: null as PickedLocation | null,
+    start: null as PickedLocation | null,
+    car: '',
+    engine: '',
+    consumption: '',
+  }
+  const [createProfile, setCreateProfile] = useState(emptyProfile)
 
   // Action menu state
   const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null)
@@ -224,7 +239,13 @@ export default function UserManagementPage() {
       const res = await fetch('/api/admin/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(createForm),
+        body: JSON.stringify({
+          email: createForm.email,
+          full_name: createForm.full_name,
+          phone: createForm.phone,
+          password: createForm.password,
+          role: createForm.role,
+        }),
       })
 
       if (!res.ok) {
@@ -232,8 +253,35 @@ export default function UserManagementPage() {
         throw new Error(data.error || t('admin.users.createUserFailed'))
       }
 
+      // For officers, persist any routing-profile fields the admin filled in.
+      const { userId } = await res.json().catch(() => ({ userId: null }))
+      const p = createProfile
+      const hasProfile =
+        !!p.home || !!p.start || p.car.trim() || p.engine.trim() || p.consumption.trim()
+      if (createForm.role === 'officer' && userId && hasProfile) {
+        const consumptionNum = p.consumption.trim() === '' ? null : Number(p.consumption)
+        await fetch('/api/admin/officer-transport', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: userId,
+            car_model: p.car.trim() || null,
+            engine: p.engine.trim() || null,
+            consumption_l_per_100km:
+              consumptionNum != null && !isNaN(consumptionNum) ? consumptionNum : null,
+            home_lat: p.home?.lat ?? null,
+            home_lng: p.home?.lng ?? null,
+            home_address: p.home?.address ?? null,
+            start_lat: p.start?.lat ?? null,
+            start_lng: p.start?.lng ?? null,
+            start_address: p.start?.address ?? null,
+          }),
+        })
+      }
+
       // Success - reset form, close panel, refresh list
       setCreateForm({ email: '', full_name: '', phone: '', password: '', role: '' })
+      setCreateProfile(emptyProfile)
       setShowCreateForm(false)
       setShowCreatePassword(false)
       await fetchData()
@@ -426,6 +474,74 @@ export default function UserManagementPage() {
                   </Select>
                 </div>
               </div>
+
+              {/* Optional routing profile — only relevant for officers */}
+              {createForm.role === 'officer' && (
+                <div className="mt-5 pt-4 border-t border-border-light">
+                  <p className="text-sm font-semibold text-text-primary mb-1">
+                    {t('routing.officerProfile')}
+                  </p>
+                  <p className="text-xs text-text-tertiary mb-3">
+                    {t('admin.users.routingProfileHint')}
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <LocationSearchField
+                      label={`${t('routing.homeLocation')} (${t('routing.optional')})`}
+                      value={createProfile.home}
+                      onChange={home => setCreateProfile(prev => ({ ...prev, home }))}
+                    />
+                    <LocationSearchField
+                      label={`${t('routing.routeStartLocation')} (${t('routing.optional')})`}
+                      value={createProfile.start}
+                      onChange={start => setCreateProfile(prev => ({ ...prev, start }))}
+                    />
+                    <div>
+                      <label className="block text-xs font-medium text-text-secondary mb-1">
+                        {t('routing.carModel')}
+                      </label>
+                      <input
+                        type="text"
+                        value={createProfile.car}
+                        onChange={e => setCreateProfile(prev => ({ ...prev, car: e.target.value }))}
+                        placeholder="Toyota Prius"
+                        className="w-full px-3 py-2 text-sm bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">
+                          {t('routing.engine')}
+                        </label>
+                        <input
+                          type="text"
+                          value={createProfile.engine}
+                          onChange={e =>
+                            setCreateProfile(prev => ({ ...prev, engine: e.target.value }))
+                          }
+                          placeholder="1.8"
+                          className="w-full px-3 py-2 text-sm bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-text-secondary mb-1">
+                          {t('routing.consumptionPer100')}
+                        </label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          value={createProfile.consumption}
+                          onChange={e =>
+                            setCreateProfile(prev => ({ ...prev, consumption: e.target.value }))
+                          }
+                          placeholder="7.5"
+                          className="w-full px-3 py-2 text-sm bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="flex items-center gap-3 mt-4">
                 <button

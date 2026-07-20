@@ -10,6 +10,12 @@ const upsertSchema = z.object({
   car_model: z.string().max(120).nullable().optional(),
   engine: z.string().max(120).nullable().optional(),
   consumption_l_per_100km: z.number().min(0).max(100).nullable().optional(),
+  home_lat: z.number().min(-90).max(90).nullable().optional(),
+  home_lng: z.number().min(-180).max(180).nullable().optional(),
+  home_address: z.string().max(300).nullable().optional(),
+  start_lat: z.number().min(-90).max(90).nullable().optional(),
+  start_lng: z.number().min(-180).max(180).nullable().optional(),
+  start_address: z.string().max(300).nullable().optional(),
 })
 
 // GET ?userId= — officer transport (RLS: own for officers, any for admin/dispatcher)
@@ -51,6 +57,12 @@ export async function PUT(request: NextRequest) {
           car_model: v.car_model ?? null,
           engine: v.engine ?? null,
           consumption_l_per_100km: v.consumption_l_per_100km ?? null,
+          home_lat: v.home_lat ?? null,
+          home_lng: v.home_lng ?? null,
+          home_address: v.home_address ?? null,
+          start_lat: v.start_lat ?? null,
+          start_lng: v.start_lng ?? null,
+          start_address: v.start_address ?? null,
           updated_at: new Date().toISOString(),
         },
         { onConflict: 'user_id' }
