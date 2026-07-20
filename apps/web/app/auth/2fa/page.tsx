@@ -2,9 +2,9 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useTranslations } from 'next-intl'
-import { getSupabase } from '@/lib/supabase'
 import { KeyRound, ShieldCheck, AlertCircle, Globe } from 'lucide-react'
 import { AuthSkeleton } from '@/features/auth/components/AuthSkeleton'
 
@@ -22,6 +22,7 @@ function TwoFactorForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const t = useTranslations()
+  const { completeServerLogin } = useAuth()
   const { language, setLanguage } = useLanguage()
 
   const returnUrl = searchParams.get('from') || '/'
@@ -44,9 +45,9 @@ function TwoFactorForm() {
   }, [resendCooldown])
 
   const finishLogin = async () => {
-    // Session cookies were set server-side by the verify call — make the
-    // client SDK re-read them so app state syncs before we navigate.
-    await getSupabase().auth.getSession()
+    // Session cookies were set server-side by the verify call — sync
+    // user/userRole state from them so RouteGuard lets us through immediately.
+    await completeServerLogin()
     router.push(returnUrl)
     router.refresh()
   }

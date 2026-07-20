@@ -16,6 +16,7 @@ interface AuthContextType {
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: any; mfaRequired?: boolean }>
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>
+  completeServerLogin: () => Promise<void>
   signOut: () => Promise<void>
   isAdmin: boolean
   isDispatcher: boolean
@@ -137,6 +138,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  // After a server-side login (login route or 2FA verify) the auth cookies are
+  // already set on the response, but getSession() only *returns* the session —
+  // it does NOT emit onAuthStateChange. Mirror the state update here so
+  // RouteGuard sees the user immediately instead of bouncing back to /auth/login.
+  const completeServerLogin = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+    if (session?.user) {
+      setUser(session.user)
+      await fetchUserRole(session.user.id, true)
+    }
+  }
+
   const signIn = async (email: string, password: string) => {
     try {
       const response = await fetch('/api/auth/login', {
@@ -160,9 +175,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Login happened server-side (cookies already set on this response) —
-      // make the client SDK re-read them so onAuthStateChange fires and
-      // user/userRole state syncs immediately, same as a direct sign-in.
-      await supabase.auth.getSession()
+      // sync user/userRole state from the cookies before the caller navigates.
+      await completeServerLogin()
 
       return { error: null }
     } catch (err) {
@@ -213,6 +227,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signIn,
     signUp,
     signOut,
+    completeServerLogin,
     isAdmin: userRole?.role === 'admin',
     isDispatcher: userRole?.role === 'dispatcher',
     isOfficer: userRole?.role === 'officer',
