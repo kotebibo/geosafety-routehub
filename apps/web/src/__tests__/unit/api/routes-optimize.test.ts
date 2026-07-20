@@ -3,10 +3,10 @@ import { NextRequest } from 'next/server'
 
 // --- Mocks ---
 
-const mockRequireAdminOrDispatcher = vi.fn()
+const mockRequireAuth = vi.fn()
 
 vi.mock('@/middleware/auth', () => ({
-  requireAdminOrDispatcher: (...args: any[]) => mockRequireAdminOrDispatcher(...args),
+  requireAuth: (...args: any[]) => mockRequireAuth(...args),
 }))
 
 const mockOptimizeRoute = vi.fn()
@@ -43,10 +43,8 @@ function validBody(overrides: Record<string, any> = {}) {
 describe('POST /api/routes/optimize', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockRequireAdminOrDispatcher.mockResolvedValue({
-      session: { user: { id: 'user-1' } },
-      userRole: 'dispatcher',
-    })
+    // Optimize is open to any authenticated user (pure computation).
+    mockRequireAuth.mockResolvedValue({ user: { id: 'user-1' } })
   })
 
   // ---------- Auth ----------
@@ -54,25 +52,13 @@ describe('POST /api/routes/optimize', () => {
   it('returns 401 when not authenticated', async () => {
     const err = new Error('Authentication required')
     err.name = 'UnauthorizedError'
-    mockRequireAdminOrDispatcher.mockRejectedValue(err)
+    mockRequireAuth.mockRejectedValue(err)
 
     const res = await POST(makeRequest(validBody()))
     const data = await res.json()
 
     expect(res.status).toBe(401)
     expect(data.error).toBe('Authentication required')
-  })
-
-  it('returns 403 when role is insufficient', async () => {
-    const err = new Error('Insufficient permissions')
-    err.name = 'ForbiddenError'
-    mockRequireAdminOrDispatcher.mockRejectedValue(err)
-
-    const res = await POST(makeRequest(validBody()))
-    const data = await res.json()
-
-    expect(res.status).toBe(403)
-    expect(data.error).toBe('Insufficient permissions')
   })
 
   // ---------- Validation ----------

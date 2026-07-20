@@ -76,13 +76,14 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { optimizeRoute, type Location, type OptimizationOptions } from '@routehub/route-optimizer'
-import { requireAdminOrDispatcher } from '@/middleware/auth'
+import { requireAuth } from '@/middleware/auth'
 import { optimizeRouteSchema, type OptimizeRouteInput } from '@/lib/validations'
 
 export async function POST(request: NextRequest) {
   try {
-    // Require admin or dispatcher role to optimize routes
-    await requireAdminOrDispatcher()
+    // Any authenticated user may optimize — it's a pure computation (OSRM road
+    // distances), no data access. Officers plan their own week, so they need it.
+    await requireAuth()
 
     const rawBody = await request.json()
 

@@ -17,6 +17,7 @@ import { useBoardColumns } from '@/features/boards/hooks/useBoardColumns'
 import { parseCoordinates } from '@/lib/geo-utils'
 import { useToast } from '@/components/ui-monday/Toast'
 import { useInspectorLocation } from '../hooks/useInspectorLocation'
+import { resolveLocationColumns } from '../lib/location-columns'
 import { useRouteOptimizer, type OptimizedRouteResult } from '../hooks/useRouteOptimizer'
 import type { RoutingItem } from '../hooks/useRoutingData'
 import type { Board } from '@/types/board'
@@ -35,11 +36,9 @@ export function RoutePlanningPopup({ board, items, onClose }: RoutePlanningPopup
   const optimizer = useRouteOptimizer()
   const [result, setResult] = useState<OptimizedRouteResult | null>(null)
 
-  // The checkin column's coordinates_column_id tells us where each item stores coords
-  const coordsColumnId = useMemo(() => {
-    const checkinCol = columns.find(c => c.column_type === 'checkin')
-    return checkinCol?.config?.coordinates_column_id as string | undefined
-  }, [columns])
+  // Where each item stores coords — explicit check-in config, else auto-detected
+  // by column name (a check-in column is not required).
+  const coordsColumnId = useMemo(() => resolveLocationColumns(columns).coordsColumnId, [columns])
 
   // Resolve each selected company to coordinates; split into usable / missing
   const { located, missing } = useMemo(() => {

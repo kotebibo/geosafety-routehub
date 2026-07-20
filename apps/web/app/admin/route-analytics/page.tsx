@@ -24,9 +24,11 @@ import { OfficerWeekPopup } from '@/features/routing/components/OfficerWeekPopup
 import { mondayOf, weekDays, dayKey, shortDate } from '@/features/routing/lib/week'
 
 export default function RouteAnalyticsPage() {
-  const { isAdmin, loading: authLoading } = useAuth()
+  const { isAdmin, isDispatcher, loading: authLoading } = useAuth()
   const router = useRouter()
   const t = useTranslations()
+  // Officers plan their week; admins and dispatchers receive/see the analytics.
+  const isManager = isAdmin || isDispatcher
 
   const [weekOffset, setWeekOffset] = useState(0)
   const [selected, setSelected] = useState<OfficerWeekSummary | null>(null)
@@ -35,11 +37,11 @@ export default function RouteAnalyticsPage() {
   const days = useMemo(() => weekDays(monday), [monday])
   const weekStartKey = dayKey(monday)
 
-  const { data, isLoading } = useRouteAnalytics(isAdmin ? weekStartKey : '')
+  const { data, isLoading } = useRouteAnalytics(isManager ? weekStartKey : '')
 
   useEffect(() => {
-    if (!authLoading && !isAdmin) router.push('/')
-  }, [authLoading, isAdmin, router])
+    if (!authLoading && !isManager) router.push('/')
+  }, [authLoading, isManager, router])
 
   const officers = data?.officers ?? []
   const fleet = useMemo(
@@ -51,7 +53,7 @@ export default function RouteAnalyticsPage() {
     [officers]
   )
 
-  if (authLoading || !isAdmin) {
+  if (authLoading || !isManager) {
     return (
       <div className="flex items-center justify-center py-20">
         <Loader2 className="w-8 h-8 text-text-tertiary animate-spin" />

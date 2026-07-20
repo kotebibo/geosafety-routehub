@@ -15,6 +15,10 @@ interface LocationSearchFieldProps {
   label: string
   value: PickedLocation | null
   onChange: (value: PickedLocation | null) => void
+  /** Pre-fills the search box (e.g. the item's address) so the user only picks. */
+  initialQuery?: string
+  /** Restrict geocoding results to this city's bounding box (accuracy). */
+  city?: string
 }
 
 /**
@@ -22,9 +26,15 @@ interface LocationSearchFieldProps {
  * route start). Resolves free text or coordinates via the geocode endpoint —
  * no GPS, since the admin isn't physically at the officer's location.
  */
-export function LocationSearchField({ label, value, onChange }: LocationSearchFieldProps) {
+export function LocationSearchField({
+  label,
+  value,
+  onChange,
+  initialQuery,
+  city,
+}: LocationSearchFieldProps) {
   const t = useTranslations()
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(initialQuery ?? '')
   const [results, setResults] = useState<GeocodeResult[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,7 +46,7 @@ export function LocationSearchField({ label, value, onChange }: LocationSearchFi
     setError(null)
     setSearched(true)
     try {
-      setResults(await resolveLocation(query))
+      setResults(await resolveLocation(query, { city }))
     } catch (err: any) {
       setError(err.message || t('routing.geocodeFailed'))
       setResults([])

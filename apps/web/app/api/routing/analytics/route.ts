@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/middleware/auth'
+import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 
 function weekDates(weekStart: string): string[] {
@@ -17,7 +17,7 @@ function weekDates(weekStart: string): string[] {
 // estimate from each officer's consumption. Admin only.
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin()
+    await requireAdminOrDispatcher()
     const weekStart = new URL(request.url).searchParams.get('weekStart')
     if (!weekStart || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart))
       return NextResponse.json({ error: 'weekStart (YYYY-MM-DD) is required' }, { status: 400 })

@@ -851,9 +851,10 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       href: '/admin/route-analytics',
       labelKey: 'nav.routeAnalytics',
       icon: Gauge,
-      // Admin-only: reuse the admin-scoped user_management permission until a
-      // dedicated pages:route_analytics permission is seeded on all instances.
-      permission: 'pages:user_management',
+      // Managers (admin + dispatcher) receive officers' plans. pages:analytics is
+      // held by both but not officers — until a dedicated pages:route_analytics
+      // permission is seeded on all instances.
+      permission: 'pages:analytics',
     },
     {
       href: '/admin/assignments',
