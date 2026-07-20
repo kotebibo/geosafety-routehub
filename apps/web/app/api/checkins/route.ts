@@ -5,7 +5,8 @@ import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import {
-  parseCoordinates,
+  parseCoordinatesList,
+  nearestWithinRadius,
   haversineMeters,
   isWithinRadius,
   CHECKIN_RADIUS_METERS,
@@ -109,12 +110,19 @@ export async function POST(request: NextRequest) {
         itemBoardId = item.board_id
         const coordsColumnId = colConfig?.coordinates_column_id
         if (coordsColumnId && item.data) {
-          const targetCoords = parseCoordinates((item.data as Record<string, any>)[coordsColumnId])
-          if (targetCoords) {
-            distanceFromLocation = Math.round(
-              haversineMeters(validated.lat, validated.lng, targetCoords.lat, targetCoords.lng)
-            )
-            if (!isWithinRadius(distanceFromLocation, validated.accuracy, CHECKIN_RADIUS_METERS)) {
+          // The cell may hold multiple coordinates — geofence against the
+          // nearest one so the inspector can check in near any of them.
+          const targets = parseCoordinatesList((item.data as Record<string, any>)[coordsColumnId])
+          const nearest = nearestWithinRadius(
+            validated.lat,
+            validated.lng,
+            targets,
+            validated.accuracy,
+            CHECKIN_RADIUS_METERS
+          )
+          if (nearest) {
+            distanceFromLocation = nearest.distance
+            if (!nearest.within) {
               return NextResponse.json(
                 {
                   error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
@@ -125,7 +133,7 @@ export async function POST(request: NextRequest) {
               )
             }
           }
-          // If parseCoordinates returns null: no geofence, GPS-only mode
+          // If there are no parseable targets: no geofence, GPS-only mode
         }
       }
     } else if (validated.company_location_id) {

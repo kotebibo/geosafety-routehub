@@ -23,6 +23,30 @@ export function isWithinRadius(
   return effectiveDistance <= radiusMeters
 }
 
+// A checkin column can target multiple coordinates (e.g. a site with several
+// gates/buildings). The inspector may check in from the radius of ANY of them,
+// so we geofence against the nearest target. Returns null when there are no
+// targets (GPS-only mode).
+export function nearestWithinRadius(
+  lat: number,
+  lng: number,
+  targets: Array<{ lat: number; lng: number }>,
+  accuracyMeters: number | null | undefined,
+  radiusMeters: number
+): { distance: number; within: boolean; target: { lat: number; lng: number } } | null {
+  if (targets.length === 0) return null
+  let best: { distance: number; target: { lat: number; lng: number } } | null = null
+  for (const t of targets) {
+    const distance = Math.round(haversineMeters(lat, lng, t.lat, t.lng))
+    if (!best || distance < best.distance) best = { distance, target: t }
+  }
+  return {
+    distance: best!.distance,
+    within: isWithinRadius(best!.distance, accuracyMeters, radiusMeters),
+    target: best!.target,
+  }
+}
+
 export function formatDuration(minutes: number, language: 'ka' | 'en' = 'ka'): string {
   const [hUnit, mUnit] = language === 'en' ? ['h', 'm'] : ['სთ', 'წთ']
   if (minutes < 60) return `${minutes}${mUnit}`
@@ -106,55 +130,118 @@ function extractFromDms(text: string): { lat: number; lng: number } | null {
   return null
 }
 
-function extractDecimalPair(text: string): { lat: number; lng: number } | null {
-  // "41.7151, 44.8271" or "41.7151,44.8271" — optionally followed by anything
-  const commaMatch = text.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/)
-  if (commaMatch) {
-    const lat = Number(commaMatch[1])
-    const lng = Number(commaMatch[2])
-    if (isValidCoord(lat, lng)) return { lat, lng }
-  }
+function extractAllDecimalPairs(text: string): Array<{ lat: number; lng: number }> {
+  const out: Array<{ lat: number; lng: number }> = []
 
-  // Space-separated: "41.430795 45.101454"
-  const spaceMatch = text.match(/^(-?\d+\.\d+)\s+(-?\d+\.\d+)$/)
+  // Comma-joined pairs, matched globally — so several pairs separated by spaces
+  // on one line ("41.71, 44.82  41.72, 44.81") are EACH captured, not just the
+  // first. Both numbers must carry a decimal point, which keeps a trailing map
+  // zoom like "…,15z" from being mistaken for a coordinate.
+  for (const m of text.matchAll(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/g)) {
+    const lat = Number(m[1])
+    const lng = Number(m[2])
+    if (isValidCoord(lat, lng)) out.push({ lat, lng })
+  }
+  if (out.length > 0) return out
+
+  // No comma pair — accept a single space-separated pair: "41.430795 45.101454"
+  const spaceMatch = text.trim().match(/^(-?\d+\.\d+)\s+(-?\d+\.\d+)$/)
   if (spaceMatch) {
     const lat = Number(spaceMatch[1])
     const lng = Number(spaceMatch[2])
-    if (isValidCoord(lat, lng)) return { lat, lng }
+    if (isValidCoord(lat, lng)) out.push({ lat, lng })
   }
 
-  return null
+  return out
+}
+
+function parseObjectCoord(value: unknown): { lat: number; lng: number } | null {
+  if (value == null || typeof value !== 'object') return null
+  const obj = value as Record<string, unknown>
+  if (obj.lat == null || obj.lng == null) return null
+  const lat = Number(obj.lat)
+  const lng = Number(obj.lng)
+  return isValidCoord(lat, lng) ? { lat, lng } : null
+}
+
+// Every coordinate in a single entry (one line, or one `;`-delimited chunk). A
+// URL or DMS entry resolves to one point; a bare decimal entry may yield several
+// (multiple space-separated "lat, lng" pairs). Checking URL/DMS first means a
+// location written as "DMS block + its query= URL" isn't counted twice.
+function parseEntryCoordinates(entry: string): Array<{ lat: number; lng: number }> {
+  const text = entry.trim()
+  if (!text) return []
+
+  // Google Maps URL with decimal coords (covers ~85%)
+  const fromUrl = extractFromGoogleUrl(text)
+  if (fromUrl) return [fromUrl]
+
+  // DMS — Latitude: N 41°43'... Longitude: E 44°47'... (covers ~11%)
+  const fromDms = extractFromDms(text)
+  if (fromDms) return [fromDms]
+
+  // Decimal pair(s) — "41.7151, 44.8271" / "41.43 45.10" / several per line
+  return extractAllDecimalPairs(text)
+}
+
+function dedupeCoords(
+  list: Array<{ lat: number; lng: number } | null>
+): Array<{ lat: number; lng: number }> {
+  const seen = new Set<string>()
+  const out: Array<{ lat: number; lng: number }> = []
+  for (const c of list) {
+    if (!c) continue
+    // ~1m precision — two entries describing the same spot (e.g. a DMS block and
+    // its query= URL) collapse to one target instead of a phantom second point.
+    const key = `${c.lat.toFixed(5)},${c.lng.toFixed(5)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(c)
+  }
+  return out
+}
+
+// Parse ALL coordinates from a coordinates-column cell. Entries are split on
+// newlines / `;`, and each entry can itself contribute several points (multiple
+// space-separated decimal pairs on one line). Within an entry a URL or DMS block
+// wins over a bare pair, so a single location written in two notations isn't
+// double-counted. Returns [] for GPS-only / unparseable cells.
+export function parseCoordinatesList(value: unknown): Array<{ lat: number; lng: number }> {
+  if (!value) return []
+
+  if (Array.isArray(value)) {
+    const out: Array<{ lat: number; lng: number }> = []
+    for (const item of value) {
+      const obj = parseObjectCoord(item)
+      if (obj) out.push(obj)
+      else if (typeof item === 'string') out.push(...parseEntryCoordinates(item))
+    }
+    return dedupeCoords(out)
+  }
+
+  if (typeof value === 'object') {
+    const obj = parseObjectCoord(value)
+    return obj ? [obj] : []
+  }
+
+  if (typeof value !== 'string') return []
+  const text = value.trim()
+  if (!text) return []
+
+  const out: Array<{ lat: number; lng: number }> = []
+  for (const entry of text.split(/[\n;]+/)) {
+    out.push(...parseEntryCoordinates(entry))
+  }
+  // Safety net: an entry that spans lines (Latitude and Longitude on separate
+  // lines) yields nothing per-line — retry DMS against the whole string.
+  if (out.length === 0) {
+    const whole = extractFromDms(text)
+    if (whole) out.push(whole)
+  }
+
+  return dedupeCoords(out)
 }
 
 export function parseCoordinates(value: unknown): { lat: number; lng: number } | null {
-  if (!value) return null
-
-  if (typeof value === 'object' && value !== null) {
-    const obj = value as Record<string, unknown>
-    if (obj.lat != null && obj.lng != null) {
-      const lat = Number(obj.lat)
-      const lng = Number(obj.lng)
-      if (isValidCoord(lat, lng)) return { lat, lng }
-    }
-    return null
-  }
-
-  if (typeof value !== 'string') return null
-  const text = value.trim()
-  if (!text) return null
-
-  // 1. Google Maps URL with decimal coords (covers ~85%)
-  const fromUrl = extractFromGoogleUrl(text)
-  if (fromUrl) return fromUrl
-
-  // 2. DMS format — Latitude: N 41°43'... Longitude: E 44°47'... (covers ~11%)
-  const fromDms = extractFromDms(text)
-  if (fromDms) return fromDms
-
-  // 3. Decimal pair — "41.7151, 44.8271" or "41.43 45.10" (covers ~2%)
-  const fromDecimal = extractDecimalPair(text)
-  if (fromDecimal) return fromDecimal
-
-  // 4. Short links (maps.app.goo.gl) — no coords in URL, can't parse client-side
-  return null
+  return parseCoordinatesList(value)[0] ?? null
 }

@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { parseCoordinates, haversineMeters, formatDuration } from '@/lib/geo-utils'
+import {
+  parseCoordinates,
+  parseCoordinatesList,
+  nearestWithinRadius,
+  haversineMeters,
+  formatDuration,
+} from '@/lib/geo-utils'
 
 // ── parseCoordinates ────────────────────────────────────────────────
 
@@ -131,6 +137,137 @@ describe('parseCoordinates', () => {
 
   it('returns null for a plain object without lat/lng', () => {
     expect(parseCoordinates({ foo: 'bar' })).toBeNull()
+  })
+})
+
+// ── parseCoordinatesList ────────────────────────────────────────────
+
+describe('parseCoordinatesList', () => {
+  it('returns a single-element list for one coordinate', () => {
+    expect(parseCoordinatesList('41.7151, 44.8271')).toEqual([{ lat: 41.7151, lng: 44.8271 }])
+  })
+
+  it('parses multiple newline-separated decimal pairs', () => {
+    const text = '41.7151, 44.8271\n41.6905, 44.8010'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.7151, lng: 44.8271 },
+      { lat: 41.6905, lng: 44.801 },
+    ])
+  })
+
+  it('parses multiple newline-separated Google Maps URLs', () => {
+    const text =
+      'https://maps.google.com/?query=41.71,44.82\nhttps://maps.google.com/?query=41.73,44.79'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.71, lng: 44.82 },
+      { lat: 41.73, lng: 44.79 },
+    ])
+  })
+
+  it('parses semicolon-separated coordinates', () => {
+    const text = '41.7151, 44.8271 ; 41.6905, 44.8010'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.7151, lng: 44.8271 },
+      { lat: 41.6905, lng: 44.801 },
+    ])
+  })
+
+  it('parses several space-separated comma pairs on one line (reported bug)', () => {
+    // A single-line cell with pairs separated only by spaces used to yield just
+    // the first pair, so check-in geofenced against one point only.
+    const text = '41.7099, 44.8271 41.7180, 44.8100 41.711811702707, 44.756197455417585'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.7099, lng: 44.8271 },
+      { lat: 41.718, lng: 44.81 },
+      { lat: 41.711811702707, lng: 44.756197455417585 },
+    ])
+  })
+
+  it('does not mistake the gap between two pairs for a coordinate', () => {
+    // Between "44.8271" and "41.7180" there is no comma, so no phantom pair.
+    const text = '41.7099, 44.8271 41.7180, 44.8100'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.7099, lng: 44.8271 },
+      { lat: 41.718, lng: 44.81 },
+    ])
+  })
+
+  it('does not double-count a DMS block and its query= URL for the same entry', () => {
+    // Real production format: DMS + query= URL describing one location, one line
+    const text =
+      'Altitude: 490.2m Latitude: N 41°42\'54.36" Longitude: E 44°49\'26.16" https://maps.google.com/?query=41.7151,44.8271'
+    // query= wins per entry; only the one point is returned, not a second DMS point
+    expect(parseCoordinatesList(text)).toEqual([{ lat: 41.7151, lng: 44.8271 }])
+  })
+
+  it('collapses exact-duplicate coordinates', () => {
+    const text = '41.7151, 44.8271\n41.7151, 44.8271'
+    expect(parseCoordinatesList(text)).toEqual([{ lat: 41.7151, lng: 44.8271 }])
+  })
+
+  it('skips unparseable entries but keeps the good ones', () => {
+    const text = '41.7151, 44.8271\nnot a coordinate\n41.6905, 44.8010'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.7151, lng: 44.8271 },
+      { lat: 41.6905, lng: 44.801 },
+    ])
+  })
+
+  it('returns [] for an empty or unparseable cell', () => {
+    expect(parseCoordinatesList('')).toEqual([])
+    expect(parseCoordinatesList('https://maps.app.goo.gl/abcd1234')).toEqual([])
+    expect(parseCoordinatesList(null)).toEqual([])
+  })
+
+  it('parses an array of { lat, lng } objects', () => {
+    expect(
+      parseCoordinatesList([
+        { lat: 41.7151, lng: 44.8271 },
+        { lat: 41.6905, lng: 44.801 },
+      ])
+    ).toEqual([
+      { lat: 41.7151, lng: 44.8271 },
+      { lat: 41.6905, lng: 44.801 },
+    ])
+  })
+
+  it('keeps parseCoordinates in sync (returns the first entry)', () => {
+    const text = '41.7151, 44.8271\n41.6905, 44.8010'
+    expect(parseCoordinates(text)).toEqual(parseCoordinatesList(text)[0])
+  })
+})
+
+// ── nearestWithinRadius ─────────────────────────────────────────────
+
+describe('nearestWithinRadius', () => {
+  const A = { lat: 41.7151, lng: 44.8271 }
+  const B = { lat: 41.6905, lng: 44.801 } // ~3km from A
+
+  it('returns null when there are no targets', () => {
+    expect(nearestWithinRadius(A.lat, A.lng, [], 10, 150)).toBeNull()
+  })
+
+  it('geofences against the nearest of several targets', () => {
+    // Standing on B, with A also in the list — nearest is B, distance ~0
+    const result = nearestWithinRadius(B.lat, B.lng, [A, B], 0, 150)
+    expect(result).not.toBeNull()
+    expect(result!.distance).toBeLessThanOrEqual(1)
+    expect(result!.within).toBe(true)
+    expect(result!.target).toEqual(B)
+  })
+
+  it('is within range if ANY target is close, even when others are far', () => {
+    // 100m north of B; A is kilometres away but B is within 150m
+    const near = { lat: B.lat + 0.0009, lng: B.lng }
+    const result = nearestWithinRadius(near.lat, near.lng, [A, B], 5, 150)
+    expect(result!.within).toBe(true)
+  })
+
+  it('is out of range when every target is beyond the radius', () => {
+    // Midway-ish between A and B — far from both
+    const result = nearestWithinRadius(41.703, 44.814, [A, B], 5, 150)
+    expect(result!.within).toBe(false)
+    expect(result!.distance).toBeGreaterThan(150)
   })
 })
 
