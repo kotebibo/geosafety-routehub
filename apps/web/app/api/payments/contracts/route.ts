@@ -128,18 +128,30 @@ function findColumnId(
     : preferredType
       ? [preferredType]
       : null
+  const candidates = types ? columns.filter(c => types.includes(c.column_type)) : columns
+
+  // Some boards have near-duplicate columns (e.g. "ყოველთვიური" and
+  // "ყოველთვიური (ანგარიშ-ფაქტურისთვის)") that both match the same loose
+  // pattern. An exact name match must win over a substring match, otherwise
+  // which column gets picked depends on column position and differs per
+  // board — silently pulling amounts from the wrong column.
   for (const pattern of patterns) {
-    const match = columns.find(c => {
+    const p = pattern.toLowerCase()
+    const exact = candidates.find(c => {
+      const nameKa = (c.column_name_ka || '').toLowerCase().trim()
+      const name = (c.column_name || '').toLowerCase().trim()
+      return nameKa === p || name === p
+    })
+    if (exact) return exact.column_id
+  }
+  for (const pattern of patterns) {
+    const p = pattern.toLowerCase()
+    const partial = candidates.find(c => {
       const nameKa = (c.column_name_ka || '').toLowerCase()
       const name = (c.column_name || '').toLowerCase()
-      const p = pattern.toLowerCase()
-      const nameMatch = nameKa.includes(p) || name.includes(p)
-      if (types) {
-        return nameMatch && types.includes(c.column_type)
-      }
-      return nameMatch
+      return nameKa.includes(p) || name.includes(p)
     })
-    if (match) return match.column_id
+    if (partial) return partial.column_id
   }
   return null
 }

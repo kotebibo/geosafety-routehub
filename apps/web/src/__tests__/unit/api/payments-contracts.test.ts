@@ -230,6 +230,88 @@ describe('Payment Contracts API - GET', () => {
     expect(res.status).toBe(200)
   })
 
+  it('prefers the exact-match monthly amount column over a near-duplicate substring match, regardless of column order', async () => {
+    mockFromResults['workspaces'] = [{ data: { id: 'ws1' }, error: null }]
+    const boards = [{ id: 'b1', name: 'ხელშეკრულებები' }]
+    const taxIdColumn = {
+      column_id: 'c1',
+      column_name: 'Tax',
+      column_name_ka: 'ს/კ',
+      column_type: 'text',
+      config: null,
+    }
+    const nearDuplicateColumn = {
+      column_id: 'wrong',
+      column_name: 'Monthly (invoice)',
+      column_name_ka: 'ყოველთვიური (ანგარიშ-ფაქტურისთვის)',
+      column_type: 'numeric',
+      config: null,
+    }
+    const exactMatchColumn = {
+      column_id: 'right',
+      column_name: 'Monthly',
+      column_name_ka: 'ყოველთვიური',
+      column_type: 'numeric',
+      config: null,
+    }
+    const items = [{ id: 'item1', name: 'Company A', data: { c1: '12345', wrong: 99, right: 500 } }]
+
+    mockFromResults['boards'] = [{ data: boards, error: null }]
+    // near-duplicate column positioned before the exact-match column
+    mockFromResults['board_columns'] = [
+      { data: [taxIdColumn, nearDuplicateColumn, exactMatchColumn], error: null },
+    ]
+    mockFromResults['board_items'] = [{ data: items, error: null }]
+    mockFromResults['bank_transactions'] = [{ data: [], error: null }]
+
+    const res = await GET()
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.contracts['12345'][0].monthly_amount).toBe(500)
+  })
+
+  it('picks the exact-match monthly amount column even when it comes before the near-duplicate', async () => {
+    mockFromResults['workspaces'] = [{ data: { id: 'ws1' }, error: null }]
+    const boards = [{ id: 'b1', name: 'ხელშეკრულებები' }]
+    const taxIdColumn = {
+      column_id: 'c1',
+      column_name: 'Tax',
+      column_name_ka: 'ს/კ',
+      column_type: 'text',
+      config: null,
+    }
+    const exactMatchColumn = {
+      column_id: 'right',
+      column_name: 'Monthly',
+      column_name_ka: 'ყოველთვიური',
+      column_type: 'numeric',
+      config: null,
+    }
+    const nearDuplicateColumn = {
+      column_id: 'wrong',
+      column_name: 'Monthly (invoice)',
+      column_name_ka: 'ყოველთვიური (ანგარიშ-ფაქტურისთვის)',
+      column_type: 'numeric',
+      config: null,
+    }
+    const items = [{ id: 'item1', name: 'Company A', data: { c1: '12345', wrong: 99, right: 500 } }]
+
+    mockFromResults['boards'] = [{ data: boards, error: null }]
+    // exact-match column positioned before the near-duplicate column
+    mockFromResults['board_columns'] = [
+      { data: [taxIdColumn, exactMatchColumn, nearDuplicateColumn], error: null },
+    ]
+    mockFromResults['board_items'] = [{ data: items, error: null }]
+    mockFromResults['bank_transactions'] = [{ data: [], error: null }]
+
+    const res = await GET()
+    const body = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(body.contracts['12345'][0].monthly_amount).toBe(500)
+  })
+
   it('skips boards with no tax ID column', async () => {
     mockFromResults['workspaces'] = [{ data: { id: 'ws1' }, error: null }]
     const boards = [{ id: 'b1', name: 'ხელშეკრულებები' }]
