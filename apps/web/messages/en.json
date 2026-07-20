@@ -2061,6 +2061,7 @@
     "noCoords": "No coordinates",
     "weekCompanies": "{count} objects",
     "fuelLiters": "{liters} L fuel",
-    "weekPlanned": "Week planned"
+    "weekPlanned": "Week planned",
+    "noOfficerAssigned": "No officer assigned to this board"
   }
 }

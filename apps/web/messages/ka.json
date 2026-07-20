@@ -2061,6 +2061,7 @@
     "noCoords": "კოორდინატები არ აქვს",
     "weekCompanies": "{count} ობიექტი",
     "fuelLiters": "{liters} ლ საწვავი",
-    "weekPlanned": "კვირა დაიგეგმა"
+    "weekPlanned": "კვირა დაიგეგმა",
+    "noOfficerAssigned": "ოფიცერი არ არის მიბმული ამ board-ზე"
   }
 }

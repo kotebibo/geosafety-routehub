@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import {
   X,
@@ -26,6 +26,7 @@ import { useRoutingItems } from '../hooks/useRoutingData'
 import { useInspectorLocation } from '../hooks/useInspectorLocation'
 import { useOfficerTransport } from '../hooks/useOfficerTransport'
 import { useRouteOptimizer } from '../hooks/useRouteOptimizer'
+import { useWeekPlan, useSaveWeekPlan } from '../hooks/useWeekPlan'
 import { mondayOf, weekDays, dayKey, shortDate, DAY_LABELS_KA } from '../lib/week'
 import type { Board } from '@/types/board'
 
@@ -59,6 +60,34 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const monday = useMemo(() => mondayOf(weekOffset), [weekOffset])
   const days = useMemo(() => weekDays(monday), [monday])
   const selectedKey = dayKey(days[selectedDay])
+  const weekStartKey = dayKey(monday)
+
+  // The plan belongs to the board's assigned officer (or the current user).
+  const inspectorId = board.settings?.assigned_officer_id || user?.id || ''
+  const { data: existingPlan } = useWeekPlan(inspectorId, weekStartKey)
+  const savePlan = useSaveWeekPlan()
+
+  // Reset on week switch, then prefill once from the saved plan for that week.
+  const loadedRef = useRef('')
+  useEffect(() => {
+    setAssignments({})
+    setDayResults({})
+    loadedRef.current = ''
+  }, [weekStartKey])
+  useEffect(() => {
+    if (!existingPlan || existingPlan.weekStart !== weekStartKey) return
+    if (loadedRef.current === weekStartKey) return
+    loadedRef.current = weekStartKey
+    const asn: Record<string, string[]> = {}
+    const res: Record<string, DayResult> = {}
+    for (const d of existingPlan.days) {
+      const ids = d.stops.map(s => s.itemId)
+      asn[d.date] = ids
+      if (d.km != null) res[d.date] = { order: ids, km: d.km }
+    }
+    setAssignments(asn)
+    setDayResults(res)
+  }, [existingPlan, weekStartKey])
 
   const coordsColumnId = useMemo(() => {
     const c = columns.find(col => col.column_type === 'checkin')
@@ -146,28 +175,35 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
       ? (totalKm * transport.consumption_l_per_100km) / 100
       : null
 
-  const handlePlanWeek = () => {
+  const handlePlanWeek = async () => {
     if (!allSaved) {
       showToast(t('routing.saveDaysFirst'), 'error')
       return
     }
-    const draft = {
-      boardId: board.id,
-      weekStart: dayKey(monday),
-      days: days.map(d => ({
-        date: dayKey(d),
-        stops: (assignments[dayKey(d)] || []).map((id, i) => ({
-          id,
-          name: nameOf(id),
-          position: i + 1,
-        })),
-        km: dayResults[dayKey(d)]?.km || 0,
-      })),
-      totalKm,
-      fuelLiters,
+    if (!inspectorId) {
+      showToast(t('routing.noOfficerAssigned'), 'error')
+      return
     }
-    localStorage.setItem(`routehub-week-plan-${board.id}-${dayKey(monday)}`, JSON.stringify(draft))
-    showToast(t('routing.weekPlanned'), 'success')
+    try {
+      await savePlan.mutateAsync({
+        boardId: board.id,
+        inspectorId,
+        weekStart: weekStartKey,
+        days: days
+          .map(d => {
+            const key = dayKey(d)
+            return {
+              date: key,
+              km: dayResults[key]?.km,
+              stops: (assignments[key] || []).map((id, i) => ({ itemId: id, position: i + 1 })),
+            }
+          })
+          .filter(d => d.stops.length > 0),
+      })
+      showToast(t('routing.weekPlanned'), 'success')
+    } catch (err: any) {
+      showToast(err.error || t('routing.optimizeFailed'), 'error')
+    }
   }
 
   const content = (
@@ -404,10 +440,14 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
         <button
           type="button"
           onClick={handlePlanWeek}
-          disabled={totalCompanies === 0}
+          disabled={totalCompanies === 0 || savePlan.isPending}
           className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-monday-primary text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
-          <Check className="w-4 h-4" />
+          {savePlan.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Check className="w-4 h-4" />
+          )}
           {t('routing.planWeek')}
         </button>
       </div>
