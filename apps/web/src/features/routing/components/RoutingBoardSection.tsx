@@ -94,8 +94,10 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
           <CalendarDays className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">{t('routing.planWeekShort')}</span>
         </button>
-        {/* Inspector starting location for this board */}
-        <InspectorLocationControl board={board} />
+        {/* Inspector starting location for this board — admin-only, like the
+            officer profile fields (car/engine/fuel/location). Officers can't
+            change routing locations, they only execute the planned routes. */}
+        {isAdmin && <InspectorLocationControl board={board} />}
         <ChevronDown
           className={cn(
             'w-4 h-4 text-text-tertiary transition-transform flex-shrink-0',
