@@ -6,8 +6,9 @@ import { X, Navigation, Fuel, CalendarDays, Check, Loader2, MapPin, Coins } from
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui-monday/Toast'
-import { useMyRoutes } from '../hooks/useMyRoutes'
+import { useMyRoutes, type OfficerRoute } from '../hooks/useMyRoutes'
 import { useSetOfficerFuelPrice, type OfficerWeekSummary } from '../hooks/useRouteAnalytics'
+import { RouteMapModal } from './RouteMapModal'
 import { addDays, dayLabelOf, shortDate } from '../lib/week'
 
 interface OfficerWeekPopupProps {
@@ -30,7 +31,10 @@ export function OfficerWeekPopup({
 }: OfficerWeekPopupProps) {
   const t = useTranslations()
   const { showToast } = useToast()
-  const { data: routes = [], isLoading } = useMyRoutes(summary.officerId)
+  const { data, isLoading } = useMyRoutes(summary.officerId)
+  const routes = data?.routes ?? []
+  const officerStart = data?.start ?? null
+  const [mapRoute, setMapRoute] = useState<OfficerRoute | null>(null)
   const setOfficerPrice = useSetOfficerFuelPrice()
 
   // Per-officer price override (empty → inherits the global price). Cost updates
@@ -179,9 +183,21 @@ export function OfficerWeekPopup({
                     </span>
                     <span className="text-xs text-text-tertiary">{shortDateStr(route.date)}</span>
                   </div>
-                  <span className="text-xs text-text-secondary">
-                    {(route.totalDistanceKm ?? 0).toFixed(1)} {t('routing.km')}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-text-secondary">
+                      {(route.totalDistanceKm ?? 0).toFixed(1)} {t('routing.km')}
+                    </span>
+                    {route.stops.some(s => s.lat != null && s.lng != null) && (
+                      <button
+                        type="button"
+                        onClick={() => setMapRoute(route)}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium text-monday-primary hover:underline"
+                      >
+                        <MapPin className="w-3 h-3" />
+                        {t('routing.viewOnMap')}
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="space-y-1">
                   {route.stops.map(stop => {
@@ -220,6 +236,32 @@ export function OfficerWeekPopup({
           )}
         </div>
       </div>
+
+      {mapRoute && (
+        <RouteMapModal
+          title={`${dayLabelOf(mapRoute.date)} ${shortDateStr(mapRoute.date)}`}
+          km={mapRoute.totalDistanceKm ?? 0}
+          fuelLiters={
+            summary.consumption != null && mapRoute.totalDistanceKm
+              ? (mapRoute.totalDistanceKm * summary.consumption) / 100
+              : null
+          }
+          stops={mapRoute.stops
+            .filter(s => s.lat != null && s.lng != null)
+            .map(s => ({
+              id: s.id,
+              name: s.name || '',
+              lat: s.lat as number,
+              lng: s.lng as number,
+            }))}
+          start={
+            officerStart
+              ? { lat: officerStart.lat, lng: officerStart.lng, name: t('routing.startPoint') }
+              : undefined
+          }
+          onClose={() => setMapRoute(null)}
+        />
+      )}
     </div>
   )
 

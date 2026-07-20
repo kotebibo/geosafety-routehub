@@ -12,6 +12,8 @@ export interface RouteStop {
   distanceFromPrevious: number | null
   boardItemId: string | null
   name: string | null
+  lat: number | null
+  lng: number | null
 }
 export interface OfficerRoute {
   id: string
@@ -23,16 +25,21 @@ export interface OfficerRoute {
   totalDistanceKm: number | null
   stops: RouteStop[]
 }
+export interface MyRoutesResult {
+  routes: OfficerRoute[]
+  /** Officer home / route-start, for the map. */
+  start: { lat: number; lng: number } | null
+}
 
 /** An officer's planned/in-progress/completed routes (managers may pass any id). */
 export function useMyRoutes(inspectorId: string) {
   return useQuery({
     queryKey: ['my-routes', inspectorId],
-    queryFn: async (): Promise<OfficerRoute[]> => {
+    queryFn: async (): Promise<MyRoutesResult> => {
       const res = await fetch(`/api/routing/my-routes?inspectorId=${inspectorId}`)
       if (!res.ok) throw new Error('Failed to load routes')
       const data = await res.json()
-      return data.routes as OfficerRoute[]
+      return { routes: (data.routes ?? []) as OfficerRoute[], start: data.start ?? null }
     },
     enabled: !!inspectorId,
     staleTime: 15_000,

@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { parseCoordinates } from '@/lib/geo-utils'
+import { resolveLocationColumns } from '@/features/routing/lib/location-columns'
 
 // GET ?inspectorId=&from=&to= — an officer's routes with stops and resolved
 // company (board item) names. Officers see only their own; admin/dispatcher
@@ -56,12 +58,39 @@ export async function GET(request: NextRequest) {
     }
 
     const nameById = new Map<string, string>()
+    const coordsById = new Map<string, { lat: number; lng: number }>()
     if (itemIds.size > 0) {
       const { data: items } = await svc
         .from('board_items')
-        .select('id, name')
+        .select('id, name, board_id, data')
         .in('id', [...itemIds])
-      for (const it of items || []) nameById.set(it.id, it.name)
+
+      // Find the coordinates column per board so we can parse each item's coords.
+      const boardIds = [
+        ...new Set((items || []).map((i: any) => i.board_id).filter(Boolean)),
+      ] as string[]
+      const coordsColByBoard = new Map<string, string | undefined>()
+      if (boardIds.length > 0) {
+        const { data: cols } = await svc
+          .from('board_columns')
+          .select('board_id, column_id, column_name, column_type, config')
+          .in('board_id', boardIds)
+        const byBoard = new Map<string, any[]>()
+        for (const c of cols || []) {
+          if (!byBoard.has(c.board_id)) byBoard.set(c.board_id, [])
+          byBoard.get(c.board_id)!.push(c)
+        }
+        for (const bid of boardIds) {
+          coordsColByBoard.set(bid, resolveLocationColumns(byBoard.get(bid) || []).coordsColumnId)
+        }
+      }
+
+      for (const it of items || []) {
+        nameById.set(it.id, it.name)
+        const col = coordsColByBoard.get(it.board_id)
+        const coords = col ? parseCoordinates(it.data?.[col]) : null
+        if (coords) coordsById.set(it.id, coords)
+      }
     }
     if (companyIds.size > 0) {
       const { data: companies } = await svc
@@ -70,6 +99,19 @@ export async function GET(request: NextRequest) {
         .in('id', [...companyIds])
       for (const c of companies || []) nameById.set(c.id, c.name)
     }
+
+    // The officer's home / route-start, for the map's home marker + line origin.
+    const { data: transport } = await svc
+      .from('officer_transport')
+      .select('start_lat, start_lng, home_lat, home_lng')
+      .eq('user_id', inspectorId)
+      .maybeSingle()
+    const start =
+      transport?.start_lat != null && transport?.start_lng != null
+        ? { lat: Number(transport.start_lat), lng: Number(transport.start_lng) }
+        : transport?.home_lat != null && transport?.home_lng != null
+          ? { lat: Number(transport.home_lat), lng: Number(transport.home_lng) }
+          : null
 
     const result = (routes || []).map((r: any) => ({
       id: r.id,
@@ -81,17 +123,23 @@ export async function GET(request: NextRequest) {
       totalDistanceKm: r.total_distance_km,
       stops: (r.route_stops || [])
         .sort((a: any, b: any) => a.position - b.position)
-        .map((s: any) => ({
-          id: s.id,
-          position: s.position,
-          status: s.status,
-          distanceFromPrevious: s.distance_from_previous_km,
-          boardItemId: s.board_item_id,
-          name: nameById.get(s.board_item_id) || nameById.get(s.company_id) || null,
-        })),
+        .map((s: any) => {
+          const key = s.board_item_id || s.company_id
+          const coords = key ? coordsById.get(key) : null
+          return {
+            id: s.id,
+            position: s.position,
+            status: s.status,
+            distanceFromPrevious: s.distance_from_previous_km,
+            boardItemId: s.board_item_id,
+            name: nameById.get(s.board_item_id) || nameById.get(s.company_id) || null,
+            lat: coords?.lat ?? null,
+            lng: coords?.lng ?? null,
+          }
+        }),
     }))
 
-    return NextResponse.json({ inspectorId, routes: result })
+    return NextResponse.json({ inspectorId, start, routes: result })
   } catch (error: any) {
     if (error.name === 'UnauthorizedError')
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
