@@ -27,7 +27,8 @@
     "roles": "Roles",
     "health": "Health",
     "payments": "Payments",
-    "routing": "Routing"
+    "routing": "Routing",
+    "routeAnalytics": "Route analytics"
   },
   "header": {
     "search": "Search...",
@@ -681,6 +682,7 @@
       "saveUserFailed": "Failed to save user",
       "updateStatusFailed": "Failed to update user status",
       "createUserFailed": "Failed to create user",
+      "routingProfileHint": "Optional. Location, vehicle and fuel — used for route planning. You can fill these in later too.",
       "noRole": "No Role",
       "pageTitle": "User Management",
       "pageDescription": "Manage users, roles, and permissions",
@@ -1881,6 +1883,20 @@
     "routeStarted": "Route started",
     "routeCompleted": "Route completed",
     "updateFailed": "Update failed"
+  },
+  "routeAnalytics": {
+    "title": "Route analytics",
+    "description": "What each officer planned this week — distance and fuel",
+    "planningOfficers": "Planning",
+    "distanceKm": "Distance, km",
+    "fuelLiters": "Fuel, L",
+    "litersShort": "L",
+    "stops": "Stops",
+    "daysPlanned": "{count} days planned",
+    "noPlan": "No plan this week",
+    "weekOf": "Week {from} – {to}",
+    "emptyTitle": "No officers",
+    "emptyDescription": "No active officers to show analytics for"
   },
   "locations": {
     "dataLoading": "Loading data...",
