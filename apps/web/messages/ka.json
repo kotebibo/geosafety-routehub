@@ -1866,7 +1866,21 @@
     },
     "stops": "გაჩერება",
     "km": "კმ",
-    "view": "ნახვა"
+    "view": "ნახვა",
+    "managerDescription": "ნახე და აკონტროლე ოფიცრების კვირის მარშრუტები",
+    "officer": "ოფიცერი",
+    "noOfficers": "ოფიცრები არ არის",
+    "emptyManager": "ამ ოფიცერს დაგეგმილი მარშრუტი არ აქვს",
+    "weekOf": "კვირა {from} – {to}",
+    "stopsCount": "{count} გაჩერება",
+    "unknownStop": "უცნობი კომპანია",
+    "startRoute": "მარშრუტის დაწყება",
+    "completeRoute": "დასრულება",
+    "allDone": "მარშრუტი დასრულდა",
+    "progress": "{done}/{total} მონახულებული",
+    "routeStarted": "მარშრუტი დაიწყო",
+    "routeCompleted": "მარშრუტი დასრულდა",
+    "updateFailed": "განახლება ვერ მოხერხდა"
   },
   "locations": {
     "dataLoading": "მონაცემების ჩატვირთვა...",

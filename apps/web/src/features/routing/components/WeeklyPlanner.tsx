@@ -38,6 +38,7 @@ interface WeeklyPlannerProps {
 interface DayResult {
   order: string[] // company item ids in optimized order
   km: number
+  stops: { itemId: string; distanceFromPrevious: number }[]
 }
 
 export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
@@ -56,6 +57,7 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const [assignments, setAssignments] = useState<Record<string, string[]>>({})
   const [dayResults, setDayResults] = useState<Record<string, DayResult>>({})
   const [savingDay, setSavingDay] = useState<string | null>(null)
+  const [planningWeek, setPlanningWeek] = useState(false)
 
   const monday = useMemo(() => mondayOf(weekOffset), [weekOffset])
   const days = useMemo(() => weekDays(monday), [monday])
@@ -83,7 +85,15 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
     for (const d of existingPlan.days) {
       const ids = d.stops.map(s => s.itemId)
       asn[d.date] = ids
-      if (d.km != null) res[d.date] = { order: ids, km: d.km }
+      if (d.km != null)
+        res[d.date] = {
+          order: ids,
+          km: d.km,
+          stops: d.stops.map(s => ({
+            itemId: s.itemId,
+            distanceFromPrevious: s.distanceFromPrevious ?? 0,
+          })),
+        }
     }
     setAssignments(asn)
     setDayResults(res)
@@ -136,28 +146,42 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
     })
   }
 
+  // Optimize a single day's stops from the inspector's start. Returns the
+  // computed result, or null when the day has no located companies. Throws on
+  // optimizer failure. Assumes `start` is set (callers guard).
+  const optimizeDay = async (key: string): Promise<DayResult | null> => {
+    const ids = assignments[key] || []
+    const located = ids.map(id => ({ id, name: nameOf(id), c: coordsOf(id) })).filter(x => x.c)
+    if (located.length === 0) return null
+    const locations = [
+      { id: 'start', name: 'start', lat: start!.lat, lng: start!.lng },
+      ...located.map(l => ({ id: l.id, name: l.name, lat: l.c!.lat, lng: l.c!.lng })),
+    ]
+    const result = await optimizer.mutateAsync(locations)
+    const routeStops = result.stops.filter(s => s.id !== 'start')
+    return {
+      order: routeStops.map(s => s.id),
+      km: result.totalDistance,
+      stops: routeStops.map(s => ({ itemId: s.id, distanceFromPrevious: s.distanceFromPrevious })),
+    }
+  }
+
   const saveDay = async (key: string) => {
     const ids = assignments[key] || []
     if (!start) {
       showToast(t('routing.setStartFirst'), 'error')
       return
     }
-    const located = ids.map(id => ({ id, name: nameOf(id), c: coordsOf(id) })).filter(x => x.c)
-    if (located.length === 0) {
-      showToast(t('routing.missingCoords', { count: ids.length }), 'error')
-      return
-    }
     setSavingDay(key)
     try {
-      const locations = [
-        { id: 'start', name: 'start', lat: start.lat, lng: start.lng },
-        ...located.map(l => ({ id: l.id, name: l.name, lat: l.c!.lat, lng: l.c!.lng })),
-      ]
-      const result = await optimizer.mutateAsync(locations)
-      const order = result.stops.filter(s => s.id !== 'start').map(s => s.id)
-      setDayResults(prev => ({ ...prev, [key]: { order, km: result.totalDistance } }))
+      const res = await optimizeDay(key)
+      if (!res) {
+        showToast(t('routing.missingCoords', { count: ids.length }), 'error')
+        return
+      }
+      setDayResults(prev => ({ ...prev, [key]: res }))
       // reorder the assignment to the optimized order
-      setAssignments(prev => ({ ...prev, [key]: order }))
+      setAssignments(prev => ({ ...prev, [key]: res.order }))
       showToast(t('routing.daySaved'), 'success')
     } catch (err: any) {
       showToast(err.error || t('routing.optimizeFailed'), 'error')
@@ -169,40 +193,67 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const plannedDays = days.filter(d => (assignments[dayKey(d)] || []).length > 0)
   const totalCompanies = days.reduce((s, d) => s + (assignments[dayKey(d)] || []).length, 0)
   const totalKm = days.reduce((s, d) => s + (dayResults[dayKey(d)]?.km || 0), 0)
-  const allSaved = plannedDays.every(d => dayResults[dayKey(d)])
   const fuelLiters =
     transport?.consumption_l_per_100km != null && totalKm > 0
       ? (totalKm * transport.consumption_l_per_100km) / 100
       : null
 
+  // One click: optimize every planned day that isn't computed yet, then persist
+  // the whole week. No need to "save" each day individually first.
   const handlePlanWeek = async () => {
-    if (!allSaved) {
-      showToast(t('routing.saveDaysFirst'), 'error')
+    if (totalCompanies === 0) return
+    if (!start) {
+      showToast(t('routing.setStartFirst'), 'error')
       return
     }
     if (!inspectorId) {
       showToast(t('routing.noOfficerAssigned'), 'error')
       return
     }
+    setPlanningWeek(true)
     try {
+      // Optimize each planned day in place (reuse already-computed days).
+      const computed: Record<string, DayResult> = { ...dayResults }
+      const nextAssignments: Record<string, string[]> = { ...assignments }
+      for (const d of plannedDays) {
+        const key = dayKey(d)
+        if (computed[key]) continue
+        const res = await optimizeDay(key)
+        if (!res) continue
+        computed[key] = res
+        nextAssignments[key] = res.order
+      }
+      setDayResults(computed)
+      setAssignments(nextAssignments)
+
+      const payloadDays = days
+        .map(d => {
+          const key = dayKey(d)
+          const res = computed[key]
+          const ids = nextAssignments[key] || []
+          return {
+            date: key,
+            km: res?.km,
+            stops: ids.map((id, i) => ({
+              itemId: id,
+              position: i + 1,
+              distanceFromPrevious: res?.stops.find(s => s.itemId === id)?.distanceFromPrevious,
+            })),
+          }
+        })
+        .filter(d => d.stops.length > 0)
+
       await savePlan.mutateAsync({
         boardId: board.id,
         inspectorId,
         weekStart: weekStartKey,
-        days: days
-          .map(d => {
-            const key = dayKey(d)
-            return {
-              date: key,
-              km: dayResults[key]?.km,
-              stops: (assignments[key] || []).map((id, i) => ({ itemId: id, position: i + 1 })),
-            }
-          })
-          .filter(d => d.stops.length > 0),
+        days: payloadDays,
       })
       showToast(t('routing.weekPlanned'), 'success')
     } catch (err: any) {
       showToast(err.error || t('routing.optimizeFailed'), 'error')
+    } finally {
+      setPlanningWeek(false)
     }
   }
 
@@ -440,10 +491,10 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
         <button
           type="button"
           onClick={handlePlanWeek}
-          disabled={totalCompanies === 0 || savePlan.isPending}
+          disabled={totalCompanies === 0 || planningWeek}
           className="ml-auto inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-monday-primary text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
         >
-          {savePlan.isPending ? (
+          {planningWeek ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Check className="w-4 h-4" />

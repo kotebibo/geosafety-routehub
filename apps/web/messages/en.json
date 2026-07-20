@@ -1866,7 +1866,21 @@
     },
     "stops": "stops",
     "km": "km",
-    "view": "View"
+    "view": "View",
+    "managerDescription": "View and track your officers’ weekly routes",
+    "officer": "Officer",
+    "noOfficers": "No officers",
+    "emptyManager": "This officer has no planned routes",
+    "weekOf": "Week {from} – {to}",
+    "stopsCount": "{count} stops",
+    "unknownStop": "Unknown company",
+    "startRoute": "Start route",
+    "completeRoute": "Complete",
+    "allDone": "Route completed",
+    "progress": "{done}/{total} visited",
+    "routeStarted": "Route started",
+    "routeCompleted": "Route completed",
+    "updateFailed": "Update failed"
   },
   "locations": {
     "dataLoading": "Loading data...",
