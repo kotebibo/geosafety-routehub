@@ -46,10 +46,35 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const { user } = useAuth()
   const { showToast } = useToast()
   const { items, isLoading } = useRoutingItems(board.id)
-  const { start } = useInspectorLocation(board)
-  const { data: transport } = useOfficerTransport(user?.id || '')
+  // The plan belongs to the board's assigned officer (or the current user).
+  const inspectorId = board.settings?.assigned_officer_id || user?.id || ''
+  const { start: boardStart } = useInspectorLocation(board)
+  const { data: transport } = useOfficerTransport(inspectorId)
   const { data: columns = [] } = useBoardColumns(board.board_type, board.id)
   const optimizer = useRouteOptimizer()
+
+  // Start-point cascade: the board's explicit start wins; otherwise fall back to
+  // the assigned officer's profile route-start, then their home location.
+  const start = useMemo(() => {
+    if (boardStart) return boardStart
+    if (transport?.start_lat != null && transport?.start_lng != null)
+      return {
+        mode: 'manual' as const,
+        lat: transport.start_lat,
+        lng: transport.start_lng,
+        address: transport.start_address ?? undefined,
+        updated_at: '',
+      }
+    if (transport?.home_lat != null && transport?.home_lng != null)
+      return {
+        mode: 'manual' as const,
+        lat: transport.home_lat,
+        lng: transport.home_lng,
+        address: transport.home_address ?? undefined,
+        updated_at: '',
+      }
+    return null
+  }, [boardStart, transport])
 
   const [weekOffset, setWeekOffset] = useState(0)
   const [selectedDay, setSelectedDay] = useState(0) // index 0..6
@@ -64,8 +89,6 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const selectedKey = dayKey(days[selectedDay])
   const weekStartKey = dayKey(monday)
 
-  // The plan belongs to the board's assigned officer (or the current user).
-  const inspectorId = board.settings?.assigned_officer_id || user?.id || ''
   const { data: existingPlan } = useWeekPlan(inspectorId, weekStartKey)
   const savePlan = useSaveWeekPlan()
 

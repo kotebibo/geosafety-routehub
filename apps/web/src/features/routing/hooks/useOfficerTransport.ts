@@ -7,6 +7,12 @@ export interface OfficerTransport {
   car_model: string | null
   engine: string | null
   consumption_l_per_100km: number | null
+  home_lat: number | null
+  home_lng: number | null
+  home_address: string | null
+  start_lat: number | null
+  start_lng: number | null
+  start_address: string | null
   updated_at?: string | null
 }
 
@@ -15,6 +21,12 @@ export type OfficerTransportInput = {
   car_model?: string | null
   engine?: string | null
   consumption_l_per_100km?: number | null
+  home_lat?: number | null
+  home_lng?: number | null
+  home_address?: string | null
+  start_lat?: number | null
+  start_lng?: number | null
+  start_address?: string | null
 }
 
 export function useOfficerTransport(userId: string) {
