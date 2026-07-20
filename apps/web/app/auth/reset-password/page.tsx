@@ -64,6 +64,11 @@ export default function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password })
 
       if (error) throw error
+      // The recovery session must not survive the reset — otherwise "back to
+      // login" lands the user in the app without ever entering the new
+      // password (and skips the 2FA login flow). Global scope also revokes
+      // any other sessions an attacker might hold on the old password.
+      await supabase.auth.signOut({ scope: 'global' }).catch(() => {})
       setSuccess(true)
     } catch (err: any) {
       const msg = String(err?.message || '')

@@ -763,8 +763,8 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
     }
   }
 
-  // Don't show sidebar on login page
-  if (pathname === '/auth/login' || pathname === '/auth/register') {
+  // Don't show sidebar on auth pages (login, register, forgot/reset password)
+  if (pathname?.startsWith('/auth/')) {
     return null
   }
 

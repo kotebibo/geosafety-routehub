@@ -14,7 +14,7 @@ interface AuthContextType {
   user: User | null
   userRole: UserRole | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error: any; mfaRequired?: boolean }>
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>
   signOut: () => Promise<void>
   isAdmin: boolean
@@ -138,11 +138,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        return {
+          error: {
+            message: data.error || 'Login failed',
+            retryAfterSeconds: data.retryAfterSeconds,
+          },
+        }
+      }
+
+      if (data.status === 'mfa_required') {
+        return { error: null, mfaRequired: true }
+      }
+
+      // Login happened server-side (cookies already set on this response) —
+      // make the client SDK re-read them so onAuthStateChange fires and
+      // user/userRole state syncs immediately, same as a direct sign-in.
+      await supabase.auth.getSession()
+
+      return { error: null }
+    } catch (err) {
+      return { error: err }
+    }
   }
 
   const signUp = async (email: string, password: string, fullName?: string) => {

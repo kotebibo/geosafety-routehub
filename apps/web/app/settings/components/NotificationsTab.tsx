@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { cn } from '@/lib/utils'
+import { Toggle } from '@/shared/components/ui'
 import { SaveButton } from './SaveButton'
 
 interface NotificationSettings {
@@ -17,27 +17,6 @@ interface NotificationsTabProps {
   onSave: () => void
   isSaving: boolean
   saveSuccess: boolean
-}
-
-function Toggle({ checked, onToggle }: { checked: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      role="switch"
-      aria-checked={checked}
-      className={cn(
-        'relative w-12 h-6 rounded-full transition-colors flex-shrink-0',
-        checked ? 'bg-monday-primary' : 'bg-text-disabled'
-      )}
-    >
-      <div
-        className={cn(
-          'absolute top-1 w-4 h-4 rounded-full bg-white transition-transform',
-          checked ? 'right-1' : 'left-1'
-        )}
-      />
-    </button>
-  )
 }
 
 export function NotificationsTab({

@@ -14,8 +14,18 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/auth/login', '/auth/signup', '/auth/reset-password', '/auth/callback']
+  const publicRoutes = [
+    '/auth/login',
+    '/auth/signup',
+    '/auth/forgot-password',
+    '/auth/reset-password',
+    '/auth/callback',
+    '/auth/2fa',
+  ]
   const isPublicRoute = publicRoutes.includes(pathname)
+  // Recovery flow pages must stay reachable with an active (recovery) session
+  const isRecoveryRoute =
+    pathname === '/auth/reset-password' || pathname === '/auth/forgot-password'
 
   useEffect(() => {
     // Skip auth checks in dev mode
@@ -27,12 +37,12 @@ export function RouteGuard({ children }: { children: React.ReactNode }) {
         router.push(`/auth/login?from=${encodeURIComponent(pathname)}`)
       }
 
-      // If logged in and trying to access login/signup page (but not reset-password)
-      if (user && isPublicRoute && pathname !== '/auth/reset-password') {
+      // If logged in and trying to access login/signup page (but not the recovery flow)
+      if (user && isPublicRoute && !isRecoveryRoute) {
         router.push('/')
       }
     }
-  }, [user, loading, pathname, isPublicRoute, router])
+  }, [user, loading, pathname, isPublicRoute, isRecoveryRoute, router])
 
   // Skip auth checks in dev mode
   if (DISABLE_AUTH_FOR_DEV) {

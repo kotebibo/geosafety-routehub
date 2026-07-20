@@ -10,8 +10,11 @@ import type { EmailOtpType } from '@supabase/supabase-js'
  * Unlike the PKCE ?code= flow, token_hash verification does not depend on
  * a code verifier stored in the requesting browser — so the email link
  * works no matter where it's opened (different browser, phone mail app).
- * The recovery email template points here:
- *   {{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery
+ * The recovery email template links here via the caller's origin (so the
+ * link works on localhost and on each deployed domain):
+ *   {{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery
+ * where redirectTo is passed to resetPasswordForEmail as
+ * `${window.location.origin}/auth/confirm` (must be in the allowlist).
  */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)

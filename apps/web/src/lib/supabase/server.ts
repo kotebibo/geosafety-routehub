@@ -54,3 +54,22 @@ export function createServiceClient() {
     process.env.SUPABASE_SERVICE_KEY!
   )
 }
+
+/**
+ * Non-persisting client — validates credentials (signInWithPassword) without
+ * ever writing a session anywhere. Used to check a password server-side
+ * (login, 2FA-disable re-auth) without handing the browser a session before
+ * we've decided whether one should exist yet.
+ */
+export function createNonPersistingClient() {
+  return createClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    }
+  )
+}

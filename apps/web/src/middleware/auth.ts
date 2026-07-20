@@ -5,8 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { createServerClient as createServerSupabase } from '@/lib/supabase/server'
 
 // Custom error classes
 export class UnauthorizedError extends Error {
@@ -21,28 +20,6 @@ export class ForbiddenError extends Error {
     super(message)
     this.name = 'ForbiddenError'
   }
-}
-
-/**
- * Create a server-side Supabase client from cookies
- */
-function createServerSupabase() {
-  const cookieStore = cookies()
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        storageKey: 'routehub-auth',
-      },
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
 }
 
 /**
