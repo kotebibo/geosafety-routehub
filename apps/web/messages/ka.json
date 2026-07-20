@@ -2040,6 +2040,8 @@
     "addressPlaceholder": "შეიყვანეთ მისამართი ან კოორდინატები",
     "noResults": "შედეგი ვერ მოიძებნა",
     "geocodeFailed": "მისამართის დადგენა ვერ მოხერხდა",
+    "geocodeAddresses": "{count} მისამართის კოორდინატებად გადაყვანა",
+    "geocodeDone": "{ok}/{total} გადაკეთდა",
     "viaGps": "GPS-ით",
     "viaAddress": "მისამართით",
     "locationSaved": "ლოკაცია შენახულია",

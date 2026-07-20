@@ -20,7 +20,9 @@ import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useBoardColumns } from '@/features/boards/hooks/useBoardColumns'
+import { useUpdateBoardItem } from '@/features/boards/hooks/useBoardItemQueries'
 import { parseCoordinates } from '@/lib/geo-utils'
+import { resolveLocation } from '../lib/geocode'
 import { useToast } from '@/components/ui-monday/Toast'
 import { useRoutingItems } from '../hooks/useRoutingData'
 import { useInspectorLocation } from '../hooks/useInspectorLocation'
@@ -83,6 +85,8 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const [dayResults, setDayResults] = useState<Record<string, DayResult>>({})
   const [savingDay, setSavingDay] = useState<string | null>(null)
   const [planningWeek, setPlanningWeek] = useState(false)
+  const [geocoding, setGeocoding] = useState(false)
+  const [geoProgress, setGeoProgress] = useState({ done: 0, total: 0 })
 
   const monday = useMemo(() => mondayOf(weekOffset), [weekOffset])
   const days = useMemo(() => weekDays(monday), [monday])
@@ -127,12 +131,74 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
     return c?.config?.coordinates_column_id as string | undefined
   }, [columns])
 
+  // A text column holding the street address, used to geocode items that have
+  // no coordinates yet (matched by name — no dedicated address_column_id config).
+  const addressColumnId = useMemo(() => {
+    const c = columns.find(
+      col => col.column_type === 'text' && /მისამარ|address|მის\./i.test(col.column_name)
+    )
+    return c?.column_id as string | undefined
+  }, [columns])
+
   const coordsOf = (itemId: string): { lat: number; lng: number } | null => {
     const ri = items.find(x => x.item.id === itemId)
     if (!ri || !coordsColumnId) return null
     return parseCoordinates(ri.item.data?.[coordsColumnId])
   }
   const nameOf = (itemId: string) => items.find(x => x.item.id === itemId)?.item.name || itemId
+
+  const updateItem = useUpdateBoardItem(board.id)
+
+  // Items that still lack coordinates but have an address we can geocode.
+  const geocodable = useMemo(
+    () =>
+      addressColumnId && coordsColumnId
+        ? items.filter(
+            ri =>
+              !parseCoordinates(ri.item.data?.[coordsColumnId]) &&
+              String(ri.item.data?.[addressColumnId] ?? '').trim() !== ''
+          )
+        : [],
+    [items, addressColumnId, coordsColumnId]
+  )
+
+  // Geocode each address (throttled for Nominatim's 1 req/s policy) and write
+  // "lat, lng" into the board's coordinates column so it's stored for good.
+  const geocodeAddresses = async () => {
+    if (!coordsColumnId || !addressColumnId || geocodable.length === 0) return
+    setGeocoding(true)
+    setGeoProgress({ done: 0, total: geocodable.length })
+    let ok = 0
+    for (let i = 0; i < geocodable.length; i++) {
+      const ri = geocodable[i]
+      const address = String(ri.item.data?.[addressColumnId] ?? '').trim()
+      try {
+        const results = await resolveLocation(address)
+        const hit = results[0]
+        if (hit) {
+          await updateItem.mutateAsync({
+            itemId: ri.item.id,
+            updates: {
+              data: {
+                ...ri.item.data,
+                [coordsColumnId]: `${hit.lat.toFixed(6)}, ${hit.lng.toFixed(6)}`,
+              },
+            },
+          })
+          ok++
+        }
+      } catch {
+        // skip this one; keep going
+      }
+      setGeoProgress({ done: i + 1, total: geocodable.length })
+      if (i < geocodable.length - 1) await new Promise(r => setTimeout(r, 1100))
+    }
+    setGeocoding(false)
+    showToast(
+      t('routing.geocodeDone', { ok, total: geocodable.length }),
+      ok > 0 ? 'success' : 'error'
+    )
+  }
 
   // Which day (index) a company is assigned to, or -1
   const dayOfItem = (itemId: string): number => {
@@ -332,9 +398,9 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
       )}
 
       {/* Body */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden">
         {/* Week grid */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4">
+        <div className="p-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
             {days.map((d, i) => {
               const key = dayKey(d)
@@ -431,8 +497,28 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
               {t('routing.assignTo', { day: DAY_LABELS_KA[selectedDay] })}
             </p>
             <p className="text-xs text-text-tertiary">{t('routing.clickToAssign')}</p>
+            {geocodable.length > 0 && (
+              <button
+                type="button"
+                onClick={geocodeAddresses}
+                disabled={geocoding}
+                className="mt-2 w-full inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/30 text-xs font-medium hover:bg-orange-500/20 disabled:opacity-60 transition-colors"
+              >
+                {geocoding ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    {geoProgress.done}/{geoProgress.total}
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="w-3.5 h-3.5" />
+                    {t('routing.geocodeAddresses', { count: geocodable.length })}
+                  </>
+                )}
+              </button>
+            )}
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
+          <div className="p-2 space-y-1 lg:flex-1 lg:overflow-y-auto lg:min-h-0">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-5 h-5 text-text-tertiary animate-spin" />

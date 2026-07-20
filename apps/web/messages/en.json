@@ -2040,6 +2040,8 @@
     "addressPlaceholder": "Enter address or coordinates",
     "noResults": "No results found",
     "geocodeFailed": "Could not resolve address",
+    "geocodeAddresses": "Geocode {count} addresses",
+    "geocodeDone": "{ok}/{total} geocoded",
     "viaGps": "via GPS",
     "viaAddress": "via address",
     "locationSaved": "Location saved",
