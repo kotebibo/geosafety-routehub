@@ -1897,7 +1897,17 @@
     "noPlan": "ამ კვირაში გეგმა არ არის",
     "weekOf": "კვირა {from} – {to}",
     "emptyTitle": "ოფიცრები არ არის",
-    "emptyDescription": "აქტიური ოფიცერი არ არის ანალიტიკისთვის"
+    "emptyDescription": "აქტიური ოფიცერი არ არის ანალიტიკისთვის",
+    "fuelPrice": "ბენზინის ფასი",
+    "perLiter": "₾/ლ",
+    "totalCost": "სულ ღირებულება, ₾",
+    "cost": "ღირებულება",
+    "consumption100": "მოხმარება",
+    "officerPrice": "ამ ოფიცრის ფასი",
+    "inheritsGlobal": "იღებს გლობალურ {price} ₾/ლ",
+    "invalidPrice": "ფასი არასწორია",
+    "priceSaved": "ფასი შენახულია",
+    "priceSaveFailed": "ფასის შენახვა ვერ მოხერხდა"
   },
   "locations": {
     "dataLoading": "მონაცემების ჩატვირთვა...",
@@ -2045,6 +2055,9 @@
     "geocodeDone": "{ok}/{total} გადაკეთდა",
     "coordinates": "კოორდინატები",
     "convertFromAddress": "მისამართიდან გადაყვანა",
+    "viewOnMap": "რუკა",
+    "noMapStops": "კოორდინატიანი გაჩერება არ არის საჩვენებლად",
+    "returnHome": "სახლში დაბრუნება {km} კმ",
     "noLocationTitle": "ამ board-ს ლოკაციის მონაცემი არ აქვს",
     "noLocationHint": "მარშრუტის დაგეგმვას კოორდინატები სჭირდება. დაამატე კოორდინატების სვეტი (ან მისამართის სვეტი გეოკოდირებისთვის) და board routable გახდება.",
     "viaGps": "GPS-ით",

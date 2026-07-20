@@ -24,6 +24,7 @@ import { useSetItemCoords } from '../hooks/useSetItemCoords'
 import { parseCoordinates } from '@/lib/geo-utils'
 import { resolveLocation, DEFAULT_GEOCODE_CITY } from '../lib/geocode'
 import { resolveLocationColumns } from '../lib/location-columns'
+import { RouteMapModal, type RouteMapStop } from './RouteMapModal'
 import { useToast } from '@/components/ui-monday/Toast'
 import { useRoutingItems } from '../hooks/useRoutingData'
 import { useInspectorLocation } from '../hooks/useInspectorLocation'
@@ -40,8 +41,11 @@ interface WeeklyPlannerProps {
 
 interface DayResult {
   order: string[] // company item ids in optimized order
-  km: number
+  km: number // full loop: home → stops → home
+  returnKm?: number // the last-stop → home leg
   stops: { itemId: string; distanceFromPrevious: number }[]
+  /** [lng, lat] pairs from OSRM for the real-road map line (when optimized). */
+  geometry?: number[][]
 }
 
 export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
@@ -88,6 +92,7 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const [planningWeek, setPlanningWeek] = useState(false)
   const [geocoding, setGeocoding] = useState(false)
   const [geoProgress, setGeoProgress] = useState({ done: 0, total: 0 })
+  const [mapDayKey, setMapDayKey] = useState<string | null>(null)
 
   const monday = useMemo(() => mondayOf(weekOffset), [weekOffset])
   const days = useMemo(() => weekDays(monday), [monday])
@@ -255,10 +260,42 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
     ]
     const result = await optimizer.mutateAsync(locations)
     const routeStops = result.stops.filter(s => s.id !== 'start')
+    const oneWayKm = result.totalDistance
+    let km = oneWayKm
+    let geometry = result.metadata?.routeGeometry ?? undefined
+    let returnKm: number | undefined
+
+    // Full loop: home → stops → back home. Fetch the real-road geometry and
+    // distance for the whole loop so km includes the trip back home.
+    try {
+      const loop = [
+        { lat: start!.lat, lng: start!.lng },
+        ...routeStops.map(s => ({ lat: s.lat, lng: s.lng })),
+        { lat: start!.lat, lng: start!.lng },
+      ]
+      const res = await fetch('/api/routing/route-geometry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locations: loop }),
+      })
+      if (res.ok) {
+        const d = await res.json()
+        if (Array.isArray(d.geometry) && d.geometry.length > 0) geometry = d.geometry
+        if (typeof d.distanceKm === 'number') {
+          km = Math.round(d.distanceKm * 100) / 100
+          returnKm = Math.max(0, Math.round((d.distanceKm - oneWayKm) * 100) / 100)
+        }
+      }
+    } catch {
+      // keep the one-way km/geometry on failure
+    }
+
     return {
       order: routeStops.map(s => s.id),
-      km: result.totalDistance,
+      km,
+      returnKm,
       stops: routeStops.map(s => ({ itemId: s.id, distanceFromPrevious: s.distanceFromPrevious })),
+      geometry,
     }
   }
 
@@ -486,22 +523,37 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                             ) : (
                               <span className="text-[11px] text-text-tertiary">—</span>
                             )}
-                            <button
-                              type="button"
-                              onClick={e => {
-                                e.stopPropagation()
-                                saveDay(key)
-                              }}
-                              disabled={savingDay === key}
-                              className="inline-flex items-center gap-1 text-[11px] font-medium text-monday-primary hover:underline disabled:opacity-50"
-                            >
-                              {savingDay === key ? (
-                                <Loader2 className="w-3 h-3 animate-spin" />
-                              ) : (
-                                <RouteIcon className="w-3 h-3" />
+                            <div className="flex items-center gap-2.5">
+                              {res && (
+                                <button
+                                  type="button"
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    setMapDayKey(key)
+                                  }}
+                                  className="inline-flex items-center gap-1 text-[11px] font-medium text-monday-primary hover:underline"
+                                >
+                                  <MapPin className="w-3 h-3" />
+                                  {t('routing.viewOnMap')}
+                                </button>
                               )}
-                              {t('routing.saveDay')}
-                            </button>
+                              <button
+                                type="button"
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  saveDay(key)
+                                }}
+                                disabled={savingDay === key}
+                                className="inline-flex items-center gap-1 text-[11px] font-medium text-monday-primary hover:underline disabled:opacity-50"
+                              >
+                                {savingDay === key ? (
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                ) : (
+                                  <RouteIcon className="w-3 h-3" />
+                                )}
+                                {t('routing.saveDay')}
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -634,6 +686,41 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
           </div>
         </>
       )}
+
+      {mapDayKey &&
+        (() => {
+          const dr = dayResults[mapDayKey]
+          const ids = assignments[mapDayKey] || []
+          const stops: RouteMapStop[] = ids
+            .map(id => {
+              const c = coordsOf(id)
+              return c ? { id, name: nameOf(id), lat: c.lat, lng: c.lng } : null
+            })
+            .filter((s): s is RouteMapStop => s !== null)
+          const km = dr?.km ?? 0
+          const fuel =
+            transport?.consumption_l_per_100km != null && km > 0
+              ? (km * transport.consumption_l_per_100km) / 100
+              : null
+          const idx = days.findIndex(d => dayKey(d) === mapDayKey)
+          const title = `${DAY_LABELS_KA[idx] ?? ''} ${shortDate(days[idx] ?? monday)}`
+          return (
+            <RouteMapModal
+              title={title}
+              km={km}
+              returnKm={dr?.returnKm}
+              fuelLiters={fuel}
+              stops={stops}
+              start={
+                start
+                  ? { lat: start.lat, lng: start.lng, name: t('routing.startPoint') }
+                  : undefined
+              }
+              geometry={dr?.geometry}
+              onClose={() => setMapDayKey(null)}
+            />
+          )
+        })()}
     </div>
   )
 

@@ -33,7 +33,24 @@ interface RouteMapProps {
   routeGeometry?: number[][]
   hoveredStop?: string | null
   onMarkerClick?: (company: Company) => void
+  /** Origin (officer home / route start) — rendered as a distinct home marker. */
+  start?: { lat: number; lng: number; name?: string }
+  /** Give each numbered stop its own color (by position) instead of all-blue. */
+  coloredStops?: boolean
 }
+
+// Distinct per-stop colors (cycled) when `coloredStops` is on. Deliberately
+// avoids blue/green/yellow/red — those are status/occupancy colors on the board.
+const STOP_COLORS = [
+  '#8B5CF6', // violet
+  '#EC4899', // pink
+  '#F97316', // orange
+  '#06B6D4', // cyan
+  '#C026D3', // magenta
+  '#7C3AED', // indigo
+  '#DB2777', // deep pink
+  '#EA580C', // burnt orange
+]
 
 export function RouteMapFixed({
   companies = [],
@@ -41,6 +58,8 @@ export function RouteMapFixed({
   routeGeometry,
   hoveredStop,
   onMarkerClick,
+  start,
+  coloredStops = false,
 }: RouteMapProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const mapInstance = useRef<L.Map | null>(null)
@@ -95,6 +114,36 @@ export function RouteMapFixed({
     }
 
     const bounds: L.LatLngBoundsExpression = []
+
+    // Home / start marker (distinct dark pin with a house glyph)
+    if (start && start.lat && start.lng) {
+      try {
+        const startIcon = L.divIcon({
+          className: 'custom-marker-start',
+          html: `
+            <div style="
+              width: 34px; height: 34px; background: #111827;
+              border: 4px solid white; border-radius: 50% 50% 50% 0;
+              transform: rotate(-45deg); box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+              display: flex; align-items: center; justify-content: center;
+            ">
+              <div style="transform: rotate(45deg); font-size: 16px; line-height: 1;">🏠</div>
+            </div>
+          `,
+          iconSize: [34, 34],
+          iconAnchor: [17, 34],
+        })
+        const marker = L.marker([start.lat, start.lng], { icon: startIcon })
+          .addTo(map)
+          .bindPopup(
+            `<div style="padding: 8px; font-weight: bold;">${start.name || 'საწყისი წერტილი'}</div>`
+          )
+        markersRef.current.set('start', marker)
+        bounds.push([start.lat, start.lng])
+      } catch (error) {
+        // Silently handle start marker errors
+      }
+    }
 
     // Add markers for selected companies (green)
     if (companies && companies.length > 0) {
@@ -178,14 +227,16 @@ export function RouteMapFixed({
         }
 
         try {
-          // Create numbered blue marker
+          // Per-stop color (cycled) when enabled, else the classic blue.
+          const color = coloredStops ? STOP_COLORS[(position - 1) % STOP_COLORS.length] : '#3B82F6'
+          // Create numbered marker
           const icon = L.divIcon({
             className: 'custom-marker-route',
             html: `
               <div style="
                 width: 36px;
                 height: 36px;
-                background: #3B82F6;
+                background: ${color};
                 border: 4px solid white;
                 border-radius: 50% 50% 50% 0;
                 transform: rotate(-45deg);
@@ -214,7 +265,7 @@ export function RouteMapFixed({
                   <div style="
                     width: 24px;
                     height: 24px;
-                    background: #3B82F6;
+                    background: ${color};
                     color: white;
                     border-radius: 50%;
                     display: flex;
@@ -226,7 +277,7 @@ export function RouteMapFixed({
                   <div style="font-weight: bold;">${company.name}</div>
                 </div>
                 <div style="font-size: 12px; color: #666;">${company.address}</div>
-                <div style="font-size: 11px; color: #3B82F6; margin-top: 8px;">
+                <div style="font-size: 11px; color: ${color}; margin-top: 8px;">
                   Stop #${position} in optimized route
                 </div>
               </div>
@@ -245,14 +296,15 @@ export function RouteMapFixed({
         }
       })
 
-      // Draw route line
-      if (route.length > 1) {
+      // Draw route line (real roads when we have OSRM geometry, even for a
+      // single stop — the geometry already runs from home to the stop)
+      if (route.length > 1 || (routeGeometry && routeGeometry.length > 0)) {
         try {
           let latLngs: L.LatLngExpression[]
           let lineStyle: L.PolylineOptions
 
           if (routeGeometry && routeGeometry.length > 0) {
-            // Use real road geometry from OSRM
+            // Use real road geometry from OSRM (home → stops)
             latLngs = routeGeometry.map(([lng, lat]) => [lat, lng] as L.LatLngExpression)
             lineStyle = {
               color: '#3B82F6',
@@ -260,8 +312,11 @@ export function RouteMapFixed({
               opacity: 0.7,
             }
           } else {
-            // Use straight lines
-            latLngs = route.map(stop => [stop.company.lat, stop.company.lng] as L.LatLngExpression)
+            // Straight-line fallback, from home through the stops
+            latLngs = [
+              ...(start ? [[start.lat, start.lng] as L.LatLngExpression] : []),
+              ...route.map(stop => [stop.company.lat, stop.company.lng] as L.LatLngExpression),
+            ]
             lineStyle = {
               color: '#3B82F6',
               weight: 4,
@@ -292,7 +347,7 @@ export function RouteMapFixed({
       // No markers, center on Tbilisi
       map.setView([41.7151, 44.8271], 12)
     }
-  }, [companies, route, routeGeometry, hoveredStop, onMarkerClick, isMapReady])
+  }, [companies, route, routeGeometry, hoveredStop, onMarkerClick, isMapReady, start])
 
   return (
     <div className="isolate" style={{ position: 'relative', width: '100%', height: '100%' }}>

@@ -1897,7 +1897,17 @@
     "noPlan": "No plan this week",
     "weekOf": "Week {from} – {to}",
     "emptyTitle": "No officers",
-    "emptyDescription": "No active officers to show analytics for"
+    "emptyDescription": "No active officers to show analytics for",
+    "fuelPrice": "Fuel price",
+    "perLiter": "₾/L",
+    "totalCost": "Total cost, ₾",
+    "cost": "Cost",
+    "consumption100": "Consumption",
+    "officerPrice": "This officer's price",
+    "inheritsGlobal": "inherits global {price} ₾/L",
+    "invalidPrice": "Invalid price",
+    "priceSaved": "Price saved",
+    "priceSaveFailed": "Could not save price"
   },
   "locations": {
     "dataLoading": "Loading data...",
@@ -2045,6 +2055,9 @@
     "geocodeDone": "{ok}/{total} geocoded",
     "coordinates": "Coordinates",
     "convertFromAddress": "Convert from address",
+    "viewOnMap": "Map",
+    "noMapStops": "No stops with coordinates to show",
+    "returnHome": "return home {km} km",
     "noLocationTitle": "This board has no location data",
     "noLocationHint": "Route planning needs coordinates. Add a coordinates column (or an address column to geocode) to this board, then it becomes routable.",
     "viaGps": "via GPS",

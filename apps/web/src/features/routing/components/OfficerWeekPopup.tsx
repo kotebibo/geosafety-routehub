@@ -1,17 +1,19 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Navigation, Fuel, CalendarDays, Check, Loader2, MapPin } from 'lucide-react'
+import { X, Navigation, Fuel, CalendarDays, Check, Loader2, MapPin, Coins } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui-monday/Toast'
 import { useMyRoutes } from '../hooks/useMyRoutes'
-import type { OfficerWeekSummary } from '../hooks/useRouteAnalytics'
+import { useSetOfficerFuelPrice, type OfficerWeekSummary } from '../hooks/useRouteAnalytics'
 import { addDays, dayLabelOf, shortDate } from '../lib/week'
 
 interface OfficerWeekPopupProps {
   summary: OfficerWeekSummary
   weekStart: string
+  globalPrice: number | null
   onClose: () => void
 }
 
@@ -20,9 +22,39 @@ function shortDateStr(dateStr: string): string {
   return shortDate(new Date(y, m - 1, d))
 }
 
-export function OfficerWeekPopup({ summary, weekStart, onClose }: OfficerWeekPopupProps) {
+export function OfficerWeekPopup({
+  summary,
+  weekStart,
+  globalPrice,
+  onClose,
+}: OfficerWeekPopupProps) {
   const t = useTranslations()
+  const { showToast } = useToast()
   const { data: routes = [], isLoading } = useMyRoutes(summary.officerId)
+  const setOfficerPrice = useSetOfficerFuelPrice()
+
+  // Per-officer price override (empty → inherits the global price). Cost updates
+  // live as the value is typed.
+  const [priceInput, setPriceInput] = useState(
+    summary.priceOverride != null ? String(summary.priceOverride) : ''
+  )
+  const effectivePrice = priceInput.trim() !== '' ? Number(priceInput) : globalPrice
+  const validPrice = effectivePrice != null && !isNaN(effectivePrice) ? effectivePrice : null
+  const liveCost = summary.liters != null && validPrice != null ? summary.liters * validPrice : null
+
+  const savePrice = async () => {
+    const num = priceInput.trim() === '' ? null : Number(priceInput)
+    if (num !== null && (isNaN(num) || num < 0)) {
+      showToast(t('routeAnalytics.invalidPrice'), 'error')
+      return
+    }
+    try {
+      await setOfficerPrice.mutateAsync({ officerId: summary.officerId, price: num })
+      showToast(t('routeAnalytics.priceSaved'), 'success')
+    } catch (err: any) {
+      showToast(err?.error || t('routeAnalytics.priceSaveFailed'), 'error')
+    }
+  }
 
   // Only this week's routes (one per day), ascending.
   const weekRoutes = useMemo(() => {
@@ -76,6 +108,55 @@ export function OfficerWeekPopup({ summary, weekStart, onClose }: OfficerWeekPop
             label={t('routeAnalytics.stops')}
             value={`${summary.visitedCount}/${summary.stopCount}`}
           />
+        </div>
+
+        {/* Fuel: consumption, per-officer price override, live cost */}
+        <div className="px-5 py-3 border-b border-border-light space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-text-secondary">{t('routeAnalytics.consumption100')}</span>
+            <span className="text-text-primary">
+              {summary.consumption != null
+                ? `${summary.consumption} ${t('routeAnalytics.litersShort')}/100${t('routing.km')}`
+                : '—'}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <span className="text-text-secondary">{t('routeAnalytics.officerPrice')}</span>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={priceInput}
+                onChange={e => setPriceInput(e.target.value)}
+                placeholder={globalPrice != null ? String(globalPrice) : '0.00'}
+                className="w-20 px-2 py-1 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary text-right"
+              />
+              <span className="text-text-tertiary">{t('routeAnalytics.perLiter')}</span>
+              <button
+                type="button"
+                onClick={savePrice}
+                disabled={setOfficerPrice.isPending}
+                className="px-2.5 py-1 rounded-lg bg-monday-primary text-white text-xs font-medium hover:opacity-90 disabled:opacity-50"
+              >
+                {t('common.save')}
+              </button>
+            </div>
+          </div>
+          {priceInput.trim() === '' && globalPrice != null && (
+            <p className="text-[11px] text-text-tertiary text-right">
+              {t('routeAnalytics.inheritsGlobal', { price: globalPrice.toFixed(2) })}
+            </p>
+          )}
+          <div className="flex items-center justify-between text-sm font-medium pt-1 border-t border-border-light">
+            <span className="inline-flex items-center gap-1 text-text-secondary">
+              <Coins className="w-3.5 h-3.5" />
+              {t('routeAnalytics.cost')}
+            </span>
+            <span className="text-text-primary">
+              {liveCost != null ? `${liveCost.toFixed(1)} ₾` : '—'}
+            </span>
+          </div>
         </div>
 
         {/* Per-day breakdown */}

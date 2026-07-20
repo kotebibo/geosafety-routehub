@@ -7,6 +7,7 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  Coins,
   Fuel,
   Loader2,
   Navigation,
@@ -15,9 +16,11 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
+import { useToast } from '@/components/ui-monday/Toast'
 import { PageHeader, StatCard, EmptyState } from '@/shared/components/ui'
 import {
   useRouteAnalytics,
+  useSetFuelPrice,
   type OfficerWeekSummary,
 } from '@/features/routing/hooks/useRouteAnalytics'
 import { OfficerWeekPopup } from '@/features/routing/components/OfficerWeekPopup'
@@ -30,8 +33,11 @@ export default function RouteAnalyticsPage() {
   // Officers plan their week; admins and dispatchers receive/see the analytics.
   const isManager = isAdmin || isDispatcher
 
+  const { showToast } = useToast()
+  const setFuelPrice = useSetFuelPrice()
   const [weekOffset, setWeekOffset] = useState(0)
   const [selected, setSelected] = useState<OfficerWeekSummary | null>(null)
+  const [priceInput, setPriceInput] = useState('')
 
   const monday = useMemo(() => mondayOf(weekOffset), [weekOffset])
   const days = useMemo(() => weekDays(monday), [monday])
@@ -43,15 +49,35 @@ export default function RouteAnalyticsPage() {
     if (!authLoading && !isManager) router.push('/')
   }, [authLoading, isManager, router])
 
+  // Seed the price input from the saved global price once loaded.
+  useEffect(() => {
+    if (data?.globalPrice != null) setPriceInput(String(data.globalPrice))
+  }, [data?.globalPrice])
+
   const officers = data?.officers ?? []
   const fleet = useMemo(
     () => ({
       km: officers.reduce((s, o) => s + o.totalKm, 0),
       liters: officers.reduce((s, o) => s + (o.liters ?? 0), 0),
+      cost: officers.reduce((s, o) => s + (o.cost ?? 0), 0),
       planning: officers.filter(o => o.days > 0).length,
     }),
     [officers]
   )
+
+  const saveGlobalPrice = async () => {
+    const num = priceInput.trim() === '' ? null : Number(priceInput)
+    if (num !== null && (isNaN(num) || num < 0)) {
+      showToast(t('routeAnalytics.invalidPrice'), 'error')
+      return
+    }
+    try {
+      await setFuelPrice.mutateAsync(num)
+      showToast(t('routeAnalytics.priceSaved'), 'success')
+    } catch (err: any) {
+      showToast(err?.error || t('routeAnalytics.priceSaveFailed'), 'error')
+    }
+  }
 
   if (authLoading || !isManager) {
     return (
@@ -87,8 +113,32 @@ export default function RouteAnalyticsPage() {
           </button>
         </div>
 
+        {/* Global fuel price — inherited by every officer unless overridden */}
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
+          <Fuel className="w-4 h-4 text-text-tertiary" />
+          <label className="text-sm text-text-secondary">{t('routeAnalytics.fuelPrice')}</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={priceInput}
+            onChange={e => setPriceInput(e.target.value)}
+            placeholder="0.00"
+            className="w-24 px-3 py-1.5 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary"
+          />
+          <span className="text-sm text-text-tertiary">{t('routeAnalytics.perLiter')}</span>
+          <button
+            type="button"
+            onClick={saveGlobalPrice}
+            disabled={setFuelPrice.isPending}
+            className="px-3 py-1.5 rounded-lg bg-monday-primary text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
+          >
+            {t('common.save')}
+          </button>
+        </div>
+
         {/* Fleet totals */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <StatCard
             label={t('routeAnalytics.planningOfficers')}
             value={fleet.planning}
@@ -106,6 +156,12 @@ export default function RouteAnalyticsPage() {
             value={Number(fleet.liters.toFixed(1))}
             icon={Fuel}
             color="amber"
+          />
+          <StatCard
+            label={t('routeAnalytics.totalCost')}
+            value={Number(fleet.cost.toFixed(1))}
+            icon={Coins}
+            color="green"
           />
         </div>
 
@@ -157,6 +213,12 @@ export default function RouteAnalyticsPage() {
                       ? `${o.liters.toFixed(1)} ${t('routeAnalytics.litersShort')}`
                       : '—'}
                   </span>
+                  {o.cost != null && (
+                    <span className="inline-flex items-center gap-1 text-text-secondary">
+                      <Coins className="w-3.5 h-3.5" />
+                      {o.cost.toFixed(1)} ₾
+                    </span>
+                  )}
                   <span className="inline-flex items-center gap-1 text-text-tertiary ml-auto">
                     <RouteIcon className="w-3.5 h-3.5" />
                     {o.stopCount}
@@ -172,6 +234,7 @@ export default function RouteAnalyticsPage() {
         <OfficerWeekPopup
           summary={selected}
           weekStart={weekStartKey}
+          globalPrice={data?.globalPrice ?? null}
           onClose={() => setSelected(null)}
         />
       )}
