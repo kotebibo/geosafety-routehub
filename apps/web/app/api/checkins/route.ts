@@ -72,6 +72,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // TEMP (testing only): user ids in CHECKIN_GEOFENCE_BYPASS_IDS may check in
+    // from anywhere. The distance is still measured and stored — only the 150m
+    // rejection is skipped. Leave this env unset in production.
+    const geofenceBypass = (process.env.CHECKIN_GEOFENCE_BYPASS_IDS || '')
+      .split(',')
+      .map(id => id.trim())
+      .filter(Boolean)
+      .includes(validated.inspector_id)
+
     let locationUpdated = false
     let distanceFromLocation: number | null = null
     let serviceSnapshot: string | null = null
@@ -122,7 +131,7 @@ export async function POST(request: NextRequest) {
           )
           if (nearest) {
             distanceFromLocation = nearest.distance
-            if (!nearest.within) {
+            if (!nearest.within && !geofenceBypass) {
               return NextResponse.json(
                 {
                   error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
@@ -149,7 +158,10 @@ export async function POST(request: NextRequest) {
           distanceFromLocation = Math.round(
             haversineMeters(validated.lat, validated.lng, loc.lat, loc.lng)
           )
-          if (!isWithinRadius(distanceFromLocation, validated.accuracy, CHECKIN_RADIUS_METERS)) {
+          if (
+            !isWithinRadius(distanceFromLocation, validated.accuracy, CHECKIN_RADIUS_METERS) &&
+            !geofenceBypass
+          ) {
             return NextResponse.json(
               {
                 error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე კომპანიის ლოკაციიდან. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
