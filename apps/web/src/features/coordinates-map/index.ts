@@ -1,3 +1,3 @@
 export { CoordinatesMap, CoordinatesFilterPanel } from './components'
 export { useCoordinateItems } from './hooks/useCoordinateItems'
-export type { CoordinateItem } from './types'
+export type { CoordinateItem, CoordinatePoint } from './types'

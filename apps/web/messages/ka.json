@@ -1980,50 +1980,25 @@
     }
   },
   "coordinatesMap": {
-    "tabs": {
-      "coordinates": "კოორდინატები",
-      "comparison": "შედარება"
-    },
     "emptyCoordinates": "კოორდინატები ვერ მოიძებნა",
-    "emptyComparison": "გეოკოდირებული მონაცემები ვერ მოიძებნა",
     "filterPanel": {
       "title": "კოორდინატები",
       "updatedAt": "განახლდა:",
       "searchPlaceholder": "ძიება...",
-      "inspectorLabel": "ინსპექტორი",
-      "allInspectors": "ყველა ({count})"
+      "inspectorsTitle": "ინსპექტორები",
+      "allInspectors": "ყველა ({count})",
+      "itemsTitle": "ობიექტები",
+      "noResults": "ვერაფერი მოიძებნა",
+      "clearFilters": "ფილტრების გასუფთავება",
+      "refresh": "განახლება",
+      "hidePanel": "პანელის დამალვა",
+      "showPanel": "პანელის ჩვენება",
+      "pointsCount": "{count} წერტილი"
     },
     "map": {
       "idLabel": "ID:",
-      "googleMaps": "Google Maps"
-    },
-    "comparisonMap": {
-      "addressLabel": "მისამართი:",
-      "skLabel": "ს/კ:",
-      "gpsLabel": "GPS:",
-      "geocodedLabel": "გეოკოდ.:",
-      "kmUnit": "კმ",
-      "legend": {
-        "title": "ლეგენდა",
-        "gpsCoordinate": "GPS კოორდინატი",
-        "geocoded": "გეოკოდირებული"
-      },
-      "distance": {
-        "all": "ყველა",
-        "close": "≤ 1 კმ",
-        "medium": "1–5 კმ",
-        "far": "> 5 კმ"
-      },
-      "filter": {
-        "title": "ფილტრი",
-        "lines": "ხაზები"
-      },
-      "stats": {
-        "title": "სტატისტიკა",
-        "total": "სულ:",
-        "average": "საშუალო:",
-        "max": "მაქს.:"
-      }
+      "googleMaps": "Google Maps",
+      "pointOf": "წერტილი {index}/{total}"
     }
   },
   "errorPage": {

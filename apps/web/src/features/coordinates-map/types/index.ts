@@ -1,13 +1,14 @@
-export interface CoordinateItem {
-  id: string
-  name: string
-  inspector: string
+export interface CoordinatePoint {
+  id: string // `${itemId}:${index}` — stable marker key
   lat: number
   lng: number
-  coordinates: string
-  sk: string
-  address: string
-  addressLat: number | null
-  addressLng: number | null
-  distanceKm: number | null
+  index: number // 0-based position within the item's coordinates cell
+}
+
+export interface CoordinateItem {
+  id: string // board_items.id
+  name: string // item name = company name
+  inspector: string // board name = inspector name
+  sk: string // value of a detected ს/კ column, else ''
+  points: CoordinatePoint[] // length >= 1 — zero-point items are dropped
 }
