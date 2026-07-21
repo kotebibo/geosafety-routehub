@@ -71,19 +71,20 @@ export async function checkAuthRateLimit(params: {
   }
 }
 
-// Password check: 5 attempts / 15 min per identifier (email or IP), then
-// locked for 15 min.
-export const LOGIN_RATE_LIMIT = { max: 5, windowSeconds: 900, lockoutSeconds: 900 }
+// Password check: 10 attempts / 5 min per identifier (email or IP), then
+// locked for 1 min (re-locks per extra attempt until the window expires).
+export const LOGIN_RATE_LIMIT = { max: 10, windowSeconds: 300, lockoutSeconds: 60 }
 
 // 2FA challenge issuance: caps total codes issued per account, which in turn
 // bounds total guesses (issuance-count x MAX_VERIFY_ATTEMPTS) an attacker who
 // already has the password could accumulate by looping login.
-export const CHALLENGE_RATE_LIMIT = { max: 5, windowSeconds: 900, lockoutSeconds: 900 }
+export const CHALLENGE_RATE_LIMIT = { max: 10, windowSeconds: 300, lockoutSeconds: 60 }
 
-// Explicit "resend code" clicks from the 2FA page.
-export const RESEND_RATE_LIMIT = { max: 3, windowSeconds: 900, lockoutSeconds: 900 }
+// Explicit "resend code" clicks from the 2FA page (the UI adds its own 60s
+// cooldown between sends).
+export const RESEND_RATE_LIMIT = { max: 10, windowSeconds: 300, lockoutSeconds: 60 }
 
 // Password-recovery email requests (per email and per IP) — on top of
 // Supabase's own sending limits, so one address can't be spammed and one IP
 // can't sweep many addresses.
-export const RECOVERY_RATE_LIMIT = { max: 5, windowSeconds: 900, lockoutSeconds: 900 }
+export const RECOVERY_RATE_LIMIT = { max: 10, windowSeconds: 300, lockoutSeconds: 60 }
