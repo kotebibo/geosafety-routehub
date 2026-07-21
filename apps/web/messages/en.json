@@ -2120,6 +2120,7 @@
     "noBoards": "No boards found",
     "companiesCount": "{count} companies",
     "overdueCount": "{count} overdue",
+    "plannedThisWeek": "{count} planned this week",
     "daysLeft": "{days} days left",
     "dueToday": "Due today",
     "overdueDays": "Overdue by {days} days",

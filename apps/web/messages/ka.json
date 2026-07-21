@@ -2120,6 +2120,7 @@
     "noBoards": "დაფები ვერ მოიძებნა",
     "companiesCount": "{count} კომპანია",
     "overdueCount": "{count} ვადაგადაცილებული",
+    "plannedThisWeek": "ამ კვირაში {count} დაგეგმილი",
     "daysLeft": "დარჩა {days} დღე",
     "dueToday": "ვადა დღეს იწურება",
     "overdueDays": "ვადაგადაცილებულია {days} დღით",

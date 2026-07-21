@@ -4,8 +4,18 @@ import { useMemo } from 'react'
 import { useBoardItems, useBoardGroups } from '@/features/boards/hooks'
 import { useBoardCheckinSummary } from '@/features/boards/hooks/useCheckinQueries'
 import { OVERDUE_VISIT_DAYS } from '@/features/boards/constants/checkin'
-import type { BoardItem, BoardGroup } from '@/types/board'
+import { useMyRoutes } from './useMyRoutes'
+import { mondayOf, dayKey, addDays } from '../lib/week'
+import type { BoardItem, BoardGroup, Board } from '@/types/board'
 import type { CheckinSummary } from '@/types/checkin'
+
+/** Where this item sits in the current week's saved plan, if at all. */
+export interface PlannedDay {
+  /** YYYY-MM-DD of the planned visit */
+  date: string
+  /** Stop order within that day's route */
+  position: number
+}
 
 export interface RoutingItem {
   item: BoardItem
@@ -19,6 +29,8 @@ export interface RoutingItem {
   daysLeft: number | null
   isOverdue: boolean
   hasActiveCheckin: boolean
+  /** Set when the item is on this week's saved plan (drives the top tier + day chip) */
+  plannedDay: PlannedDay | null
 }
 
 function daysSince(dateStr: string): number {
@@ -28,7 +40,8 @@ function daysSince(dateStr: string): number {
 function toRoutingItem(
   item: BoardItem,
   group: BoardGroup | null,
-  summary: CheckinSummary | null
+  summary: CheckinSummary | null,
+  plannedDay: PlannedDay | null
 ): RoutingItem {
   const latest = summary?.latest_created_at
   // Never-visited items still race the 35-day window — counted from creation
@@ -45,6 +58,7 @@ function toRoutingItem(
     daysLeft,
     isOverdue: daysLeft !== null && daysLeft < 0,
     hasActiveCheckin: summary?.has_active ?? false,
+    plannedDay,
   }
 }
 
@@ -66,8 +80,28 @@ function compareByUrgency(a: RoutingItem, b: RoutingItem): number {
   return a.item.name.localeCompare(b.item.name, 'ka')
 }
 
-/** Flat, urgency-sorted list of a board's companies. Mount only when needed — fetches on mount. */
-export function useRoutingItems(boardId: string) {
+// Ordering tiers: (1) this week's planned stops first, in day → position order
+// so the week's route reads top-to-bottom; (2) everything else by urgency
+// (soonest deadline first). Keeps the planned week pinned above the backlog.
+function comparePlannedThenUrgency(a: RoutingItem, b: RoutingItem): number {
+  const ap = a.plannedDay
+  const bp = b.plannedDay
+  if (ap && !bp) return -1
+  if (!ap && bp) return 1
+  if (ap && bp) {
+    if (ap.date !== bp.date) return ap.date.localeCompare(bp.date)
+    if (ap.position !== bp.position) return ap.position - bp.position
+    return a.item.name.localeCompare(b.item.name, 'ka')
+  }
+  return compareByUrgency(a, b)
+}
+
+/**
+ * Flat, sorted list of a board's companies. Mount only when needed — fetches on
+ * mount. Pass `plannedByItemId` (item id → this week's plan slot) to pin the
+ * week's planned stops to the top in day/position order.
+ */
+export function useRoutingItems(boardId: string, plannedByItemId?: Map<string, PlannedDay>) {
   const { data: items = [], isLoading: itemsLoading } = useBoardItems(boardId)
   const { data: groups = [], isLoading: groupsLoading } = useBoardGroups(boardId)
   const { data: summaryMap, isLoading: summaryLoading } = useBoardCheckinSummary(boardId)
@@ -79,15 +113,46 @@ export function useRoutingItems(boardId: string) {
         toRoutingItem(
           item,
           (item.group_id && groupById.get(item.group_id)) || null,
-          summaryMap?.get(item.id) ?? null
+          summaryMap?.get(item.id) ?? null,
+          plannedByItemId?.get(item.id) ?? null
         )
       )
-      .sort(compareByUrgency)
-  }, [items, groups, summaryMap])
+      .sort(comparePlannedThenUrgency)
+  }, [items, groups, summaryMap, plannedByItemId])
 
   return {
     items: routingItems,
     overdueCount: routingItems.filter(ri => ri.isOverdue).length,
+    plannedCount: routingItems.filter(ri => ri.plannedDay).length,
     isLoading: itemsLoading || groupsLoading || summaryLoading,
   }
+}
+
+/**
+ * This week's saved plan for the board's assigned officer, as item id → slot.
+ * Empty when no officer is assigned. Feeds `useRoutingItems` so the week's
+ * planned stops pin to the top with their day.
+ */
+export function useBoardWeekPlan(board: Board): Map<string, PlannedDay> {
+  const officerId = board.settings?.assigned_officer_id ?? ''
+  const { data } = useMyRoutes(officerId)
+
+  return useMemo(() => {
+    const map = new Map<string, PlannedDay>()
+    if (!data?.routes) return map
+    const weekStart = dayKey(mondayOf(0))
+    const weekEnd = addDays(weekStart, 6)
+    for (const r of data.routes) {
+      if (r.date < weekStart || r.date > weekEnd) continue
+      for (const s of r.stops) {
+        if (!s.boardItemId) continue
+        const existing = map.get(s.boardItemId)
+        // Earliest day wins if an item is somehow planned twice in one week
+        if (!existing || r.date < existing.date) {
+          map.set(s.boardItemId, { date: r.date, position: s.position })
+        }
+      }
+    }
+    return map
+  }, [data])
 }

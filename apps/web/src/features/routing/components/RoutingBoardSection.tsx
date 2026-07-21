@@ -11,7 +11,8 @@ import { InspectorLocationControl } from './InspectorLocationControl'
 import { AssignOfficerControl } from './AssignOfficerControl'
 import { WeeklyPlanner } from './WeeklyPlanner'
 import { RoutePlanningPopup } from './RoutePlanningPopup'
-import { useRoutingItems, type RoutingItem } from '../hooks/useRoutingData'
+import { useRoutingItems, useBoardWeekPlan, type RoutingItem } from '../hooks/useRoutingData'
+import { dayLabelOf, shortDate } from '../lib/week'
 import type { Board } from '@/types/board'
 
 // Same palette the sidebar uses for board avatars
@@ -117,7 +118,11 @@ const PAGE_SIZE = 15
 
 function BoardItemsList({ board }: { board: Board }) {
   const t = useTranslations()
-  const { items, overdueCount, isLoading } = useRoutingItems(board.id)
+  const plannedByItemId = useBoardWeekPlan(board)
+  const { items, overdueCount, plannedCount, isLoading } = useRoutingItems(
+    board.id,
+    plannedByItemId
+  )
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [openedItem, setOpenedItem] = useState<RoutingItem | null>(null)
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -155,6 +160,11 @@ function BoardItemsList({ board }: { board: Board }) {
     <div className="border-t border-border-light">
       <div className="flex items-center gap-2 px-4 py-2 text-xs text-text-tertiary">
         <span>{t('routing.companiesCount', { count: items.length })}</span>
+        {plannedCount > 0 && (
+          <span className="px-2 py-0.5 rounded-full font-medium bg-monday-primary/10 text-monday-primary border border-monday-primary/30">
+            {t('routing.plannedThisWeek', { count: plannedCount })}
+          </span>
+        )}
         {overdueCount > 0 && (
           <span className="px-2 py-0.5 rounded-full font-medium bg-red-500/10 text-red-500 border border-red-500/30">
             {t('routing.overdueCount', { count: overdueCount })}
@@ -234,12 +244,19 @@ interface ItemRowProps {
 
 function ItemRow({ routingItem, selected, onToggleSelect, onOpen }: ItemRowProps) {
   const t = useTranslations()
-  const { item, group, summary, daysLeft, hasActiveCheckin, neverVisited } = routingItem
+  const { item, group, summary, daysLeft, hasActiveCheckin, neverVisited, plannedDay } = routingItem
 
   const lastVisit = summary?.latest_created_at ? new Date(summary.latest_created_at) : null
   const lastVisitStr = lastVisit
     ? `${lastVisit.getDate().toString().padStart(2, '0')}/${(lastVisit.getMonth() + 1).toString().padStart(2, '0')}/${lastVisit.getFullYear()}`
     : null
+
+  // "სამ 21.07" chip for items on this week's plan
+  let plannedChip: string | null = null
+  if (plannedDay) {
+    const [py, pm, pd] = plannedDay.date.split('-').map(Number)
+    plannedChip = `${dayLabelOf(plannedDay.date)} ${shortDate(new Date(py, pm - 1, pd))}`
+  }
 
   return (
     <div
@@ -279,7 +296,16 @@ function ItemRow({ routingItem, selected, onToggleSelect, onOpen }: ItemRowProps
           {item.name.charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-text-primary truncate">{item.name}</p>
+          <div className="flex items-center gap-2 min-w-0">
+            {plannedChip && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-semibold bg-monday-primary/10 text-monday-primary border border-monday-primary/30 flex-shrink-0">
+                <CalendarDays className="w-3 h-3" />
+                {plannedChip}
+                {plannedDay && <span className="opacity-70">#{plannedDay.position}</span>}
+              </span>
+            )}
+            <p className="text-sm font-medium text-text-primary truncate">{item.name}</p>
+          </div>
           <div className="flex items-center gap-2 text-xs text-text-secondary">
             {group && <span className="truncate">{group.name}</span>}
             {lastVisitStr && (
