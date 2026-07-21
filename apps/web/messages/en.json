@@ -1628,7 +1628,8 @@
       "monthlyRevenue": "How much was this month's revenue?",
       "debtors": "Who are the bad payers?",
       "unpaidInvoices": "How many invoices are unpaid this month?",
-      "revenueTrend": "Show me the last 6 months' revenue as a chart"
+      "revenueTrend": "Show me the last 6 months' revenue as a chart",
+      "unvisited": "Which companies haven't been visited this month?"
     },
     "tools": {
       "findCompany": "Find company",
@@ -1648,12 +1649,19 @@
       "getDebtors": "Debtor analysis",
       "getUnpaidInvoices": "Unpaid invoices",
       "getCompanyFinancials": "Company financials",
-      "getExpiringContracts": "Expiring contracts"
+      "getExpiringContracts": "Expiring contracts",
+      "getCheckinStats": "Check-in stats",
+      "listRecentCheckins": "Recent check-ins",
+      "getUnvisitedCompanies": "Unvisited companies"
     },
     "history": {
       "title": "Chats",
       "empty": "No saved chats yet",
-      "delete": "Delete chat"
+      "delete": "Delete chat",
+      "search": "Search…",
+      "rename": "Rename",
+      "pin": "Pin",
+      "unpin": "Unpin"
     },
     "attach": {
       "label": "Attach data",
@@ -1666,7 +1674,14 @@
     "thinking": "Thinking...",
     "chart": {
       "invalid": "Chart data could not be rendered"
-    }
+    },
+    "copy": "Copy",
+    "copied": "Copied",
+    "retry": "Retry",
+    "error": "Failed to get a response",
+    "exportCsv": "Download CSV",
+    "exportXlsx": "Download Excel",
+    "downloadChart": "Download chart"
   },
   "news": {
     "toast": {

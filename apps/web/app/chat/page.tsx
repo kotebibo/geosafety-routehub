@@ -11,7 +11,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import {
   Send,
   Bot,
-  User,
   Loader2,
   Sparkles,
   Wrench,
@@ -27,10 +26,18 @@ import {
   FolderKanban,
   ArrowLeft,
   History,
+  Copy,
+  Check,
+  RotateCcw,
+  Pin,
+  Pencil,
+  MoreVertical,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChatSkeleton } from '@/features/chat/components/ChatSkeleton'
 import { ChatChart } from '@/features/chat/components/ChatChart'
+import { parseFollowups } from '@/lib/chat/followups'
+import { hastTableToRows, downloadRowsAsCsv, downloadRowsAsXlsx } from '@/lib/chat/table-export'
 import { boardCrudService } from '@/features/boards/services/board-crud.service'
 import { workspaceService } from '@/features/workspaces/services/workspace.service'
 import type { UIMessage } from 'ai'
@@ -40,8 +47,8 @@ const SUGGESTED_QUESTION_KEYS = [
   'chat.suggestions.debtors',
   'chat.suggestions.unpaidInvoices',
   'chat.suggestions.revenueTrend',
+  'chat.suggestions.unvisited',
   'chat.suggestions.activeCompanies',
-  'chat.suggestions.specialistBoards',
 ] as const
 
 const TOOL_FRIENDLY_NAME_KEYS: Record<string, string> = {
@@ -63,12 +70,23 @@ const TOOL_FRIENDLY_NAME_KEYS: Record<string, string> = {
   get_unpaid_invoices: 'chat.tools.getUnpaidInvoices',
   get_company_financials: 'chat.tools.getCompanyFinancials',
   get_expiring_contracts: 'chat.tools.getExpiringContracts',
+  get_checkin_stats: 'chat.tools.getCheckinStats',
+  list_recent_checkins: 'chat.tools.listRecentCheckins',
+  get_unvisited_companies: 'chat.tools.getUnvisitedCompanies',
 }
 
 interface Conversation {
   id: string
   title: string | null
+  pinned: boolean
   updated_at: string
+}
+
+/** Pinned first, then most recently active. */
+function sortConversations(list: Conversation[]): Conversation[] {
+  return [...list].sort(
+    (a, b) => Number(b.pinned) - Number(a.pinned) || b.updated_at.localeCompare(a.updated_at)
+  )
 }
 
 interface Attachment {
@@ -89,7 +107,33 @@ function isChartCode(className?: string): boolean {
   return !!className?.split(' ').includes('language-chart')
 }
 
+/** True for the model's ```followups suggestion block. */
+function isFollowupsCode(className?: string): boolean {
+  return !!className?.split(' ').includes('language-followups')
+}
+
+/** Languages whose fenced blocks render as widgets — unwrap their <pre>. */
+const WIDGET_LANGUAGES = ['language-chart', 'language-followups']
+
 const REMARK_PLUGINS = [remarkGfm]
+
+function FollowupChips({ source, onSend }: { source: string; onSend?: (text: string) => void }) {
+  const questions = useMemo(() => parseFollowups(source), [source])
+  if (!questions || !onSend) return null
+  return (
+    <div className="mt-2 flex flex-wrap gap-1.5">
+      {questions.map(question => (
+        <button
+          key={question}
+          onClick={() => onSend(question)}
+          className="rounded-full border border-monday-primary/30 px-3 py-1 text-left text-xs text-monday-primary transition-colors hover:bg-monday-primary/10"
+        >
+          {question}
+        </button>
+      ))}
+    </div>
+  )
+}
 
 // Memoized, with a stable `components` object: recreating the renderers on
 // every parent re-render (e.g. each keystroke in the input) would make React
@@ -98,10 +142,16 @@ const REMARK_PLUGINS = [remarkGfm]
 const MarkdownContent = memo(function MarkdownContent({
   text,
   streaming,
+  showFollowups,
+  onFollowup,
 }: {
   text: string
   streaming?: boolean
+  /** Render the ```followups block as chips (last assistant message only). */
+  showFollowups?: boolean
+  onFollowup?: (text: string) => void
 }) {
+  const t = useTranslations()
   const components = useMemo<Components>(
     () => ({
       a: ({ href, children }) =>
@@ -119,11 +169,40 @@ const MarkdownContent = memo(function MarkdownContent({
             {children}
           </a>
         ),
-      table: ({ children }) => (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-xs">{children}</table>
-        </div>
-      ),
+      table: ({ node, children }) => {
+        const exportRows = (format: 'csv' | 'xlsx') => {
+          const rows = hastTableToRows(node)
+          if (!rows.length) return
+          const filename = `routehub-table-${new Date().toISOString().slice(0, 10)}.${format}`
+          if (format === 'csv') downloadRowsAsCsv(rows, filename)
+          else downloadRowsAsXlsx(rows, filename)
+        }
+        const exportButtonClass =
+          'rounded border border-border-light bg-bg-primary px-1.5 py-0.5 text-[10px] font-medium text-text-secondary hover:text-text-primary'
+        return (
+          <div className="group/table relative overflow-x-auto pt-1">
+            <div className="absolute right-0 top-0 z-10 flex gap-1 md:opacity-0 md:transition-opacity md:group-hover/table:opacity-100">
+              <button
+                type="button"
+                onClick={() => exportRows('csv')}
+                title={t('chat.exportCsv')}
+                className={exportButtonClass}
+              >
+                CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => exportRows('xlsx')}
+                title={t('chat.exportXlsx')}
+                className={exportButtonClass}
+              >
+                XLSX
+              </button>
+            </div>
+            <table className="w-full border-collapse text-xs">{children}</table>
+          </div>
+        )
+      },
       th: ({ children }) => (
         <th className="border border-border-light bg-bg-primary px-2 py-1 text-left font-medium">
           {children}
@@ -131,13 +210,15 @@ const MarkdownContent = memo(function MarkdownContent({
       ),
       td: ({ children }) => <td className="border border-border-light px-2 py-1">{children}</td>,
       pre: ({ node, children }) => {
-        // Chart blocks render as a widget, not preformatted text — unwrap
-        // the <pre> so recharts' divs aren't nested inside it.
+        // Chart/followup blocks render as widgets, not preformatted text —
+        // unwrap the <pre> so their divs aren't nested inside it.
         const codeChild = node?.children?.[0]
         if (
           codeChild?.type === 'element' &&
           Array.isArray(codeChild.properties?.className) &&
-          codeChild.properties.className.includes('language-chart')
+          codeChild.properties.className.some(
+            c => typeof c === 'string' && WIDGET_LANGUAGES.includes(c)
+          )
         ) {
           return <>{children}</>
         }
@@ -146,14 +227,17 @@ const MarkdownContent = memo(function MarkdownContent({
         )
       },
       code: ({ className, children }) => {
+        const source = Array.isArray(children) ? children.join('') : String(children ?? '')
         if (isChartCode(className)) {
-          const source = Array.isArray(children) ? children.join('') : String(children ?? '')
           return <ChatChart source={source} streaming={streaming} />
+        }
+        if (isFollowupsCode(className)) {
+          return showFollowups ? <FollowupChips source={source} onSend={onFollowup} /> : null
         }
         return <code className="rounded bg-bg-primary px-1 py-0.5 text-xs">{children}</code>
       },
     }),
-    [streaming]
+    [streaming, showFollowups, onFollowup, t]
   )
 
   return (
@@ -210,6 +294,8 @@ interface ConversationListProps {
   onOpen: (id: string) => void
   onDelete: (id: string) => void
   onNewChat: () => void
+  onRename: (id: string, title: string) => void
+  onTogglePin: (conversation: Conversation) => void
   /** When set, shows a close button (used inside the mobile drawer). */
   onClose?: () => void
 }
@@ -221,9 +307,27 @@ function ConversationList({
   onOpen,
   onDelete,
   onNewChat,
+  onRename,
+  onTogglePin,
   onClose,
 }: ConversationListProps) {
   const t = useTranslations()
+  const [search, setSearch] = useState('')
+  const [menuId, setMenuId] = useState<string | null>(null)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+
+  const query = search.trim().toLowerCase()
+  const visible = query
+    ? conversations.filter(c => (c.title || '').toLowerCase().includes(query))
+    : conversations
+
+  const commitRename = (id: string) => {
+    setRenamingId(null)
+    const title = renameValue.trim()
+    if (title) onRename(id, title)
+  }
+
   return (
     <>
       <div className="flex items-center justify-between px-4 py-3">
@@ -247,35 +351,104 @@ function ConversationList({
           )}
         </div>
       </div>
+      {conversations.length > 0 && (
+        <div className="px-3 pb-2">
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder={t('chat.history.search')}
+            className="w-full rounded-md border border-border-light bg-bg-primary px-2.5 py-1.5 text-xs text-text-primary outline-none placeholder:text-text-tertiary focus:border-border-focus"
+          />
+        </div>
+      )}
       <div className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
-        {conversations.length === 0 ? (
-          <p className="px-2 py-4 text-xs text-text-tertiary">{t('chat.history.empty')}</p>
+        {visible.length === 0 ? (
+          <p className="px-2 py-4 text-xs text-text-tertiary">
+            {conversations.length === 0 ? t('chat.history.empty') : t('chat.attach.noResults')}
+          </p>
         ) : (
-          conversations.map(conversation => (
+          visible.map(conversation => (
             <div
               key={conversation.id}
               className={cn(
-                'group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm',
+                'group relative flex items-center gap-2 rounded-md px-2 py-1.5 text-sm',
                 conversation.id === activeId
                   ? 'bg-monday-primary/10 text-text-primary'
                   : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
               )}
             >
-              <button
-                onClick={() => onOpen(conversation.id)}
-                className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left"
-              >
-                <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{conversation.title || '…'}</span>
-              </button>
-              {/* Touch screens have no hover — keep delete visible below md. */}
-              <button
-                onClick={() => onDelete(conversation.id)}
-                title={t('chat.history.delete')}
-                className="shrink-0 rounded p-1.5 text-text-tertiary hover:text-red-500 md:hidden md:group-hover:block"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+              {renamingId === conversation.id ? (
+                <input
+                  autoFocus
+                  value={renameValue}
+                  onChange={e => setRenameValue(e.target.value)}
+                  onBlur={() => commitRename(conversation.id)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') commitRename(conversation.id)
+                    if (e.key === 'Escape') setRenamingId(null)
+                  }}
+                  className="w-full rounded border border-border-focus bg-bg-primary px-1.5 py-1 text-sm text-text-primary outline-none"
+                />
+              ) : (
+                <>
+                  <button
+                    onClick={() => onOpen(conversation.id)}
+                    className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left"
+                  >
+                    {conversation.pinned ? (
+                      <Pin className="h-3.5 w-3.5 shrink-0 text-monday-primary" />
+                    ) : (
+                      <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                    )}
+                    <span className="truncate">{conversation.title || '…'}</span>
+                  </button>
+                  {/* Touch screens have no hover — keep the menu visible below md. */}
+                  <button
+                    onClick={() => setMenuId(menuId === conversation.id ? null : conversation.id)}
+                    className="shrink-0 rounded p-1.5 text-text-tertiary hover:text-text-primary md:hidden md:group-hover:block"
+                  >
+                    <MoreVertical className="h-3.5 w-3.5" />
+                  </button>
+                  {menuId === conversation.id && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setMenuId(null)} />
+                      <div className="absolute right-1 top-8 z-40 w-40 rounded-lg border border-border-light bg-bg-primary py-1 shadow-lg">
+                        <button
+                          onClick={() => {
+                            setMenuId(null)
+                            onTogglePin(conversation)
+                          }}
+                          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-bg-hover"
+                        >
+                          <Pin className="h-3.5 w-3.5 text-text-secondary" />
+                          {conversation.pinned ? t('chat.history.unpin') : t('chat.history.pin')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setMenuId(null)
+                            setRenameValue(conversation.title || '')
+                            setRenamingId(conversation.id)
+                          }}
+                          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-text-primary hover:bg-bg-hover"
+                        >
+                          <Pencil className="h-3.5 w-3.5 text-text-secondary" />
+                          {t('chat.history.rename')}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setMenuId(null)
+                            onDelete(conversation.id)
+                          }}
+                          className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs text-red-500 hover:bg-bg-hover"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          {t('chat.history.delete')}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
           ))
         )}
@@ -335,13 +508,82 @@ function MessageAttachments({ message }: { message: UIMessage }) {
   )
 }
 
-function MessageContent({ message, streaming }: { message: UIMessage; streaming?: boolean }) {
+/** Message text without the machine-facing chart/followups blocks. */
+function messagePlainText(message: UIMessage): string {
+  return message.parts
+    .filter(part => part.type === 'text')
+    .map(part => (part as { text: string }).text)
+    .join('\n\n')
+    .replace(/```(?:chart|followups)[\s\S]*?(?:```|$)/g, '')
+    .trim()
+}
+
+interface AssistantActionsProps {
+  message: UIMessage
+  canRetry: boolean
+  onRetry: () => void
+}
+
+function AssistantActions({ message, canRetry, onRetry }: AssistantActionsProps) {
+  const t = useTranslations()
+  const [copied, setCopied] = useState(false)
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(messagePlainText(message))
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // clipboard may be unavailable (http, permissions) — nothing to do
+    }
+  }
+
+  return (
+    <div className="mt-1 flex items-center gap-1">
+      <button
+        onClick={handleCopy}
+        title={copied ? t('chat.copied') : t('chat.copy')}
+        className="rounded p-1 text-text-tertiary hover:bg-bg-hover hover:text-text-primary"
+      >
+        {copied ? (
+          <Check className="h-3.5 w-3.5 text-green-500" />
+        ) : (
+          <Copy className="h-3.5 w-3.5" />
+        )}
+      </button>
+      {canRetry && (
+        <button
+          onClick={onRetry}
+          title={t('chat.retry')}
+          className="rounded p-1 text-text-tertiary hover:bg-bg-hover hover:text-text-primary"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  )
+}
+
+interface MessageContentProps {
+  message: UIMessage
+  streaming?: boolean
+  isLast?: boolean
+  onFollowup?: (text: string) => void
+}
+
+function MessageContent({ message, streaming, isLast, onFollowup }: MessageContentProps) {
   return (
     <>
       {message.parts.map((part, i) => {
         if (part.type === 'text') {
           return message.role === 'assistant' ? (
-            <MarkdownContent key={i} text={part.text} streaming={streaming} />
+            <MarkdownContent
+              key={i}
+              text={part.text}
+              streaming={streaming}
+              showFollowups={isLast}
+              onFollowup={onFollowup}
+            />
           ) : (
             <div key={i} className="whitespace-pre-wrap leading-relaxed">
               {part.text}
@@ -565,7 +807,7 @@ function AttachMenu({ onSelect, onClose }: AttachMenuProps) {
 export default function ChatPage() {
   const t = useTranslations()
   const router = useRouter()
-  const { isAdmin, loading: authLoading } = useAuth()
+  const { user, isAdmin, loading: authLoading } = useAuth()
   const scrollRef = useRef<HTMLDivElement>(null)
   const attachRef = useRef<HTMLDivElement>(null)
 
@@ -577,9 +819,11 @@ export default function ChatPage() {
   const [loadingConversation, setLoadingConversation] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
 
-  const { messages, sendMessage, status, setMessages, stop } = useChat()
+  const { messages, sendMessage, status, setMessages, stop, regenerate, error, clearError } =
+    useChat()
 
   const isLoading = status === 'submitted' || status === 'streaming'
+  const lastUserMessageId = [...messages].reverse().find(m => m.role === 'user')?.id
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -642,6 +886,7 @@ export default function ChatPage() {
   const handleSend = (text: string) => {
     if (!text.trim() || isLoading) return
     setInputValue('')
+    clearError()
     sendMessage(
       {
         text,
@@ -657,6 +902,34 @@ export default function ChatPage() {
     )
   }
 
+  // Stable identity for the memoized markdown renderer (follow-up chips).
+  const handleSendRef = useRef(handleSend)
+  handleSendRef.current = handleSend
+  const handleFollowup = useCallback((text: string) => handleSendRef.current(text), [])
+
+  const handleRetry = () => {
+    if (isLoading) return
+    clearError()
+    regenerate({
+      body: {
+        conversationId,
+        attachments: attachments.map(({ type, id }) => ({ type, id })),
+      },
+    })
+  }
+
+  /** Put the last question back into the input and rewind the conversation to it. */
+  const handleEditMessage = (messageId: string) => {
+    if (isLoading) return
+    const index = messages.findIndex(m => m.id === messageId)
+    if (index === -1) return
+    const message = messages[index]
+    const meta = (message.metadata as { attachments?: Attachment[] } | undefined)?.attachments
+    setInputValue(messagePlainText(message))
+    setMessages(messages.slice(0, index))
+    if (meta?.length) setAttachments(meta)
+  }
+
   const handleNewChat = () => {
     setMessages([])
     setConversationId(crypto.randomUUID())
@@ -670,9 +943,22 @@ export default function ChatPage() {
       const res = await fetch(`/api/chat/conversations/${id}`)
       if (!res.ok) return
       const data = await res.json()
-      setMessages((data.messages || []) as UIMessage[])
+      const loaded = (data.messages || []) as UIMessage[]
+      setMessages(loaded)
       setConversationId(id)
-      setAttachments([])
+      // Restore the board/workspace context the conversation was using, so
+      // continuing the thread keeps the same grounding.
+      const lastWithAttachments = [...loaded]
+        .reverse()
+        .find(
+          m =>
+            m.role === 'user' &&
+            (m.metadata as { attachments?: Attachment[] } | undefined)?.attachments?.length
+        )
+      setAttachments(
+        (lastWithAttachments?.metadata as { attachments?: Attachment[] } | undefined)
+          ?.attachments || []
+      )
     } catch (err) {
       console.error('Failed to load conversation:', err)
     } finally {
@@ -689,6 +975,35 @@ export default function ChatPage() {
       }
     } catch (err) {
       console.error('Failed to delete conversation:', err)
+    }
+  }
+
+  const handleRenameConversation = async (id: string, title: string) => {
+    setConversations(prev => prev.map(c => (c.id === id ? { ...c, title } : c)))
+    try {
+      await fetch(`/api/chat/conversations/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      })
+    } catch (err) {
+      console.error('Failed to rename conversation:', err)
+    }
+  }
+
+  const handleTogglePin = async (conversation: Conversation) => {
+    const pinned = !conversation.pinned
+    setConversations(prev =>
+      sortConversations(prev.map(c => (c.id === conversation.id ? { ...c, pinned } : c)))
+    )
+    try {
+      await fetch(`/api/chat/conversations/${conversation.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned }),
+      })
+    } catch (err) {
+      console.error('Failed to pin conversation:', err)
     }
   }
 
@@ -714,6 +1029,8 @@ export default function ChatPage() {
           onOpen={handleOpenConversation}
           onDelete={handleDeleteConversation}
           onNewChat={handleNewChat}
+          onRename={handleRenameConversation}
+          onTogglePin={handleTogglePin}
         />
       </aside>
 
@@ -743,6 +1060,8 @@ export default function ChatPage() {
             setHistoryOpen(false)
             handleNewChat()
           }}
+          onRename={handleRenameConversation}
+          onTogglePin={handleTogglePin}
           onClose={() => setHistoryOpen(false)}
         />
       </aside>
@@ -803,37 +1122,68 @@ export default function ChatPage() {
             <div className="mx-auto max-w-3xl space-y-4">
               {messages
                 .filter(m => m.role === 'user' || hasRenderableParts(m))
-                .map(message => (
-                  <div
-                    key={message.id}
-                    className={cn('flex gap-3', message.role === 'user' && 'justify-end')}
-                  >
-                    {message.role === 'assistant' && (
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-monday-primary/10">
-                        <Bot className="h-4 w-4 text-monday-primary" />
-                      </div>
-                    )}
+                .map(message => {
+                  const isLastMessage = message.id === messages[messages.length - 1]?.id
+                  return (
                     <div
-                      className={cn(
-                        'max-w-[80%] rounded-xl px-4 py-2.5 text-sm',
-                        message.role === 'user'
-                          ? 'bg-monday-primary text-white'
-                          : 'bg-bg-secondary text-text-primary'
-                      )}
+                      key={message.id}
+                      className={cn('flex gap-3', message.role === 'user' && 'justify-end')}
                     >
-                      {message.role === 'user' && <MessageAttachments message={message} />}
-                      <MessageContent
-                        message={message}
-                        streaming={isLoading && message.id === messages[messages.length - 1]?.id}
-                      />
-                    </div>
-                    {message.role === 'user' && (
-                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-bg-tertiary">
-                        <User className="h-4 w-4 text-text-secondary" />
+                      {message.role === 'assistant' && (
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-monday-primary/10">
+                          <Bot className="h-4 w-4 text-monday-primary" />
+                        </div>
+                      )}
+                      <div
+                        className={cn(
+                          'flex max-w-[80%] flex-col',
+                          message.role === 'user' && 'items-end'
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'rounded-xl px-4 py-2.5 text-sm',
+                            message.role === 'user'
+                              ? 'bg-monday-primary text-white'
+                              : 'bg-bg-secondary text-text-primary'
+                          )}
+                        >
+                          {message.role === 'user' && <MessageAttachments message={message} />}
+                          <MessageContent
+                            message={message}
+                            streaming={isLoading && isLastMessage}
+                            isLast={isLastMessage}
+                            onFollowup={handleFollowup}
+                          />
+                        </div>
+                        {message.role === 'assistant' && !(isLoading && isLastMessage) && (
+                          <AssistantActions
+                            message={message}
+                            canRetry={isLastMessage && !isLoading}
+                            onRetry={handleRetry}
+                          />
+                        )}
+                        {message.role === 'user' &&
+                          message.id === lastUserMessageId &&
+                          !isLoading && (
+                            <button
+                              onClick={() => handleEditMessage(message.id)}
+                              title={t('common.edit')}
+                              className="mt-1 rounded p-1 text-text-tertiary hover:bg-bg-hover hover:text-text-primary"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {/* Same avatar as the navbar: initial on the brand color. */}
+                      {message.role === 'user' && (
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-monday-primary text-xs font-medium text-white">
+                          {user?.email?.charAt(0).toUpperCase() || 'U'}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               {isLoading &&
                 !(
                   messages[messages.length - 1]?.role === 'assistant' &&
@@ -846,6 +1196,18 @@ export default function ChatPage() {
         {/* Input */}
         <div className="border-t border-border-light bg-bg-primary px-4 py-3 md:px-6 md:py-4">
           <div className="mx-auto max-w-3xl">
+            {error && !isLoading && (
+              <div className="mb-2 flex items-center justify-between gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-500">
+                <span>{t('chat.error')}</span>
+                <button
+                  onClick={handleRetry}
+                  className="flex shrink-0 items-center gap-1 font-medium hover:underline"
+                >
+                  <RotateCcw className="h-3 w-3" />
+                  {t('chat.retry')}
+                </button>
+              </div>
+            )}
             {attachments.length > 0 && (
               <div className="mb-2 flex flex-wrap gap-1.5">
                 {attachments.map(attachment => (

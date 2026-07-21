@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useTranslations } from 'next-intl'
 import {
   ResponsiveContainer,
@@ -17,13 +17,14 @@ import {
   Tooltip,
   Legend,
 } from 'recharts'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, Download } from 'lucide-react'
 import {
   parseChartSpec,
   formatChartValue,
   formatChartTick,
   type ChartSpec,
 } from '@/lib/chat/chart-spec'
+import { downloadSvgAsPng } from '@/lib/chat/chart-export'
 
 const PALETTE = ['#579BFC', '#00C875', '#FDAB3D', '#E2445C', '#A25DDC', '#0086C0']
 
@@ -141,7 +142,32 @@ function ChartBody({ spec }: { spec: ChartSpec }) {
 
 export function ChatChart({ source, streaming }: ChatChartProps) {
   const t = useTranslations()
+  const containerRef = useRef<HTMLDivElement>(null)
   const spec = useMemo(() => parseChartSpec(source), [source])
+
+  const handleDownload = () => {
+    // recharts marks every Surface with .recharts-surface — including the tiny
+    // legend icons, which can precede the chart in the DOM. The main chart
+    // surface is always the largest one.
+    const surfaces = containerRef.current?.querySelectorAll<SVGSVGElement>('svg.recharts-surface')
+    let svg: SVGSVGElement | null = null
+    let maxArea = 0
+    surfaces?.forEach(candidate => {
+      const rect = candidate.getBoundingClientRect()
+      const area = rect.width * rect.height
+      if (area > maxArea) {
+        maxArea = area
+        svg = candidate
+      }
+    })
+    if (svg) {
+      downloadSvgAsPng(
+        svg,
+        `routehub-chart-${new Date().toISOString().slice(0, 10)}.png`,
+        spec?.title
+      )
+    }
+  }
 
   if (!spec) {
     if (streaming) {
@@ -164,8 +190,23 @@ export function ChatChart({ source, streaming }: ChatChartProps) {
   return (
     // Explicit width: the message bubble is shrink-to-fit, so a percentage
     // width alone would let ResponsiveContainer collapse to zero.
-    <div className="my-2 w-[560px] max-w-full rounded-lg border border-border-light bg-bg-primary p-3">
-      {spec.title && <h4 className="mb-2 text-xs font-semibold text-text-primary">{spec.title}</h4>}
+    <div
+      ref={containerRef}
+      className="group/chart my-2 w-[560px] max-w-full rounded-lg border border-border-light bg-bg-primary p-3"
+    >
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <h4 className="min-w-0 truncate text-xs font-semibold text-text-primary">
+          {spec.title || ' '}
+        </h4>
+        <button
+          type="button"
+          onClick={handleDownload}
+          title={t('chat.downloadChart')}
+          className="shrink-0 rounded p-1 text-text-tertiary hover:bg-bg-hover hover:text-text-primary md:opacity-0 md:transition-opacity md:group-hover/chart:opacity-100"
+        >
+          <Download className="h-3.5 w-3.5" />
+        </button>
+      </div>
       <ResponsiveContainer width="100%" height={260}>
         <ChartBody spec={spec} />
       </ResponsiveContainer>

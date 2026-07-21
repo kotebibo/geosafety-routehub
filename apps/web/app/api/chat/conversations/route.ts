@@ -30,7 +30,8 @@ export async function GET() {
   const db = createServerClient() as unknown as SupabaseClient
   const { data, error } = await db
     .from('chat_conversations')
-    .select('id, title, created_at, updated_at')
+    .select('id, title, pinned, created_at, updated_at')
+    .order('pinned', { ascending: false })
     .order('updated_at', { ascending: false })
     .limit(50)
 

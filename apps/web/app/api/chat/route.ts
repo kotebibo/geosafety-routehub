@@ -98,6 +98,7 @@ DATA MODEL:
 - bank_transactions: from BOG bank, matched to companies by tax_id or name
 - inspectors: our staff (specialists/officers)
 - workspaces: group boards (e.g. "სპეციალისტები", "ხელშეკრულებები")
+- location_checkins: GPS-verified site visits — an inspector checking in at a company location. Use the check-in tools for visit/inspection-activity questions ("ვინ მოინახულა", "რომელი კომპანია არ არის მონახულებული").
 
 FINANCIAL SEMANTICS (for revenue/debtor/invoice tools):
 - "Expected" = contract terms from the ხელშეკრულებები workspace boards: active contracts owe their monthly amount each month; one-time contracts owe once (start month); paused/ended contracts owe nothing new.
@@ -125,6 +126,12 @@ CHARTS: To render a chart, output a fenced code block with language "chart" cont
 - "currency": true when the values are GEL amounts.
 - Use only real numbers returned by tools. At most one chart per answer, and only when it genuinely helps.
 
+FOLLOW-UPS: After the source line, end every data-backed answer with a fenced code block with language "followups" containing ONLY a JSON array of 2-3 short follow-up questions the user might ask next, in the user's language. They must be answerable with your tools. Example:
+\`\`\`followups
+["მაჩვენე ეს გრაფიკზე","მხოლოდ ₾1,000-ზე მეტი დავალიანება"]
+\`\`\`
+Skip the block for greetings, refusals, and clarifying questions.
+
 TODAY: ${new Date().toISOString().split('T')[0]} (Asia/Tbilisi timezone)
 
 RULES:
@@ -145,6 +152,18 @@ const bodySchema = z.object({
   conversationId: z.string().uuid().optional(),
   attachments: z.array(attachmentSchema).max(3).optional(),
 })
+
+/**
+ * Resolve display names for auth user ids (check-in inspector_ids hold
+ * auth.users ids — resolve via public.users, never auth.users).
+ */
+async function getUserNames(db: SupabaseClient, ids: string[]): Promise<Record<string, string>> {
+  const unique = [...new Set(ids)].filter(Boolean)
+  if (!unique.length) return {}
+  const { data } = await db.from('users').select('id, full_name, email').in('id', unique)
+  const rows = (data || []) as { id: string; full_name: string | null; email: string }[]
+  return Object.fromEntries(rows.map(u => [u.id, u.full_name || u.email]))
+}
 
 /** Resolve a board's columns: board-specific first, board_type defaults as fallback. */
 async function getBoardColumns(db: SupabaseClient, boardId: string, boardType: string) {
@@ -980,6 +999,156 @@ export async function POST(req: Request) {
             return await financialAnalyticsService.getExpiringContracts(roSelect, { days })
           } catch (err) {
             return { error: err instanceof Error ? err.message : 'Failed to load contracts' }
+          }
+        },
+      }),
+
+      get_checkin_stats: tool({
+        description:
+          'Check-in (site visit) statistics for a period: total visits and per-inspector breakdown. Use for questions about inspection/visit activity.',
+        inputSchema: z.object({
+          days: z.number().min(1).max(365).default(30),
+        }),
+        execute: async ({ days }) => {
+          const since = new Date(Date.now() - days * 86400000).toISOString()
+          const rows: { inspector_id: string; company_id: string }[] = []
+          for (let page = 0; page < 5; page++) {
+            const { data, error } = await db
+              .from('location_checkins')
+              .select('inspector_id, company_id')
+              .gte('created_at', since)
+              .range(page * 1000, page * 1000 + 999)
+            if (error) return { error: error.message }
+            rows.push(...((data || []) as typeof rows))
+            if (!data || data.length < 1000) break
+          }
+          const byInspector = new Map<string, { checkins: number; companies: Set<string> }>()
+          for (const row of rows) {
+            const entry = byInspector.get(row.inspector_id) || { checkins: 0, companies: new Set() }
+            entry.checkins++
+            entry.companies.add(row.company_id)
+            byInspector.set(row.inspector_id, entry)
+          }
+          const names = await getUserNames(db, [...byInspector.keys()])
+          return {
+            period_days: days,
+            total_checkins: rows.length,
+            companies_visited: new Set(rows.map(r => r.company_id)).size,
+            by_inspector: [...byInspector.entries()]
+              .map(([id, entry]) => ({
+                inspector: names[id] || 'Unknown',
+                checkins: entry.checkins,
+                companies_visited: entry.companies.size,
+              }))
+              .sort((a, b) => b.checkins - a.checkins),
+          }
+        },
+      }),
+
+      list_recent_checkins: tool({
+        description:
+          'List recent check-ins (site visits), optionally filtered by company or inspector name. Shows who visited which company and when.',
+        inputSchema: z.object({
+          company: z.string().optional().describe('Company name or tax id filter'),
+          inspector: z.string().optional().describe('Inspector name filter'),
+          days: z.number().min(1).max(365).default(7),
+          limit: z.number().min(1).max(50).default(20),
+        }),
+        execute: async ({ company, inspector, days, limit }) => {
+          const since = new Date(Date.now() - days * 86400000).toISOString()
+          let query = db
+            .from('location_checkins')
+            .select('inspector_id, notes, created_at, companies(name, tax_id)')
+            .gte('created_at', since)
+            .order('created_at', { ascending: false })
+            .limit(limit)
+          if (company) {
+            const { data: matches } = await db
+              .from('companies')
+              .select('id')
+              .or(`name.ilike.%${company.replace(/[,()]/g, ' ')}%,tax_id.eq.${company}`)
+              .limit(50)
+            const ids = (matches || []).map(c => c.id)
+            if (!ids.length) return { error: `Company "${company}" not found` }
+            query = query.in('company_id', ids)
+          }
+          if (inspector) {
+            const { data: matches } = await db
+              .from('users')
+              .select('id')
+              .ilike('full_name', `%${inspector}%`)
+              .limit(20)
+            const ids = (matches || []).map(u => u.id)
+            if (!ids.length) return { error: `Inspector "${inspector}" not found` }
+            query = query.in('inspector_id', ids)
+          }
+          const { data, error } = await query
+          if (error) return { error: error.message }
+          const rows = (data || []) as unknown as {
+            inspector_id: string
+            notes: string | null
+            created_at: string
+            companies: { name: string; tax_id: string | null } | null
+          }[]
+          const names = await getUserNames(
+            db,
+            rows.map(r => r.inspector_id)
+          )
+          return {
+            period_days: days,
+            checkins: rows.map(r => ({
+              company: r.companies?.name || 'Unknown',
+              tax_id: r.companies?.tax_id,
+              inspector: names[r.inspector_id] || 'Unknown',
+              date: r.created_at,
+              notes: r.notes || undefined,
+            })),
+          }
+        },
+      }),
+
+      get_unvisited_companies: tool({
+        description:
+          'Find active companies with NO check-in (site visit) in the last N days. Use for "which companies have not been visited" questions.',
+        inputSchema: z.object({
+          days: z.number().min(1).max(365).default(30),
+          limit: z.number().min(1).max(50).default(25),
+        }),
+        execute: async ({ days, limit }) => {
+          const since = new Date(Date.now() - days * 86400000).toISOString()
+          const companies: { id: string; name: string; tax_id: string | null }[] = []
+          for (let page = 0; page < 5; page++) {
+            const { data, error } = await db
+              .from('companies')
+              .select('id, name, tax_id')
+              .eq('status', 'active')
+              .order('name')
+              .range(page * 1000, page * 1000 + 999)
+            if (error) return { error: error.message }
+            companies.push(...((data || []) as typeof companies))
+            if (!data || data.length < 1000) break
+          }
+          const visited = new Set<string>()
+          for (let page = 0; page < 5; page++) {
+            const { data, error } = await db
+              .from('location_checkins')
+              .select('company_id')
+              .gte('created_at', since)
+              .range(page * 1000, page * 1000 + 999)
+            if (error) return { error: error.message }
+            for (const row of (data || []) as { company_id: string }[]) {
+              visited.add(row.company_id)
+            }
+            if (!data || data.length < 1000) break
+          }
+          const unvisited = companies.filter(c => !visited.has(c.id))
+          return {
+            period_days: days,
+            active_companies: companies.length,
+            visited_count: companies.length - unvisited.length,
+            unvisited_count: unvisited.length,
+            unvisited: unvisited.slice(0, limit).map(c => ({ name: c.name, tax_id: c.tax_id })),
+            truncated: unvisited.length > limit,
           }
         },
       }),
