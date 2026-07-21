@@ -20,8 +20,9 @@ import { useToast } from '@/components/ui-monday/Toast'
 import { PageHeader, StatCard, EmptyState } from '@/shared/components/ui'
 import {
   useRouteAnalytics,
-  useSetFuelPrice,
+  useSetFuelPrices,
   type OfficerWeekSummary,
+  type FuelType,
 } from '@/features/routing/hooks/useRouteAnalytics'
 import { OfficerWeekPopup } from '@/features/routing/components/OfficerWeekPopup'
 import { mondayOf, weekDays, dayKey, shortDate } from '@/features/routing/lib/week'
@@ -34,10 +35,14 @@ export default function RouteAnalyticsPage() {
   const isManager = isAdmin || isDispatcher
 
   const { showToast } = useToast()
-  const setFuelPrice = useSetFuelPrice()
+  const setFuelPrices = useSetFuelPrices()
   const [weekOffset, setWeekOffset] = useState(0)
   const [selected, setSelected] = useState<OfficerWeekSummary | null>(null)
-  const [priceInput, setPriceInput] = useState('')
+  const [priceInputs, setPriceInputs] = useState<Record<FuelType, string>>({
+    petrol: '',
+    diesel: '',
+    gas: '',
+  })
 
   const monday = useMemo(() => mondayOf(weekOffset), [weekOffset])
   const days = useMemo(() => weekDays(monday), [monday])
@@ -49,10 +54,16 @@ export default function RouteAnalyticsPage() {
     if (!authLoading && !isManager) router.push('/')
   }, [authLoading, isManager, router])
 
-  // Seed the price input from the saved global price once loaded.
+  // Seed the price inputs from the saved global prices once loaded.
+  const gp = data?.globalPrices
   useEffect(() => {
-    if (data?.globalPrice != null) setPriceInput(String(data.globalPrice))
-  }, [data?.globalPrice])
+    if (gp)
+      setPriceInputs({
+        petrol: gp.petrol != null ? String(gp.petrol) : '',
+        diesel: gp.diesel != null ? String(gp.diesel) : '',
+        gas: gp.gas != null ? String(gp.gas) : '',
+      })
+  }, [gp?.petrol, gp?.diesel, gp?.gas])
 
   const officers = data?.officers ?? []
   const fleet = useMemo(
@@ -65,14 +76,19 @@ export default function RouteAnalyticsPage() {
     [officers]
   )
 
-  const saveGlobalPrice = async () => {
-    const num = priceInput.trim() === '' ? null : Number(priceInput)
-    if (num !== null && (isNaN(num) || num < 0)) {
+  const saveGlobalPrices = async () => {
+    const parse = (v: string): number | null => (v.trim() === '' ? null : Number(v))
+    const prices = {
+      petrol: parse(priceInputs.petrol),
+      diesel: parse(priceInputs.diesel),
+      gas: parse(priceInputs.gas),
+    }
+    if (Object.values(prices).some(n => n !== null && (isNaN(n) || n < 0))) {
       showToast(t('routeAnalytics.invalidPrice'), 'error')
       return
     }
     try {
-      await setFuelPrice.mutateAsync(num)
+      await setFuelPrices.mutateAsync(prices)
       showToast(t('routeAnalytics.priceSaved'), 'success')
     } catch (err: any) {
       showToast(err?.error || t('routeAnalytics.priceSaveFailed'), 'error')
@@ -113,25 +129,37 @@ export default function RouteAnalyticsPage() {
           </button>
         </div>
 
-        {/* Global fuel price — inherited by every officer unless overridden */}
-        <div className="flex items-center gap-2 mb-6 flex-wrap">
-          <Fuel className="w-4 h-4 text-text-tertiary" />
-          <label className="text-sm text-text-secondary">{t('routeAnalytics.fuelPrice')}</label>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            value={priceInput}
-            onChange={e => setPriceInput(e.target.value)}
-            placeholder="0.00"
-            className="w-24 px-3 py-1.5 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          />
-          <span className="text-sm text-text-tertiary">{t('routeAnalytics.perLiter')}</span>
+        {/* Global fuel prices per type — an officer inherits the price for the
+            fuel type set on their profile (unless they have an override). */}
+        <div className="flex items-end gap-3 mb-6 flex-wrap bg-bg-primary border border-border-light rounded-xl px-4 py-3">
+          <div className="flex items-center gap-1.5 text-sm text-text-secondary self-center">
+            <Fuel className="w-4 h-4 text-text-tertiary" />
+            {t('routeAnalytics.fuelPrice')}
+          </div>
+          {(['petrol', 'diesel', 'gas'] as FuelType[]).map(type => (
+            <div key={type} className="flex flex-col gap-1">
+              <label className="text-xs text-text-tertiary">
+                {t(`routing.fuel${type[0].toUpperCase()}${type.slice(1)}`)}
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={priceInputs[type]}
+                onChange={e => setPriceInputs(prev => ({ ...prev, [type]: e.target.value }))}
+                placeholder="0.00"
+                className="w-24 px-3 py-1.5 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+            </div>
+          ))}
+          <span className="text-sm text-text-tertiary self-center">
+            {t('routeAnalytics.perLiter')}
+          </span>
           <button
             type="button"
-            onClick={saveGlobalPrice}
-            disabled={setFuelPrice.isPending}
-            className="px-3 py-1.5 rounded-lg bg-monday-primary text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
+            onClick={saveGlobalPrices}
+            disabled={setFuelPrices.isPending}
+            className="ml-auto px-4 py-1.5 rounded-lg bg-monday-primary text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 self-center"
           >
             {t('common.save')}
           </button>
@@ -234,7 +262,7 @@ export default function RouteAnalyticsPage() {
         <OfficerWeekPopup
           summary={selected}
           weekStart={weekStartKey}
-          globalPrice={data?.globalPrice ?? null}
+          typePrice={selected.fuelType ? (gp?.[selected.fuelType] ?? null) : null}
           onClose={() => setSelected(null)}
         />
       )}

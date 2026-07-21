@@ -113,6 +113,35 @@ export async function GET(request: NextRequest) {
           ? { lat: Number(transport.home_lat), lng: Number(transport.home_lng) }
           : null
 
+    // Check-in state/time per stop. The board check-in flow links board_item_id
+    // (not route_stop_id), so match the officer's check-ins by board_item_id +
+    // the route's date. Keyed `${board_item_id}|${YYYY-MM-DD}`.
+    const checkinByItemDate = new Map<
+      string,
+      { checkedInAt: string | null; checkedOutAt: string | null; durationMinutes: number | null }
+    >()
+    if (itemIds.size > 0) {
+      const { data: checkins } = await svc
+        .from('location_checkins')
+        .select('board_item_id, created_at, checked_out_at, duration_minutes')
+        .eq('inspector_id', inspectorId)
+        .in('board_item_id', [...itemIds])
+        .order('created_at', { ascending: true })
+      for (const c of checkins || []) {
+        if (!c.board_item_id || !c.created_at) continue
+        // Key by the Georgia-local (UTC+4) day, matching how a route's date and
+        // the check-in→stop status write are computed. Latest per item+day wins.
+        const day = new Date(new Date(c.created_at).getTime() + 4 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10)
+        checkinByItemDate.set(`${c.board_item_id}|${day}`, {
+          checkedInAt: c.created_at,
+          checkedOutAt: c.checked_out_at ?? null,
+          durationMinutes: c.duration_minutes ?? null,
+        })
+      }
+    }
+
     const result = (routes || []).map((r: any) => ({
       id: r.id,
       name: r.name,
@@ -126,6 +155,11 @@ export async function GET(request: NextRequest) {
         .map((s: any) => {
           const key = s.board_item_id || s.company_id
           const coords = key ? coordsById.get(key) : null
+          // Status is persisted on check-in/out (route_stops.status), so read it
+          // straight. The check-in match here only surfaces the visit times.
+          const ci = s.board_item_id
+            ? checkinByItemDate.get(`${s.board_item_id}|${r.date}`)
+            : undefined
           return {
             id: s.id,
             position: s.position,
@@ -135,6 +169,9 @@ export async function GET(request: NextRequest) {
             name: nameById.get(s.board_item_id) || nameById.get(s.company_id) || null,
             lat: coords?.lat ?? null,
             lng: coords?.lng ?? null,
+            checkedInAt: ci?.checkedInAt ?? null,
+            checkedOutAt: ci?.checkedOutAt ?? null,
+            durationMinutes: ci?.durationMinutes ?? null,
           }
         }),
     }))

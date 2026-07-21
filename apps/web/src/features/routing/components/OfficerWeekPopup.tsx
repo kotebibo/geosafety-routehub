@@ -9,12 +9,13 @@ import { useToast } from '@/components/ui-monday/Toast'
 import { useMyRoutes, type OfficerRoute } from '../hooks/useMyRoutes'
 import { useSetOfficerFuelPrice, type OfficerWeekSummary } from '../hooks/useRouteAnalytics'
 import { RouteMapModal } from './RouteMapModal'
+import { stopVisitState } from '../lib/stop-state'
 import { addDays, dayLabelOf, shortDate } from '../lib/week'
 
 interface OfficerWeekPopupProps {
   summary: OfficerWeekSummary
   weekStart: string
-  globalPrice: number | null
+  typePrice: number | null
   onClose: () => void
 }
 
@@ -26,7 +27,7 @@ function shortDateStr(dateStr: string): string {
 export function OfficerWeekPopup({
   summary,
   weekStart,
-  globalPrice,
+  typePrice,
   onClose,
 }: OfficerWeekPopupProps) {
   const t = useTranslations()
@@ -42,7 +43,7 @@ export function OfficerWeekPopup({
   const [priceInput, setPriceInput] = useState(
     summary.priceOverride != null ? String(summary.priceOverride) : ''
   )
-  const effectivePrice = priceInput.trim() !== '' ? Number(priceInput) : globalPrice
+  const effectivePrice = priceInput.trim() !== '' ? Number(priceInput) : typePrice
   const validPrice = effectivePrice != null && !isNaN(effectivePrice) ? effectivePrice : null
   const liveCost = summary.liters != null && validPrice != null ? summary.liters * validPrice : null
 
@@ -133,7 +134,7 @@ export function OfficerWeekPopup({
                 min="0"
                 value={priceInput}
                 onChange={e => setPriceInput(e.target.value)}
-                placeholder={globalPrice != null ? String(globalPrice) : '0.00'}
+                placeholder={typePrice != null ? String(typePrice) : '0.00'}
                 className="w-20 px-2 py-1 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
               <span className="text-text-tertiary">{t('routeAnalytics.perLiter')}</span>
@@ -147,9 +148,9 @@ export function OfficerWeekPopup({
               </button>
             </div>
           </div>
-          {priceInput.trim() === '' && globalPrice != null && (
+          {priceInput.trim() === '' && typePrice != null && (
             <p className="text-[11px] text-text-tertiary text-right">
-              {t('routeAnalytics.inheritsGlobal', { price: globalPrice.toFixed(2) })}
+              {t('routeAnalytics.inheritsGlobal', { price: typePrice.toFixed(2) })}
             </p>
           )}
           <div className="flex items-center justify-between text-sm font-medium pt-1 border-t border-border-light">
@@ -201,15 +202,18 @@ export function OfficerWeekPopup({
                 </div>
                 <div className="space-y-1">
                   {route.stops.map(stop => {
-                    const done = stop.status === 'visited'
+                    const state = stopVisitState(stop.status)
+                    const done = state === 'done'
                     return (
                       <div key={stop.id} className="flex items-center gap-2 text-xs">
                         <span
                           className={cn(
                             'w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold border',
-                            done
+                            state === 'done'
                               ? 'bg-green-500 border-green-500 text-white'
-                              : 'border-border-medium text-text-tertiary'
+                              : state === 'in_progress'
+                                ? 'bg-amber-500 border-amber-500 text-white'
+                                : 'border-border-medium text-text-tertiary'
                           )}
                         >
                           {done ? <Check className="w-2.5 h-2.5" /> : stop.position}
@@ -222,6 +226,11 @@ export function OfficerWeekPopup({
                         >
                           {stop.name || t('inspectorRoutes.unknownStop')}
                         </span>
+                        {stop.durationMinutes != null && (
+                          <span className="text-[11px] text-text-tertiary flex-shrink-0">
+                            {t('routing.stopDuration', { min: stop.durationMinutes })}
+                          </span>
+                        )}
                         {stop.distanceFromPrevious != null && (
                           <span className="text-[11px] text-text-tertiary flex-shrink-0">
                             {stop.distanceFromPrevious.toFixed(1)} {t('routing.km')}
@@ -254,6 +263,8 @@ export function OfficerWeekPopup({
               lat: s.lat as number,
               lng: s.lng as number,
               distanceKm: s.distanceFromPrevious,
+              status: s.status,
+              durationMinutes: s.durationMinutes,
             }))}
           start={
             officerStart

@@ -37,8 +37,11 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     if (ownerId !== session.user.id && !isManager)
       return NextResponse.json({ error: 'Cannot modify another officer’s route' }, { status: 403 })
 
+    // API vocabulary uses 'visited'; the route_stops.status constraint only
+    // allows 'completed' for the done state, so translate on write.
+    const dbStatus = status === 'visited' ? 'completed' : status
     const now = new Date().toISOString()
-    const patch: Record<string, any> = { status, updated_at: now }
+    const patch: Record<string, any> = { status: dbStatus, updated_at: now }
     patch.actual_arrival_time = status === 'visited' ? now : null
 
     const { data: updated, error: uErr } = await svc

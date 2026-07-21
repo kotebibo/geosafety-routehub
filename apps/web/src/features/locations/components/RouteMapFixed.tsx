@@ -27,6 +27,8 @@ interface Company {
   priority?: string
   /** Optional pre-built popup HTML (caller controls content + i18n). */
   popupHtml?: string
+  /** Explicit marker color (e.g. by visit state). Overrides coloredStops/blue. */
+  color?: string
 }
 
 interface RouteMapProps {
@@ -229,8 +231,11 @@ export function RouteMapFixed({
         }
 
         try {
-          // Per-stop color (cycled) when enabled, else the classic blue.
-          const color = coloredStops ? STOP_COLORS[(position - 1) % STOP_COLORS.length] : '#3B82F6'
+          // Explicit per-stop color (e.g. visit state) wins; else cycled palette
+          // when enabled; else the classic blue.
+          const color =
+            company.color ??
+            (coloredStops ? STOP_COLORS[(position - 1) % STOP_COLORS.length] : '#3B82F6')
           // Create numbered marker
           const icon = L.divIcon({
             className: 'custom-marker-route',

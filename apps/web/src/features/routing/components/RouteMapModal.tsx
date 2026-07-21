@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
 import { X, Navigation, Fuel, Loader2, MapPin } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { stopVisitState, STOP_STATE_HEX } from '../lib/stop-state'
 
 // Leaflet touches `window` at import time — load the map only on the client.
 const RouteMapFixed = dynamic(
@@ -26,6 +27,10 @@ export interface RouteMapStop {
   lng: number
   /** Distance of this leg (from the previous point), in km. */
   distanceKm?: number | null
+  /** route_stops.status — drives the marker color (execution views). */
+  status?: string | null
+  /** Minutes spent at the stop (from check-in → check-out). */
+  durationMinutes?: number | null
 }
 
 function escapeHtml(s: string): string {
@@ -110,10 +115,16 @@ export function RouteMapModal({
       rows.push(
         `<div style="font-size:12px;color:#444;">${t('routing.legFuel', { liters: fuel.toFixed(2) })}</div>`
       )
-    // Future: check-in time / duration will be appended here.
+    if (s.durationMinutes != null)
+      rows.push(
+        `<div style="font-size:12px;color:#444;">${t('routing.stopDuration', { min: s.durationMinutes })}</div>`
+      )
     const popupHtml = `<div style="padding:8px 10px;min-width:150px;">${rows.join('')}</div>`
+    // Marker color by visit state only when a status is provided (execution
+    // views); planning stops keep the default numbered color.
+    const color = s.status != null ? STOP_STATE_HEX[stopVisitState(s.status)] : undefined
     return {
-      company: { id: s.id, name: s.name, address: '', lat: s.lat, lng: s.lng, popupHtml },
+      company: { id: s.id, name: s.name, address: '', lat: s.lat, lng: s.lng, popupHtml, color },
       position: i + 1,
     }
   })
@@ -164,12 +175,7 @@ export function RouteMapModal({
             {t('routing.noMapStops')}
           </div>
         ) : (
-          <RouteMapFixed
-            route={route as any}
-            routeGeometry={geometry ?? undefined}
-            start={start}
-            coloredStops
-          />
+          <RouteMapFixed route={route as any} routeGeometry={geometry ?? undefined} start={start} />
         )}
       </div>
     </div>

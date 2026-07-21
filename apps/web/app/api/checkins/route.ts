@@ -34,6 +34,44 @@ const checkoutSchema = z.object({
   accuracy: z.number().optional(),
 })
 
+// Georgia is UTC+4 — a route's `date` is that local day, so resolve "today" in
+// the same offset when matching a check-in to its planned stop.
+function georgiaToday(): string {
+  return new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+// Reflect a visit on the officer's planned stop. Board check-ins carry
+// board_item_id (not route_stop_id), so resolve the stop through the officer's
+// route for today and persist the status so every surface (officer routes,
+// analytics counts, admin popup) sees it. Never throws — planning is optional.
+// route_stops.status is constrained to ('pending','in_progress','completed',
+// 'skipped','failed') — 'completed' is the done state (stopVisitState maps it to
+// green). We never write 'visited' (not an allowed value).
+async function markPlannedStop(
+  inspectorId: string,
+  boardItemId: string | null | undefined,
+  status: 'in_progress' | 'completed'
+): Promise<void> {
+  if (!boardItemId) return
+  try {
+    const svc = createServiceClient() as any
+    const { data: routes } = await svc
+      .from('routes')
+      .select('route_stops(id, board_item_id)')
+      .eq('inspector_id', inspectorId)
+      .eq('date', georgiaToday())
+    const stopIds: string[] = []
+    for (const r of routes || [])
+      for (const st of r.route_stops || [])
+        if (st.board_item_id === boardItemId) stopIds.push(st.id)
+    if (stopIds.length > 0) {
+      await svc.from('route_stops').update({ status }).in('id', stopIds)
+    }
+  } catch (e) {
+    console.error('markPlannedStop failed:', e)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerClient()
@@ -71,6 +109,15 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       )
     }
+
+    // TEMP (testing only): user ids in CHECKIN_GEOFENCE_BYPASS_IDS may check in
+    // from anywhere. The distance is still measured and stored — only the 150m
+    // rejection is skipped. Leave this env unset in production.
+    const geofenceBypass = (process.env.CHECKIN_GEOFENCE_BYPASS_IDS || '')
+      .split(',')
+      .map(id => id.trim())
+      .filter(Boolean)
+      .includes(validated.inspector_id)
 
     let locationUpdated = false
     let distanceFromLocation: number | null = null
@@ -122,7 +169,7 @@ export async function POST(request: NextRequest) {
           )
           if (nearest) {
             distanceFromLocation = nearest.distance
-            if (!nearest.within) {
+            if (!nearest.within && !geofenceBypass) {
               return NextResponse.json(
                 {
                   error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
@@ -149,7 +196,10 @@ export async function POST(request: NextRequest) {
           distanceFromLocation = Math.round(
             haversineMeters(validated.lat, validated.lng, loc.lat, loc.lng)
           )
-          if (!isWithinRadius(distanceFromLocation, validated.accuracy, CHECKIN_RADIUS_METERS)) {
+          if (
+            !isWithinRadius(distanceFromLocation, validated.accuracy, CHECKIN_RADIUS_METERS) &&
+            !geofenceBypass
+          ) {
             return NextResponse.json(
               {
                 error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე კომპანიის ლოკაციიდან. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
@@ -200,14 +250,19 @@ export async function POST(request: NextRequest) {
     }
     if (error) throw error
 
+    // Check-in puts the planned stop "in progress" (yellow). Check-out (PATCH)
+    // later marks it "visited" (green). Legacy clients may pass route_stop_id
+    // directly; board check-ins resolve the stop via board_item_id + today.
     if (validated.route_stop_id) {
       await supabase
         .from('route_stops')
         .update({
-          status: 'completed',
+          status: 'in_progress',
           actual_arrival_time: new Date().toTimeString().slice(0, 8),
         })
         .eq('id', validated.route_stop_id)
+    } else {
+      await markPlannedStop(validated.inspector_id, validated.board_item_id, 'in_progress')
     }
 
     // Stage automation: the visit type doubles as the company's stage.
@@ -372,6 +427,23 @@ export async function PATCH(request: NextRequest) {
       .single()
 
     if (updateError) throw updateError
+
+    // Check-out marks the planned stop done (green) + departure time.
+    if ((checkin as any).route_stop_id) {
+      await supabase
+        .from('route_stops')
+        .update({
+          status: 'completed',
+          actual_departure_time: new Date().toTimeString().slice(0, 8),
+        })
+        .eq('id', (checkin as any).route_stop_id)
+    } else {
+      await markPlannedStop(
+        (checkin as any).inspector_id,
+        (checkin as any).board_item_id,
+        'completed'
+      )
+    }
 
     return NextResponse.json(updated)
   } catch (error: any) {

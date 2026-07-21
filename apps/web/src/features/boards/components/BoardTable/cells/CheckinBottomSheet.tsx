@@ -130,9 +130,17 @@ export function CheckinBottomSheet({
 
   const distance = nearest?.distance ?? null
   const withinRadius = nearest?.within ?? false
+  // TEMP (testing only): user ids in NEXT_PUBLIC_CHECKIN_GEOFENCE_BYPASS_IDS may
+  // check in from anywhere. Mirrors the server-side CHECKIN_GEOFENCE_BYPASS_IDS.
+  // Leave both env vars unset in production.
+  const geofenceBypass = (process.env.NEXT_PUBLIC_CHECKIN_GEOFENCE_BYPASS_IDS || '')
+    .split(',')
+    .map(id => id.trim())
+    .filter(Boolean)
+    .includes(user?.id ?? '')
   const canCheckin =
     coords &&
-    (distance === null || withinRadius) &&
+    (distance === null || withinRadius || geofenceBypass) &&
     (visitTypes.length === 0 || checkinType !== '') &&
     !createCheckin.isPending
 
