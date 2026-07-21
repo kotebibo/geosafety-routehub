@@ -5,7 +5,7 @@
 -- All additive and nullable — existing rows keep working.
 --
 -- Apply staging-first:
---   node scripts/run-migration.mjs 112_officer_profile_fields.sql --stage
+--   node scripts/run-migration.mjs 114_officer_profile_fields.sql --stage
 --   (then --prod on prod day)
 --
 -- ROLLBACK:
