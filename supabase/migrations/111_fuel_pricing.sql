@@ -3,7 +3,7 @@
 -- key-value settings table; the override is a column on officer_transport.
 --
 -- Apply staging-first:
---   node scripts/run-migration.mjs 108_fuel_pricing.sql --stage
+--   node scripts/run-migration.mjs 111_fuel_pricing.sql --stage
 --   (then --prod on prod day)
 --
 -- ROLLBACK:
