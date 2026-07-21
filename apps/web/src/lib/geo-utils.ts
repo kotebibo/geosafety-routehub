@@ -73,26 +73,29 @@ function dmsToDecimal(deg: number, min: number, sec: number, direction: string):
   return direction === 'S' || direction === 'W' ? -decimal : decimal
 }
 
-function extractFromGoogleUrl(text: string): { lat: number; lng: number } | null {
-  // query=LAT,LNG (most common — 85% of entries)
-  const queryMatch = text.match(/query=(-?\d+\.?\d*),(-?\d+\.?\d*)/)
-  if (queryMatch) {
-    const lat = Number(queryMatch[1])
-    const lng = Number(queryMatch[2])
-    if (isValidCoord(lat, lng)) return { lat, lng }
+// Matched globally — several map links pasted on ONE line ("url1 url2") each
+// contribute a point instead of only the first winning. query= pins win over
+// @-style map centers: a full share URL carries both for the same place, and
+// its @ center would otherwise add a phantom second point a few meters off.
+function extractFromGoogleUrls(text: string): Array<{ lat: number; lng: number }> {
+  const collect = (re: RegExp): Array<{ lat: number; lng: number }> => {
+    const out: Array<{ lat: number; lng: number }> = []
+    for (const m of text.matchAll(re)) {
+      const lat = Number(m[1])
+      const lng = Number(m[2])
+      if (isValidCoord(lat, lng)) out.push({ lat, lng })
+    }
+    return out
   }
+
+  // query=LAT,LNG (most common — 85% of entries)
+  const fromQuery = collect(/query=(-?\d+\.?\d*),(-?\d+\.?\d*)/g)
+  if (fromQuery.length > 0) return fromQuery
 
   // @LAT,LNG in maps URL path
-  const atMatch = text.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/)
-  if (atMatch) {
-    const lat = Number(atMatch[1])
-    const lng = Number(atMatch[2])
-    if (isValidCoord(lat, lng)) return { lat, lng }
-  }
-
   // maps/place/LAT%C2%B0... encoded DMS — the query= param above catches these too,
   // but if someone pastes a place URL without query=, fall through to DMS parsing
-  return null
+  return collect(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/g)
 }
 
 function extractFromDms(text: string): { lat: number; lng: number } | null {
@@ -172,9 +175,10 @@ function parseEntryCoordinates(entry: string): Array<{ lat: number; lng: number 
   const text = entry.trim()
   if (!text) return []
 
-  // Google Maps URL with decimal coords (covers ~85%)
-  const fromUrl = extractFromGoogleUrl(text)
-  if (fromUrl) return [fromUrl]
+  // Google Maps URL(s) with decimal coords (covers ~85%) — all links in the
+  // entry count, so two URLs on one line yield two points
+  const fromUrls = extractFromGoogleUrls(text)
+  if (fromUrls.length > 0) return fromUrls
 
   // DMS — Latitude: N 41°43'... Longitude: E 44°47'... (covers ~11%)
   const fromDms = extractFromDms(text)
