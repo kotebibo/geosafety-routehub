@@ -9,11 +9,25 @@ import { requireAuth } from '@/middleware/auth'
  * User-Agent Nominatim's usage policy requires. The project already uses OSM
  * (NEXT_PUBLIC_MAP_PROVIDER=openstreetmap), so no extra API key is needed.
  */
+// Nominatim free-text geocoding of Georgian street addresses is unreliable —
+// it happily returns a same-named street in the wrong city. Bounding the search
+// to the target city's box (bounded=1) keeps results in the right city, which is
+// far more accurate for these addresses. Extend as more cities are needed.
+// viewbox = lon_min,lat_max,lon_max,lat_min
+const CITY_BBOX: Record<string, string> = {
+  თბილისი: '44.65,41.83,45.00,41.62',
+  ბათუმი: '41.58,41.68,41.68,41.60',
+  ქუთაისი: '42.66,42.30,42.74,42.23',
+  რუსთავი: '44.95,41.60,45.05,41.52',
+}
+
 export async function GET(request: NextRequest) {
   try {
     await requireAuth()
 
-    const query = new URL(request.url).searchParams.get('q')?.trim()
+    const params = new URL(request.url).searchParams
+    const query = params.get('q')?.trim()
+    const city = params.get('city')?.trim()
     if (!query) {
       return NextResponse.json({ error: 'q is required' }, { status: 400 })
     }
@@ -25,6 +39,11 @@ export async function GET(request: NextRequest) {
     // Bias toward Georgia — this is a Georgian field-ops app
     url.searchParams.set('countrycodes', 'ge')
     url.searchParams.set('accept-language', 'ka')
+    // When a known city is given, restrict results to its bounding box.
+    if (city && CITY_BBOX[city]) {
+      url.searchParams.set('viewbox', CITY_BBOX[city])
+      url.searchParams.set('bounded', '1')
+    }
 
     const res = await fetch(url.toString(), {
       headers: {

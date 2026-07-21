@@ -1,15 +1,20 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Link from 'next/link'
-import { ExternalLink, LayoutDashboard, User, X } from 'lucide-react'
+import { ExternalLink, LayoutDashboard, MapPin, Navigation, User, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useLanguage } from '@/contexts/LanguageContext'
 import { useBoardColumns } from '@/features/boards/hooks/useBoardColumns'
+import { useSetItemCoords } from '../hooks/useSetItemCoords'
 import { useUsers } from '@/hooks/useUsers'
 import { parseCoordinates } from '@/lib/geo-utils'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/components/ui-monday/Toast'
+import { DEFAULT_GEOCODE_CITY } from '../lib/geocode'
+import { resolveLocationColumns } from '../lib/location-columns'
+import { LocationSearchField, type PickedLocation } from './LocationSearchField'
 import { UrgencyBadge } from './UrgencyBadge'
 import type { RoutingItem } from '../hooks/useRoutingData'
 import type { Board, BoardColumn } from '@/types/board'
@@ -57,7 +62,45 @@ export function ItemDetailPopup({ routingItem, board, onClose }: ItemDetailPopup
     [users]
   )
 
-  // Only what the board shows (is_visible) and only filled-in values
+  const { showToast } = useToast()
+  const setItemCoords = useSetItemCoords(board.id)
+  const [showPicker, setShowPicker] = useState(false)
+  // Reflects a just-saved coordinate immediately (the popup holds a snapshot of
+  // the item, so it wouldn't otherwise update until reopened).
+  const [localCoords, setLocalCoords] = useState<{ lat: number; lng: number } | null>(null)
+
+  // Location columns (coordinates optional per board). Coordinates come from the
+  // address via geocoding; distance calculation reads the coordinates column.
+  const { coordsColumnId, addressColumnId } = useMemo(
+    () => resolveLocationColumns(columns),
+    [columns]
+  )
+  const coords =
+    localCoords ?? (coordsColumnId ? parseCoordinates(item.data?.[coordsColumnId]) : null)
+  const address = addressColumnId ? String(item.data?.[addressColumnId] ?? '').trim() : ''
+
+  // Save a picked location into the coordinates column — same search/pick flow
+  // as setting an inspector location, so the user chooses the right match
+  // (free-text geocoding of Georgian addresses is otherwise unreliable).
+  const saveCoords = async (picked: PickedLocation) => {
+    if (!coordsColumnId) return
+    try {
+      await setItemCoords.mutateAsync({
+        itemId: item.id,
+        coordsColumnId,
+        lat: picked.lat,
+        lng: picked.lng,
+      })
+      setLocalCoords({ lat: picked.lat, lng: picked.lng })
+      setShowPicker(false)
+      showToast(t('routing.locationSaved'), 'success')
+    } catch (err: any) {
+      showToast(err?.error || t('routing.geocodeFailed'), 'error')
+    }
+  }
+
+  // Only what the board shows (is_visible) and only filled-in values. The
+  // coordinates column is rendered in its own row, so exclude it here.
   const visibleColumns = useMemo(
     () =>
       columns
@@ -65,10 +108,11 @@ export function ItemDetailPopup({ routingItem, board, onClose }: ItemDetailPopup
           c =>
             c.is_visible &&
             !HIDDEN_COLUMN_TYPES.has(c.column_type) &&
+            c.column_id !== coordsColumnId &&
             hasValue(item.data?.[c.column_id])
         )
         .sort((a, b) => a.position - b.position),
-    [columns, item.data]
+    [columns, item.data, coordsColumnId]
   )
 
   const columnLabel = (col: BoardColumn) =>
@@ -148,6 +192,58 @@ export function ItemDetailPopup({ routingItem, board, onClose }: ItemDetailPopup
             <p className="py-6 text-sm text-text-tertiary text-center">{t('routing.loading')}</p>
           ) : (
             <dl className="divide-y divide-border-light">
+              {/* Coordinates — shown when set, otherwise picked from the address
+                  (search + choose, same flow as setting a location) */}
+              {coordsColumnId && (
+                <div className="flex items-start gap-4 py-2.5">
+                  <dt className="w-36 flex-shrink-0 text-xs font-medium text-text-tertiary pt-1.5 truncate">
+                    {t('routing.coordinates')}
+                  </dt>
+                  <dd className="flex-1 min-w-0 text-sm text-text-primary break-words">
+                    {coords && !showPicker && (
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <a
+                          href={`https://www.google.com/maps?q=${coords.lat},${coords.lng}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-monday-primary hover:underline"
+                        >
+                          <MapPin className="w-3.5 h-3.5" />
+                          {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setShowPicker(true)}
+                          className="text-[11px] text-text-tertiary hover:text-monday-primary"
+                        >
+                          {t('common.edit')}
+                        </button>
+                      </div>
+                    )}
+
+                    {!coords && !showPicker && (
+                      <button
+                        type="button"
+                        onClick={() => setShowPicker(true)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-500 border border-orange-500/30 text-xs font-medium hover:bg-orange-500/20 transition-colors"
+                      >
+                        <Navigation className="w-3.5 h-3.5" />
+                        {t('routing.convertFromAddress')}
+                      </button>
+                    )}
+
+                    {showPicker && (
+                      <LocationSearchField
+                        label=""
+                        value={null}
+                        onChange={v => v && saveCoords(v)}
+                        initialQuery={address}
+                        city={DEFAULT_GEOCODE_CITY}
+                      />
+                    )}
+                  </dd>
+                </div>
+              )}
               {visibleColumns.map(col => (
                 <FieldRow
                   key={col.id}

@@ -54,7 +54,8 @@ export default function InspectorRoutesPage() {
   const inspectorId = isManager ? selectedOfficer : user?.id || ''
   const canExecute = !!user?.id && inspectorId === user.id
 
-  const { data: routes = [], isLoading } = useMyRoutes(inspectorId)
+  const { data, isLoading } = useMyRoutes(inspectorId)
+  const routes = data?.routes ?? []
 
   const stats = useMemo(
     () => ({

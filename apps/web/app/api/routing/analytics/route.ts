@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAdmin } from '@/middleware/auth'
+import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 
 function weekDates(weekStart: string): string[] {
@@ -17,7 +17,7 @@ function weekDates(weekStart: string): string[] {
 // estimate from each officer's consumption. Admin only.
 export async function GET(request: NextRequest) {
   try {
-    await requireAdmin()
+    await requireAdminOrDispatcher()
     const weekStart = new URL(request.url).searchParams.get('weekStart')
     if (!weekStart || !/^\d{4}-\d{2}-\d{2}$/.test(weekStart))
       return NextResponse.json({ error: 'weekStart (YYYY-MM-DD) is required' }, { status: 400 })
@@ -39,11 +39,24 @@ export async function GET(request: NextRequest) {
 
     const { data: transport } = await svc
       .from('officer_transport')
-      .select('user_id, consumption_l_per_100km')
+      .select('user_id, consumption_l_per_100km, fuel_price_per_liter')
       .in('user_id', activeIds)
     const consumptionOf = new Map<string, number | null>(
       (transport || []).map((t: any) => [t.user_id, t.consumption_l_per_100km])
     )
+    const priceOverrideOf = new Map<string, number | null>(
+      (transport || []).map((t: any) => [t.user_id, t.fuel_price_per_liter])
+    )
+
+    // Global fuel price — the default every officer inherits.
+    const { data: priceRow } = await svc
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'fuel_price_per_liter')
+      .maybeSingle()
+    const globalPriceNum =
+      priceRow?.value != null && priceRow.value !== '' ? Number(priceRow.value) : null
+    const globalPrice = globalPriceNum != null && !isNaN(globalPriceNum) ? globalPriceNum : null
 
     const dates = weekDates(weekStart)
     const { data: routes } = await svc
@@ -72,6 +85,9 @@ export async function GET(request: NextRequest) {
       const consumption = consumptionOf.get(u.id) ?? null
       const liters =
         consumption != null && agg.totalKm > 0 ? (agg.totalKm * consumption) / 100 : null
+      const priceOverride = priceOverrideOf.get(u.id) ?? null
+      const fuelPrice = priceOverride ?? globalPrice // effective price for this officer
+      const cost = liters != null && fuelPrice != null ? liters * fuelPrice : null
       return {
         officerId: u.id,
         name: u.full_name || u.email,
@@ -82,13 +98,16 @@ export async function GET(request: NextRequest) {
         visitedCount: agg.visitedCount,
         consumption,
         liters,
+        priceOverride, // the officer's own override (null → inherits global)
+        fuelPrice, // effective price used for cost
+        cost,
       }
     })
 
     // Officers with the most planned distance first; unplanned ones last.
     officers.sort((a: any, b: any) => b.totalKm - a.totalKm || a.name.localeCompare(b.name, 'ka'))
 
-    return NextResponse.json({ weekStart, officers })
+    return NextResponse.json({ weekStart, globalPrice, officers })
   } catch (error: any) {
     if (error.name === 'UnauthorizedError')
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })

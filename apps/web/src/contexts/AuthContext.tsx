@@ -111,10 +111,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (currentUser?.email) {
           ;(supabase as any)
             .rpc('upsert_user_profile', {
-              p_user_id: currentUser.id,
-              p_user_email: currentUser.email,
-              p_user_full_name: currentUser.user_metadata?.full_name || '',
-              p_user_avatar_url: currentUser.user_metadata?.avatar_url || '',
+              user_id: currentUser.id,
+              user_email: currentUser.email,
+              user_full_name: currentUser.user_metadata?.full_name || '',
+              user_avatar_url: currentUser.user_metadata?.avatar_url || '',
             })
             .then(({ error }: { error: any }) => {
               if (error) console.warn('Failed to upsert user profile:', error.message)
