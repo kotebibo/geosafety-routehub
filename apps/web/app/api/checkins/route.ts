@@ -34,6 +34,41 @@ const checkoutSchema = z.object({
   accuracy: z.number().optional(),
 })
 
+// Georgia is UTC+4 — a route's `date` is that local day, so resolve "today" in
+// the same offset when matching a check-in to its planned stop.
+function georgiaToday(): string {
+  return new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+// Reflect a visit on the officer's planned stop. Board check-ins carry
+// board_item_id (not route_stop_id), so resolve the stop through the officer's
+// route for today and persist the status so every surface (officer routes,
+// analytics counts, admin popup) sees it. Never throws — planning is optional.
+async function markPlannedStop(
+  inspectorId: string,
+  boardItemId: string | null | undefined,
+  status: 'in_progress' | 'visited'
+): Promise<void> {
+  if (!boardItemId) return
+  try {
+    const svc = createServiceClient() as any
+    const { data: routes } = await svc
+      .from('routes')
+      .select('route_stops(id, board_item_id)')
+      .eq('inspector_id', inspectorId)
+      .eq('date', georgiaToday())
+    const stopIds: string[] = []
+    for (const r of routes || [])
+      for (const st of r.route_stops || [])
+        if (st.board_item_id === boardItemId) stopIds.push(st.id)
+    if (stopIds.length > 0) {
+      await svc.from('route_stops').update({ status }).in('id', stopIds)
+    }
+  } catch (e) {
+    console.error('markPlannedStop failed:', e)
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = createServerClient()
@@ -213,7 +248,8 @@ export async function POST(request: NextRequest) {
     if (error) throw error
 
     // Check-in puts the planned stop "in progress" (yellow). Check-out (PATCH)
-    // later marks it "visited" (green).
+    // later marks it "visited" (green). Legacy clients may pass route_stop_id
+    // directly; board check-ins resolve the stop via board_item_id + today.
     if (validated.route_stop_id) {
       await supabase
         .from('route_stops')
@@ -222,6 +258,8 @@ export async function POST(request: NextRequest) {
           actual_arrival_time: new Date().toTimeString().slice(0, 8),
         })
         .eq('id', validated.route_stop_id)
+    } else {
+      await markPlannedStop(validated.inspector_id, validated.board_item_id, 'in_progress')
     }
 
     // Stage automation: the visit type doubles as the company's stage.
@@ -396,6 +434,12 @@ export async function PATCH(request: NextRequest) {
           actual_departure_time: new Date().toTimeString().slice(0, 8),
         })
         .eq('id', (checkin as any).route_stop_id)
+    } else {
+      await markPlannedStop(
+        (checkin as any).inspector_id,
+        (checkin as any).board_item_id,
+        'visited'
+      )
     }
 
     return NextResponse.json(updated)

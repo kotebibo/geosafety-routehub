@@ -129,8 +129,12 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: true })
       for (const c of checkins || []) {
         if (!c.board_item_id || !c.created_at) continue
-        // Latest check-in for that item+day wins (ascending order → last set).
-        checkinByItemDate.set(`${c.board_item_id}|${c.created_at.slice(0, 10)}`, {
+        // Key by the Georgia-local (UTC+4) day, matching how a route's date and
+        // the check-in→stop status write are computed. Latest per item+day wins.
+        const day = new Date(new Date(c.created_at).getTime() + 4 * 60 * 60 * 1000)
+          .toISOString()
+          .slice(0, 10)
+        checkinByItemDate.set(`${c.board_item_id}|${day}`, {
           checkedInAt: c.created_at,
           checkedOutAt: c.checked_out_at ?? null,
           durationMinutes: c.duration_minutes ?? null,
@@ -151,17 +155,15 @@ export async function GET(request: NextRequest) {
         .map((s: any) => {
           const key = s.board_item_id || s.company_id
           const coords = key ? coordsById.get(key) : null
-          // A real check-in for this item on the route's date drives the visit
-          // state: checked out → visited (green), checked in only → in_progress
-          // (yellow). Otherwise the stored route_stops.status stands (pending).
+          // Status is persisted on check-in/out (route_stops.status), so read it
+          // straight. The check-in match here only surfaces the visit times.
           const ci = s.board_item_id
             ? checkinByItemDate.get(`${s.board_item_id}|${r.date}`)
             : undefined
-          const status = ci ? (ci.checkedOutAt ? 'visited' : 'in_progress') : s.status
           return {
             id: s.id,
             position: s.position,
-            status,
+            status: s.status,
             distanceFromPrevious: s.distance_from_previous_km,
             boardItemId: s.board_item_id,
             name: nameById.get(s.board_item_id) || nameById.get(s.company_id) || null,
