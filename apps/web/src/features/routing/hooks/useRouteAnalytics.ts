@@ -2,6 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+export type FuelType = 'petrol' | 'diesel' | 'gas'
+export type FuelPrices = Record<FuelType, number | null>
+
 export interface OfficerWeekSummary {
   officerId: string
   name: string
@@ -12,16 +15,18 @@ export interface OfficerWeekSummary {
   visitedCount: number
   consumption: number | null
   liters: number | null
-  /** The officer's own price override (null → inherits the global price). */
+  /** The officer's fuel type (drives which global price applies). */
+  fuelType: FuelType | null
+  /** The officer's own price override (null → inherits the type's global price). */
   priceOverride: number | null
-  /** Effective price used for cost (override ?? global). */
+  /** Effective price used for cost (override ?? global price for the type). */
   fuelPrice: number | null
   cost: number | null
 }
 
 export interface RouteAnalytics {
   weekStart: string
-  globalPrice: number | null
+  globalPrices: FuelPrices
   officers: OfficerWeekSummary[]
 }
 
@@ -39,15 +44,15 @@ export function useRouteAnalytics(weekStart: string) {
   })
 }
 
-/** Global fuel price (₾/L) that officers inherit by default. */
-export function useSetFuelPrice() {
+/** Global fuel prices per type (₾/L) that officers inherit by fuel type. */
+export function useSetFuelPrices() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async (price: number | null) => {
+    mutationFn: async (prices: FuelPrices) => {
       const res = await fetch('/api/routing/fuel-price', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ price }),
+        body: JSON.stringify(prices),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))

@@ -261,7 +261,7 @@ function ItemRow({ routingItem, selected, onToggleSelect, onOpen }: ItemRowProps
   return (
     <div
       className={cn(
-        'w-full flex items-center gap-2.5 px-3 py-2 transition-colors',
+        'w-full flex items-center gap-2 px-3 py-1.5 transition-colors',
         selected ? 'bg-monday-primary/5' : 'hover:bg-bg-hover'
       )}
     >
@@ -289,7 +289,7 @@ function ItemRow({ routingItem, selected, onToggleSelect, onOpen }: ItemRowProps
         {/* Company avatar — same style as board rows, tinted by its category color */}
         <div
           className={cn(
-            'w-6 h-6 rounded flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0',
+            'w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
             (group && GROUP_DOT_COLORS[group.color]) || 'bg-monday-primary'
           )}
         >

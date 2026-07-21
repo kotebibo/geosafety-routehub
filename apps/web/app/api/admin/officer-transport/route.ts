@@ -8,7 +8,10 @@ import { createServerClient } from '@/lib/supabase/server'
 const upsertSchema = z.object({
   user_id: z.string().uuid(),
   car_model: z.string().max(120).nullable().optional(),
+  car_plate: z.string().max(30).nullable().optional(),
   engine: z.string().max(120).nullable().optional(),
+  fuel_type: z.enum(['petrol', 'diesel', 'gas']).nullable().optional(),
+  org: z.enum(['geosafety', 'safetycorp']).nullable().optional(),
   consumption_l_per_100km: z.number().min(0).max(100).nullable().optional(),
   home_lat: z.number().min(-90).max(90).nullable().optional(),
   home_lng: z.number().min(-180).max(180).nullable().optional(),
@@ -55,7 +58,10 @@ export async function PUT(request: NextRequest) {
         {
           user_id: v.user_id,
           car_model: v.car_model ?? null,
+          car_plate: v.car_plate ?? null,
           engine: v.engine ?? null,
+          fuel_type: v.fuel_type ?? null,
+          org: v.org ?? null,
           consumption_l_per_100km: v.consumption_l_per_100km ?? null,
           home_lat: v.home_lat ?? null,
           home_lng: v.home_lng ?? null,

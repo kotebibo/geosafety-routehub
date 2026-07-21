@@ -2,10 +2,16 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+export type FuelType = 'petrol' | 'diesel' | 'gas'
+export type OfficerOrg = 'geosafety' | 'safetycorp'
+
 export interface OfficerTransport {
   user_id: string
   car_model: string | null
+  car_plate: string | null
   engine: string | null
+  fuel_type: FuelType | null
+  org: OfficerOrg | null
   consumption_l_per_100km: number | null
   home_lat: number | null
   home_lng: number | null
@@ -19,7 +25,10 @@ export interface OfficerTransport {
 export type OfficerTransportInput = {
   user_id: string
   car_model?: string | null
+  car_plate?: string | null
   engine?: string | null
+  fuel_type?: FuelType | null
+  org?: OfficerOrg | null
   consumption_l_per_100km?: number | null
   home_lat?: number | null
   home_lng?: number | null

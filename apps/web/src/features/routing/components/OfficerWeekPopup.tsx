@@ -15,7 +15,7 @@ import { addDays, dayLabelOf, shortDate } from '../lib/week'
 interface OfficerWeekPopupProps {
   summary: OfficerWeekSummary
   weekStart: string
-  globalPrice: number | null
+  typePrice: number | null
   onClose: () => void
 }
 
@@ -27,7 +27,7 @@ function shortDateStr(dateStr: string): string {
 export function OfficerWeekPopup({
   summary,
   weekStart,
-  globalPrice,
+  typePrice,
   onClose,
 }: OfficerWeekPopupProps) {
   const t = useTranslations()
@@ -43,7 +43,7 @@ export function OfficerWeekPopup({
   const [priceInput, setPriceInput] = useState(
     summary.priceOverride != null ? String(summary.priceOverride) : ''
   )
-  const effectivePrice = priceInput.trim() !== '' ? Number(priceInput) : globalPrice
+  const effectivePrice = priceInput.trim() !== '' ? Number(priceInput) : typePrice
   const validPrice = effectivePrice != null && !isNaN(effectivePrice) ? effectivePrice : null
   const liveCost = summary.liters != null && validPrice != null ? summary.liters * validPrice : null
 
@@ -134,7 +134,7 @@ export function OfficerWeekPopup({
                 min="0"
                 value={priceInput}
                 onChange={e => setPriceInput(e.target.value)}
-                placeholder={globalPrice != null ? String(globalPrice) : '0.00'}
+                placeholder={typePrice != null ? String(typePrice) : '0.00'}
                 className="w-20 px-2 py-1 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
               <span className="text-text-tertiary">{t('routeAnalytics.perLiter')}</span>
@@ -148,9 +148,9 @@ export function OfficerWeekPopup({
               </button>
             </div>
           </div>
-          {priceInput.trim() === '' && globalPrice != null && (
+          {priceInput.trim() === '' && typePrice != null && (
             <p className="text-[11px] text-text-tertiary text-right">
-              {t('routeAnalytics.inheritsGlobal', { price: globalPrice.toFixed(2) })}
+              {t('routeAnalytics.inheritsGlobal', { price: typePrice.toFixed(2) })}
             </p>
           )}
           <div className="flex items-center justify-between text-sm font-medium pt-1 border-t border-border-light">

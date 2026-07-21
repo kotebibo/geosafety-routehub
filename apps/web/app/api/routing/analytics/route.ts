@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
 
     const { data: transport } = await svc
       .from('officer_transport')
-      .select('user_id, consumption_l_per_100km, fuel_price_per_liter')
+      .select('user_id, consumption_l_per_100km, fuel_price_per_liter, fuel_type')
       .in('user_id', activeIds)
     const consumptionOf = new Map<string, number | null>(
       (transport || []).map((t: any) => [t.user_id, t.consumption_l_per_100km])
@@ -47,16 +47,32 @@ export async function GET(request: NextRequest) {
     const priceOverrideOf = new Map<string, number | null>(
       (transport || []).map((t: any) => [t.user_id, t.fuel_price_per_liter])
     )
+    const fuelTypeOf = new Map<string, string | null>(
+      (transport || []).map((t: any) => [t.user_id, t.fuel_type])
+    )
 
-    // Global fuel price — the default every officer inherits.
-    const { data: priceRow } = await svc
+    // Global fuel price per fuel type — the default an officer inherits based on
+    // the fuel type set on their profile.
+    const FUEL_KEYS = {
+      petrol: 'fuel_price_petrol',
+      diesel: 'fuel_price_diesel',
+      gas: 'fuel_price_gas',
+    } as const
+    const { data: priceRows } = await svc
       .from('app_settings')
-      .select('value')
-      .eq('key', 'fuel_price_per_liter')
-      .maybeSingle()
-    const globalPriceNum =
-      priceRow?.value != null && priceRow.value !== '' ? Number(priceRow.value) : null
-    const globalPrice = globalPriceNum != null && !isNaN(globalPriceNum) ? globalPriceNum : null
+      .select('key, value')
+      .in('key', Object.values(FUEL_KEYS))
+    const priceByKey = new Map<string, string>((priceRows || []).map((r: any) => [r.key, r.value]))
+    const toPrice = (v: unknown): number | null => {
+      if (v == null || v === '') return null
+      const n = Number(v)
+      return isNaN(n) ? null : n
+    }
+    const globalPrices = {
+      petrol: toPrice(priceByKey.get(FUEL_KEYS.petrol)),
+      diesel: toPrice(priceByKey.get(FUEL_KEYS.diesel)),
+      gas: toPrice(priceByKey.get(FUEL_KEYS.gas)),
+    }
 
     const dates = weekDates(weekStart)
     const { data: routes } = await svc
@@ -89,7 +105,11 @@ export async function GET(request: NextRequest) {
       const liters =
         consumption != null && agg.totalKm > 0 ? (agg.totalKm * consumption) / 100 : null
       const priceOverride = priceOverrideOf.get(u.id) ?? null
-      const fuelPrice = priceOverride ?? globalPrice // effective price for this officer
+      const fuelType = (fuelTypeOf.get(u.id) ?? null) as 'petrol' | 'diesel' | 'gas' | null
+      // Effective price: an explicit per-officer override wins; otherwise the
+      // global price for the officer's fuel type.
+      const typePrice = fuelType ? globalPrices[fuelType] : null
+      const fuelPrice = priceOverride ?? typePrice
       const cost = liters != null && fuelPrice != null ? liters * fuelPrice : null
       return {
         officerId: u.id,
@@ -101,7 +121,8 @@ export async function GET(request: NextRequest) {
         visitedCount: agg.visitedCount,
         consumption,
         liters,
-        priceOverride, // the officer's own override (null → inherits global)
+        fuelType, // officer's fuel type (drives which global price applies)
+        priceOverride, // the officer's own override (null → inherits by type)
         fuelPrice, // effective price used for cost
         cost,
       }
@@ -110,7 +131,7 @@ export async function GET(request: NextRequest) {
     // Officers with the most planned distance first; unplanned ones last.
     officers.sort((a: any, b: any) => b.totalKm - a.totalKm || a.name.localeCompare(b.name, 'ka'))
 
-    return NextResponse.json({ weekStart, globalPrice, officers })
+    return NextResponse.json({ weekStart, globalPrices, officers })
   } catch (error: any) {
     if (error.name === 'UnauthorizedError')
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })

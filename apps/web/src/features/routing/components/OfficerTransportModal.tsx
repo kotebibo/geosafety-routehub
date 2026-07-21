@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Car, X, Loader2, Check, Home, type LucideIcon } from 'lucide-react'
+import { Car, X, Loader2, Check, Home, Building2, type LucideIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui-monday/Toast'
-import { useOfficerTransport, useSaveOfficerTransport } from '../hooks/useOfficerTransport'
+import {
+  useOfficerTransport,
+  useSaveOfficerTransport,
+  type FuelType,
+  type OfficerOrg,
+} from '../hooks/useOfficerTransport'
 import { LocationSearchField, type PickedLocation } from './LocationSearchField'
 
 interface OfficerTransportModalProps {
@@ -25,7 +30,10 @@ export function OfficerTransportModal({
   const save = useSaveOfficerTransport()
 
   const [carModel, setCarModel] = useState('')
+  const [carPlate, setCarPlate] = useState('')
   const [engine, setEngine] = useState('')
+  const [fuelType, setFuelType] = useState<'' | FuelType>('')
+  const [org, setOrg] = useState<'' | OfficerOrg>('')
   const [consumption, setConsumption] = useState('')
   const [home, setHome] = useState<PickedLocation | null>(null)
   const [startLoc, setStartLoc] = useState<PickedLocation | null>(null)
@@ -33,7 +41,10 @@ export function OfficerTransportModal({
   useEffect(() => {
     if (data) {
       setCarModel(data.car_model ?? '')
+      setCarPlate(data.car_plate ?? '')
       setEngine(data.engine ?? '')
+      setFuelType(data.fuel_type ?? '')
+      setOrg(data.org ?? '')
       setConsumption(
         data.consumption_l_per_100km != null ? String(data.consumption_l_per_100km) : ''
       )
@@ -60,7 +71,10 @@ export function OfficerTransportModal({
       await save.mutateAsync({
         user_id: officerId,
         car_model: carModel.trim() || null,
+        car_plate: carPlate.trim() || null,
         engine: engine.trim() || null,
+        fuel_type: fuelType || null,
+        org: org || null,
         consumption_l_per_100km: consumptionNum,
         home_lat: home?.lat ?? null,
         home_lng: home?.lng ?? null,
@@ -121,6 +135,20 @@ export function OfficerTransportModal({
                 onChange={setStartLoc}
               />
 
+              {/* Organization */}
+              <SectionLabel icon={Building2}>{t('routing.orgSection')}</SectionLabel>
+              <Field label={t('routing.org')}>
+                <select
+                  value={org}
+                  onChange={e => setOrg(e.target.value as '' | OfficerOrg)}
+                  className="w-full px-3 py-2 text-sm bg-bg-primary border border-border-light rounded-lg focus:outline-none focus:border-monday-primary text-text-primary"
+                >
+                  <option value="">{t('routing.orgNone')}</option>
+                  <option value="geosafety">{t('routing.orgGeosafety')}</option>
+                  <option value="safetycorp">{t('routing.orgSafetycorp')}</option>
+                </select>
+              </Field>
+
               {/* Vehicle (optional) */}
               <SectionLabel icon={Car}>{t('routing.vehicleSection')}</SectionLabel>
               <Field label={t('routing.carModel')}>
@@ -130,6 +158,26 @@ export function OfficerTransportModal({
                   placeholder="Toyota Prius"
                   className="w-full px-3 py-2 text-sm bg-bg-primary border border-border-light rounded-lg focus:outline-none focus:border-monday-primary text-text-primary"
                 />
+              </Field>
+              <Field label={t('routing.carPlate')}>
+                <input
+                  value={carPlate}
+                  onChange={e => setCarPlate(e.target.value)}
+                  placeholder="AA-001-AA"
+                  className="w-full px-3 py-2 text-sm bg-bg-primary border border-border-light rounded-lg focus:outline-none focus:border-monday-primary text-text-primary"
+                />
+              </Field>
+              <Field label={t('routing.fuelType')}>
+                <select
+                  value={fuelType}
+                  onChange={e => setFuelType(e.target.value as '' | FuelType)}
+                  className="w-full px-3 py-2 text-sm bg-bg-primary border border-border-light rounded-lg focus:outline-none focus:border-monday-primary text-text-primary"
+                >
+                  <option value="">{t('routing.fuelTypeNone')}</option>
+                  <option value="petrol">{t('routing.fuelPetrol')}</option>
+                  <option value="diesel">{t('routing.fuelDiesel')}</option>
+                  <option value="gas">{t('routing.fuelGas')}</option>
+                </select>
               </Field>
               <Field label={`${t('routing.engine')} (${t('routing.optional')})`}>
                 <input
