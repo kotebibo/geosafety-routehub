@@ -6,7 +6,7 @@
  * traffic anyway. These flows need a limiter that survives across instances
  * and regions, so counters live in public.auth_rate_limits and are bumped
  * atomically via the check_and_bump_rate_limit() SQL function — see
- * supabase/migrations/105_auth_login_2fa.sql for why this can't be a
+ * supabase/migrations/108_auth_login_2fa.sql for why this can't be a
  * read-then-write from the app layer.
  */
 
@@ -29,9 +29,9 @@ export interface RateLimitCheck {
   retryAfterSeconds: number
 }
 
-// TEMP: local-testing bypass — flip back to false before merging.
-// The NODE_ENV guard below means this can never disable limits in production.
-const DISABLE_RATE_LIMITS_FOR_LOCAL_DEV = true
+// Local-testing bypass — keep false so limits run everywhere; the NODE_ENV
+// guard below means this can never disable limits in production either way.
+const DISABLE_RATE_LIMITS_FOR_LOCAL_DEV = false
 
 /**
  * On a DB error this fails OPEN (allows the request) rather than locking
@@ -82,3 +82,8 @@ export const CHALLENGE_RATE_LIMIT = { max: 5, windowSeconds: 900, lockoutSeconds
 
 // Explicit "resend code" clicks from the 2FA page.
 export const RESEND_RATE_LIMIT = { max: 3, windowSeconds: 900, lockoutSeconds: 900 }
+
+// Password-recovery email requests (per email and per IP) — on top of
+// Supabase's own sending limits, so one address can't be spammed and one IP
+// can't sweep many addresses.
+export const RECOVERY_RATE_LIMIT = { max: 5, windowSeconds: 900, lockoutSeconds: 900 }

@@ -11,8 +11,9 @@ const emailSchema = z
   .toLowerCase()
   .transform(val => val.trim())
 
-// Password validation
-const passwordSchema = z
+// Password validation — exported so the reset-password UI and the recovery
+// API route enforce the same policy as signup.
+export const passwordSchema = z
   .string()
   .min(8, 'Password must be at least 8 characters')
   .max(100, 'Password too long')
@@ -47,6 +48,12 @@ export const signInSchema = z.object({
 // Reset password request schema
 export const resetPasswordRequestSchema = z.object({
   email: emailSchema,
+})
+
+// Recovery completion — the caller already holds a recovery session, so the
+// new password is the only input.
+export const updatePasswordSchema = z.object({
+  password: passwordSchema,
 })
 
 // Reset password schema

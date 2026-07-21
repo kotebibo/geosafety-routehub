@@ -48,24 +48,31 @@ function ForgotPasswordForm() {
     setErrorKey(null)
     setLoading(true)
     try {
-      const supabase = getSupabase()
-      // redirectTo lands in the email as {{ .RedirectTo }} — the /auth/confirm
-      // route verifies the token_hash query param and forwards to reset-password.
-      // Must be in the Supabase redirect allowlist or it falls back to site_url.
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/confirm`,
+      // Server route generates a 6-digit recovery code and emails it via
+      // Resend, with durable rate limiting and an audit event; the response
+      // never reveals whether the account exists.
+      const response = await fetch('/api/auth/recovery/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       })
-      if (error) throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (data.retryAfterSeconds) {
+          setErrorKey('forgot.tooManyRequests')
+          setResendCooldown(data.retryAfterSeconds)
+        } else {
+          setErrorKey('forgot.sendError')
+        }
+        return
+      }
+
       setStep('code')
       setCode('')
       setResendCooldown(RESEND_COOLDOWN_SECONDS)
-    } catch (err: any) {
-      const msg = String(err?.message || '')
-      setErrorKey(
-        msg.includes('rate limit') || msg.includes('security purposes')
-          ? 'forgot.tooManyRequests'
-          : 'forgot.sendError'
-      )
+    } catch {
+      setErrorKey('forgot.sendError')
     } finally {
       setLoading(false)
     }
@@ -76,15 +83,14 @@ function ForgotPasswordForm() {
     await sendCode()
   }
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const verifyCode = async (codeValue: string) => {
     setErrorKey(null)
     setLoading(true)
     try {
       const supabase = getSupabase()
       const { error } = await supabase.auth.verifyOtp({
         email,
-        token: code.trim(),
+        token: codeValue.trim(),
         type: 'recovery',
       })
       if (error) throw error
@@ -94,6 +100,28 @@ function ForgotPasswordForm() {
       setErrorKey('forgot.invalidCode')
       setLoading(false)
     }
+  }
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await verifyCode(code)
+  }
+
+  // Submit as soon as the 6th digit lands (typed or pasted) — once per
+  // distinct value, so a rejected code doesn't loop.
+  const lastAutoSubmitted = useRef<string | null>(null)
+  useEffect(() => {
+    if (step !== 'code' || code.length !== 6 || loading) return
+    if (lastAutoSubmitted.current === code) return
+    lastAutoSubmitted.current = code
+    verifyCode(code)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code, step])
+
+  const handleCodePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+    if (digits) setCode(digits)
   }
 
   return (
@@ -171,7 +199,7 @@ function ForgotPasswordForm() {
           <form className="mt-6 space-y-6" onSubmit={handleVerifyCode}>
             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-start gap-3">
               <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-green-500">{t('forgot.linkHint')}</p>
+              <p className="text-sm text-green-500">{t('forgot.codeHint')}</p>
             </div>
 
             <div>
@@ -191,6 +219,7 @@ function ForgotPasswordForm() {
                 ref={codeInputRef}
                 value={code}
                 onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
+                onPaste={handleCodePaste}
                 className="appearance-none block w-full px-3 py-2 border border-border-medium rounded-lg placeholder-text-tertiary focus:outline-none focus:ring-2 focus:ring-monday-primary focus:border-transparent text-center text-2xl tracking-[0.5em] font-mono"
                 placeholder="000000"
               />

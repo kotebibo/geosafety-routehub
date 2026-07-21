@@ -28,7 +28,8 @@
     "health": "Health",
     "payments": "Payments",
     "routing": "Routing",
-    "routeAnalytics": "Route analytics"
+    "routeAnalytics": "Route analytics",
+    "securityLog": "Security Log"
   },
   "header": {
     "search": "Search...",
@@ -107,7 +108,8 @@
       "searchPlaceholder": "Search...",
       "noUsersFound": "No users found",
       "done": "Done"
-    }
+    },
+    "refresh": "Refresh"
   },
   "login": {
     "title": "RouteHub",
@@ -154,8 +156,10 @@
       "invalidCode": "The code is incorrect or has expired.",
       "tooManyAttempts": "Too many attempts. Please try again later.",
       "resendError": "Failed to resend the code. Please try again.",
-      "verifyError": "Verification failed. Please try again."
-    }
+      "verifyError": "Verification failed. Please try again.",
+      "rememberDevice": "Remember this device for 30 days"
+    },
+    "lockedRetryIn": "Try again in {time}"
   },
   "forgot": {
     "title": "Password Recovery",
@@ -165,7 +169,7 @@
     "sendError": "Failed to send the code. Please try again.",
     "tooManyRequests": "Too many attempts. Please wait a moment and try again.",
     "codeSentTo": "A 6-digit code has been sent to {email}",
-    "linkHint": "Check your email — enter the code below, or simply open the link in the email.",
+    "codeHint": "Check your email and enter the 6-digit code below.",
     "codeLabel": "Verification Code",
     "verify": "Verify Code",
     "verifying": "Verifying...",
@@ -187,7 +191,19 @@
     "tooShort": "Password must be at least 6 characters",
     "goToLogin": "Go to login",
     "invalidLink": "This link is invalid or has expired. Please request a new password reset from the login page.",
-    "samePassword": "New password must be different from your old password"
+    "samePassword": "New password must be different from your old password",
+    "policyNotMet": "Password does not meet the requirements",
+    "requirements": {
+      "minLength": "At least 8 characters",
+      "uppercase": "One uppercase letter",
+      "lowercase": "One lowercase letter",
+      "number": "One digit"
+    },
+    "strength": {
+      "weak": "Weak",
+      "medium": "Medium",
+      "strong": "Strong"
+    }
   },
   "walkthrough": {
     "welcome": {
@@ -764,6 +780,34 @@
       "deactivateUser": "Deactivate user",
       "activateUser": "Activate user",
       "showingCount": "Showing {shown} of {total} users"
+    },
+    "securityLog": {
+      "title": "Security Log",
+      "subtitle": "Login, 2FA and password-recovery events",
+      "allEvents": "All events",
+      "loadError": "Failed to load the log",
+      "empty": "No events",
+      "columns": {
+        "time": "Time",
+        "event": "Event",
+        "user": "User",
+        "ip": "IP"
+      },
+      "events": {
+        "login_success": "Successful login",
+        "login_failed": "Failed login",
+        "login_locked": "Login locked",
+        "2fa_challenge_sent": "2FA code sent",
+        "2fa_verify_success": "2FA verified",
+        "2fa_verify_failed": "2FA failed",
+        "2fa_resend": "2FA code resent",
+        "2fa_enabled": "2FA enabled",
+        "2fa_disabled": "2FA disabled",
+        "2fa_disabled_by_admin": "2FA disabled by admin",
+        "2fa_trusted_device_used": "Trusted device login",
+        "password_reset_requested": "Password reset requested",
+        "password_reset_completed": "Password changed"
+      }
     }
   },
   "payments": {

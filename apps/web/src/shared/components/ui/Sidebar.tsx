@@ -39,6 +39,7 @@ import {
   X,
   Check,
   Shield,
+  ShieldAlert,
   KeyRound,
   BarChart3,
   Navigation,
@@ -884,6 +885,13 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       labelKey: 'nav.roles',
       icon: KeyRound,
       permission: 'pages:roles',
+    },
+    {
+      href: '/admin/security-log',
+      labelKey: 'nav.securityLog',
+      icon: ShieldAlert,
+      // Admin-scoped like /admin/users — auth_audit_log RLS only opens to admins.
+      permission: 'pages:user_management',
     },
     {
       href: '/health',

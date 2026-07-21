@@ -19,6 +19,11 @@ vi.mock('@/lib/auth/auditLog', () => ({
   logAuthEvent: (...args: any[]) => mockLogAuthEvent(...args),
 }))
 
+const mockRevokeTrustedDevices = vi.fn()
+vi.mock('@/lib/auth/trustedDevice', () => ({
+  revokeTrustedDevicesForUser: (...args: any[]) => mockRevokeTrustedDevices(...args),
+}))
+
 const mockSendEmail = vi.fn()
 vi.mock('@/lib/email', () => ({
   sendEmail: (...args: any[]) => mockSendEmail(...args),

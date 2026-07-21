@@ -34,6 +34,11 @@ vi.mock('@/lib/auth/auditLog', () => ({
   logAuthEvent: (...args: any[]) => mockLogAuthEvent(...args),
 }))
 
+const mockRevokeTrustedDevices = vi.fn()
+vi.mock('@/lib/auth/trustedDevice', () => ({
+  revokeTrustedDevicesForUser: (...args: any[]) => mockRevokeTrustedDevices(...args),
+}))
+
 import { POST } from '../../../../app/api/settings/2fa/disable/route'
 
 function makeRequest(body: any) {

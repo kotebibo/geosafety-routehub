@@ -13,6 +13,11 @@ import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { verifyLoginChallengeByCookie, verifyLoginChallengeByLinkToken } from '@/lib/auth/twoFactor'
+import {
+  createTrustedDevice,
+  TRUSTED_DEVICE_COOKIE,
+  TRUSTED_DEVICE_TTL_SECONDS,
+} from '@/lib/auth/trustedDevice'
 import { logAuthEvent } from '@/lib/auth/auditLog'
 import { PENDING_2FA_COOKIE } from '@/lib/auth/constants'
 import { getClientIp, ipOrNull } from '@/lib/auth/rateLimit'
@@ -24,6 +29,7 @@ const verifySchema = z
       .regex(/^\d{6}$/)
       .optional(),
     linkToken: z.string().min(1).optional(),
+    rememberDevice: z.boolean().optional(),
   })
   .refine(v => !!v.code || !!v.linkToken, { message: 'code or linkToken is required' })
 
@@ -33,7 +39,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { code, linkToken } = verifySchema.parse(body)
+    const { code, linkToken, rememberDevice } = verifySchema.parse(body)
 
     const result = linkToken
       ? await verifyLoginChallengeByLinkToken(linkToken)
@@ -84,6 +90,18 @@ export async function POST(request: NextRequest) {
     if (finalizeError) throw finalizeError
 
     cookies().delete(PENDING_2FA_COOKIE)
+
+    if (rememberDevice) {
+      const deviceToken = await createTrustedDevice({ userId, ip, userAgent })
+      cookies().set(TRUSTED_DEVICE_COOKIE, deviceToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: TRUSTED_DEVICE_TTL_SECONDS,
+      })
+    }
+
     await service.from('users').update({ last_login_at: new Date().toISOString() }).eq('id', userId)
     await logAuthEvent({ userId, eventType: '2fa_verify_success', ip, userAgent })
     await logAuthEvent({ userId, eventType: 'login_success', ip, userAgent })

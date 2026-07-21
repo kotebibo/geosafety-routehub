@@ -51,6 +51,10 @@
     {
       "path": "/api/cron/bank-reconcile",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-auth",
+      "schedule": "30 2 * * *"
     }
   ],
   "redirects": [

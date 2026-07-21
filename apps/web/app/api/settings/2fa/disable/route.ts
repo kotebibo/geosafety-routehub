@@ -12,6 +12,7 @@ import { z } from 'zod'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createNonPersistingClient } from '@/lib/supabase/server'
 import { logAuthEvent } from '@/lib/auth/auditLog'
+import { revokeTrustedDevicesForUser } from '@/lib/auth/trustedDevice'
 import { checkAuthRateLimit, getClientIp, ipOrNull, LOGIN_RATE_LIMIT } from '@/lib/auth/rateLimit'
 
 const disableSchema = z.object({
@@ -62,6 +63,8 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
     if (error) throw error
 
+    // Trusted devices only exist to skip a 2FA that no longer applies.
+    await revokeTrustedDevicesForUser(user.id)
     await logAuthEvent({ userId: user.id, eventType: '2fa_disabled', ip, userAgent })
 
     return NextResponse.json({ status: 'ok' })

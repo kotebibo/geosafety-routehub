@@ -4,8 +4,15 @@ import { NextRequest } from 'next/server'
 const USER_ID = 'a1b2c3d4-e5f6-4a7b-8c9d-e0f1a2b3c4d5'
 
 const mockCookieSet = vi.fn()
+const mockCookieGet = vi.fn()
 vi.mock('next/headers', () => ({
-  cookies: () => ({ set: mockCookieSet }),
+  cookies: () => ({ set: mockCookieSet, get: mockCookieGet }),
+}))
+
+const mockIsTrustedDevice = vi.fn()
+vi.mock('@/lib/auth/trustedDevice', () => ({
+  TRUSTED_DEVICE_COOKIE: 'trusted_device',
+  isTrustedDevice: (...args: any[]) => mockIsTrustedDevice(...args),
 }))
 
 const mockCheckAuthRateLimit = vi.fn()
@@ -51,8 +58,10 @@ vi.mock('@/lib/auth/auditLog', () => ({
 }))
 
 const mockSendTwoFactorEmail = vi.fn()
+const mockSendLockoutEmail = vi.fn()
 vi.mock('@/lib/email', () => ({
   sendTwoFactorEmail: (...args: any[]) => mockSendTwoFactorEmail(...args),
+  sendLockoutEmail: (...args: any[]) => mockSendLockoutEmail(...args),
 }))
 
 import { POST } from '../../../../app/api/auth/login/route'
@@ -70,6 +79,8 @@ describe('POST /api/auth/login', () => {
     vi.clearAllMocks()
     mockCheckAuthRateLimit.mockResolvedValue({ allowed: true, retryAfterSeconds: 0 })
     mockUsersUpdate.mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) })
+    mockCookieGet.mockReturnValue(undefined)
+    mockIsTrustedDevice.mockResolvedValue(false)
   })
 
   it('returns 400 for an invalid body', async () => {

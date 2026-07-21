@@ -7,6 +7,10 @@ import { useTranslations } from 'next-intl'
 import { getSupabase } from '@/lib/supabase'
 import { Lock, AlertCircle, CheckCircle, Globe, Eye, EyeOff } from 'lucide-react'
 import { AuthSkeleton } from '@/features/auth/components/AuthSkeleton'
+import {
+  PasswordStrengthMeter,
+  isPasswordPolicyMet,
+} from '@/features/auth/components/PasswordStrengthMeter'
 
 type SessionState = 'checking' | 'ready' | 'missing'
 
@@ -48,8 +52,10 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setError('')
 
-    if (password.length < 6) {
-      setError(t('reset.tooShort'))
+    // Same policy as signup (passwordSchema) — also enforced server-side by
+    // /api/auth/recovery/complete.
+    if (!isPasswordPolicyMet(password)) {
+      setError(t('reset.policyNotMet'))
       return
     }
 
@@ -60,25 +66,42 @@ export default function ResetPasswordPage() {
 
     setLoading(true)
     try {
-      const supabase = getSupabase()
-      const { error } = await supabase.auth.updateUser({ password })
+      // The server route validates the policy, updates the password, writes
+      // the audit event, emails a "password changed" notice, revokes trusted
+      // 2FA devices, and globally signs out — so the recovery session dies
+      // and any session an attacker holds on the old password is revoked.
+      const response = await fetch('/api/auth/recovery/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      const data = await response.json()
 
-      if (error) throw error
-      // The recovery session must not survive the reset — otherwise "back to
-      // login" lands the user in the app without ever entering the new
-      // password (and skips the 2FA login flow). Global scope also revokes
-      // any other sessions an attacker might hold on the old password.
-      await supabase.auth.signOut({ scope: 'global' }).catch(() => {})
-      setSuccess(true)
-    } catch (err: any) {
-      const msg = String(err?.message || '')
-      if (msg.includes('different from the old password')) {
-        setError(t('reset.samePassword'))
-      } else if (msg.includes('session missing') || msg.includes('not authenticated')) {
-        setError(t('reset.invalidLink'))
-      } else {
-        setError(t('reset.error'))
+      if (!response.ok) {
+        const msg = String(data?.error || '')
+        if (msg.includes('different from the old password')) {
+          setError(t('reset.samePassword'))
+        } else if (
+          response.status === 401 ||
+          msg.includes('session missing') ||
+          msg.includes('not authenticated')
+        ) {
+          setError(t('reset.invalidLink'))
+        } else if (msg === 'Validation failed') {
+          setError(t('reset.policyNotMet'))
+        } else {
+          setError(t('reset.error'))
+        }
+        return
       }
+
+      // Server-side sign-out cleared the cookies; drop any client-held state too.
+      await getSupabase()
+        .auth.signOut({ scope: 'local' })
+        .catch(() => {})
+      setSuccess(true)
+    } catch {
+      setError(t('reset.error'))
     } finally {
       setLoading(false)
     }
@@ -108,9 +131,9 @@ export default function ResetPasswordPage() {
 
         {sessionState === 'missing' ? (
           <div className="space-y-6">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{t('reset.invalidLink')}</p>
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-500">{t('reset.invalidLink')}</p>
             </div>
             <Link
               href="/auth/login"
@@ -121,9 +144,9 @@ export default function ResetPasswordPage() {
           </div>
         ) : success ? (
           <div className="space-y-6">
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-green-800">{t('reset.success')}</p>
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-green-500">{t('reset.success')}</p>
             </div>
             <Link
               href="/auth/login"
@@ -135,9 +158,9 @@ export default function ResetPasswordPage() {
         ) : (
           <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-red-800">{error}</p>
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-500">{error}</p>
               </div>
             )}
 
@@ -170,7 +193,7 @@ export default function ResetPasswordPage() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-text-tertiary">{t('login.minChars')}</p>
+                <PasswordStrengthMeter password={password} />
               </div>
 
               {/* Confirm Password */}

@@ -29,6 +29,7 @@ function LoginForm() {
   const [errorKey, setErrorKey] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [retryAfter, setRetryAfter] = useState(0)
 
   // Show session expired message if redirected from expired session
   useEffect(() => {
@@ -37,6 +38,24 @@ function LoginForm() {
       sessionStorage.removeItem('routehub-session-expired')
     }
   }, [])
+
+  // Tick the lockout countdown down once per second; clear the error with it.
+  useEffect(() => {
+    if (retryAfter <= 0) return
+    const timer = setTimeout(() => {
+      setRetryAfter(s => {
+        if (s <= 1) setErrorKey(current => (current === 'login.tooManyAttempts' ? null : current))
+        return s - 1
+      })
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [retryAfter])
+
+  const formatCountdown = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+    return `${minutes}:${String(seconds).padStart(2, '0')}`
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,6 +73,7 @@ function LoginForm() {
       if (error) {
         if (error.retryAfterSeconds) {
           setErrorKey('login.tooManyAttempts')
+          setRetryAfter(error.retryAfterSeconds)
         } else if (
           error.message?.includes('Invalid credentials') ||
           error.message?.includes('Invalid login credentials')
@@ -103,9 +123,16 @@ function LoginForm() {
         <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
           {/* Error Message */}
           {errorKey && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800">{t(errorKey)}</p>
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-red-500">
+                <p>{t(errorKey)}</p>
+                {retryAfter > 0 && (
+                  <p className="mt-1 font-medium">
+                    {t('login.lockedRetryIn', { time: formatCountdown(retryAfter) })}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -170,7 +197,7 @@ function LoginForm() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || retryAfter > 0}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-monday-primary text-white font-medium rounded-lg hover:bg-monday-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-monday-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <LogIn className="w-5 h-5" />

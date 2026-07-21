@@ -12,6 +12,7 @@ import { z } from 'zod'
 import { requireAdmin } from '@/middleware/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { logAuthEvent } from '@/lib/auth/auditLog'
+import { revokeTrustedDevicesForUser } from '@/lib/auth/trustedDevice'
 import { sendEmail } from '@/lib/email'
 import { getClientIp, ipOrNull } from '@/lib/auth/rateLimit'
 
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
       .eq('id', userId)
     if (error) throw error
 
+    await revokeTrustedDevicesForUser(userId)
     await logAuthEvent({
       userId,
       eventType: '2fa_disabled_by_admin',

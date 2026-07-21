@@ -2221,6 +2221,39 @@ export type Database = {
         }
         Relationships: []
       }
+      trusted_devices: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          ip: string | null
+          last_used_at: string | null
+          token_hash: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          ip?: string | null
+          last_used_at?: string | null
+          token_hash: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          ip?: string | null
+          last_used_at?: string | null
+          token_hash?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -2700,6 +2733,17 @@ export type Database = {
         Returns: {
           allowed: boolean
           retry_after_seconds: number
+        }[]
+      }
+      cleanup_auth_challenges: {
+        Args: {
+          p_challenge_retention_hours?: number
+          p_rate_limit_retention_hours?: number
+        }
+        Returns: {
+          deleted_challenges: number
+          deleted_rate_limits: number
+          deleted_trusted_devices: number
         }[]
       }
       cleanup_stale_presence: { Args: never; Returns: undefined }

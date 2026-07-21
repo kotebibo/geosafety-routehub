@@ -12,6 +12,9 @@ export type AuthEventType =
   | '2fa_enabled'
   | '2fa_disabled'
   | '2fa_disabled_by_admin'
+  | '2fa_trusted_device_used'
+  | 'password_reset_requested'
+  | 'password_reset_completed'
 
 export async function logAuthEvent(params: {
   userId?: string | null
