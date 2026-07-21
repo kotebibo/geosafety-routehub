@@ -1627,7 +1627,8 @@
       "unmatchedPayments": "How many unmatched payments are there?",
       "monthlyRevenue": "How much was this month's revenue?",
       "debtors": "Who are the bad payers?",
-      "unpaidInvoices": "How many invoices are unpaid this month?"
+      "unpaidInvoices": "How many invoices are unpaid this month?",
+      "revenueTrend": "Show me the last 6 months' revenue as a chart"
     },
     "tools": {
       "findCompany": "Find company",
@@ -1662,7 +1663,10 @@
       "noResults": "Nothing found"
     },
     "stop": "Stop generating",
-    "thinking": "Thinking..."
+    "thinking": "Thinking...",
+    "chart": {
+      "invalid": "Chart data could not be rendered"
+    }
   },
   "news": {
     "toast": {

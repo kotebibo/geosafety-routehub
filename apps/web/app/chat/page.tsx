@@ -1,11 +1,11 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { useState, useRef, useEffect, useCallback, type ReactNode } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo, memo, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslations } from 'next-intl'
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown, { type Components } from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { useAuth } from '@/contexts/AuthContext'
 import {
@@ -29,6 +29,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChatSkeleton } from '@/features/chat/components/ChatSkeleton'
+import { ChatChart } from '@/features/chat/components/ChatChart'
 import { boardCrudService } from '@/features/boards/services/board-crud.service'
 import { workspaceService } from '@/features/workspaces/services/workspace.service'
 import type { UIMessage } from 'ai'
@@ -37,9 +38,9 @@ const SUGGESTED_QUESTION_KEYS = [
   'chat.suggestions.monthlyRevenue',
   'chat.suggestions.debtors',
   'chat.suggestions.unpaidInvoices',
+  'chat.suggestions.revenueTrend',
   'chat.suggestions.activeCompanies',
   'chat.suggestions.specialistBoards',
-  'chat.suggestions.bankTransactions',
 ] as const
 
 const TOOL_FRIENDLY_NAME_KEYS: Record<string, string> = {
@@ -82,50 +83,86 @@ interface AttachOption {
   detail?: string
 }
 
-function MarkdownContent({ text }: { text: string }) {
+/** True when a fenced code block's language is `chart` (the AI chart protocol). */
+function isChartCode(className?: string): boolean {
+  return !!className?.split(' ').includes('language-chart')
+}
+
+const REMARK_PLUGINS = [remarkGfm]
+
+// Memoized, with a stable `components` object: recreating the renderers on
+// every parent re-render (e.g. each keystroke in the input) would make React
+// treat them as new component types and remount the whole tree — charts
+// included, replaying their animations.
+const MarkdownContent = memo(function MarkdownContent({
+  text,
+  streaming,
+}: {
+  text: string
+  streaming?: boolean
+}) {
+  const components = useMemo<Components>(
+    () => ({
+      a: ({ href, children }) =>
+        href?.startsWith('/') ? (
+          <Link href={href} className="text-monday-primary underline hover:opacity-80">
+            {children}
+          </Link>
+        ) : (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-monday-primary underline hover:opacity-80"
+          >
+            {children}
+          </a>
+        ),
+      table: ({ children }) => (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-xs">{children}</table>
+        </div>
+      ),
+      th: ({ children }) => (
+        <th className="border border-border-light bg-bg-primary px-2 py-1 text-left font-medium">
+          {children}
+        </th>
+      ),
+      td: ({ children }) => <td className="border border-border-light px-2 py-1">{children}</td>,
+      pre: ({ node, children }) => {
+        // Chart blocks render as a widget, not preformatted text — unwrap
+        // the <pre> so recharts' divs aren't nested inside it.
+        const codeChild = node?.children?.[0]
+        if (
+          codeChild?.type === 'element' &&
+          Array.isArray(codeChild.properties?.className) &&
+          codeChild.properties.className.includes('language-chart')
+        ) {
+          return <>{children}</>
+        }
+        return (
+          <pre className="overflow-x-auto rounded-md bg-bg-primary p-2.5 text-xs">{children}</pre>
+        )
+      },
+      code: ({ className, children }) => {
+        if (isChartCode(className)) {
+          const source = Array.isArray(children) ? children.join('') : String(children ?? '')
+          return <ChatChart source={source} streaming={streaming} />
+        }
+        return <code className="rounded bg-bg-primary px-1 py-0.5 text-xs">{children}</code>
+      },
+    }),
+    [streaming]
+  )
+
   return (
     <div className="chat-markdown space-y-2 leading-relaxed [&_li]:ml-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_ul]:list-disc [&_ul]:pl-4">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
-        components={{
-          a: ({ href, children }) =>
-            href?.startsWith('/') ? (
-              <Link href={href} className="text-monday-primary underline hover:opacity-80">
-                {children}
-              </Link>
-            ) : (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-monday-primary underline hover:opacity-80"
-              >
-                {children}
-              </a>
-            ),
-          table: ({ children }) => (
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-xs">{children}</table>
-            </div>
-          ),
-          th: ({ children }) => (
-            <th className="border border-border-light bg-bg-primary px-2 py-1 text-left font-medium">
-              {children}
-            </th>
-          ),
-          td: ({ children }) => (
-            <td className="border border-border-light px-2 py-1">{children}</td>
-          ),
-          code: ({ children }) => (
-            <code className="rounded bg-bg-primary px-1 py-0.5 text-xs">{children}</code>
-          ),
-        }}
-      >
+      <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
         {text}
       </ReactMarkdown>
     </div>
   )
-}
+})
 
 interface ToolCallDisplayProps {
   toolName: string
@@ -217,13 +254,13 @@ function MessageAttachments({ message }: { message: UIMessage }) {
   )
 }
 
-function MessageContent({ message }: { message: UIMessage }) {
+function MessageContent({ message, streaming }: { message: UIMessage; streaming?: boolean }) {
   return (
     <>
       {message.parts.map((part, i) => {
         if (part.type === 'text') {
           return message.role === 'assistant' ? (
-            <MarkdownContent key={i} text={part.text} />
+            <MarkdownContent key={i} text={part.text} streaming={streaming} />
           ) : (
             <div key={i} className="whitespace-pre-wrap leading-relaxed">
               {part.text}
@@ -690,7 +727,10 @@ export default function ChatPage() {
                       )}
                     >
                       {message.role === 'user' && <MessageAttachments message={message} />}
-                      <MessageContent message={message} />
+                      <MessageContent
+                        message={message}
+                        streaming={isLoading && message.id === messages[messages.length - 1]?.id}
+                      />
                     </div>
                     {message.role === 'user' && (
                       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-bg-tertiary">
