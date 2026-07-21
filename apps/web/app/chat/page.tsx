@@ -26,6 +26,7 @@ import {
   LayoutGrid,
   FolderKanban,
   ArrowLeft,
+  History,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChatSkeleton } from '@/features/chat/components/ChatSkeleton'
@@ -200,6 +201,86 @@ function ToolCallDisplay({ toolName, input, output }: ToolCallDisplayProps) {
         </pre>
       )}
     </div>
+  )
+}
+
+interface ConversationListProps {
+  conversations: Conversation[]
+  activeId: string
+  onOpen: (id: string) => void
+  onDelete: (id: string) => void
+  onNewChat: () => void
+  /** When set, shows a close button (used inside the mobile drawer). */
+  onClose?: () => void
+}
+
+/** Conversation history list — shared by the desktop sidebar and mobile drawer. */
+function ConversationList({
+  conversations,
+  activeId,
+  onOpen,
+  onDelete,
+  onNewChat,
+  onClose,
+}: ConversationListProps) {
+  const t = useTranslations()
+  return (
+    <>
+      <div className="flex items-center justify-between px-4 py-3">
+        <span className="text-sm font-medium text-text-primary">{t('chat.history.title')}</span>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onNewChat}
+            title={t('chat.header.newChat')}
+            className="rounded-md p-1.5 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+          >
+            <SquarePen className="h-4 w-4" />
+          </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              title={t('common.close')}
+              className="rounded-md p-1.5 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
+        {conversations.length === 0 ? (
+          <p className="px-2 py-4 text-xs text-text-tertiary">{t('chat.history.empty')}</p>
+        ) : (
+          conversations.map(conversation => (
+            <div
+              key={conversation.id}
+              className={cn(
+                'group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm',
+                conversation.id === activeId
+                  ? 'bg-monday-primary/10 text-text-primary'
+                  : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
+              )}
+            >
+              <button
+                onClick={() => onOpen(conversation.id)}
+                className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left"
+              >
+                <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{conversation.title || '…'}</span>
+              </button>
+              {/* Touch screens have no hover — keep delete visible below md. */}
+              <button
+                onClick={() => onDelete(conversation.id)}
+                title={t('chat.history.delete')}
+                className="shrink-0 rounded p-1.5 text-text-tertiary hover:text-red-500 md:hidden md:group-hover:block"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </>
   )
 }
 
@@ -494,6 +575,7 @@ export default function ChatPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [attachMenuOpen, setAttachMenuOpen] = useState(false)
   const [loadingConversation, setLoadingConversation] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   const { messages, sendMessage, status, setMessages, stop } = useChat()
 
@@ -534,6 +616,16 @@ export default function ChatPage() {
       fetchConversations()
     }
   }, [status, messages.length, fetchConversations])
+
+  // Close the mobile history drawer with Escape.
+  useEffect(() => {
+    if (!historyOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setHistoryOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [historyOpen])
 
   // Close the attach menu on outside click.
   useEffect(() => {
@@ -614,57 +706,60 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full bg-bg-primary">
-      {/* Conversation history */}
+      {/* Conversation history — desktop sidebar */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-border-light md:flex">
-        <div className="flex items-center justify-between px-4 py-3">
-          <span className="text-sm font-medium text-text-primary">{t('chat.history.title')}</span>
-          <button
-            onClick={handleNewChat}
-            title={t('chat.header.newChat')}
-            className="rounded-md p-1.5 text-text-secondary hover:bg-bg-hover hover:text-text-primary"
-          >
-            <SquarePen className="h-4 w-4" />
-          </button>
-        </div>
-        <div className="flex-1 space-y-0.5 overflow-y-auto px-2 pb-2">
-          {conversations.length === 0 ? (
-            <p className="px-2 py-4 text-xs text-text-tertiary">{t('chat.history.empty')}</p>
-          ) : (
-            conversations.map(conversation => (
-              <div
-                key={conversation.id}
-                className={cn(
-                  'group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm',
-                  conversation.id === conversationId
-                    ? 'bg-monday-primary/10 text-text-primary'
-                    : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
-                )}
-              >
-                <button
-                  onClick={() => handleOpenConversation(conversation.id)}
-                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
-                >
-                  <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-                  <span className="truncate">{conversation.title || '…'}</span>
-                </button>
-                <button
-                  onClick={() => handleDeleteConversation(conversation.id)}
-                  title={t('chat.history.delete')}
-                  className="hidden shrink-0 rounded p-1 text-text-tertiary hover:text-red-500 group-hover:block"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))
-          )}
-        </div>
+        <ConversationList
+          conversations={conversations}
+          activeId={conversationId}
+          onOpen={handleOpenConversation}
+          onDelete={handleDeleteConversation}
+          onNewChat={handleNewChat}
+        />
+      </aside>
+
+      {/* Conversation history — mobile drawer */}
+      <div
+        className={cn(
+          'fixed inset-0 z-40 bg-black/40 transition-opacity duration-200 md:hidden',
+          historyOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+        )}
+        onClick={() => setHistoryOpen(false)}
+      />
+      <aside
+        className={cn(
+          'fixed inset-y-0 left-0 z-50 flex w-72 max-w-[85vw] flex-col border-r border-border-light bg-bg-primary shadow-xl transition-transform duration-200 md:hidden',
+          historyOpen ? 'translate-x-0' : '-translate-x-full'
+        )}
+      >
+        <ConversationList
+          conversations={conversations}
+          activeId={conversationId}
+          onOpen={id => {
+            setHistoryOpen(false)
+            handleOpenConversation(id)
+          }}
+          onDelete={handleDeleteConversation}
+          onNewChat={() => {
+            setHistoryOpen(false)
+            handleNewChat()
+          }}
+          onClose={() => setHistoryOpen(false)}
+        />
       </aside>
 
       {/* Chat column */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Header */}
-        <div className="border-b border-border-light bg-bg-primary px-6 py-4">
+        <div className="border-b border-border-light bg-bg-primary px-4 py-4 md:px-6">
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setHistoryOpen(true)}
+              title={t('chat.history.title')}
+              className="-ml-1 rounded-md p-2 text-text-secondary hover:bg-bg-hover hover:text-text-primary md:hidden"
+            >
+              <History className="h-5 w-5" />
+            </button>
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-monday-primary/10">
               <Bot className="h-5 w-5 text-monday-primary" />
             </div>
@@ -676,7 +771,7 @@ export default function ChatPage() {
         </div>
 
         {/* Messages */}
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4">
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 md:px-6">
           {loadingConversation ? (
             <div className="flex h-full items-center justify-center">
               <Loader2 className="h-5 w-5 animate-spin text-text-tertiary" />
@@ -749,7 +844,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input */}
-        <div className="border-t border-border-light bg-bg-primary px-6 py-4">
+        <div className="border-t border-border-light bg-bg-primary px-4 py-3 md:px-6 md:py-4">
           <div className="mx-auto max-w-3xl">
             {attachments.length > 0 && (
               <div className="mb-2 flex flex-wrap gap-1.5">
