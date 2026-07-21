@@ -124,7 +124,7 @@ export default function RouteAnalyticsPage() {
             value={priceInput}
             onChange={e => setPriceInput(e.target.value)}
             placeholder="0.00"
-            className="w-24 px-3 py-1.5 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary"
+            className="w-24 px-3 py-1.5 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           />
           <span className="text-sm text-text-tertiary">{t('routeAnalytics.perLiter')}</span>
           <button
