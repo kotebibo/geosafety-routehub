@@ -96,6 +96,10 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const [geoProgress, setGeoProgress] = useState({ done: 0, total: 0 })
   const [mapDayKey, setMapDayKey] = useState<string | null>(null)
   const [addingUnplanned, setAddingUnplanned] = useState(false)
+  // Ad-hoc extra visits: each is its own home→object route, numbered in add order.
+  const [extraVisits, setExtraVisits] = useState<
+    { itemId: string; name: string; km: number | null; loading: boolean }[]
+  >([])
 
   const monday = useMemo(() => mondayOf(weekOffset), [weekOffset])
   const days = useMemo(() => weekDays(monday), [monday])
@@ -340,27 +344,46 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const todayKey = dayKey(new Date())
   const todayIndex = days.findIndex(d => dayKey(d) === todayKey)
   const assignedThisWeek = useMemo(() => new Set(Object.values(assignments).flat()), [assignments])
+  const extraIds = useMemo(() => new Set(extraVisits.map(e => e.itemId)), [extraVisits])
   const unplannedCandidates = useMemo(
-    () => items.filter(ri => !assignedThisWeek.has(ri.item.id)),
-    [items, assignedThisWeek]
+    () => items.filter(ri => !assignedThisWeek.has(ri.item.id) && !extraIds.has(ri.item.id)),
+    [items, assignedThisWeek, extraIds]
   )
-  const addUnplannedVisit = (itemId: string) => {
-    if (todayIndex < 0) return
-    dirtyRef.current = weekStartKey
-    setAssignments(prev => {
-      const next = { ...prev }
-      for (const k of Object.keys(next)) next[k] = next[k].filter(id => id !== itemId)
-      next[todayKey] = [...(next[todayKey] || []), itemId]
-      return next
-    })
-    setDayResults(prev => {
-      const n = { ...prev }
-      delete n[todayKey]
-      return n
-    })
-    setSelectedDay(todayIndex)
+  // Add an extra (unplanned) visit as its own entry, with a route computed from
+  // the officer's start to that object. Kept separate from the planned days.
+  const addExtraVisit = async (itemId: string) => {
+    if (extraVisits.some(e => e.itemId === itemId)) {
+      setAddingUnplanned(false)
+      return
+    }
+    const name = nameOf(itemId)
+    setExtraVisits(prev => [...prev, { itemId, name, km: null, loading: true }])
     setAddingUnplanned(false)
+
+    const dest = coordsOf(itemId)
+    let km: number | null = null
+    if (start && dest) {
+      try {
+        const res = await fetch('/api/routing/route-geometry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            locations: [
+              { lat: start.lat, lng: start.lng },
+              { lat: dest.lat, lng: dest.lng },
+            ],
+          }),
+        })
+        if (res.ok) km = (await res.json()).distanceKm ?? null
+      } catch {
+        // leave km null — distance unavailable
+      }
+    }
+    setExtraVisits(prev => prev.map(e => (e.itemId === itemId ? { ...e, km, loading: false } : e)))
   }
+
+  const removeExtraVisit = (itemId: string) =>
+    setExtraVisits(prev => prev.filter(e => e.itemId !== itemId))
 
   const plannedDays = days.filter(d => (assignments[dayKey(d)] || []).length > 0)
   const totalCompanies = days.reduce((s, d) => s + (assignments[dayKey(d)] || []).length, 0)
@@ -611,9 +634,7 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                       <span className="text-sm font-semibold text-text-primary">
                         {t('routing.unplannedVisits')}
                       </span>
-                      <span className="text-xs text-text-tertiary">
-                        {execution.unplannedVisits.length}
-                      </span>
+                      <span className="text-xs text-text-tertiary">{extraVisits.length}</span>
                       {/* Ad-hoc add — current week only */}
                       {isCurrentWeek && todayIndex >= 0 && (
                         <button
@@ -629,7 +650,7 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                     {addingUnplanned && (
                       <select
                         defaultValue=""
-                        onChange={e => e.target.value && addUnplannedVisit(e.target.value)}
+                        onChange={e => e.target.value && addExtraVisit(e.target.value)}
                         className="w-full mb-2 px-2 py-1.5 rounded-lg border border-border-light bg-bg-primary text-xs text-text-primary"
                       >
                         <option value="" disabled>
@@ -642,21 +663,32 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                         ))}
                       </select>
                     )}
-                    {execution.unplannedVisits.length === 0 ? (
+                    {extraVisits.length === 0 ? (
                       <p className="text-xs text-text-tertiary py-1">
                         {t('routing.noUnplannedVisits')}
                       </p>
                     ) : (
                       <div className="space-y-1">
-                        {execution.unplannedVisits.map(v => (
-                          <div key={v.boardItemId} className="flex items-center gap-2 text-xs">
-                            <MapPin className="w-3 h-3 text-orange-500 flex-shrink-0" />
-                            <span className="flex-1 truncate text-text-primary">
-                              {v.name || t('routing.unknownStop')}
+                        {extraVisits.map((e, i) => (
+                          <div key={e.itemId} className="flex items-center gap-2 text-xs">
+                            <span className="w-4 h-4 rounded-full bg-orange-500 text-white text-[9px] font-bold flex items-center justify-center flex-shrink-0">
+                              {i + 1}
                             </span>
+                            <span className="flex-1 truncate text-text-primary">{e.name}</span>
                             <span className="text-[11px] text-text-tertiary flex-shrink-0">
-                              {fmtDate(v.date)}
+                              {e.loading
+                                ? '…'
+                                : e.km != null
+                                  ? `${e.km.toFixed(1)} ${t('routing.km')}`
+                                  : '—'}
                             </span>
+                            <button
+                              type="button"
+                              onClick={() => removeExtraVisit(e.itemId)}
+                              className="text-text-tertiary hover:text-red-500 flex-shrink-0"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
                           </div>
                         ))}
                       </div>
