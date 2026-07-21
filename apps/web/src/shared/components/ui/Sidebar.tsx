@@ -873,7 +873,9 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       href: '/chat',
       labelKey: 'nav.assistant',
       icon: Bot,
-      permission: 'pages:payments',
+      // Admin-only: reuse the admin-scoped user_management permission (same
+      // pattern as /admin/route-analytics) — the AI assistant is admin-only.
+      permission: 'pages:user_management',
     },
     {
       href: '/admin/users',

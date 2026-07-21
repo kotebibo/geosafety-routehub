@@ -1624,7 +1624,10 @@
       "haccpItems": "HACCP ბორდზე რამდენი ჩანაწერია?",
       "bankTransactions": "ბოლო ბანკის ტრანზაქციები მაჩვენე",
       "anaSanadzeClients": "ანა სანაძის კლიენტები მაჩვენე",
-      "unmatchedPayments": "რამდენი შეუთანხმებელი გადახდაა?"
+      "unmatchedPayments": "რამდენი შეუთანხმებელი გადახდაა?",
+      "monthlyRevenue": "რამდენი იყო ამ თვის შემოსავალი?",
+      "debtors": "ვინ არიან ცუდი გადამხდელები?",
+      "unpaidInvoices": "რამდენი ინვოისია გადაუხდელი ამ თვეში?"
     },
     "tools": {
       "findCompany": "კომპანიის ძიება",
@@ -1637,8 +1640,29 @@
       "listInspectors": "სპეციალისტები",
       "getSpecialistWorkload": "სპეციალისტის დატვირთვა",
       "getServiceTypes": "სერვისის ტიპები",
-      "searchBoardItems": "ჩანაწერების ძიება"
-    }
+      "searchBoardItems": "ჩანაწერების ძიება",
+      "findBoard": "ბორდის ძიება",
+      "getBoardDetails": "ბორდის დეტალები",
+      "getRevenueSummary": "შემოსავლების მიმოხილვა",
+      "getDebtors": "დავალიანებების ანალიზი",
+      "getUnpaidInvoices": "გადაუხდელი ინვოისები",
+      "getCompanyFinancials": "კომპანიის ფინანსები",
+      "getExpiringContracts": "ვადის ამოწურვის ხელშეკრულებები"
+    },
+    "history": {
+      "title": "ჩატები",
+      "empty": "ჯერ არ გაქვთ შენახული ჩატები",
+      "delete": "ჩატის წაშლა"
+    },
+    "attach": {
+      "label": "მონაცემების მიმაგრება",
+      "board": "ბორდის მიმაგრება",
+      "workspace": "სამუშაო სივრცის მიმაგრება",
+      "searchPlaceholder": "ძიება...",
+      "noResults": "ვერაფერი მოიძებნა"
+    },
+    "stop": "გენერაციის შეჩერება",
+    "thinking": "ფიქრობს..."
   },
   "news": {
     "toast": {

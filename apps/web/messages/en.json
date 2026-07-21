@@ -1624,7 +1624,10 @@
       "haccpItems": "How many items are on the HACCP board?",
       "bankTransactions": "Show me the latest bank transactions",
       "anaSanadzeClients": "Show me Ana Sanadze's clients",
-      "unmatchedPayments": "How many unmatched payments are there?"
+      "unmatchedPayments": "How many unmatched payments are there?",
+      "monthlyRevenue": "How much was this month's revenue?",
+      "debtors": "Who are the bad payers?",
+      "unpaidInvoices": "How many invoices are unpaid this month?"
     },
     "tools": {
       "findCompany": "Find company",
@@ -1637,8 +1640,29 @@
       "listInspectors": "Specialists",
       "getSpecialistWorkload": "Specialist workload",
       "getServiceTypes": "Service types",
-      "searchBoardItems": "Search items"
-    }
+      "searchBoardItems": "Search items",
+      "findBoard": "Find board",
+      "getBoardDetails": "Board details",
+      "getRevenueSummary": "Revenue summary",
+      "getDebtors": "Debtor analysis",
+      "getUnpaidInvoices": "Unpaid invoices",
+      "getCompanyFinancials": "Company financials",
+      "getExpiringContracts": "Expiring contracts"
+    },
+    "history": {
+      "title": "Chats",
+      "empty": "No saved chats yet",
+      "delete": "Delete chat"
+    },
+    "attach": {
+      "label": "Attach data",
+      "board": "Attach board",
+      "workspace": "Attach workspace",
+      "searchPlaceholder": "Search...",
+      "noResults": "Nothing found"
+    },
+    "stop": "Stop generating",
+    "thinking": "Thinking..."
   },
   "news": {
     "toast": {
