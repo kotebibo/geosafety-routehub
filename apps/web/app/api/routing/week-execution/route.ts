@@ -66,30 +66,46 @@ export async function GET(request: NextRequest) {
       .gte('created_at', start.toISOString())
       .lt('created_at', endExclusive.toISOString())
       .order('created_at', { ascending: true })
-    const visitedByItem = new Map<string, string>()
-    for (const c of checkins || [])
-      if (c.board_item_id && boardItemIds.has(c.board_item_id))
-        visitedByItem.set(c.board_item_id, c.created_at)
+    // Georgia (UTC+4) local day of a timestamp.
+    const georgiaDay = (iso: string) =>
+      new Date(new Date(iso).getTime() + 4 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    // "Now" in the Georgia frame (as if UTC) — used for the 21:00 cutoff below.
+    const georgiaNowIso = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString()
 
-    // Unplanned: visited this week but not on the plan.
-    const unplannedVisits = [...visitedByItem.entries()]
-      .filter(([itemId]) => !plannedByItem.has(itemId))
-      .map(([itemId, at]) => ({
+    const visitedItems = new Set<string>() // any check-in this week
+    const visitDayByItem = new Map<string, string>() // first visit day (unplanned display)
+    const checkinOnDay = new Set<string>() // `${itemId}|${georgiaDay}`
+    for (const c of checkins || []) {
+      if (!c.board_item_id || !boardItemIds.has(c.board_item_id) || !c.created_at) continue
+      const day = georgiaDay(c.created_at)
+      if (!visitedItems.has(c.board_item_id)) visitDayByItem.set(c.board_item_id, day)
+      visitedItems.add(c.board_item_id)
+      checkinOnDay.add(`${c.board_item_id}|${day}`)
+    }
+
+    // Unplanned: visited this week on an item that wasn't in the plan at all.
+    const unplannedVisits = [...visitedItems]
+      .filter(itemId => !plannedByItem.has(itemId))
+      .map(itemId => ({
         boardItemId: itemId,
         name: nameById.get(itemId) ?? null,
-        date: at.slice(0, 10),
+        date: visitDayByItem.get(itemId) ?? '',
       }))
 
-    // Missed: planned this week but not visited (and not marked done).
+    // Deviation: a planned stop not visited on its planned day, once that day's
+    // 21:00 (Georgia) has passed. A late (next-day) check-in leaves it here — it
+    // stays a deviation for the record, since the planned day was missed.
     const missedPlanned = [...plannedByItem.entries()]
-      .filter(
-        ([itemId, p]) =>
-          !visitedByItem.has(itemId) && p.status !== 'completed' && p.status !== 'visited'
-      )
+      .filter(([itemId, p]) => {
+        if (p.status === 'completed' || p.status === 'visited') return false
+        if (checkinOnDay.has(`${itemId}|${p.date}`)) return false // visited on time
+        return georgiaNowIso >= `${p.date}T21:00:00.000Z` // past 21:00 of the planned day
+      })
       .map(([itemId, p]) => ({
         boardItemId: itemId,
         name: nameById.get(itemId) ?? null,
         date: p.date,
+        lateVisitedOn: visitedItems.has(itemId) ? (visitDayByItem.get(itemId) ?? null) : null,
       }))
       .sort((a, b) => a.date.localeCompare(b.date))
 

@@ -7,6 +7,8 @@ export interface WeekExecutionEntry {
   name: string | null
   /** YYYY-MM-DD — the visit date (unplanned) or the planned day (missed). */
   date: string
+  /** Set on a deviation that was visited late (a later day than planned). */
+  lateVisitedOn?: string | null
 }
 
 export interface WeekExecution {

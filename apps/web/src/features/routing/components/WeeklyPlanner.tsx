@@ -95,6 +95,7 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const [geocoding, setGeocoding] = useState(false)
   const [geoProgress, setGeoProgress] = useState({ done: 0, total: 0 })
   const [mapDayKey, setMapDayKey] = useState<string | null>(null)
+  const [addingUnplanned, setAddingUnplanned] = useState(false)
 
   const monday = useMemo(() => mondayOf(weekOffset), [weekOffset])
   const days = useMemo(() => weekDays(monday), [monday])
@@ -330,6 +331,35 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
     } finally {
       setSavingDay(null)
     }
+  }
+
+  // Mid-week ad-hoc visit: enabled only for the current week (weekOffset 0).
+  // Adds a board object to today's route so the officer can go + check in off
+  // the original plan; planning other weeks does not offer this.
+  const isCurrentWeek = weekOffset === 0
+  const todayKey = dayKey(new Date())
+  const todayIndex = days.findIndex(d => dayKey(d) === todayKey)
+  const assignedThisWeek = useMemo(() => new Set(Object.values(assignments).flat()), [assignments])
+  const unplannedCandidates = useMemo(
+    () => items.filter(ri => !assignedThisWeek.has(ri.item.id)),
+    [items, assignedThisWeek]
+  )
+  const addUnplannedVisit = (itemId: string) => {
+    if (todayIndex < 0) return
+    dirtyRef.current = weekStartKey
+    setAssignments(prev => {
+      const next = { ...prev }
+      for (const k of Object.keys(next)) next[k] = next[k].filter(id => id !== itemId)
+      next[todayKey] = [...(next[todayKey] || []), itemId]
+      return next
+    })
+    setDayResults(prev => {
+      const n = { ...prev }
+      delete n[todayKey]
+      return n
+    })
+    setSelectedDay(todayIndex)
+    setAddingUnplanned(false)
   }
 
   const plannedDays = days.filter(d => (assignments[dayKey(d)] || []).length > 0)
@@ -581,10 +611,37 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                       <span className="text-sm font-semibold text-text-primary">
                         {t('routing.unplannedVisits')}
                       </span>
-                      <span className="ml-auto text-xs text-text-tertiary">
+                      <span className="text-xs text-text-tertiary">
                         {execution.unplannedVisits.length}
                       </span>
+                      {/* Ad-hoc add — current week only */}
+                      {isCurrentWeek && todayIndex >= 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setAddingUnplanned(v => !v)}
+                          className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-orange-500/10 text-orange-500 border border-orange-500/30 hover:bg-orange-500/20 transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                          {t('routing.addVisit')}
+                        </button>
+                      )}
                     </div>
+                    {addingUnplanned && (
+                      <select
+                        defaultValue=""
+                        onChange={e => e.target.value && addUnplannedVisit(e.target.value)}
+                        className="w-full mb-2 px-2 py-1.5 rounded-lg border border-border-light bg-bg-primary text-xs text-text-primary"
+                      >
+                        <option value="" disabled>
+                          {t('routing.pickObject')}
+                        </option>
+                        {unplannedCandidates.map(ri => (
+                          <option key={ri.item.id} value={ri.item.id}>
+                            {ri.item.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                     {execution.unplannedVisits.length === 0 ? (
                       <p className="text-xs text-text-tertiary py-1">
                         {t('routing.noUnplannedVisits')}
@@ -627,6 +684,11 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                             <span className="flex-1 truncate text-text-primary">
                               {v.name || t('routing.unknownStop')}
                             </span>
+                            {v.lateVisitedOn && (
+                              <span className="text-[10px] font-medium text-amber-500 flex-shrink-0">
+                                {t('routing.visitedLate', { date: fmtDate(v.lateVisitedOn) })}
+                              </span>
+                            )}
                             <span className="text-[11px] text-text-tertiary flex-shrink-0">
                               {fmtDate(v.date)}
                             </span>
