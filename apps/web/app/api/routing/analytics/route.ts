@@ -76,7 +76,10 @@ export async function GET(request: NextRequest) {
       if (stops.length === 0) continue
       agg.days += 1
       agg.stopCount += stops.length
-      agg.visitedCount += stops.filter((s: any) => s.status === 'visited').length
+      // Done = 'completed' (the DB-valid state); 'visited' kept for any legacy rows.
+      agg.visitedCount += stops.filter(
+        (s: any) => s.status === 'completed' || s.status === 'visited'
+      ).length
       agg.totalKm += r.total_distance_km || 0
     }
 

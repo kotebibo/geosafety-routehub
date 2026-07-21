@@ -44,10 +44,13 @@ function georgiaToday(): string {
 // board_item_id (not route_stop_id), so resolve the stop through the officer's
 // route for today and persist the status so every surface (officer routes,
 // analytics counts, admin popup) sees it. Never throws — planning is optional.
+// route_stops.status is constrained to ('pending','in_progress','completed',
+// 'skipped','failed') — 'completed' is the done state (stopVisitState maps it to
+// green). We never write 'visited' (not an allowed value).
 async function markPlannedStop(
   inspectorId: string,
   boardItemId: string | null | undefined,
-  status: 'in_progress' | 'visited'
+  status: 'in_progress' | 'completed'
 ): Promise<void> {
   if (!boardItemId) return
   try {
@@ -425,12 +428,12 @@ export async function PATCH(request: NextRequest) {
 
     if (updateError) throw updateError
 
-    // Check-out marks the planned stop "visited" (green) + departure time.
+    // Check-out marks the planned stop done (green) + departure time.
     if ((checkin as any).route_stop_id) {
       await supabase
         .from('route_stops')
         .update({
-          status: 'visited',
+          status: 'completed',
           actual_departure_time: new Date().toTimeString().slice(0, 8),
         })
         .eq('id', (checkin as any).route_stop_id)
@@ -438,7 +441,7 @@ export async function PATCH(request: NextRequest) {
       await markPlannedStop(
         (checkin as any).inspector_id,
         (checkin as any).board_item_id,
-        'visited'
+        'completed'
       )
     }
 
