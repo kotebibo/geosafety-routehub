@@ -192,6 +192,30 @@ describe('parseCoordinatesList', () => {
     ])
   })
 
+  it('parses two query= URLs on ONE line (each link is a point)', () => {
+    const text =
+      'https://maps.google.com/?query=41.7151,44.8271 https://maps.google.com/?query=41.7300,44.8000'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.7151, lng: 44.8271 },
+      { lat: 41.73, lng: 44.8 },
+    ])
+  })
+
+  it('parses two @-style URLs on ONE line (each link is a point)', () => {
+    const text =
+      'https://www.google.com/maps/@41.7151,44.8271,17z https://www.google.com/maps/@41.7300,44.8000,17z'
+    expect(parseCoordinatesList(text)).toEqual([
+      { lat: 41.7151, lng: 44.8271 },
+      { lat: 41.73, lng: 44.8 },
+    ])
+  })
+
+  it('does not add a phantom point from the @ center of a full share URL', () => {
+    // One link carrying both query= (the pin) and @ (the map center, meters off)
+    const text = 'https://www.google.com/maps/place/X/@41.7160,44.8290,17z/?query=41.7151,44.8271'
+    expect(parseCoordinatesList(text)).toEqual([{ lat: 41.7151, lng: 44.8271 }])
+  })
+
   it('does not double-count a DMS block and its query= URL for the same entry', () => {
     // Real production format: DMS + query= URL describing one location, one line
     const text =
