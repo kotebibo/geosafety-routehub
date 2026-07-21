@@ -14,8 +14,10 @@ export function useCoordinateItems(options: UseCoordinateItemsOptions = {}) {
   const {
     data: allItems = [],
     isLoading,
+    isFetching,
     error,
     dataUpdatedAt,
+    refetch,
   } = useQuery({
     queryKey: ['coordinates-map', 'items'],
     queryFn: () => coordinatesMapService.getCoordinateItems(),
@@ -54,7 +56,9 @@ export function useCoordinateItems(options: UseCoordinateItemsOptions = {}) {
     allItems,
     inspectors,
     isLoading,
+    isFetching,
     error,
     lastUpdated: dataUpdatedAt ? new Date(dataUpdatedAt) : null,
+    refresh: refetch,
   }
 }

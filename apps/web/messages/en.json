@@ -2062,50 +2062,25 @@
     }
   },
   "coordinatesMap": {
-    "tabs": {
-      "coordinates": "Coordinates",
-      "comparison": "Comparison"
-    },
     "emptyCoordinates": "No coordinates found",
-    "emptyComparison": "No geocoded data found",
     "filterPanel": {
       "title": "Coordinates",
       "updatedAt": "Updated:",
       "searchPlaceholder": "Search...",
-      "inspectorLabel": "Inspector",
-      "allInspectors": "All ({count})"
+      "inspectorsTitle": "Inspectors",
+      "allInspectors": "All ({count})",
+      "itemsTitle": "Objects",
+      "noResults": "Nothing found",
+      "clearFilters": "Clear filters",
+      "refresh": "Refresh",
+      "hidePanel": "Hide panel",
+      "showPanel": "Show panel",
+      "pointsCount": "{count} points"
     },
     "map": {
       "idLabel": "ID:",
-      "googleMaps": "Google Maps"
-    },
-    "comparisonMap": {
-      "addressLabel": "Address:",
-      "skLabel": "ID:",
-      "gpsLabel": "GPS:",
-      "geocodedLabel": "Geocoded:",
-      "kmUnit": "km",
-      "legend": {
-        "title": "Legend",
-        "gpsCoordinate": "GPS coordinate",
-        "geocoded": "Geocoded"
-      },
-      "distance": {
-        "all": "All",
-        "close": "≤ 1 km",
-        "medium": "1–5 km",
-        "far": "> 5 km"
-      },
-      "filter": {
-        "title": "Filter",
-        "lines": "Lines"
-      },
-      "stats": {
-        "title": "Statistics",
-        "total": "Total:",
-        "average": "Average:",
-        "max": "Max:"
-      }
+      "googleMaps": "Google Maps",
+      "pointOf": "Point {index} of {total}"
     }
   },
   "errorPage": {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useTranslations } from 'next-intl'
@@ -8,7 +8,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useCoordinateItems } from '@/features/coordinates-map/hooks/useCoordinateItems'
 import { CoordinatesFilterPanel } from '@/features/coordinates-map/components/CoordinatesFilterPanel'
 import { CoordinatesMapSkeleton } from '@/features/coordinates-map/components/CoordinatesMapSkeleton'
-import { RefreshCw, MapPin, GitCompareArrows } from 'lucide-react'
+import { RefreshCw, PanelLeftOpen } from 'lucide-react'
+import type { MapFocus } from '@/features/coordinates-map/components/CoordinatesMap'
+import type { CoordinateItem } from '@/features/coordinates-map/types'
 
 const CoordinatesMap = dynamic(
   () =>
@@ -23,21 +25,6 @@ const CoordinatesMap = dynamic(
   }
 )
 
-const ComparisonMap = dynamic(
-  () =>
-    import('@/features/coordinates-map/components/ComparisonMap').then(mod => mod.ComparisonMap),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex-1 flex items-center justify-center">
-        <RefreshCw className="w-6 h-6 animate-spin text-text-tertiary" />
-      </div>
-    ),
-  }
-)
-
-type MapView = 'coordinates' | 'comparison'
-
 export default function CoordinatesMapPage() {
   const t = useTranslations()
   const { userRole, loading: authLoading } = useAuth()
@@ -47,17 +34,15 @@ export default function CoordinatesMapPage() {
 
   const [inspectorFilter, setInspectorFilter] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const [activeView, setActiveView] = useState<MapView>('coordinates')
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [focus, setFocus] = useState<MapFocus | null>(null)
 
-  const { items, allItems, inspectors, isLoading, lastUpdated } = useCoordinateItems({
-    inspectorFilter,
-    searchQuery,
-  })
+  const { items, allItems, inspectors, isLoading, isFetching, lastUpdated, refresh } =
+    useCoordinateItems({ inspectorFilter, searchQuery })
 
-  const comparisonCount = useMemo(
-    () => items.filter(i => i.addressLat !== null && i.addressLng !== null).length,
-    [items]
-  )
+  const handleSelectItem = useCallback((item: CoordinateItem) => {
+    setFocus(prev => ({ id: item.id, nonce: (prev?.nonce ?? 0) + 1 }))
+  }, [])
 
   useEffect(() => {
     if (!authLoading && !isAllowed) {
@@ -71,89 +56,45 @@ export default function CoordinatesMapPage() {
 
   return (
     <div className="flex h-full">
-      <CoordinatesFilterPanel
-        inspectors={inspectors}
-        selectedInspector={inspectorFilter}
-        onInspectorChange={setInspectorFilter}
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        totalCount={allItems.length}
-        filteredCount={items.length}
-        lastUpdated={lastUpdated}
-        isLoading={isLoading}
-      />
-      <div className="flex-1 flex flex-col relative">
-        {/* View tabs */}
-        <div className="flex items-center gap-1 px-3 py-2 border-b border-border-primary bg-bg-primary z-10">
-          <button
-            onClick={() => setActiveView('coordinates')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-              activeView === 'coordinates'
-                ? 'bg-accent-primary text-white'
-                : 'text-text-secondary hover:bg-bg-secondary'
-            }`}
-          >
-            <MapPin className="w-3.5 h-3.5" />
-            {t('coordinatesMap.tabs.coordinates')}
-            <span
-              className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] ${
-                activeView === 'coordinates' ? 'bg-white/20' : 'bg-bg-tertiary'
-              }`}
-            >
-              {items.length}
-            </span>
-          </button>
-          <button
-            onClick={() => setActiveView('comparison')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-              activeView === 'comparison'
-                ? 'bg-accent-primary text-white'
-                : 'text-text-secondary hover:bg-bg-secondary'
-            }`}
-          >
-            <GitCompareArrows className="w-3.5 h-3.5" />
-            {t('coordinatesMap.tabs.comparison')}
-            <span
-              className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] ${
-                activeView === 'comparison' ? 'bg-white/20' : 'bg-bg-tertiary'
-              }`}
-            >
-              {comparisonCount}
-            </span>
-          </button>
-        </div>
+      {sidebarOpen && (
+        <CoordinatesFilterPanel
+          items={items}
+          allItems={allItems}
+          inspectors={inspectors}
+          selectedInspector={inspectorFilter}
+          onInspectorChange={setInspectorFilter}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedItemId={focus?.id ?? null}
+          onSelectItem={handleSelectItem}
+          lastUpdated={lastUpdated}
+          isLoading={isLoading}
+          isRefreshing={isFetching}
+          onRefresh={refresh}
+          onCollapse={() => setSidebarOpen(false)}
+        />
+      )}
 
-        {/* Map area */}
-        <div className="flex-1 relative isolate">
-          {activeView === 'coordinates' && (
-            <>
-              <CoordinatesMap items={items} inspectors={inspectors} />
-              {items.length === 0 && !isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-bg-primary/90 rounded-lg px-6 py-4 text-center shadow-sm">
-                    <p className="text-text-secondary text-sm">
-                      {t('coordinatesMap.emptyCoordinates')}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-          {activeView === 'comparison' && (
-            <>
-              <ComparisonMap items={items} />
-              {comparisonCount === 0 && !isLoading && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-bg-primary/90 rounded-lg px-6 py-4 text-center shadow-sm">
-                    <p className="text-text-secondary text-sm">
-                      {t('coordinatesMap.emptyComparison')}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
+      <div className="flex-1 relative isolate min-w-0">
+        <CoordinatesMap items={items} inspectors={inspectors} focus={focus} />
+
+        {!sidebarOpen && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            title={t('coordinatesMap.filterPanel.showPanel')}
+            className="absolute top-3 left-3 z-[1000] p-1.5 rounded-md bg-bg-primary border border-border-light shadow-sm text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors"
+          >
+            <PanelLeftOpen className="w-4 h-4" />
+          </button>
+        )}
+
+        {items.length === 0 && !isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="bg-bg-primary/90 rounded-lg px-6 py-4 text-center shadow-sm border border-border-light">
+              <p className="text-text-secondary text-sm">{t('coordinatesMap.emptyCoordinates')}</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
