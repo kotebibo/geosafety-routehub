@@ -113,6 +113,28 @@ export async function GET(request: NextRequest) {
           ? { lat: Number(transport.home_lat), lng: Number(transport.home_lng) }
           : null
 
+    // Check-in state/time per stop: match location_checkins on route_stop_id.
+    const stopIds: string[] = []
+    for (const r of routes || []) for (const s of r.route_stops || []) if (s.id) stopIds.push(s.id)
+    const checkinByStop = new Map<
+      string,
+      { checkedInAt: string | null; checkedOutAt: string | null; durationMinutes: number | null }
+    >()
+    if (stopIds.length > 0) {
+      const { data: checkins } = await svc
+        .from('location_checkins')
+        .select('route_stop_id, created_at, checked_out_at, duration_minutes')
+        .in('route_stop_id', stopIds)
+      for (const c of checkins || []) {
+        if (!c.route_stop_id) continue
+        checkinByStop.set(c.route_stop_id, {
+          checkedInAt: c.created_at ?? null,
+          checkedOutAt: c.checked_out_at ?? null,
+          durationMinutes: c.duration_minutes ?? null,
+        })
+      }
+    }
+
     const result = (routes || []).map((r: any) => ({
       id: r.id,
       name: r.name,
@@ -126,6 +148,7 @@ export async function GET(request: NextRequest) {
         .map((s: any) => {
           const key = s.board_item_id || s.company_id
           const coords = key ? coordsById.get(key) : null
+          const ci = checkinByStop.get(s.id)
           return {
             id: s.id,
             position: s.position,
@@ -135,6 +158,9 @@ export async function GET(request: NextRequest) {
             name: nameById.get(s.board_item_id) || nameById.get(s.company_id) || null,
             lat: coords?.lat ?? null,
             lng: coords?.lng ?? null,
+            checkedInAt: ci?.checkedInAt ?? null,
+            checkedOutAt: ci?.checkedOutAt ?? null,
+            durationMinutes: ci?.durationMinutes ?? null,
           }
         }),
     }))

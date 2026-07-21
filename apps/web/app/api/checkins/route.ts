@@ -200,11 +200,13 @@ export async function POST(request: NextRequest) {
     }
     if (error) throw error
 
+    // Check-in puts the planned stop "in progress" (yellow). Check-out (PATCH)
+    // later marks it "visited" (green).
     if (validated.route_stop_id) {
       await supabase
         .from('route_stops')
         .update({
-          status: 'completed',
+          status: 'in_progress',
           actual_arrival_time: new Date().toTimeString().slice(0, 8),
         })
         .eq('id', validated.route_stop_id)
@@ -372,6 +374,17 @@ export async function PATCH(request: NextRequest) {
       .single()
 
     if (updateError) throw updateError
+
+    // Check-out marks the planned stop "visited" (green) + departure time.
+    if ((checkin as any).route_stop_id) {
+      await supabase
+        .from('route_stops')
+        .update({
+          status: 'visited',
+          actual_departure_time: new Date().toTimeString().slice(0, 8),
+        })
+        .eq('id', (checkin as any).route_stop_id)
+    }
 
     return NextResponse.json(updated)
   } catch (error: any) {

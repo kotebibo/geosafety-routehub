@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui-monday/Toast'
 import { useMyRoutes, type OfficerRoute } from '../hooks/useMyRoutes'
 import { useSetOfficerFuelPrice, type OfficerWeekSummary } from '../hooks/useRouteAnalytics'
 import { RouteMapModal } from './RouteMapModal'
+import { stopVisitState } from '../lib/stop-state'
 import { addDays, dayLabelOf, shortDate } from '../lib/week'
 
 interface OfficerWeekPopupProps {
@@ -201,15 +202,18 @@ export function OfficerWeekPopup({
                 </div>
                 <div className="space-y-1">
                   {route.stops.map(stop => {
-                    const done = stop.status === 'visited'
+                    const state = stopVisitState(stop.status)
+                    const done = state === 'done'
                     return (
                       <div key={stop.id} className="flex items-center gap-2 text-xs">
                         <span
                           className={cn(
                             'w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold border',
-                            done
+                            state === 'done'
                               ? 'bg-green-500 border-green-500 text-white'
-                              : 'border-border-medium text-text-tertiary'
+                              : state === 'in_progress'
+                                ? 'bg-amber-500 border-amber-500 text-white'
+                                : 'border-border-medium text-text-tertiary'
                           )}
                         >
                           {done ? <Check className="w-2.5 h-2.5" /> : stop.position}
@@ -222,6 +226,11 @@ export function OfficerWeekPopup({
                         >
                           {stop.name || t('inspectorRoutes.unknownStop')}
                         </span>
+                        {stop.durationMinutes != null && (
+                          <span className="text-[11px] text-text-tertiary flex-shrink-0">
+                            {t('routing.stopDuration', { min: stop.durationMinutes })}
+                          </span>
+                        )}
                         {stop.distanceFromPrevious != null && (
                           <span className="text-[11px] text-text-tertiary flex-shrink-0">
                             {stop.distanceFromPrevious.toFixed(1)} {t('routing.km')}
@@ -254,6 +263,8 @@ export function OfficerWeekPopup({
               lat: s.lat as number,
               lng: s.lng as number,
               distanceKm: s.distanceFromPrevious,
+              status: s.status,
+              durationMinutes: s.durationMinutes,
             }))}
           start={
             officerStart

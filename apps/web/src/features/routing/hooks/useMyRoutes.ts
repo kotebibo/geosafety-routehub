@@ -3,7 +3,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 export type RouteStatus = 'planned' | 'in_progress' | 'completed' | 'cancelled'
-export type StopStatus = 'pending' | 'visited' | 'skipped'
+// pending → (check-in) in_progress → (check-out) visited. 'completed' is legacy
+// data from before the two-step flow, treated as done.
+export type StopStatus = 'pending' | 'in_progress' | 'visited' | 'completed' | 'skipped'
 
 export interface RouteStop {
   id: string
@@ -14,6 +16,9 @@ export interface RouteStop {
   name: string | null
   lat: number | null
   lng: number | null
+  checkedInAt: string | null
+  checkedOutAt: string | null
+  durationMinutes: number | null
 }
 export interface OfficerRoute {
   id: string

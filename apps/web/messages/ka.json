@@ -2150,6 +2150,7 @@
     "returnHome": "სახლში დაბრუნება {km} კმ",
     "legDistance": "მანძილი: {km} კმ",
     "legFuel": "საწვავი: {liters} ლ",
+    "stopDuration": "{min} წთ",
     "noLocationTitle": "ამ board-ს ლოკაციის მონაცემი არ აქვს",
     "noLocationHint": "მარშრუტის დაგეგმვას კოორდინატები სჭირდება. დაამატე კოორდინატების სვეტი (ან მისამართის სვეტი გეოკოდირებისთვის) და board routable გახდება.",
     "viaGps": "GPS-ით",

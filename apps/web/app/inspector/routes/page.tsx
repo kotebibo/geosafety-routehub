@@ -2,37 +2,20 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import {
-  Calendar,
-  Check,
-  Clock,
-  Loader2,
-  MapPin,
-  Play,
-  Route as RouteIcon,
-  User,
-} from 'lucide-react'
+import { Calendar, Check, Clock, Loader2, MapPin, Route as RouteIcon, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
-import { useToast } from '@/components/ui-monday/Toast'
 import { PageHeader, StatCard, EmptyState } from '@/shared/components/ui'
 import { InspectorRoutesSkeleton } from '@/features/inspector/components/InspectorRoutesSkeleton'
 import { useOfficers } from '@/features/routing/hooks/useOfficers'
+import { useMyRoutes, type OfficerRoute } from '@/features/routing/hooks/useMyRoutes'
+import { RouteMapModal } from '@/features/routing/components/RouteMapModal'
 import {
-  useMyRoutes,
-  useUpdateRouteStatus,
-  useUpdateStopStatus,
-  type OfficerRoute,
-  type RouteStatus,
-} from '@/features/routing/hooks/useMyRoutes'
+  stopVisitState,
+  STOP_STATE_CLASS,
+  type StopVisitState,
+} from '@/features/routing/lib/stop-state'
 import { weekStartOf, dayLabelOf, addDays, shortDate } from '@/features/routing/lib/week'
-
-const STATUS_BADGE: Record<string, string> = {
-  planned: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
-  in_progress: 'bg-amber-500/10 text-amber-500 border-amber-500/30',
-  completed: 'bg-green-500/10 text-green-500 border-green-500/30',
-  cancelled: 'bg-red-500/10 text-red-500 border-red-500/30',
-}
 
 function shortDateStr(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -52,7 +35,6 @@ export default function InspectorRoutesPage() {
   }, [isManager, selectedOfficer, officers])
 
   const inspectorId = isManager ? selectedOfficer : user?.id || ''
-  const canExecute = !!user?.id && inspectorId === user.id
 
   const { data, isLoading } = useMyRoutes(inspectorId)
   const routes = data?.routes ?? []
@@ -167,12 +149,7 @@ export default function InspectorRoutesPage() {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {week.routes.map(route => (
-                    <RouteCard
-                      key={route.id}
-                      route={route}
-                      inspectorId={inspectorId}
-                      canExecute={canExecute}
-                    />
+                    <RouteCard key={route.id} route={route} start={data?.start ?? null} />
                   ))}
                 </div>
               </div>
@@ -186,40 +163,31 @@ export default function InspectorRoutesPage() {
 
 interface RouteCardProps {
   route: OfficerRoute
-  inspectorId: string
-  canExecute: boolean
+  start: { lat: number; lng: number } | null
 }
 
-function RouteCard({ route, inspectorId, canExecute }: RouteCardProps) {
+// Route-level state derived from its stops (check-in driven): all done → done,
+// any started → in_progress, else pending.
+function routeVisitState(route: OfficerRoute): StopVisitState {
+  const states = route.stops.map(s => stopVisitState(s.status))
+  if (states.length > 0 && states.every(s => s === 'done')) return 'done'
+  if (states.some(s => s === 'in_progress' || s === 'done')) return 'in_progress'
+  return 'pending'
+}
+
+const STATE_LABEL_KEY: Record<StopVisitState, string> = {
+  pending: 'inspectorRoutes.status.planned',
+  in_progress: 'inspectorRoutes.status.inProgress',
+  done: 'inspectorRoutes.status.completed',
+}
+
+function RouteCard({ route, start }: RouteCardProps) {
   const t = useTranslations()
-  const { showToast } = useToast()
-  const updateRoute = useUpdateRouteStatus(inspectorId)
-  const updateStop = useUpdateStopStatus(inspectorId)
+  const [mapOpen, setMapOpen] = useState(false)
 
-  const visited = route.stops.filter(s => s.status === 'visited').length
-  const status = route.status || 'planned'
-  const isInProgress = status === 'in_progress'
-
-  const setRouteStatus = async (next: RouteStatus, successKey: string) => {
-    try {
-      await updateRoute.mutateAsync({ routeId: route.id, status: next })
-      showToast(t(successKey), 'success')
-    } catch (err: any) {
-      showToast(err.error || t('inspectorRoutes.updateFailed'), 'error')
-    }
-  }
-
-  const toggleStop = async (stopId: string, current: string | null) => {
-    if (!canExecute || !isInProgress) return
-    try {
-      await updateStop.mutateAsync({
-        stopId,
-        status: current === 'visited' ? 'pending' : 'visited',
-      })
-    } catch (err: any) {
-      showToast(err.error || t('inspectorRoutes.updateFailed'), 'error')
-    }
-  }
+  const doneCount = route.stops.filter(s => stopVisitState(s.status) === 'done').length
+  const state = routeVisitState(route)
+  const hasCoords = route.stops.some(s => s.lat != null && s.lng != null)
 
   return (
     <div className="bg-bg-primary rounded-xl border border-border-light p-4">
@@ -242,95 +210,87 @@ function RouteCard({ route, inspectorId, canExecute }: RouteCardProps) {
             </span>
           </div>
         </div>
-        <span
-          className={cn(
-            'px-2 py-0.5 rounded-full text-[11px] font-medium border flex-shrink-0',
-            STATUS_BADGE[status] || STATUS_BADGE.planned
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {hasCoords && (
+            <button
+              type="button"
+              onClick={() => setMapOpen(true)}
+              className="inline-flex items-center gap-1 text-[11px] font-medium text-monday-primary hover:underline"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              {t('routing.viewOnMap')}
+            </button>
           )}
-        >
-          {t(`inspectorRoutes.status.${status === 'in_progress' ? 'inProgress' : status}`)}
-        </span>
+          <span
+            className={cn(
+              'px-2 py-0.5 rounded-full text-[11px] font-medium',
+              STOP_STATE_CLASS[state]
+            )}
+          >
+            {t(STATE_LABEL_KEY[state])} {doneCount}/{route.stops.length}
+          </span>
+        </div>
       </div>
 
-      {/* Stops */}
-      <div className="space-y-1 mb-3">
+      {/* Stops — colored by check-in state (read-only) */}
+      <div className="space-y-1">
         {route.stops.map(stop => {
-          const done = stop.status === 'visited'
-          const interactive = canExecute && isInProgress
+          const st = stopVisitState(stop.status)
+          const done = st === 'done'
           return (
-            <button
-              key={stop.id}
-              type="button"
-              disabled={!interactive || updateStop.isPending}
-              onClick={() => toggleStop(stop.id, stop.status)}
-              className={cn(
-                'w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-left transition-colors',
-                interactive ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
-                done && 'opacity-60'
-              )}
-            >
+            <div key={stop.id} className="flex items-center gap-2 px-2 py-1.5 text-sm">
               <span
                 className={cn(
                   'w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-bold border',
-                  done
+                  st === 'done'
                     ? 'bg-green-500 border-green-500 text-white'
-                    : 'border-border-medium text-text-tertiary'
+                    : st === 'in_progress'
+                      ? 'bg-amber-500 border-amber-500 text-white'
+                      : 'border-border-medium text-text-tertiary'
                 )}
               >
                 {done ? <Check className="w-3 h-3" /> : stop.position}
               </span>
-              <span
-                className={cn('flex-1 truncate text-sm text-text-primary', done && 'line-through')}
-              >
+              <span className={cn('flex-1 truncate text-text-primary', done && 'line-through')}>
                 {stop.name || t('inspectorRoutes.unknownStop')}
               </span>
+              {stop.durationMinutes != null && (
+                <span className="inline-flex items-center gap-1 text-[11px] text-text-tertiary flex-shrink-0">
+                  <Clock className="w-3 h-3" />
+                  {t('routing.stopDuration', { min: stop.durationMinutes })}
+                </span>
+              )}
               {stop.distanceFromPrevious != null && (
                 <span className="text-[11px] text-text-tertiary flex-shrink-0">
                   {stop.distanceFromPrevious.toFixed(1)} {t('inspectorRoutes.km')}
                 </span>
               )}
-            </button>
+            </div>
           )
         })}
       </div>
 
-      {/* Execution controls (own routes only) */}
-      {canExecute && (
-        <div className="flex items-center gap-2 pt-2 border-t border-border-light">
-          {status === 'planned' && (
-            <button
-              type="button"
-              disabled={updateRoute.isPending}
-              onClick={() => setRouteStatus('in_progress', 'inspectorRoutes.routeStarted')}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-monday-primary text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-            >
-              <Play className="w-3.5 h-3.5" />
-              {t('inspectorRoutes.startRoute')}
-            </button>
-          )}
-          {isInProgress && (
-            <>
-              <span className="text-xs text-text-secondary">
-                {t('inspectorRoutes.progress', { done: visited, total: route.stops.length })}
-              </span>
-              <button
-                type="button"
-                disabled={updateRoute.isPending}
-                onClick={() => setRouteStatus('completed', 'inspectorRoutes.routeCompleted')}
-                className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-              >
-                <Check className="w-3.5 h-3.5" />
-                {t('inspectorRoutes.completeRoute')}
-              </button>
-            </>
-          )}
-          {status === 'completed' && (
-            <span className="text-xs text-green-500 inline-flex items-center gap-1">
-              <Check className="w-3.5 h-3.5" />
-              {t('inspectorRoutes.allDone')}
-            </span>
-          )}
-        </div>
+      {mapOpen && (
+        <RouteMapModal
+          title={`${dayLabelOf(route.date)} ${shortDateStr(route.date)}`}
+          km={route.totalDistanceKm ?? 0}
+          fuelLiters={null}
+          stops={route.stops
+            .filter(s => s.lat != null && s.lng != null)
+            .map(s => ({
+              id: s.id,
+              name: s.name || '',
+              lat: s.lat as number,
+              lng: s.lng as number,
+              distanceKm: s.distanceFromPrevious,
+              status: s.status,
+              durationMinutes: s.durationMinutes,
+            }))}
+          start={
+            start ? { lat: start.lat, lng: start.lng, name: t('routing.startPoint') } : undefined
+          }
+          onClose={() => setMapOpen(false)}
+        />
       )}
     </div>
   )
