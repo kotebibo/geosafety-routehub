@@ -15,6 +15,7 @@ import {
   Navigation,
   Plus,
   AlertCircle,
+  AlertTriangle,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
@@ -31,6 +32,7 @@ import { useInspectorLocation } from '../hooks/useInspectorLocation'
 import { useOfficerTransport } from '../hooks/useOfficerTransport'
 import { useRouteOptimizer } from '../hooks/useRouteOptimizer'
 import { useWeekPlan, useSaveWeekPlan } from '../hooks/useWeekPlan'
+import { useWeekExecution } from '../hooks/useWeekExecution'
 import { mondayOf, weekDays, dayKey, shortDate, DAY_LABELS_KA } from '../lib/week'
 import type { Board } from '@/types/board'
 
@@ -100,6 +102,13 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const weekStartKey = dayKey(monday)
 
   const { data: existingPlan } = useWeekPlan(inspectorId, weekStartKey)
+  const { data: execution } = useWeekExecution(inspectorId, board.id, weekStartKey)
+
+  // DD.MM label for an execution-panel YYYY-MM-DD date.
+  const fmtDate = (s: string) => {
+    const [y, m, d] = s.split('-').map(Number)
+    return shortDate(new Date(y, m - 1, d))
+  }
   const savePlan = useSaveWeekPlan()
 
   // Reset on week switch, then prefill once from the saved plan for that week.
@@ -561,6 +570,73 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                   )
                 })}
               </div>
+
+              {/* Execution vs plan — populated from this week's check-ins */}
+              {execution && (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Unplanned visits — checked in somewhere not on the plan */}
+                  <div className="rounded-xl border border-border-light bg-bg-primary p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <MapPin className="w-4 h-4 text-orange-500" />
+                      <span className="text-sm font-semibold text-text-primary">
+                        {t('routing.unplannedVisits')}
+                      </span>
+                      <span className="ml-auto text-xs text-text-tertiary">
+                        {execution.unplannedVisits.length}
+                      </span>
+                    </div>
+                    {execution.unplannedVisits.length === 0 ? (
+                      <p className="text-xs text-text-tertiary py-1">
+                        {t('routing.noUnplannedVisits')}
+                      </p>
+                    ) : (
+                      <div className="space-y-1">
+                        {execution.unplannedVisits.map(v => (
+                          <div key={v.boardItemId} className="flex items-center gap-2 text-xs">
+                            <MapPin className="w-3 h-3 text-orange-500 flex-shrink-0" />
+                            <span className="flex-1 truncate text-text-primary">
+                              {v.name || t('routing.unknownStop')}
+                            </span>
+                            <span className="text-[11px] text-text-tertiary flex-shrink-0">
+                              {fmtDate(v.date)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Plan deviation — planned but not yet visited */}
+                  <div className="rounded-xl border border-border-light bg-bg-primary p-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <AlertTriangle className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-semibold text-text-primary">
+                        {t('routing.planDeviation')}
+                      </span>
+                      <span className="ml-auto text-xs text-text-tertiary">
+                        {execution.missedPlanned.length}
+                      </span>
+                    </div>
+                    {execution.missedPlanned.length === 0 ? (
+                      <p className="text-xs text-text-tertiary py-1">{t('routing.noDeviation')}</p>
+                    ) : (
+                      <div className="space-y-1">
+                        {execution.missedPlanned.map(v => (
+                          <div key={v.boardItemId} className="flex items-center gap-2 text-xs">
+                            <AlertTriangle className="w-3 h-3 text-red-500 flex-shrink-0" />
+                            <span className="flex-1 truncate text-text-primary">
+                              {v.name || t('routing.unknownStop')}
+                            </span>
+                            <span className="text-[11px] text-text-tertiary flex-shrink-0">
+                              {fmtDate(v.date)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Company pool */}
