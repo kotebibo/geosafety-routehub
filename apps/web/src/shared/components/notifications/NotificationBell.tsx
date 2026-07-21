@@ -22,11 +22,11 @@ const TYPE_ICONS: Record<NotificationType, string> = {
 }
 
 const TYPE_COLORS: Record<NotificationType, string> = {
-  board_shared: 'bg-blue-100 text-blue-700',
-  item_mention: 'bg-amber-100 text-amber-700',
+  board_shared: 'bg-blue-500/15 text-blue-500',
+  item_mention: 'bg-amber-500/15 text-amber-500',
   item_comment: 'bg-bg-tertiary text-text-secondary',
-  item_overdue: 'bg-red-100 text-red-700',
-  announcement_new: 'bg-indigo-100 text-indigo-700',
+  item_overdue: 'bg-red-500/15 text-red-500',
+  announcement_new: 'bg-indigo-500/15 text-indigo-400',
 }
 
 interface NotificationBellProps {
@@ -162,13 +162,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
             }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b bg-bg-secondary">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border-light bg-bg-secondary">
               <h3 className="font-semibold text-text-primary">{t('header.notifications')}</h3>
               {unreadCount > 0 && (
                 <button
                   onClick={() => markAllAsRead()}
                   disabled={isMarkingAllAsRead}
-                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  className="text-sm text-text-link hover:underline flex items-center gap-1"
                 >
                   <CheckCheck className="w-4 h-4" />
                   {t('notificationBell.markAllRead')}
@@ -180,7 +180,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
             <div className="max-h-96 overflow-y-auto">
               {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-color-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : notifications.length === 0 ? (
                 <div className="py-12 text-center text-text-tertiary">
@@ -192,8 +192,10 @@ export function NotificationBell({ className }: NotificationBellProps) {
                   <div
                     key={notification.id}
                     className={cn(
-                      'flex items-start gap-3 px-4 py-3 border-b border-border-light hover:bg-bg-hover cursor-pointer transition-colors',
-                      !notification.is_read && 'bg-blue-50/50'
+                      'flex items-start gap-3 px-4 py-3 border-b border-border-light cursor-pointer transition-colors',
+                      notification.is_read
+                        ? 'hover:bg-bg-hover'
+                        : 'bg-bg-selected/50 hover:bg-bg-selected'
                     )}
                     onClick={() => handleNotificationClick(notification)}
                   >
@@ -252,7 +254,7 @@ export function NotificationBell({ className }: NotificationBellProps) {
                             e.stopPropagation()
                             deleteNotification(notification.id)
                           }}
-                          className="p-1 rounded hover:bg-red-100 text-text-tertiary hover:text-red-600"
+                          className="p-1 rounded hover:bg-red-500/10 text-text-tertiary hover:text-red-500"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -265,13 +267,13 @@ export function NotificationBell({ className }: NotificationBellProps) {
 
             {/* Footer */}
             {notifications.length > 0 && (
-              <div className="px-4 py-2 border-t bg-bg-secondary text-center">
+              <div className="px-4 py-2 border-t border-border-light bg-bg-secondary text-center">
                 <button
                   onClick={() => {
                     router.push('/settings?tab=notifications')
                     setIsOpen(false)
                   }}
-                  className="text-sm text-blue-600 hover:text-blue-700"
+                  className="text-sm text-text-link hover:underline"
                 >
                   {t('notificationBell.viewAll')}
                 </button>
