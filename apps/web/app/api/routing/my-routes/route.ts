@@ -113,22 +113,25 @@ export async function GET(request: NextRequest) {
           ? { lat: Number(transport.home_lat), lng: Number(transport.home_lng) }
           : null
 
-    // Check-in state/time per stop: match location_checkins on route_stop_id.
-    const stopIds: string[] = []
-    for (const r of routes || []) for (const s of r.route_stops || []) if (s.id) stopIds.push(s.id)
-    const checkinByStop = new Map<
+    // Check-in state/time per stop. The board check-in flow links board_item_id
+    // (not route_stop_id), so match the officer's check-ins by board_item_id +
+    // the route's date. Keyed `${board_item_id}|${YYYY-MM-DD}`.
+    const checkinByItemDate = new Map<
       string,
       { checkedInAt: string | null; checkedOutAt: string | null; durationMinutes: number | null }
     >()
-    if (stopIds.length > 0) {
+    if (itemIds.size > 0) {
       const { data: checkins } = await svc
         .from('location_checkins')
-        .select('route_stop_id, created_at, checked_out_at, duration_minutes')
-        .in('route_stop_id', stopIds)
+        .select('board_item_id, created_at, checked_out_at, duration_minutes')
+        .eq('inspector_id', inspectorId)
+        .in('board_item_id', [...itemIds])
+        .order('created_at', { ascending: true })
       for (const c of checkins || []) {
-        if (!c.route_stop_id) continue
-        checkinByStop.set(c.route_stop_id, {
-          checkedInAt: c.created_at ?? null,
+        if (!c.board_item_id || !c.created_at) continue
+        // Latest check-in for that item+day wins (ascending order → last set).
+        checkinByItemDate.set(`${c.board_item_id}|${c.created_at.slice(0, 10)}`, {
+          checkedInAt: c.created_at,
           checkedOutAt: c.checked_out_at ?? null,
           durationMinutes: c.duration_minutes ?? null,
         })
@@ -148,11 +151,17 @@ export async function GET(request: NextRequest) {
         .map((s: any) => {
           const key = s.board_item_id || s.company_id
           const coords = key ? coordsById.get(key) : null
-          const ci = checkinByStop.get(s.id)
+          // A real check-in for this item on the route's date drives the visit
+          // state: checked out → visited (green), checked in only → in_progress
+          // (yellow). Otherwise the stored route_stops.status stands (pending).
+          const ci = s.board_item_id
+            ? checkinByItemDate.get(`${s.board_item_id}|${r.date}`)
+            : undefined
+          const status = ci ? (ci.checkedOutAt ? 'visited' : 'in_progress') : s.status
           return {
             id: s.id,
             position: s.position,
-            status: s.status,
+            status,
             distanceFromPrevious: s.distance_from_previous_km,
             boardItemId: s.board_item_id,
             name: nameById.get(s.board_item_id) || nameById.get(s.company_id) || null,
