@@ -253,12 +253,14 @@ export function OfficerWeekPopup({
               name: s.name || '',
               lat: s.lat as number,
               lng: s.lng as number,
+              distanceKm: s.distanceFromPrevious,
             }))}
           start={
             officerStart
               ? { lat: officerStart.lat, lng: officerStart.lng, name: t('routing.startPoint') }
               : undefined
           }
+          consumption={summary.consumption}
           onClose={() => setMapRoute(null)}
         />
       )}

@@ -2058,6 +2058,8 @@
     "viewOnMap": "Map",
     "noMapStops": "No stops with coordinates to show",
     "returnHome": "return home {km} km",
+    "legDistance": "Distance: {km} km",
+    "legFuel": "Fuel: {liters} L",
     "noLocationTitle": "This board has no location data",
     "noLocationHint": "Route planning needs coordinates. Add a coordinates column (or an address column to geocode) to this board, then it becomes routable.",
     "viaGps": "via GPS",

@@ -691,10 +691,21 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
         (() => {
           const dr = dayResults[mapDayKey]
           const ids = assignments[mapDayKey] || []
+          const distanceByItem = new Map(
+            (dr?.stops ?? []).map(s => [s.itemId, s.distanceFromPrevious])
+          )
           const stops: RouteMapStop[] = ids
-            .map(id => {
+            .map((id): RouteMapStop | null => {
               const c = coordsOf(id)
-              return c ? { id, name: nameOf(id), lat: c.lat, lng: c.lng } : null
+              return c
+                ? {
+                    id,
+                    name: nameOf(id),
+                    lat: c.lat,
+                    lng: c.lng,
+                    distanceKm: distanceByItem.get(id) ?? null,
+                  }
+                : null
             })
             .filter((s): s is RouteMapStop => s !== null)
           const km = dr?.km ?? 0
@@ -716,6 +727,7 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                   ? { lat: start.lat, lng: start.lng, name: t('routing.startPoint') }
                   : undefined
               }
+              consumption={transport?.consumption_l_per_100km ?? null}
               geometry={dr?.geometry}
               onClose={() => setMapDayKey(null)}
             />

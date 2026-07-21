@@ -25,6 +25,8 @@ interface Company {
   lng: number
   type?: string
   priority?: string
+  /** Optional pre-built popup HTML (caller controls content + i18n). */
+  popupHtml?: string
 }
 
 interface RouteMapProps {
@@ -259,7 +261,10 @@ export function RouteMapFixed({
             iconAnchor: [18, 36],
           })
 
-          const marker = L.marker([company.lat, company.lng], { icon }).addTo(map).bindPopup(`
+          // Caller-provided popup content wins (i18n + extra info); else default.
+          const popupHtml =
+            company.popupHtml ??
+            `
               <div style="padding: 10px;">
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                   <div style="
@@ -281,7 +286,10 @@ export function RouteMapFixed({
                   Stop #${position} in optimized route
                 </div>
               </div>
-            `)
+            `
+          const marker = L.marker([company.lat, company.lng], { icon })
+            .addTo(map)
+            .bindPopup(popupHtml)
 
           if (onMarkerClick) {
             marker.on('click', () => {

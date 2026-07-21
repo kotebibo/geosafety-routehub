@@ -24,6 +24,12 @@ export interface RouteMapStop {
   name: string
   lat: number
   lng: number
+  /** Distance of this leg (from the previous point), in km. */
+  distanceKm?: number | null
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
 }
 
 interface RouteMapModalProps {
@@ -35,6 +41,8 @@ interface RouteMapModalProps {
   stops: RouteMapStop[]
   /** Officer home / route start — shown as the home marker and line origin. */
   start?: { lat: number; lng: number; name?: string }
+  /** Officer consumption (L/100km) — for per-stop fuel in the marker popup. */
+  consumption?: number | null
   /** [lng, lat] pairs from OSRM — real road line; absent → straight lines. */
   geometry?: number[][]
   onClose: () => void
@@ -47,6 +55,7 @@ export function RouteMapModal({
   fuelLiters,
   stops,
   start,
+  consumption,
   geometry: initialGeometry,
   onClose,
 }: RouteMapModalProps) {
@@ -85,10 +94,29 @@ export function RouteMapModal({
   }, [stopKey, startKey])
 
   // RouteMapFixed shows numbered stops for `route` and draws `routeGeometry`.
-  const route = stops.map((s, i) => ({
-    company: { id: s.id, name: s.name, address: '', lat: s.lat, lng: s.lng },
-    position: i + 1,
-  }))
+  // The popup content is built here (with i18n + data) so it's easy to extend
+  // later (e.g. check-in time / duration).
+  const route = stops.map((s, i) => {
+    const fuel =
+      s.distanceKm != null && consumption != null ? (s.distanceKm * consumption) / 100 : null
+    const rows = [
+      `<div style="font-weight:600;margin-bottom:2px;">${i + 1}. ${escapeHtml(s.name)}</div>`,
+    ]
+    if (s.distanceKm != null)
+      rows.push(
+        `<div style="font-size:12px;color:#444;">${t('routing.legDistance', { km: s.distanceKm.toFixed(1) })}</div>`
+      )
+    if (fuel != null)
+      rows.push(
+        `<div style="font-size:12px;color:#444;">${t('routing.legFuel', { liters: fuel.toFixed(2) })}</div>`
+      )
+    // Future: check-in time / duration will be appended here.
+    const popupHtml = `<div style="padding:8px 10px;min-width:150px;">${rows.join('')}</div>`
+    return {
+      company: { id: s.id, name: s.name, address: '', lat: s.lat, lng: s.lng, popupHtml },
+      position: i + 1,
+    }
+  })
 
   const content = (
     <div className="fixed inset-0 z-50 flex flex-col bg-bg-primary">
