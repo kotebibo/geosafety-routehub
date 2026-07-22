@@ -53,6 +53,7 @@ import {
   Activity,
   ClipboardCheck,
   Waypoints,
+  CalendarCheck,
   Gauge,
 } from 'lucide-react'
 import {
@@ -85,7 +86,10 @@ interface NavItem {
   href: string
   labelKey: string
   icon: React.ComponentType<{ className?: string }>
-  permission: string
+  /** Permission-gated item (managers). Omit when using `roles` instead. */
+  permission?: string
+  /** Role-gated item (e.g. officer-only) — shown when the user's role matches. */
+  roles?: string[]
 }
 
 // Board color mapping
@@ -780,6 +784,19 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
       icon: Home,
       permission: 'pages:dashboard',
     },
+    // Officer routing hub: current week (execute) + planning.
+    {
+      href: '/inspector/routes',
+      labelKey: 'myWeek.title',
+      icon: CalendarCheck,
+      roles: ['officer'],
+    },
+    {
+      href: '/routing',
+      labelKey: 'nav.routing',
+      icon: Waypoints,
+      roles: ['officer'],
+    },
     {
       href: '/my-work',
       labelKey: 'nav.myWork',
@@ -966,7 +983,13 @@ export function Sidebar({ className, onMobileClose }: SidebarProps) {
             <nav className="py-4 px-2" data-walkthrough="sidebar">
               <ul className="space-y-1">
                 {navItems
-                  .filter(item => hasPermission(item.permission))
+                  .filter(item =>
+                    item.roles
+                      ? !!userRole && item.roles.includes(userRole.role)
+                      : item.permission
+                        ? hasPermission(item.permission)
+                        : false
+                  )
                   .map(item => {
                     const Icon = item.icon
                     const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
