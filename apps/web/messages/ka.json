@@ -2067,7 +2067,15 @@
     "inheritsGlobal": "იღებს გლობალურ {price} ₾/ლ",
     "invalidPrice": "ფასი არასწორია",
     "priceSaved": "ფასი შენახულია",
-    "priceSaveFailed": "ფასის შენახვა ვერ მოხერხდა"
+    "priceSaveFailed": "ფასის შენახვა ვერ მოხერხდა",
+    "period": {
+      "week": "კვირა",
+      "month": "თვე"
+    },
+    "monthTotal": "თვის ჯამი",
+    "weekLabel": "კვირა {n}",
+    "noWeekData": "გეგმა არ არის",
+    "officersShort": "ოფიცერი"
   },
   "locations": {
     "dataLoading": "მონაცემების ჩატვირთვა...",

@@ -2067,7 +2067,15 @@
     "inheritsGlobal": "inherits global {price} ₾/L",
     "invalidPrice": "Invalid price",
     "priceSaved": "Price saved",
-    "priceSaveFailed": "Could not save price"
+    "priceSaveFailed": "Could not save price",
+    "period": {
+      "week": "Week",
+      "month": "Month"
+    },
+    "monthTotal": "Month total",
+    "weekLabel": "Week {n}",
+    "noWeekData": "No plan",
+    "officersShort": "Officers"
   },
   "locations": {
     "dataLoading": "Loading data...",

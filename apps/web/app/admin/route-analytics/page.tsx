@@ -31,6 +31,7 @@ import {
 import { OfficerWeekPopup } from '@/features/routing/components/OfficerWeekPopup'
 import { AdminWeekTabs, type AdminTab } from '@/features/routing/components/analytics/AdminWeekTabs'
 import { FuelBreakdownPopup } from '@/features/routing/components/analytics/FuelBreakdownPopup'
+import { MonthBreakdown } from '@/features/routing/components/analytics/MonthBreakdown'
 import { mondayOf, weekDays, dayKey, shortDate } from '@/features/routing/lib/week'
 
 export default function RouteAnalyticsPage() {
@@ -42,9 +43,14 @@ export default function RouteAnalyticsPage() {
 
   const { showToast } = useToast()
   const setFuelPrices = useSetFuelPrices()
+  const [period, setPeriod] = useState<'week' | 'month'>('week')
   const [weekOffset, setWeekOffset] = useState(0)
+  const [monthOffset, setMonthOffset] = useState(0)
   const [tab, setTab] = useState<'overview' | AdminTab>('overview')
-  const [selected, setSelected] = useState<OfficerWeekSummary | null>(null)
+  const [selected, setSelected] = useState<{
+    summary: OfficerWeekSummary
+    weekStart: string
+  } | null>(null)
   const [breakdown, setBreakdown] = useState(false)
   const [exporting, setExporting] = useState<'week' | 'month' | null>(null)
   const [priceInputs, setPriceInputs] = useState<Record<FuelType, string>>({
@@ -56,6 +62,16 @@ export default function RouteAnalyticsPage() {
   const monday = useMemo(() => mondayOf(weekOffset), [weekOffset])
   const days = useMemo(() => weekDays(monday), [monday])
   const weekStartKey = dayKey(monday)
+
+  // Month view (weekly breakdown). Month name comes from the browser locale.
+  const monthBase = useMemo(() => {
+    const d = new Date()
+    d.setDate(1)
+    d.setMonth(d.getMonth() + monthOffset)
+    return d
+  }, [monthOffset])
+  const monthKey = `${monthBase.getFullYear()}-${String(monthBase.getMonth() + 1).padStart(2, '0')}`
+  const monthLabel = monthBase.toLocaleDateString('ka-GE', { month: 'long', year: 'numeric' })
 
   const { data, isLoading } = useRouteAnalytics(isManager ? weekStartKey : '')
 
@@ -107,12 +123,15 @@ export default function RouteAnalyticsPage() {
 
   // Excel export of per-officer rows over the week or the viewed month.
   const exportXlsx = async (scope: 'week' | 'month') => {
+    // In month view the month export follows the selected month; otherwise it
+    // uses the month the viewed week sits in.
+    const mBase = period === 'month' ? monthBase : monday
     const from =
-      scope === 'week' ? weekStartKey : dayKey(new Date(monday.getFullYear(), monday.getMonth(), 1))
+      scope === 'week' ? weekStartKey : dayKey(new Date(mBase.getFullYear(), mBase.getMonth(), 1))
     const to =
       scope === 'week'
         ? dayKey(days[6])
-        : dayKey(new Date(monday.getFullYear(), monday.getMonth() + 1, 0))
+        : dayKey(new Date(mBase.getFullYear(), mBase.getMonth() + 1, 0))
     setExporting(scope)
     try {
       const res = await fetch(`/api/routing/export?from=${from}&to=${to}`)
@@ -180,24 +199,49 @@ export default function RouteAnalyticsPage() {
                 <p className="text-sm text-white/80">{t('routeAnalytics.description')}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 self-start rounded-full bg-white/15 backdrop-blur-sm ring-1 ring-white/20 p-1 sm:self-auto">
-              <button
-                type="button"
-                onClick={() => setWeekOffset(w => w - 1)}
-                className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="text-sm font-semibold text-white px-2 whitespace-nowrap">
-                {shortDate(days[0])} – {shortDate(days[6])}
-              </span>
-              <button
-                type="button"
-                onClick={() => setWeekOffset(w => w + 1)}
-                className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+            <div className="flex flex-col gap-2 sm:items-end">
+              {/* Week / month toggle */}
+              <div className="inline-flex self-start rounded-full bg-white/10 ring-1 ring-white/20 p-0.5 sm:self-auto">
+                {(['week', 'month'] as const).map(p => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPeriod(p)}
+                    className={cn(
+                      'px-3 py-1 rounded-full text-xs font-semibold transition-colors',
+                      period === p
+                        ? 'bg-white text-monday-primary'
+                        : 'text-white/80 hover:text-white'
+                    )}
+                  >
+                    {t(`routeAnalytics.period.${p}`)}
+                  </button>
+                ))}
+              </div>
+              {/* Period navigation */}
+              <div className="flex items-center gap-1 self-start rounded-full bg-white/15 backdrop-blur-sm ring-1 ring-white/20 p-1 sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() =>
+                    period === 'week' ? setWeekOffset(w => w - 1) : setMonthOffset(w => w - 1)
+                  }
+                  className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <span className="text-sm font-semibold text-white px-2 whitespace-nowrap capitalize">
+                  {period === 'week' ? `${shortDate(days[0])} – ${shortDate(days[6])}` : monthLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    period === 'week' ? setWeekOffset(w => w + 1) : setMonthOffset(w => w + 1)
+                  }
+                  className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -276,28 +320,41 @@ export default function RouteAnalyticsPage() {
           </button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-1 mb-5 border-b border-border-light overflow-x-auto">
-          {(['overview', 'requests', 'unplanned', 'deferred'] as const).map(tb => (
-            <button
-              key={tb}
-              type="button"
-              onClick={() => setTab(tb)}
-              className={cn(
-                'px-3 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors',
-                tab === tb
-                  ? 'border-monday-primary text-monday-primary'
-                  : 'border-transparent text-text-secondary hover:text-text-primary'
-              )}
-            >
-              {t(`routeAnalytics.tab.${tb}`)}
-            </button>
-          ))}
-        </div>
+        {/* Month view: weekly breakdown of the selected month */}
+        {period === 'month' && (
+          <MonthBreakdown
+            month={monthKey}
+            globalPrices={gp}
+            onSelect={(summary, weekStart) => setSelected({ summary, weekStart })}
+          />
+        )}
 
-        {tab !== 'overview' && <AdminWeekTabs weekStart={weekStartKey} tab={tab} />}
+        {/* Tabs (week view only) */}
+        {period === 'week' && (
+          <div className="flex items-center gap-1 mb-5 border-b border-border-light overflow-x-auto">
+            {(['overview', 'requests', 'unplanned', 'deferred'] as const).map(tb => (
+              <button
+                key={tb}
+                type="button"
+                onClick={() => setTab(tb)}
+                className={cn(
+                  'px-3 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors',
+                  tab === tb
+                    ? 'border-monday-primary text-monday-primary'
+                    : 'border-transparent text-text-secondary hover:text-text-primary'
+                )}
+              >
+                {t(`routeAnalytics.tab.${tb}`)}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {tab === 'overview' && (
+        {period === 'week' && tab !== 'overview' && (
+          <AdminWeekTabs weekStart={weekStartKey} tab={tab} />
+        )}
+
+        {period === 'week' && tab === 'overview' && (
           <>
             {/* Fleet totals */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -349,7 +406,7 @@ export default function RouteAnalyticsPage() {
                   <button
                     key={o.officerId}
                     type="button"
-                    onClick={() => setSelected(o)}
+                    onClick={() => setSelected({ summary: o, weekStart: weekStartKey })}
                     style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'backwards' }}
                     className={cn(
                       'text-left rounded-2xl border p-4 shadow-sm transition-all',
@@ -400,9 +457,9 @@ export default function RouteAnalyticsPage() {
 
       {selected && (
         <OfficerWeekPopup
-          summary={selected}
-          weekStart={weekStartKey}
-          typePrice={selected.fuelType ? (gp?.[selected.fuelType] ?? null) : null}
+          summary={selected.summary}
+          weekStart={selected.weekStart}
+          typePrice={selected.summary.fuelType ? (gp?.[selected.summary.fuelType] ?? null) : null}
           onClose={() => setSelected(null)}
         />
       )}

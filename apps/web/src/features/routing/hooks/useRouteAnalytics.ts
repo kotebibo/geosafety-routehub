@@ -45,6 +45,34 @@ export function useRouteAnalytics(weekStart: string) {
   })
 }
 
+export interface WeekSlice {
+  weekStart: string
+  weekEnd: string
+  fleet: { km: number; liters: number; cost: number; minutes: number; planning: number }
+  officers: OfficerWeekSummary[]
+}
+export interface MonthAnalytics {
+  month: string
+  weekStarts: string[]
+  weeks: WeekSlice[]
+  monthTotals: { km: number; liters: number; cost: number; minutes: number }
+  globalPrices: FuelPrices
+}
+
+/** Per-week analytics slices for a whole month (YYYY-MM). Admin analytics page. */
+export function useMonthAnalytics(month: string, enabled = true) {
+  return useQuery({
+    queryKey: ['route-analytics-month', month],
+    queryFn: async (): Promise<MonthAnalytics> => {
+      const res = await fetch(`/api/routing/analytics/month?month=${month}`)
+      if (!res.ok) throw new Error('Failed to load month analytics')
+      return res.json()
+    },
+    enabled: enabled && !!month,
+    staleTime: 30_000,
+  })
+}
+
 export interface WeekRequest {
   inspectorId: string
   name: string | null
