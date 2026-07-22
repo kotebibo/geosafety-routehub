@@ -14,9 +14,23 @@ export interface WeekPlanDay {
   status?: string
   stops: WeekPlanStop[]
 }
+export type WeekPlanStatus = 'draft' | 'submitted' | 'approved'
+
+export interface WeekPlanSnapshot {
+  status: WeekPlanStatus
+  submitted_at: string | null
+  approved_at: string | null
+  approved_by: string | null
+  total_km: number | null
+  fuel_liters: number | null
+  fuel_cost: number | null
+}
+
 export interface WeekPlan {
   inspectorId: string
   weekStart: string
+  status: WeekPlanStatus
+  plan: WeekPlanSnapshot | null
   days: WeekPlanDay[]
 }
 
@@ -66,6 +80,35 @@ export function useSaveWeekPlan() {
       queryClient.invalidateQueries({
         queryKey: ['week-plan', variables.inspectorId, variables.weekStart],
       })
+    },
+  })
+}
+
+/** Advance the week plan lifecycle: submit (officer) / approve|reopen (admin). */
+export function useWeekPlanAction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: {
+      inspectorId: string
+      weekStart: string
+      action: 'submit' | 'approve' | 'reopen'
+    }) => {
+      const res = await fetch('/api/routing/week-plan', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw { ...err, status: res.status }
+      }
+      return res.json()
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['week-plan', variables.inspectorId, variables.weekStart],
+      })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
     },
   })
 }
