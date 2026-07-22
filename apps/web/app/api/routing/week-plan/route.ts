@@ -194,6 +194,30 @@ export async function POST(request: NextRequest) {
       await svc.from('routes').delete().in('id', oldIds)
     }
 
+    // Carry-over: objects that were "failed" earlier (skipped in a prior week and
+    // never resolved as canceled+confirmed) were already paid for, so re-planning
+    // them this week must not be charged again → mark those stops prepaid.
+    const plannedItemIds = [...new Set(v.days.flatMap(d => d.stops.map(s => s.itemId)))]
+    const prepaidItems = new Set<string>()
+    if (plannedItemIds.length) {
+      const { data: priorSkipped } = await svc
+        .from('routes')
+        .select('date, route_stops(board_item_id, status, skip_reason, skip_confirmed)')
+        .eq('inspector_id', v.inspectorId)
+        .lt('date', v.weekStart)
+      for (const r of priorSkipped || []) {
+        for (const s of r.route_stops || []) {
+          if (
+            s.status === 'skipped' &&
+            s.board_item_id &&
+            plannedItemIds.includes(s.board_item_id) &&
+            !(s.skip_reason === 'canceled' && s.skip_confirmed)
+          )
+            prepaidItems.add(s.board_item_id)
+        }
+      }
+    }
+
     // Insert one route per non-empty day + its stops
     let savedDays = 0
     let savedStops = 0
@@ -218,6 +242,7 @@ export async function POST(request: NextRequest) {
         position: s.position,
         status: 'pending',
         distance_from_previous_km: s.distanceFromPrevious ?? null,
+        prepaid: prepaidItems.has(s.itemId),
       }))
       const { error: sErr } = await svc.from('route_stops').insert(stops)
       if (sErr) throw sErr

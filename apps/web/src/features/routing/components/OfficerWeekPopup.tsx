@@ -40,7 +40,9 @@ export function OfficerWeekPopup({
   const routes = data?.routes ?? []
   const officerStart = data?.start ?? null
   const [mapRoute, setMapRoute] = useState<OfficerRoute | null>(null)
+  const [tab, setTab] = useState<'week' | 'failed'>('week')
   const setOfficerPrice = useSetOfficerFuelPrice()
+  const failedCount = officerWeek.data?.failed.length ?? 0
 
   // Per-officer price override (empty → inherits the global price). Cost updates
   // live as the value is typed.
@@ -168,9 +170,32 @@ export function OfficerWeekPopup({
           </div>
         </div>
 
+        {/* Tabs: week plan vs. failed (carried-over, paid-but-unvisited) */}
+        <div className="flex items-center gap-1 px-4 pt-3">
+          <TabButton active={tab === 'week'} onClick={() => setTab('week')}>
+            {t('routeAnalytics.tab.week')}
+          </TabButton>
+          <TabButton active={tab === 'failed'} onClick={() => setTab('failed')}>
+            {t('myWeek.failed')}
+            {failedCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-500">
+                {failedCount}
+              </span>
+            )}
+          </TabButton>
+        </div>
+
         {/* Per-day breakdown */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {isLoading ? (
+          {tab === 'failed' ? (
+            officerWeek.data ? (
+              <WeekExtrasSections data={officerWeek.data} show={['failed']} />
+            ) : (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-6 h-6 text-text-tertiary animate-spin" />
+              </div>
+            )
+          ) : isLoading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="w-6 h-6 text-text-tertiary animate-spin" />
             </div>
@@ -248,11 +273,12 @@ export function OfficerWeekPopup({
             ))
           )}
 
-          {/* Unplanned / deviation / failed — admin can confirm canceled */}
-          {officerWeek.data && (
+          {/* Unplanned / deviation — admin can confirm canceled (failed → own tab) */}
+          {tab === 'week' && officerWeek.data && (
             <div className="mt-4">
               <WeekExtrasSections
                 data={officerWeek.data}
+                show={['unplanned', 'deviation']}
                 onConfirmCancel={id => confirm.mutate(id)}
                 confirming={confirm.isPending}
               />
@@ -294,6 +320,31 @@ export function OfficerWeekPopup({
   )
 
   return createPortal(content, document.body)
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+        active
+          ? 'bg-monday-primary/10 text-monday-primary'
+          : 'text-text-secondary hover:bg-bg-hover'
+      )}
+    >
+      {children}
+    </button>
+  )
 }
 
 function Total({

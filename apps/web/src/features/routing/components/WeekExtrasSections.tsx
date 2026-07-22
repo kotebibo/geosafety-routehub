@@ -4,8 +4,12 @@ import { useTranslations } from 'next-intl'
 import { AlertTriangle, Check, Clock, Loader2, MapPin, Plus, TrendingDown } from 'lucide-react'
 import type { OfficerWeek, StopExtraRow } from '../hooks/useOfficerWeek'
 
+type ExtrasSection = 'unplanned' | 'deviation' | 'failed'
+
 interface WeekExtrasSectionsProps {
   data: OfficerWeek
+  /** Which sections to render (default: all three). */
+  show?: ExtrasSection[]
   /** Officer-only: show a "book unplanned visit" action. */
   onBook?: () => void
   /** Admin-only: confirm an object-canceled deferral. */
@@ -22,6 +26,7 @@ function fmt(dateStr: string): string {
 // the officer "My Week" page and the admin's per-officer popup.
 export function WeekExtrasSections({
   data,
+  show = ['unplanned', 'deviation', 'failed'],
   onBook,
   onConfirmCancel,
   confirming,
@@ -31,69 +36,75 @@ export function WeekExtrasSections({
   return (
     <div className="space-y-3">
       {/* Unplanned */}
-      <Section
-        icon={<MapPin className="w-4 h-4 text-orange-500" />}
-        title={t('routing.unplannedVisits')}
-        count={data.unplanned.length}
-        action={
-          onBook && (
-            <button
-              type="button"
-              onClick={onBook}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-orange-500/10 text-orange-500 border border-orange-500/30 hover:bg-orange-500/20"
-            >
-              <Plus className="w-3 h-3" />
-              {t('myWeek.bookUnplanned')}
-            </button>
-          )
-        }
-        empty={data.unplanned.length === 0 ? t('routing.noUnplannedVisits') : null}
-      >
-        {data.unplanned.map((v, i) => (
-          <Row key={v.id} n={i + 1} name={v.name} date={v.date}>
-            {v.reason && (
-              <span className="text-[11px] text-text-secondary truncate">{v.reason}</span>
-            )}
-            <StatusChip status={v.status} t={t} />
-          </Row>
-        ))}
-      </Section>
+      {show.includes('unplanned') && (
+        <Section
+          icon={<MapPin className="w-4 h-4 text-orange-500" />}
+          title={t('routing.unplannedVisits')}
+          count={data.unplanned.length}
+          action={
+            onBook && (
+              <button
+                type="button"
+                onClick={onBook}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-orange-500/10 text-orange-500 border border-orange-500/30 hover:bg-orange-500/20"
+              >
+                <Plus className="w-3 h-3" />
+                {t('myWeek.bookUnplanned')}
+              </button>
+            )
+          }
+          empty={data.unplanned.length === 0 ? t('routing.noUnplannedVisits') : null}
+        >
+          {data.unplanned.map((v, i) => (
+            <Row key={v.id} n={i + 1} name={v.name} date={v.date}>
+              {v.reason && (
+                <span className="text-[11px] text-text-secondary truncate">{v.reason}</span>
+              )}
+              <StatusChip status={v.status} t={t} />
+            </Row>
+          ))}
+        </Section>
+      )}
 
       {/* Deviation */}
-      <Section
-        icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}
-        title={t('routing.planDeviation')}
-        count={data.deviation.length}
-        empty={data.deviation.length === 0 ? t('routing.noDeviation') : null}
-      >
-        {data.deviation.map(s => (
-          <DeviationRow
-            key={s.stopId}
-            s={s}
-            onConfirmCancel={onConfirmCancel}
-            confirming={confirming}
-            t={t}
-          />
-        ))}
-      </Section>
+      {show.includes('deviation') && (
+        <Section
+          icon={<AlertTriangle className="w-4 h-4 text-amber-500" />}
+          title={t('routing.planDeviation')}
+          count={data.deviation.length}
+          empty={data.deviation.length === 0 ? t('routing.noDeviation') : null}
+        >
+          {data.deviation.map(s => (
+            <DeviationRow
+              key={s.stopId}
+              s={s}
+              onConfirmCancel={onConfirmCancel}
+              confirming={confirming}
+              t={t}
+            />
+          ))}
+        </Section>
+      )}
 
       {/* Failed (paid but not visited, not canceled+confirmed) */}
-      <Section
-        icon={<TrendingDown className="w-4 h-4 text-red-500" />}
-        title={t('myWeek.failed')}
-        count={data.failed.length}
-        empty={data.failed.length === 0 ? t('myWeek.noFailed') : null}
-      >
-        {data.failed.map(s => (
-          <Row key={s.stopId} name={s.name} date={s.date}>
-            {s.reason && (
-              <span className="text-[11px] text-red-500 truncate">
-                {t(`myWeek.reason.${s.reason}`)}
-              </span>
-            )}
-          </Row>
-        ))}
-      </Section>
+      {show.includes('failed') && (
+        <Section
+          icon={<TrendingDown className="w-4 h-4 text-red-500" />}
+          title={t('myWeek.failed')}
+          count={data.failed.length}
+          empty={data.failed.length === 0 ? t('myWeek.noFailed') : null}
+        >
+          {data.failed.map(s => (
+            <Row key={s.stopId} name={s.name} date={s.date}>
+              {s.reason && (
+                <span className="text-[11px] text-red-500 truncate">
+                  {t(`myWeek.reason.${s.reason}`)}
+                </span>
+              )}
+            </Row>
+          ))}
+        </Section>
+      )}
     </div>
   )
 }

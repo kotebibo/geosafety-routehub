@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     const { data: routes } = await svc
       .from('routes')
-      .select('inspector_id, total_distance_km, route_stops(status)')
+      .select('inspector_id, total_distance_km, route_stops(status, prepaid)')
       .in('inspector_id', activeIds)
       .gte('date', from)
       .lte('date', to)
@@ -79,7 +79,9 @@ export async function GET(request: NextRequest) {
       a.visited += stops.filter(
         (s: any) => s.status === 'completed' || s.status === 'visited'
       ).length
-      a.km += r.total_distance_km || 0
+      // All-prepaid carry-over days were already paid for → exclude from km/fuel.
+      const allPrepaid = stops.every((s: any) => s.prepaid)
+      if (!allPrepaid) a.km += r.total_distance_km || 0
     }
 
     const { data: checkins } = await svc

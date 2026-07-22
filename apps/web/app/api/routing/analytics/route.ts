@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     const dates = weekDates(weekStart)
     const { data: routes } = await svc
       .from('routes')
-      .select('inspector_id, total_distance_km, route_stops(status)')
+      .select('inspector_id, total_distance_km, route_stops(status, prepaid)')
       .in('inspector_id', activeIds)
       .in('date', dates)
 
@@ -96,7 +96,10 @@ export async function GET(request: NextRequest) {
       agg.visitedCount += stops.filter(
         (s: any) => s.status === 'completed' || s.status === 'visited'
       ).length
-      agg.totalKm += r.total_distance_km || 0
+      // A day whose stops are ALL prepaid carry-overs was already paid for last
+      // week → its km/fuel isn't charged again (matches computeWeekFuel).
+      const allPrepaid = stops.every((s: any) => s.prepaid)
+      if (!allPrepaid) agg.totalKm += r.total_distance_km || 0
     }
 
     // Time spent this week per officer (sum of check-in durations).
