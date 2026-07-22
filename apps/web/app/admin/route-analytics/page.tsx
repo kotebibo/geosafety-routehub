@@ -14,8 +14,8 @@ import {
   Loader2,
   Navigation,
   PieChart,
-  Route as RouteIcon,
   Users,
+  type LucideIcon,
 } from 'lucide-react'
 import * as XLSX from 'xlsx'
 import { cn } from '@/lib/utils'
@@ -338,46 +338,42 @@ export default function RouteAnalyticsPage() {
                     type="button"
                     onClick={() => setSelected(o)}
                     className={cn(
-                      'text-left rounded-xl border p-4 transition-colors',
+                      'text-left rounded-2xl border p-4 shadow-sm transition-all',
+                      'hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99]',
                       o.days > 0
-                        ? 'border-border-light bg-bg-primary hover:border-monday-primary'
+                        ? 'border-border-light bg-bg-primary hover:border-monday-primary/40'
                         : 'border-border-light bg-bg-primary opacity-70 hover:opacity-100'
                     )}
                   >
                     <div className="flex items-center gap-2.5 mb-3">
-                      <div className="w-9 h-9 rounded-full bg-bg-tertiary flex items-center justify-center text-text-secondary font-medium flex-shrink-0">
+                      <div className="w-10 h-10 rounded-2xl bg-monday-primary/10 flex items-center justify-center text-monday-primary font-bold flex-shrink-0">
                         {o.name.charAt(0).toUpperCase()}
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-text-primary truncate">{o.name}</p>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-text-primary truncate">{o.name}</p>
                         <p className="text-xs text-text-tertiary">
                           {o.days > 0
                             ? t('routeAnalytics.daysPlanned', { count: o.days })
                             : t('routeAnalytics.noPlan')}
                         </p>
                       </div>
+                      {o.stopCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-green-500/10 text-green-600 border border-green-500/30 flex-shrink-0">
+                          {o.visitedCount}/{o.stopCount}
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="inline-flex items-center gap-1 text-text-secondary">
-                        <Navigation className="w-3.5 h-3.5" />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Chip icon={Navigation}>
                         {o.totalKm.toFixed(1)} {t('routing.km')}
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-text-secondary">
-                        <Fuel className="w-3.5 h-3.5" />
+                      </Chip>
+                      <Chip icon={Fuel}>
                         {o.liters != null
                           ? `${o.liters.toFixed(1)} ${t('routeAnalytics.litersShort')}`
                           : '—'}
-                      </span>
-                      {o.cost != null && (
-                        <span className="inline-flex items-center gap-1 text-text-secondary">
-                          <Coins className="w-3.5 h-3.5" />
-                          {o.cost.toFixed(1)} ₾
-                        </span>
-                      )}
-                      <span className="inline-flex items-center gap-1 text-text-tertiary ml-auto">
-                        <RouteIcon className="w-3.5 h-3.5" />
-                        {o.stopCount}
-                      </span>
+                      </Chip>
+                      {o.cost != null && <Chip icon={Coins}>{o.cost.toFixed(1)} ₾</Chip>}
+                      {o.minutes > 0 && <Chip icon={Clock}>{o.minutes}წთ</Chip>}
                     </div>
                   </button>
                 ))}
@@ -398,5 +394,15 @@ export default function RouteAnalyticsPage() {
 
       {breakdown && <FuelBreakdownPopup officers={officers} onClose={() => setBreakdown(false)} />}
     </div>
+  )
+}
+
+// Soft pill for a metric on the officer card.
+function Chip({ icon: Icon, children }: { icon: LucideIcon; children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-bg-secondary text-xs text-text-secondary">
+      <Icon className="w-3.5 h-3.5" />
+      {children}
+    </span>
   )
 }
