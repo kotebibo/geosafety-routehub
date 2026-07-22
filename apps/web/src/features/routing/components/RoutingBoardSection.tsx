@@ -61,14 +61,14 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
           nested-button markup; the row area itself toggles expand. */}
       <div
         className={cn(
-          'w-full flex items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-bg-hover cursor-pointer',
+          'w-full flex items-center gap-2.5 px-3 py-3 transition-colors hover:bg-bg-hover cursor-pointer',
           expanded && 'bg-bg-selected'
         )}
         onClick={() => setExpanded(v => !v)}
       >
         <div
           className={cn(
-            'w-6 h-6 rounded flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0',
+            'w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm',
             BOARD_COLORS[board.color || 'primary'] || 'bg-monday-primary'
           )}
         >
@@ -76,7 +76,7 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
         </div>
         <span
           className={cn(
-            'flex-1 text-left text-sm font-medium truncate',
+            'flex-1 text-left text-sm font-semibold truncate',
             expanded ? 'text-monday-primary' : 'text-text-primary'
           )}
         >
@@ -84,7 +84,7 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
         </span>
         {/* Admin assigns the officer this board belongs to */}
         {isAdmin && <AssignOfficerControl board={board} />}
-        {/* Weekly route planner */}
+        {/* Weekly route planner — the primary action */}
         <button
           type="button"
           onClick={e => {
@@ -92,7 +92,7 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
             setWeekPlanning(true)
           }}
           title={t('routing.weekPlanning')}
-          className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-bg-tertiary text-text-tertiary hover:bg-bg-hover transition-colors flex-shrink-0"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-monday-primary text-white shadow-sm hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
         >
           <CalendarDays className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">{t('routing.planWeekShort')}</span>
