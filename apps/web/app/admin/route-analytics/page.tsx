@@ -9,12 +9,15 @@ import {
   ChevronRight,
   Clock,
   Coins,
+  Download,
   Fuel,
   Loader2,
   Navigation,
+  PieChart,
   Route as RouteIcon,
   Users,
 } from 'lucide-react'
+import * as XLSX from 'xlsx'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui-monday/Toast'
@@ -27,6 +30,7 @@ import {
 } from '@/features/routing/hooks/useRouteAnalytics'
 import { OfficerWeekPopup } from '@/features/routing/components/OfficerWeekPopup'
 import { AdminWeekTabs, type AdminTab } from '@/features/routing/components/analytics/AdminWeekTabs'
+import { FuelBreakdownPopup } from '@/features/routing/components/analytics/FuelBreakdownPopup'
 import { mondayOf, weekDays, dayKey, shortDate } from '@/features/routing/lib/week'
 
 export default function RouteAnalyticsPage() {
@@ -41,6 +45,8 @@ export default function RouteAnalyticsPage() {
   const [weekOffset, setWeekOffset] = useState(0)
   const [tab, setTab] = useState<'overview' | AdminTab>('overview')
   const [selected, setSelected] = useState<OfficerWeekSummary | null>(null)
+  const [breakdown, setBreakdown] = useState(false)
+  const [exporting, setExporting] = useState<'week' | 'month' | null>(null)
   const [priceInputs, setPriceInputs] = useState<Record<FuelType, string>>({
     petrol: '',
     diesel: '',
@@ -99,6 +105,56 @@ export default function RouteAnalyticsPage() {
     }
   }
 
+  // Excel export of per-officer rows over the week or the viewed month.
+  const exportXlsx = async (scope: 'week' | 'month') => {
+    const from =
+      scope === 'week' ? weekStartKey : dayKey(new Date(monday.getFullYear(), monday.getMonth(), 1))
+    const to =
+      scope === 'week'
+        ? dayKey(days[6])
+        : dayKey(new Date(monday.getFullYear(), monday.getMonth() + 1, 0))
+    setExporting(scope)
+    try {
+      const res = await fetch(`/api/routing/export?from=${from}&to=${to}`)
+      if (!res.ok) throw new Error()
+      const { rows } = await res.json()
+      const header = [
+        t('inspectorRoutes.officer'),
+        t('routing.org'),
+        t('routing.fuelType'),
+        t('routeAnalytics.daysShort'),
+        t('officerPlan.objects'),
+        t('myWeek.done'),
+        t('routing.km'),
+        t('officerPlan.fuelL'),
+        '₾',
+        t('routeAnalytics.totalTime'),
+        t('routeAnalytics.tab.unplanned'),
+      ]
+      const body = (rows as any[]).map(r => [
+        r.name,
+        r.org ? t(`routing.org${r.org[0].toUpperCase()}${r.org.slice(1)}`) : '',
+        r.fuelType ? t(`routing.fuel${r.fuelType[0].toUpperCase()}${r.fuelType.slice(1)}`) : '',
+        r.days,
+        r.stops,
+        r.visited,
+        r.km,
+        r.liters ?? '',
+        r.cost ?? '',
+        r.minutes,
+        r.unplanned,
+      ])
+      const ws = XLSX.utils.aoa_to_sheet([header, ...body])
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Routing')
+      XLSX.writeFile(wb, `routing-${scope}-${from}.xlsx`)
+    } catch {
+      showToast(t('common.error'), 'error')
+    } finally {
+      setExporting(null)
+    }
+  }
+
   if (authLoading || !isManager) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -130,6 +186,44 @@ export default function RouteAnalyticsPage() {
             className="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary"
           >
             <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Export + cost breakdown */}
+        <div className="flex items-center justify-end gap-2 mb-4 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setBreakdown(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-light text-sm text-text-secondary hover:bg-bg-hover"
+          >
+            <PieChart className="w-4 h-4" />
+            {t('routeAnalytics.costBreakdown')}
+          </button>
+          <button
+            type="button"
+            onClick={() => exportXlsx('week')}
+            disabled={exporting !== null}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-light text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50"
+          >
+            {exporting === 'week' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            {t('routeAnalytics.exportWeek')}
+          </button>
+          <button
+            type="button"
+            onClick={() => exportXlsx('month')}
+            disabled={exporting !== null}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-light text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50"
+          >
+            {exporting === 'month' ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4" />
+            )}
+            {t('routeAnalytics.exportMonth')}
           </button>
         </div>
 
@@ -301,6 +395,8 @@ export default function RouteAnalyticsPage() {
           onClose={() => setSelected(null)}
         />
       )}
+
+      {breakdown && <FuelBreakdownPopup officers={officers} onClose={() => setBreakdown(false)} />}
     </div>
   )
 }
