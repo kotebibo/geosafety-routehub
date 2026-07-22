@@ -2179,6 +2179,7 @@
   "myWeek": {
     "title": "My week",
     "today": "Today",
+    "dayLocked": "Another day",
     "done": "Done",
     "empty": "No visits planned this week.",
     "checkin": "Check in",

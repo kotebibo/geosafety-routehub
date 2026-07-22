@@ -220,6 +220,34 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Day rule (env CHECKIN_ANY_DAY=false): a planned stop can only be checked
+    // in on its planned day. Deferred (skipped) stops and unplanned items —
+    // items not actively planned for another day this week — are exempt.
+    if (process.env.CHECKIN_ANY_DAY !== 'true' && validated.board_item_id) {
+      const gsvc = createServiceClient() as any
+      const nowG = new Date(Date.now() + 4 * 60 * 60 * 1000)
+      const today = nowG.toISOString().slice(0, 10)
+      const dow = (nowG.getUTCDay() + 6) % 7
+      const monday = new Date(nowG.getTime() - dow * 86400000).toISOString().slice(0, 10)
+      const sunday = new Date(new Date(monday).getTime() + 6 * 86400000).toISOString().slice(0, 10)
+      const { data: prs } = await gsvc
+        .from('routes')
+        .select('date, route_stops(board_item_id, status)')
+        .eq('inspector_id', validated.inspector_id)
+        .gte('date', monday)
+        .lte('date', sunday)
+      const activeDays = new Set<string>()
+      for (const r of prs || [])
+        for (const s of r.route_stops || [])
+          if (s.board_item_id === validated.board_item_id && s.status !== 'skipped')
+            activeDays.add(r.date)
+      if (activeDays.size > 0 && !activeDays.has(today))
+        return NextResponse.json(
+          { error: 'ჩექინი მხოლოდ დაგეგმილ დღეს შეიძლება', wrongDay: true },
+          { status: 422 }
+        )
+    }
+
     const { data: checkin, error } = await supabase
       .from('location_checkins')
       .insert({

@@ -50,6 +50,8 @@ export function MyWeekPage() {
   const weekStart = dayKey(mondayOf(0))
   const weekEnd = addDays(weekStart, 6)
   const todayKey = dayKey(new Date())
+  // env: true → check in on a planned stop any day; false → only its planned day.
+  const anyDay = process.env.NEXT_PUBLIC_CHECKIN_ANY_DAY === 'true'
   const days = useMemo(
     () =>
       (data?.routes ?? [])
@@ -115,6 +117,7 @@ export function MyWeekPage() {
               key={route.id}
               route={route}
               isToday={route.date === todayKey}
+              checkinEnabled={anyDay || route.date === todayKey}
               onCheckin={setCheckinItemId}
               onDefer={setDeferStop}
               t={t}
@@ -151,12 +154,14 @@ export function MyWeekPage() {
 function DaySection({
   route,
   isToday,
+  checkinEnabled,
   onCheckin,
   onDefer,
   t,
 }: {
   route: OfficerRoute
   isToday: boolean
+  checkinEnabled: boolean
   onCheckin: (itemId: string) => void
   onDefer: (stop: RouteStop) => void
   t: ReturnType<typeof useTranslations>
@@ -189,7 +194,14 @@ function DaySection({
       </div>
       <div className="divide-y divide-border-light">
         {route.stops.map(stop => (
-          <StopRow key={stop.id} stop={stop} onCheckin={onCheckin} onDefer={onDefer} t={t} />
+          <StopRow
+            key={stop.id}
+            stop={stop}
+            checkinEnabled={checkinEnabled}
+            onCheckin={onCheckin}
+            onDefer={onDefer}
+            t={t}
+          />
         ))}
       </div>
     </div>
@@ -198,11 +210,13 @@ function DaySection({
 
 function StopRow({
   stop,
+  checkinEnabled,
   onCheckin,
   onDefer,
   t,
 }: {
   stop: RouteStop
+  checkinEnabled: boolean
   onCheckin: (itemId: string) => void
   onDefer: (stop: RouteStop) => void
   t: ReturnType<typeof useTranslations>
@@ -210,6 +224,8 @@ function StopRow({
   const state = stopVisitState(stop.status)
   const skipped = stop.status === 'skipped'
   const done = state === 'done'
+  // Deviations (skipped) can be checked in any day; planned stops obey the day rule.
+  const canCheckin = checkinEnabled || skipped
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
@@ -249,29 +265,35 @@ function StopRow({
         </div>
       </div>
 
-      {/* Actions — hidden once done */}
-      {!done && stop.boardItemId && (
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          <button
-            type="button"
-            onClick={() => onCheckin(stop.boardItemId!)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-monday-primary text-white hover:opacity-90 active:scale-95 transition-all"
-          >
-            <MapPin className="w-3.5 h-3.5" />
-            {t('myWeek.checkin')}
-          </button>
-          {!skipped && (
+      {/* Actions — hidden once done; day-locked stops show a hint instead */}
+      {!done &&
+        stop.boardItemId &&
+        (canCheckin ? (
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             <button
               type="button"
-              onClick={() => onDefer(stop)}
-              title={t('myWeek.defer')}
-              className="inline-flex items-center justify-center w-8 h-8 rounded-full text-text-tertiary hover:bg-bg-hover hover:text-amber-500 transition-colors"
+              onClick={() => onCheckin(stop.boardItemId!)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-monday-primary text-white hover:opacity-90 active:scale-95 transition-all"
             >
-              <SkipForward className="w-4 h-4" />
+              <MapPin className="w-3.5 h-3.5" />
+              {t('myWeek.checkin')}
             </button>
-          )}
-        </div>
-      )}
+            {!skipped && (
+              <button
+                type="button"
+                onClick={() => onDefer(stop)}
+                title={t('myWeek.defer')}
+                className="inline-flex items-center justify-center w-8 h-8 rounded-full text-text-tertiary hover:bg-bg-hover hover:text-amber-500 transition-colors"
+              >
+                <SkipForward className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        ) : (
+          <span className="text-[10px] text-text-tertiary flex-shrink-0">
+            {t('myWeek.dayLocked')}
+          </span>
+        ))}
     </div>
   )
 }
