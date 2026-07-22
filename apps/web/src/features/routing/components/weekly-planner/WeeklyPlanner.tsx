@@ -3,8 +3,10 @@
 import { createPortal } from 'react-dom'
 import { AlertCircle, MapPin } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { useToast } from '@/components/ui-monday/Toast'
 import { dayKey } from '../../lib/week'
 import type { Board } from '@/types/board'
+import { useWeekPlanAction } from '../../hooks/useWeekPlan'
 import { useWeeklyPlan } from './useWeeklyPlan'
 import { PlannerHeader } from './PlannerHeader'
 import { DayCard } from './DayCard'
@@ -20,7 +22,25 @@ interface WeeklyPlannerProps {
 
 export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const t = useTranslations()
+  const { showToast } = useToast()
   const c = useWeeklyPlan(board)
+  const submit = useWeekPlanAction()
+
+  // Send the plan to the admin for approval (optimize + save, then submit).
+  const handleSubmit = async () => {
+    if (c.totalCompanies === 0) return
+    await c.handlePlanWeek()
+    try {
+      await submit.mutateAsync({
+        inspectorId: c.inspectorId,
+        weekStart: c.weekStartKey,
+        action: 'submit',
+      })
+      showToast(t('officerPlan.sent'), 'success')
+    } catch (err: any) {
+      showToast(err?.error || t('officerPlan.sendFailed'), 'error')
+    }
+  }
 
   const content = (
     <div className="fixed inset-0 z-50 flex flex-col bg-bg-primary">
@@ -113,6 +133,9 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
             fuelLiters={c.fuelLiters}
             planningWeek={c.planningWeek}
             onPlanWeek={c.handlePlanWeek}
+            planStatus={c.planStatus}
+            onSubmit={handleSubmit}
+            submitting={submit.isPending}
           />
         </>
       )}

@@ -49,6 +49,7 @@ export function MyWeekPage() {
   // Current week's routes only, day-ascending.
   const weekStart = dayKey(mondayOf(0))
   const weekEnd = addDays(weekStart, 6)
+  const todayKey = dayKey(new Date())
   const days = useMemo(
     () =>
       (data?.routes ?? [])
@@ -113,6 +114,7 @@ export function MyWeekPage() {
             <DaySection
               key={route.id}
               route={route}
+              isToday={route.date === todayKey}
               onCheckin={setCheckinItemId}
               onDefer={setDeferStop}
               t={t}
@@ -148,21 +150,38 @@ export function MyWeekPage() {
 
 function DaySection({
   route,
+  isToday,
   onCheckin,
   onDefer,
   t,
 }: {
   route: OfficerRoute
+  isToday: boolean
   onCheckin: (itemId: string) => void
   onDefer: (stop: RouteStop) => void
   t: ReturnType<typeof useTranslations>
 }) {
   return (
-    <div className="rounded-2xl bg-bg-primary border border-border-light shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2.5 bg-bg-secondary/50 border-b border-border-light">
+    <div
+      className={cn(
+        'rounded-2xl bg-bg-primary shadow-sm overflow-hidden border',
+        isToday ? 'border-monday-primary ring-2 ring-monday-primary/20' : 'border-border-light'
+      )}
+    >
+      <div
+        className={cn(
+          'flex items-center justify-between px-4 py-2.5 border-b border-border-light',
+          isToday ? 'bg-monday-primary/10' : 'bg-bg-secondary/50'
+        )}
+      >
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-text-primary">{dayLabelOf(route.date)}</span>
           <span className="text-xs text-text-tertiary">{shortDateStr(route.date)}</span>
+          {isToday && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-monday-primary text-white">
+              {t('myWeek.today')}
+            </span>
+          )}
         </div>
         <span className="text-xs text-text-tertiary">
           {(route.totalDistanceKm ?? 0).toFixed(1)} {t('inspectorRoutes.km')}
