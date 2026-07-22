@@ -7,6 +7,9 @@ import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 
 const patchSchema = z.object({
   status: z.enum(['pending', 'visited', 'skipped']),
+  // Only meaningful when status = 'skipped' (deferred/deviation).
+  skipReason: z.enum(['empty', 'closed', 'refused', 'other']).nullable().optional(),
+  skipNote: z.string().max(500).nullable().optional(),
 })
 
 // PATCH — mark a single route stop visited/skipped/pending. Authorized against
@@ -15,7 +18,7 @@ const patchSchema = z.object({
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await requireAuth()
-    const { status } = patchSchema.parse(await request.json())
+    const { status, skipReason, skipNote } = patchSchema.parse(await request.json())
 
     const supabase = createServerClient() as any
     const { data: roleRow } = await supabase
@@ -43,6 +46,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const now = new Date().toISOString()
     const patch: Record<string, any> = { status: dbStatus, updated_at: now }
     patch.actual_arrival_time = status === 'visited' ? now : null
+    // Deferral (deviation): record the reason + when; clear it on visit/revert.
+    if (status === 'skipped') {
+      patch.skip_reason = skipReason ?? null
+      patch.skip_note = skipNote ?? null
+      patch.deferred_at = now
+    } else {
+      patch.skip_reason = null
+      patch.skip_note = null
+      patch.deferred_at = null
+    }
 
     const { data: updated, error: uErr } = await svc
       .from('route_stops')
