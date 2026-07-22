@@ -2193,6 +2193,7 @@
       "empty": "Was empty",
       "closed": "Was closed",
       "refused": "They refused",
+      "canceled": "Object canceled the visit",
       "other": "Other"
     }
   },

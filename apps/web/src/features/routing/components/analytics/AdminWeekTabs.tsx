@@ -1,7 +1,7 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { AlertTriangle, Check, Clock, Loader2, MapPin, Navigation, Send, X } from 'lucide-react'
+import { AlertTriangle, Check, Loader2, MapPin, Navigation, X } from 'lucide-react'
 import { useToast } from '@/components/ui-monday/Toast'
 import { useAdminWeek } from '../../hooks/useRouteAnalytics'
 import { useWeekPlanAction } from '../../hooks/useWeekPlan'

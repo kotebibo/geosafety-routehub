@@ -83,7 +83,7 @@ export function useUpdateStopStatus(inspectorId: string) {
     }: {
       stopId: string
       status: StopStatus
-      skipReason?: 'empty' | 'closed' | 'refused' | 'other' | null
+      skipReason?: 'empty' | 'closed' | 'refused' | 'canceled' | 'other' | null
       skipNote?: string | null
     }) => {
       const res = await fetch(`/api/routing/stops/${stopId}`, {

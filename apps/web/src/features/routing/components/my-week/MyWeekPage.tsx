@@ -9,7 +9,6 @@ import {
   Loader2,
   MapPin,
   Navigation,
-  Plus,
   SkipForward,
   X,
 } from 'lucide-react'
@@ -30,7 +29,7 @@ import { stopVisitState } from '../../lib/stop-state'
 import { mondayOf, dayKey, addDays, shortDate, dayLabelOf } from '../../lib/week'
 import type { BoardColumn } from '@/types/board'
 
-const SKIP_REASONS = ['empty', 'closed', 'refused', 'other'] as const
+const SKIP_REASONS = ['empty', 'closed', 'refused', 'canceled', 'other'] as const
 type SkipReason = (typeof SKIP_REASONS)[number]
 
 export function MyWeekPage() {

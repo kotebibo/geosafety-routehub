@@ -9,7 +9,7 @@ import { notifyManagers } from '@/features/routing/lib/routing-notify'
 const patchSchema = z.object({
   status: z.enum(['pending', 'visited', 'skipped']),
   // Only meaningful when status = 'skipped' (deferred/deviation).
-  skipReason: z.enum(['empty', 'closed', 'refused', 'other']).nullable().optional(),
+  skipReason: z.enum(['empty', 'closed', 'refused', 'canceled', 'other']).nullable().optional(),
   skipNote: z.string().max(500).nullable().optional(),
 })
 
