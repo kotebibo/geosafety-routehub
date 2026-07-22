@@ -210,28 +210,33 @@ export async function POST(request: NextRequest) {
       await svc.from('routes').delete().in('id', oldIds)
     }
 
-    // Carry-over: objects that were "failed" earlier (skipped in a prior week and
-    // never resolved as canceled+confirmed) were already paid for, so re-planning
-    // them this week must not be charged again → mark those stops prepaid.
+    // Carry-over: an object whose LATEST prior stop was an unresolved skip (not
+    // canceled+confirmed) was already paid for but never visited, so re-planning
+    // it this week must not be charged again → mark that stop prepaid. Using only
+    // the latest prior stop means a debt cleared by a later visit isn't re-applied.
     const plannedItemIds = [...new Set(v.days.flatMap(d => d.stops.map(s => s.itemId)))]
     const prepaidItems = new Set<string>()
     if (plannedItemIds.length) {
-      const { data: priorSkipped } = await svc
+      const { data: priorRoutes } = await svc
         .from('routes')
         .select('date, route_stops(board_item_id, status, skip_reason, skip_confirmed)')
         .eq('inspector_id', v.inspectorId)
         .lt('date', v.weekStart)
-      for (const r of priorSkipped || []) {
+      const latest = new Map<string, { date: string; status: string; canceledOk: boolean }>()
+      for (const r of priorRoutes || []) {
         for (const s of r.route_stops || []) {
-          if (
-            s.status === 'skipped' &&
-            s.board_item_id &&
-            plannedItemIds.includes(s.board_item_id) &&
-            !(s.skip_reason === 'canceled' && s.skip_confirmed)
-          )
-            prepaidItems.add(s.board_item_id)
+          if (!s.board_item_id || !plannedItemIds.includes(s.board_item_id)) continue
+          const prev = latest.get(s.board_item_id)
+          if (!prev || r.date > prev.date)
+            latest.set(s.board_item_id, {
+              date: r.date,
+              status: s.status,
+              canceledOk: s.skip_reason === 'canceled' && !!s.skip_confirmed,
+            })
         }
       }
+      for (const [itemId, s] of latest)
+        if (s.status === 'skipped' && !s.canceledOk) prepaidItems.add(itemId)
     }
 
     // Insert one route per non-empty day + its stops

@@ -324,7 +324,6 @@ export default function RouteAnalyticsPage() {
         {period === 'month' && (
           <MonthBreakdown
             month={monthKey}
-            globalPrices={gp}
             onSelect={(summary, weekStart) => setSelected({ summary, weekStart })}
           />
         )}

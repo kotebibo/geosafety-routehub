@@ -77,23 +77,38 @@ export async function GET(request: NextRequest) {
       .eq('inspector_id', inspectorId)
       .lte('date', weekEnd)
     const deviation: any[] = []
-    const failed: any[] = []
+    // Failed = objects whose LATEST prior stop was an unresolved skip (paid but
+    // not visited, not canceled+confirmed). Tracking only the latest prior stop
+    // per object means one that was later visited no longer shows as failed.
+    const priorLatest = new Map<string, any>()
     for (const r of routes || []) {
       for (const s of r.route_stops || []) {
-        if (s.status !== 'skipped') continue
-        const row = {
-          stopId: s.id,
-          boardItemId: s.board_item_id,
-          date: r.date,
-          reason: s.skip_reason,
-          note: s.skip_note,
-          confirmed: s.skip_confirmed,
+        if (r.date >= weekStart && r.date <= weekEnd) {
+          if (s.status === 'skipped')
+            deviation.push({
+              stopId: s.id,
+              boardItemId: s.board_item_id,
+              date: r.date,
+              reason: s.skip_reason,
+              note: s.skip_note,
+              confirmed: s.skip_confirmed,
+            })
+        } else if (r.date < weekStart && s.board_item_id) {
+          const prev = priorLatest.get(s.board_item_id)
+          if (!prev || r.date > prev.date) priorLatest.set(s.board_item_id, { ...s, date: r.date })
         }
-        if (r.date >= weekStart && r.date <= weekEnd) deviation.push(row)
-        else if (r.date < weekStart && !(s.skip_reason === 'canceled' && s.skip_confirmed))
-          failed.push(row)
       }
     }
+    const failed = Array.from(priorLatest.values())
+      .filter(s => s.status === 'skipped' && !(s.skip_reason === 'canceled' && s.skip_confirmed))
+      .map(s => ({
+        stopId: s.id,
+        boardItemId: s.board_item_id,
+        date: s.date,
+        reason: s.skip_reason,
+        note: s.skip_note,
+        confirmed: s.skip_confirmed,
+      }))
     await resolveItems([...deviation, ...failed].map(x => x.boardItemId))
     for (const x of [...deviation, ...failed])
       x.name = x.boardItemId ? (nameOfItem.get(x.boardItemId) ?? null) : null

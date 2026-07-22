@@ -5,7 +5,6 @@ import { Clock, Coins, Fuel, Loader2, Navigation, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
   useMonthAnalytics,
-  type FuelPrices,
   type OfficerWeekSummary,
   type WeekSlice,
 } from '../../hooks/useRouteAnalytics'
@@ -13,7 +12,6 @@ import { shortDate } from '../../lib/week'
 
 interface MonthBreakdownProps {
   month: string // YYYY-MM
-  globalPrices: FuelPrices | undefined
   onSelect: (summary: OfficerWeekSummary, weekStart: string) => void
 }
 
@@ -24,7 +22,7 @@ function fmtDate(dateStr: string): string {
 
 // Month analytics as weekly slices — one card per week, each with fleet totals
 // and a compact per-officer breakdown. Clicking an officer opens their week.
-export function MonthBreakdown({ month, globalPrices, onSelect }: MonthBreakdownProps) {
+export function MonthBreakdown({ month, onSelect }: MonthBreakdownProps) {
   const t = useTranslations()
   const { data, isLoading } = useMonthAnalytics(month)
 
