@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { notifyManagers } from '@/features/routing/lib/routing-notify'
 
 const patchSchema = z.object({
   status: z.enum(['pending', 'visited', 'skipped']),
@@ -31,7 +32,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const svc = createServiceClient() as any
     const { data: stop, error: sErr } = await svc
       .from('route_stops')
-      .select('id, route_id, routes(inspector_id)')
+      .select('id, route_id, board_item_id, routes(inspector_id)')
       .eq('id', params.id)
       .single()
     if (sErr || !stop) return NextResponse.json({ error: 'Stop not found' }, { status: 404 })
@@ -64,6 +65,26 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       .select('id, status, actual_arrival_time')
       .single()
     if (uErr) throw uErr
+
+    // Deferral is a plan deviation → notify managers in-app.
+    if (status === 'skipped') {
+      const [{ data: officer }, { data: item }] = await Promise.all([
+        ownerId
+          ? svc.from('users').select('full_name, email').eq('id', ownerId).maybeSingle()
+          : Promise.resolve({ data: null }),
+        stop.board_item_id
+          ? svc.from('board_items').select('name').eq('id', stop.board_item_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+      const who = officer?.full_name || officer?.email || 'ოფიცერი'
+      await notifyManagers(svc, {
+        type: 'stop_deferred',
+        title: 'გეგმიდან გადახვევა',
+        message: `${who} — ${item?.name || 'ობიექტი'}${skipReason ? ` (${skipReason})` : ''}`,
+        data: { stopId: params.id, inspectorId: ownerId, boardItemId: stop.board_item_id },
+        email: false,
+      })
+    }
 
     return NextResponse.json({ success: true, stop: updated })
   } catch (error: any) {

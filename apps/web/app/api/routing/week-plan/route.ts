@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { notifyUser } from '@/lib/notify'
+import { notifyManagers } from '@/features/routing/lib/routing-notify'
 
 const stopSchema = z.object({
   itemId: z.string().uuid(),
@@ -304,6 +306,33 @@ export async function PATCH(request: NextRequest) {
       .select()
       .single()
     if (error) throw error
+
+    // Notify: submit → managers (in-app); approve → the officer (in-app).
+    if (action === 'submit') {
+      const { data: u } = await svc
+        .from('users')
+        .select('full_name, email')
+        .eq('id', inspectorId)
+        .maybeSingle()
+      const who = u?.full_name || u?.email || 'ოფიცერი'
+      await notifyManagers(svc, {
+        type: 'week_plan_submitted',
+        title: 'ახალი კვირის გეგმა',
+        message: `${who} — კვირის გეგმა დასამტკიცებლად`,
+        data: { inspectorId, weekStart },
+        email: false,
+      })
+    } else if (action === 'approve') {
+      await notifyUser({
+        supabase: svc,
+        userId: inspectorId,
+        type: 'week_plan_approved',
+        title: 'გეგმა დამტკიცდა',
+        message: 'თქვენი კვირის გეგმა დამტკიცდა',
+        data: { weekStart },
+        email: false,
+      })
+    }
 
     return NextResponse.json({ success: true, plan: data })
   } catch (error: any) {

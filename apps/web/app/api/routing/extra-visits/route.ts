@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { notifyManagers } from '@/features/routing/lib/routing-notify'
 
 async function roleOf(supabase: any, userId: string): Promise<string | null> {
   const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single()
@@ -107,6 +108,21 @@ export async function POST(request: NextRequest) {
       .select()
       .single()
     if (error) throw error
+
+    // Unplanned visits are urgent → notify managers in-app AND by email.
+    const [{ data: officer }, { data: item }] = await Promise.all([
+      svc.from('users').select('full_name, email').eq('id', v.inspectorId).maybeSingle(),
+      svc.from('board_items').select('name').eq('id', v.boardItemId).maybeSingle(),
+    ])
+    const who = officer?.full_name || officer?.email || 'ოფიცერი'
+    await notifyManagers(svc, {
+      type: 'extra_visit_requested',
+      title: 'დაუგეგმავი ვიზიტის მოთხოვნა',
+      message: `${who} — ${item?.name || 'ობიექტი'}${v.reason ? ` (${v.reason})` : ''}`,
+      data: { extraVisitId: data.id, inspectorId: v.inspectorId, boardItemId: v.boardItemId },
+      email: true,
+    })
+
     return NextResponse.json({ success: true, visit: data })
   } catch (error: any) {
     if (error.name === 'UnauthorizedError')
