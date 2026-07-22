@@ -406,7 +406,7 @@ function DeferModal({
             onChange={e => setNote(e.target.value)}
             placeholder={t('myWeek.reasonNote')}
             rows={2}
-            className="w-full px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-primary text-text-primary focus:outline-none focus:border-monday-primary resize-none"
+            className="w-full px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-primary text-text-primary transition-colors focus:outline-none focus:border-monday-primary focus:ring-2 focus:ring-monday-primary/20 resize-none"
           />
         </div>
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border-light">
@@ -515,7 +515,7 @@ function BookUnplannedModal({
           <select
             value={itemId}
             onChange={e => setItemId(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-primary text-text-primary"
+            className="w-full px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-primary text-text-primary transition-colors focus:outline-none focus:border-monday-primary focus:ring-2 focus:ring-monday-primary/20"
           >
             <option value="">{t('routing.pickObject')}</option>
             {items.map(i => (
@@ -529,7 +529,7 @@ function BookUnplannedModal({
             onChange={e => setReason(e.target.value)}
             placeholder={t('myWeek.bookReason')}
             rows={2}
-            className="w-full px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-primary text-text-primary focus:outline-none focus:border-monday-primary resize-none"
+            className="w-full px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-primary text-text-primary transition-colors focus:outline-none focus:border-monday-primary focus:ring-2 focus:ring-monday-primary/20 resize-none"
           />
         </div>
         <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border-light">

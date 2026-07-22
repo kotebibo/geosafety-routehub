@@ -68,7 +68,7 @@ export function RoutingWorkspaceSection({
 
       {/* Boards inside */}
       {expanded && (
-        <div className="border-t border-border-light px-2.5 py-2.5 space-y-2 bg-bg-secondary/40">
+        <div className="border-t border-border-light px-2.5 py-2.5 space-y-2 bg-bg-secondary/40 animate-in fade-in slide-in-from-top-1 duration-300">
           {boards.length === 0 ? (
             <p className="px-2 py-2 text-xs text-text-tertiary">{t('routing.noBoards')}</p>
           ) : (

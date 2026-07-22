@@ -159,8 +159,8 @@ function BoardItemsList({ board }: { board: Board }) {
   }
 
   return (
-    <div className="border-t border-border-light">
-      <div className="flex items-center gap-2 px-4 py-2 text-xs text-text-tertiary">
+    <div className="border-t border-border-light animate-in fade-in slide-in-from-top-1 duration-300">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 text-xs text-text-tertiary">
         <span>{t('routing.companiesCount', { count: items.length })}</span>
         {plannedCount > 0 && (
           <span className="px-2 py-0.5 rounded-full font-medium bg-monday-primary/10 text-monday-primary border border-monday-primary/30">
@@ -308,7 +308,7 @@ function ItemRow({ routingItem, selected, onToggleSelect, onOpen }: ItemRowProps
             )}
             <p className="text-sm font-medium text-text-primary truncate">{item.name}</p>
           </div>
-          <div className="flex items-center gap-2 text-xs text-text-secondary">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-text-secondary">
             {group && <span className="truncate">{group.name}</span>}
             {lastVisitStr && (
               <span className="flex-shrink-0">

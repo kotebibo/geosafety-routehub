@@ -251,7 +251,7 @@ export default function RouteAnalyticsPage() {
           <button
             type="button"
             onClick={() => setBreakdown(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-light text-sm text-text-secondary hover:bg-bg-hover"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border-light text-sm text-text-secondary transition-colors hover:bg-bg-hover"
           >
             <PieChart className="w-4 h-4" />
             {t('routeAnalytics.costBreakdown')}
@@ -260,7 +260,7 @@ export default function RouteAnalyticsPage() {
             type="button"
             onClick={() => exportXlsx('week')}
             disabled={exporting !== null}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-light text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border-light text-sm text-text-secondary transition-colors hover:bg-bg-hover disabled:opacity-50"
           >
             {exporting === 'week' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -273,7 +273,7 @@ export default function RouteAnalyticsPage() {
             type="button"
             onClick={() => exportXlsx('month')}
             disabled={exporting !== null}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border-light text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border-light text-sm text-text-secondary transition-colors hover:bg-bg-hover disabled:opacity-50"
           >
             {exporting === 'month' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -303,7 +303,7 @@ export default function RouteAnalyticsPage() {
                 value={priceInputs[type]}
                 onChange={e => setPriceInputs(prev => ({ ...prev, [type]: e.target.value }))}
                 placeholder="0.00"
-                className="w-24 px-3 py-1.5 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="w-24 px-3 py-1.5 rounded-xl border border-border-light bg-bg-primary text-sm text-text-primary transition-colors focus:outline-none focus:border-monday-primary focus:ring-2 focus:ring-monday-primary/20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
           ))}
@@ -314,7 +314,7 @@ export default function RouteAnalyticsPage() {
             type="button"
             onClick={saveGlobalPrices}
             disabled={setFuelPrices.isPending}
-            className="ml-auto px-4 py-1.5 rounded-lg bg-monday-primary text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 self-center"
+            className="ml-auto px-4 py-1.5 rounded-xl bg-monday-primary text-white text-sm font-semibold shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 self-center"
           >
             {t('common.save')}
           </button>

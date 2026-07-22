@@ -141,7 +141,7 @@ export function OfficerWeekPopup({
                 value={priceInput}
                 onChange={e => setPriceInput(e.target.value)}
                 placeholder={typePrice != null ? String(typePrice) : '0.00'}
-                className="w-20 px-2 py-1 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="w-20 px-2 py-1 rounded-xl border border-border-light bg-bg-primary text-sm text-text-primary text-right transition-colors focus:outline-none focus:border-monday-primary focus:ring-2 focus:ring-monday-primary/20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
               <span className="text-text-tertiary">{t('routeAnalytics.perLiter')}</span>
               <button

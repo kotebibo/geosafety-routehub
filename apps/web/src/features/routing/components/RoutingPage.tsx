@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useUserBoards } from '@/features/boards/hooks'
 import { useWorkspaces } from '@/features/workspaces/hooks'
 import { RoutingWorkspaceSection } from './RoutingWorkspaceSection'
+import { RoutingBoardSection } from './RoutingBoardSection'
 import type { Board } from '@/types/board'
 
 interface WorkspaceEntry {
@@ -17,8 +18,11 @@ interface WorkspaceEntry {
 
 export function RoutingPage() {
   const t = useTranslations()
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, isAdmin, isDispatcher } = useAuth()
   const isAuthReady = !authLoading && !!user
+  // Officers own a single board and don't manage workspaces → show a flat board
+  // list (no workspace accordion). Managers keep the grouped accordions.
+  const isManager = isAdmin || isDispatcher
 
   // Same sources and grouping the sidebar uses — workspaces and boards added
   // there show up here automatically
@@ -96,21 +100,28 @@ export function RoutingPage() {
           </div>
         )}
 
-        {/* Workspaces — same rows as the sidebar workspace dropdown */}
-        {!loading && (
-          <div className="space-y-2">
-            {workspaceEntries.map(entry => (
-              <RoutingWorkspaceSection key={entry.id} name={entry.name} boards={entry.boards} />
-            ))}
-            {sharedBoards.length > 0 && (
-              <RoutingWorkspaceSection
-                name={t('routing.sharedWithMe')}
-                boards={sharedBoards}
-                shared
-              />
-            )}
-          </div>
-        )}
+        {/* Officers see a flat board list; managers keep the workspace accordions. */}
+        {!loading &&
+          (isManager ? (
+            <div className="space-y-2.5">
+              {workspaceEntries.map(entry => (
+                <RoutingWorkspaceSection key={entry.id} name={entry.name} boards={entry.boards} />
+              ))}
+              {sharedBoards.length > 0 && (
+                <RoutingWorkspaceSection
+                  name={t('routing.sharedWithMe')}
+                  boards={sharedBoards}
+                  shared
+                />
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2.5">
+              {[...workspaceEntries.flatMap(e => e.boards), ...sharedBoards].map(board => (
+                <RoutingBoardSection key={board.id} board={board} />
+              ))}
+            </div>
+          ))}
       </div>
     </div>
   )
