@@ -14,6 +14,7 @@ import {
   Shield,
   UserCog,
   MapPin,
+  CalendarDays,
 } from 'lucide-react'
 
 export function Navigation() {
@@ -65,6 +66,7 @@ export function Navigation() {
       icon: Route,
       roles: ['admin', 'dispatcher'],
     },
+    { href: '/inspector/plan', label: t('nav.planWeek'), icon: CalendarDays, roles: ['officer'] },
     { href: '/inspector/routes', label: t('home.myRoutes'), icon: Route, roles: ['officer'] },
   ]
 

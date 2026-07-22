@@ -6,6 +6,7 @@
   },
   "nav": {
     "home": "Home",
+    "planWeek": "Plan week",
     "boards": "Boards",
     "companies": "Companies",
     "officers": "Officers",
@@ -2130,6 +2131,24 @@
   },
   "gps": {
     "notSupported": "Geolocation is not supported by this browser"
+  },
+  "officerPlan": {
+    "title": "Plan the week",
+    "nextWeek": "Next week",
+    "objects": "Objects",
+    "fuelL": "L",
+    "objectsOnMap": "My objects on the map",
+    "sendHint": "Finish planning and send it to the admin for approval.",
+    "sendToAdmin": "Send to admin",
+    "sent": "Plan sent to the admin",
+    "sendFailed": "Could not send",
+    "noBoardTitle": "No board assigned",
+    "noBoardHint": "An admin needs to assign you a board before you can plan.",
+    "statusDraft": "Draft",
+    "statusSubmitted": "Submitted",
+    "statusApproved": "Approved",
+    "submittedBanner": "Plan submitted — waiting for admin approval. Contact the admin to make changes.",
+    "approvedBanner": "Plan approved"
   },
   "routing": {
     "title": "Routing",
