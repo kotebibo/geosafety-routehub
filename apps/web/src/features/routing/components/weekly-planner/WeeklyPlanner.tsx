@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import { AlertCircle, MapPin } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useToast } from '@/components/ui-monday/Toast'
+import { useAuth } from '@/contexts/AuthContext'
 import { dayKey } from '../../lib/week'
 import type { Board } from '@/types/board'
 import { useWeekPlanAction } from '../../hooks/useWeekPlan'
@@ -23,7 +24,10 @@ interface WeeklyPlannerProps {
 export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
   const t = useTranslations()
   const { showToast } = useToast()
-  const c = useWeeklyPlan(board)
+  const { isAdmin, isDispatcher } = useAuth()
+  const isManager = isAdmin || isDispatcher
+  // Officers plan only NEXT week and can't switch weeks; managers browse freely.
+  const c = useWeeklyPlan(board, { initialWeekOffset: isManager ? 0 : 1 })
   const submit = useWeekPlanAction()
 
   // Send the plan to the admin for approval (optimize + save, then submit).
@@ -47,6 +51,7 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
       <PlannerHeader
         boardName={board.name}
         days={c.days}
+        canNavigate={isManager}
         onPrevWeek={() => c.setWeekOffset(w => w - 1)}
         onNextWeek={() => c.setWeekOffset(w => w + 1)}
         onClose={onClose}

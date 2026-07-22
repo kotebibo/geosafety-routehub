@@ -225,14 +225,15 @@ export async function POST(request: NextRequest) {
       savedStops += stops.length
     }
 
-    // Track the week at the plan level. New plans start as 'draft'; an admin
-    // editing an already-approved plan leaves its status intact.
+    // Any edit re-opens the plan as a draft — a submitted/approved plan that an
+    // admin changes must be re-submitted/re-approved so the fuel snapshot can't
+    // drift from what was actually purchased.
     await svc.from('week_plans').upsert(
       {
         inspector_id: v.inspectorId,
         board_id: v.boardId,
         week_start: v.weekStart,
-        status: existingPlan?.status ?? 'draft',
+        status: 'draft',
         updated_at: new Date().toISOString(),
       },
       { onConflict: 'inspector_id,week_start' }

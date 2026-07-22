@@ -7,6 +7,8 @@ import { shortDate } from '../../lib/week'
 interface PlannerHeaderProps {
   boardName: string
   days: Date[]
+  /** Officers can't switch weeks (they plan only next week) — hide the arrows. */
+  canNavigate?: boolean
   onPrevWeek: () => void
   onNextWeek: () => void
   onClose: () => void
@@ -15,6 +17,7 @@ interface PlannerHeaderProps {
 export function PlannerHeader({
   boardName,
   days,
+  canNavigate = true,
   onPrevWeek,
   onNextWeek,
   onClose,
@@ -33,25 +36,29 @@ export function PlannerHeader({
           <p className="text-xs text-text-tertiary truncate">{boardName}</p>
         </div>
       </div>
-      {/* Week nav */}
+      {/* Week nav — arrows only for managers; officers are pinned to next week */}
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={onPrevWeek}
-          className="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
+        {canNavigate && (
+          <button
+            type="button"
+            onClick={onPrevWeek}
+            className="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
         <span className="text-sm font-medium text-text-primary px-2 whitespace-nowrap">
           {shortDate(days[0])} – {shortDate(days[6])}
         </span>
-        <button
-          type="button"
-          onClick={onNextWeek}
-          className="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
+        {canNavigate && (
+          <button
+            type="button"
+            onClick={onNextWeek}
+            className="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
       </div>
       <button
         type="button"
