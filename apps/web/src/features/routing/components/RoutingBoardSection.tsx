@@ -301,41 +301,34 @@ function ItemRow({ routingItem, selected, onToggleSelect, onOpen }: ItemRowProps
             {item.name.charAt(0).toUpperCase()}
           </div>
 
-          <div className="flex-1 min-w-0 space-y-1">
-            {/* Planned chip on its own line for a clear tag */}
-            {plannedChip && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-monday-primary/10 text-monday-primary border border-monday-primary/30">
-                <CalendarDays className="w-3 h-3" />
-                {plannedChip}
-                {plannedDay && <span className="opacity-70">#{plannedDay.position}</span>}
-              </span>
-            )}
-            <p className="text-[15px] font-semibold text-text-primary leading-snug break-words">
-              {item.name}
-            </p>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-secondary">
-              {group && <span className="truncate">{group.name}</span>}
-              {lastVisitStr && (
-                <span className="flex-shrink-0">
-                  {t('routing.lastVisit', { date: lastVisitStr })}
+          <div className="flex-1 min-w-0 space-y-1.5">
+            {/* Tags row — planned chip + urgency, both wrap so they never squeeze
+                the name (which would otherwise break one char per line on mobile) */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {plannedChip && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-monday-primary/10 text-monday-primary border border-monday-primary/30">
+                  <CalendarDays className="w-3 h-3" />
+                  {plannedChip}
+                  {plannedDay && <span className="opacity-70">#{plannedDay.position}</span>}
                 </span>
               )}
+              <UrgencyBadge
+                daysLeft={daysLeft}
+                hasActiveCheckin={hasActiveCheckin}
+                neverVisited={neverVisited}
+              />
+            </div>
+            <p className="text-[15px] font-semibold text-text-primary leading-snug">{item.name}</p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-secondary">
+              {group && <span className="truncate max-w-full">{group.name}</span>}
+              {lastVisitStr && <span>{t('routing.lastVisit', { date: lastVisitStr })}</span>}
               {summary?.latest_inspector_name && (
-                <span className="inline-flex items-center gap-1 flex-shrink-0">
+                <span className="inline-flex items-center gap-1">
                   <User className="w-3 h-3" />
                   {summary.latest_inspector_name}
                 </span>
               )}
             </div>
-          </div>
-
-          {/* Urgency — right on desktop, wraps under its own row on mobile */}
-          <div className="flex-shrink-0 self-start">
-            <UrgencyBadge
-              daysLeft={daysLeft}
-              hasActiveCheckin={hasActiveCheckin}
-              neverVisited={neverVisited}
-            />
           </div>
         </button>
       </div>
