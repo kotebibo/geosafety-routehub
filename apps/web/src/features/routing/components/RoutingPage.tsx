@@ -64,14 +64,18 @@ export function RoutingPage() {
   return (
     <div className="flex-1 min-h-0 overflow-auto">
       <div className="max-w-3xl mx-auto px-6 py-6">
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-lg bg-monday-primary/10 flex items-center justify-center">
-            <Waypoints className="w-5 h-5 text-monday-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-text-primary">{t('routing.title')}</h1>
-            <p className="text-sm text-text-secondary">{t('routing.subtitle')}</p>
+        {/* Hero */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-monday-primary to-monday-purple p-6 shadow-lg mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="pointer-events-none absolute -top-10 -right-8 w-44 h-44 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-12 -left-6 w-36 h-36 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm ring-1 ring-white/25 flex items-center justify-center flex-shrink-0">
+              <Waypoints className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-white">{t('routing.title')}</h1>
+              <p className="text-sm text-white/80">{t('routing.subtitle')}</p>
+            </div>
           </div>
         </div>
 
@@ -84,7 +88,10 @@ export function RoutingPage() {
 
         {/* Empty state */}
         {!loading && workspaceEntries.length === 0 && sharedBoards.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="rounded-3xl bg-bg-primary border border-border-light p-12 text-center shadow-sm animate-in fade-in duration-500">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-monday-primary/10 flex items-center justify-center mb-4">
+              <Waypoints className="w-8 h-8 text-monday-primary" />
+            </div>
             <p className="text-sm text-text-secondary">{t('routing.noBoards')}</p>
           </div>
         )}

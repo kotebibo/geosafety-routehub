@@ -21,7 +21,7 @@ import * as XLSX from 'xlsx'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui-monday/Toast'
-import { PageHeader, StatCard, EmptyState } from '@/shared/components/ui'
+import { StatCard, EmptyState } from '@/shared/components/ui'
 import {
   useRouteAnalytics,
   useSetFuelPrices,
@@ -165,28 +165,41 @@ export default function RouteAnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-bg-secondary">
-      <PageHeader title={t('routeAnalytics.title')} description={t('routeAnalytics.description')} />
-
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Week navigation */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <button
-            type="button"
-            onClick={() => setWeekOffset(w => w - 1)}
-            className="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-sm font-medium text-text-primary px-2 whitespace-nowrap">
-            {shortDate(days[0])} – {shortDate(days[6])}
-          </span>
-          <button
-            type="button"
-            onClick={() => setWeekOffset(w => w + 1)}
-            className="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+        {/* Hero — title + glass week navigation */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-monday-primary to-monday-purple p-6 shadow-lg mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="pointer-events-none absolute -top-10 -right-8 w-44 h-44 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-12 -left-6 w-36 h-36 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm ring-1 ring-white/25 flex items-center justify-center flex-shrink-0">
+                <BarChart3 className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">{t('routeAnalytics.title')}</h1>
+                <p className="text-sm text-white/80">{t('routeAnalytics.description')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 self-start rounded-full bg-white/15 backdrop-blur-sm ring-1 ring-white/20 p-1 sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setWeekOffset(w => w - 1)}
+                className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-sm font-semibold text-white px-2 whitespace-nowrap">
+                {shortDate(days[0])} – {shortDate(days[6])}
+              </span>
+              <button
+                type="button"
+                onClick={() => setWeekOffset(w => w + 1)}
+                className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Export + cost breakdown */}
@@ -287,7 +300,7 @@ export default function RouteAnalyticsPage() {
         {tab === 'overview' && (
           <>
             {/* Fleet totals */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
               <StatCard
                 label={t('routeAnalytics.planningOfficers')}
                 value={fleet.planning}
@@ -332,14 +345,16 @@ export default function RouteAnalyticsPage() {
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {officers.map(o => (
+                {officers.map((o, i) => (
                   <button
                     key={o.officerId}
                     type="button"
                     onClick={() => setSelected(o)}
+                    style={{ animationDelay: `${i * 50}ms`, animationFillMode: 'backwards' }}
                     className={cn(
                       'text-left rounded-2xl border p-4 shadow-sm transition-all',
                       'hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99]',
+                      'animate-in fade-in slide-in-from-bottom-2 duration-500',
                       o.days > 0
                         ? 'border-border-light bg-bg-primary hover:border-monday-primary/40'
                         : 'border-border-light bg-bg-primary opacity-70 hover:opacity-100'

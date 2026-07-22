@@ -85,43 +85,51 @@ export function MyWeekPage() {
   return (
     <div className="min-h-screen bg-bg-secondary">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-5">
-        {/* Header */}
-        <div className="rounded-2xl bg-bg-primary border border-border-light p-5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-green-500/10 flex items-center justify-center flex-shrink-0">
-              <CalendarCheck className="w-5 h-5 text-green-600" />
+        {/* Hero */}
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-monday-primary to-monday-purple p-6 shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <div className="pointer-events-none absolute -top-10 -right-8 w-44 h-44 rounded-full bg-white/10 blur-2xl" />
+          <div className="pointer-events-none absolute -bottom-12 -left-6 w-36 h-36 rounded-full bg-white/10 blur-2xl" />
+          <div className="relative">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur-sm ring-1 ring-white/25 flex items-center justify-center flex-shrink-0">
+                <CalendarCheck className="w-6 h-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold text-white">{t('myWeek.title')}</h1>
+                <p className="text-sm text-white/80">
+                  {shortDateStr(weekStart)} – {shortDateStr(weekEnd)}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h1 className="text-lg font-bold text-text-primary">{t('myWeek.title')}</h1>
-              <p className="text-sm text-text-secondary">
-                {shortDateStr(weekStart)} – {shortDateStr(weekEnd)}
-              </p>
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              <GlassStat
+                icon={Check}
+                label={t('myWeek.done')}
+                value={`${stats.done}/${stats.total}`}
+              />
+              <GlassStat icon={MapPin} label={t('officerPlan.objects')} value={stats.total} />
+              <GlassStat
+                icon={Navigation}
+                label={t('inspectorRoutes.km')}
+                value={stats.km.toFixed(1)}
+              />
             </div>
-          </div>
-          <div className="mt-4 grid grid-cols-3 gap-2.5">
-            <StatChip
-              icon={Check}
-              label={t('myWeek.done')}
-              value={`${stats.done}/${stats.total}`}
-            />
-            <StatChip icon={MapPin} label={t('officerPlan.objects')} value={stats.total} />
-            <StatChip
-              icon={Navigation}
-              label={t('inspectorRoutes.km')}
-              value={stats.km.toFixed(1)}
-            />
           </div>
         </div>
 
         {days.length === 0 ? (
-          <div className="rounded-2xl bg-bg-primary border border-border-light p-10 text-center">
+          <div className="rounded-3xl bg-bg-primary border border-border-light p-12 text-center shadow-sm animate-in fade-in duration-500">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-monday-primary/10 flex items-center justify-center mb-4">
+              <CalendarCheck className="w-8 h-8 text-monday-primary" />
+            </div>
             <p className="text-sm text-text-secondary">{t('myWeek.empty')}</p>
           </div>
         ) : (
-          days.map(route => (
+          days.map((route, i) => (
             <DaySection
               key={route.id}
               route={route}
+              index={i}
               isToday={route.date === todayKey}
               checkinEnabled={anyDay || route.date === todayKey}
               onCheckin={setCheckinItemId}
@@ -178,6 +186,7 @@ export function MyWeekPage() {
 
 function DaySection({
   route,
+  index,
   isToday,
   checkinEnabled,
   onCheckin,
@@ -185,6 +194,7 @@ function DaySection({
   t,
 }: {
   route: OfficerRoute
+  index: number
   isToday: boolean
   checkinEnabled: boolean
   onCheckin: (itemId: string) => void
@@ -193,22 +203,28 @@ function DaySection({
 }) {
   return (
     <div
+      style={{ animationDelay: `${index * 70}ms`, animationFillMode: 'backwards' }}
       className={cn(
-        'rounded-2xl bg-bg-primary shadow-sm overflow-hidden border',
-        isToday ? 'border-monday-primary ring-2 ring-monday-primary/20' : 'border-border-light'
+        'rounded-2xl bg-bg-primary overflow-hidden border transition-shadow animate-in fade-in slide-in-from-bottom-2 duration-500',
+        isToday
+          ? 'border-monday-primary/60 ring-2 ring-monday-primary/20 shadow-md'
+          : 'border-border-light shadow-sm hover:shadow-md'
       )}
     >
       <div
         className={cn(
-          'flex items-center justify-between px-4 py-2.5 border-b border-border-light',
-          isToday ? 'bg-monday-primary/10' : 'bg-bg-secondary/50'
+          'flex items-center justify-between px-4 py-3 border-b border-border-light',
+          isToday
+            ? 'bg-gradient-to-r from-monday-primary/15 to-monday-purple/10'
+            : 'bg-bg-secondary/50'
         )}
       >
         <div className="flex items-center gap-2">
           <span className="text-sm font-bold text-text-primary">{dayLabelOf(route.date)}</span>
           <span className="text-xs text-text-tertiary">{shortDateStr(route.date)}</span>
           {isToday && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-monday-primary text-white">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-monday-primary text-white">
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               {t('myWeek.today')}
             </span>
           )}
@@ -253,7 +269,7 @@ function StopRow({
   const canCheckin = checkinEnabled || skipped
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3">
+    <div className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-bg-secondary/40">
       <span
         className={cn(
           'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[11px] font-bold border',
@@ -548,7 +564,7 @@ function shortDateStr(dateStr: string): string {
   return shortDate(new Date(y, m - 1, d))
 }
 
-function StatChip({
+function GlassStat({
   icon: Icon,
   label,
   value,
@@ -558,12 +574,12 @@ function StatChip({
   value: string | number
 }) {
   return (
-    <div className="rounded-xl bg-bg-secondary border border-border-light px-3 py-2.5">
-      <div className="flex items-center gap-1.5 text-text-tertiary mb-0.5">
+    <div className="rounded-2xl bg-white/15 backdrop-blur-sm ring-1 ring-white/15 px-3 py-2.5">
+      <div className="flex items-center gap-1.5 text-white/80 mb-0.5">
         <Icon className="w-3.5 h-3.5" />
         <span className="text-[11px] font-medium">{label}</span>
       </div>
-      <span className="text-lg font-bold text-text-primary">{value}</span>
+      <span className="text-lg font-bold text-white">{value}</span>
     </div>
   )
 }
