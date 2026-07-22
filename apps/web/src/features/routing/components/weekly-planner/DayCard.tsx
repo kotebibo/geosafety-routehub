@@ -40,24 +40,34 @@ export function DayCard({
       className={cn(
         'rounded-2xl border p-3 cursor-pointer transition-all min-h-[120px]',
         isSelected
-          ? 'border-monday-primary bg-monday-primary/5 shadow-sm'
-          : 'border-border-light bg-bg-primary hover:border-border-medium hover:shadow-sm'
+          ? 'border-monday-primary/60 bg-gradient-to-br from-monday-primary/10 to-monday-purple/5 ring-2 ring-monday-primary/20 shadow-md'
+          : 'border-border-light bg-bg-primary hover:border-monday-primary/40 hover:shadow-sm'
       )}
     >
       <div className="flex items-center justify-between mb-2">
-        <div>
-          <span className="text-sm font-semibold text-text-primary">{DAY_LABELS_KA[dayIndex]}</span>
-          <span className="text-xs text-text-tertiary ml-1.5">{shortDate(date)}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className={cn(
+              'inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold flex-shrink-0',
+              isSelected ? 'bg-monday-primary text-white' : 'bg-bg-tertiary text-text-secondary'
+            )}
+          >
+            {DAY_LABELS_KA[dayIndex]}
+          </span>
+          <span className="text-xs text-text-tertiary">{shortDate(date)}</span>
         </div>
         {ids.length > 0 && (
-          <span className="text-[11px] text-text-tertiary">
-            {t('routing.companiesCount', { count: ids.length })}
+          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-monday-primary/10 text-monday-primary flex-shrink-0">
+            {ids.length}
           </span>
         )}
       </div>
 
       {ids.length === 0 ? (
-        <p className="text-xs text-text-tertiary py-2">{t('routing.dayEmpty')}</p>
+        <div className="flex flex-col items-center justify-center py-4 text-center">
+          <MapPin className="w-5 h-5 text-text-tertiary/50 mb-1" />
+          <p className="text-xs text-text-tertiary">{t('routing.dayEmpty')}</p>
+        </div>
       ) : (
         <div className="space-y-1">
           {ids.map((id, idx) => (
