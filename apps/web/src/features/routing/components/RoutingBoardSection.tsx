@@ -173,7 +173,7 @@ function BoardItemsList({ board }: { board: Board }) {
           </span>
         )}
       </div>
-      <div className="divide-y divide-border-light">
+      <div className="px-2 sm:px-2.5 pb-2 space-y-2">
         {items.slice(0, visibleCount).map(ri => (
           <ItemRow
             key={ri.item.id}
@@ -263,72 +263,82 @@ function ItemRow({ routingItem, selected, onToggleSelect, onOpen }: ItemRowProps
   return (
     <div
       className={cn(
-        'w-full flex items-center gap-2 px-3 py-1.5 transition-colors',
-        selected ? 'bg-monday-primary/5' : 'hover:bg-bg-hover'
+        'rounded-xl border p-3 transition-all',
+        selected
+          ? 'border-monday-primary/50 bg-monday-primary/5 shadow-sm'
+          : 'border-border-light bg-bg-primary hover:border-monday-primary/40 hover:shadow-sm'
       )}
     >
-      {/* Selection checkbox */}
-      <button
-        type="button"
-        onClick={onToggleSelect}
-        aria-label={t('routing.selectCompany')}
-        className={cn(
-          'w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors',
-          selected
-            ? 'bg-monday-primary border-monday-primary text-white'
-            : 'border-border-medium hover:border-monday-primary'
-        )}
-      >
-        {selected && <Check className="w-3 h-3" />}
-      </button>
-
-      {/* The rest opens the detail popup */}
-      <button
-        type="button"
-        onClick={onOpen}
-        className="flex-1 flex items-center gap-2.5 min-w-0 text-left"
-      >
-        {/* Company avatar — same style as board rows, tinted by its category color */}
-        <div
+      <div className="flex items-start gap-3">
+        {/* Selection checkbox */}
+        <button
+          type="button"
+          onClick={onToggleSelect}
+          aria-label={t('routing.selectCompany')}
           className={cn(
-            'w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
-            (group && GROUP_DOT_COLORS[group.color]) || 'bg-monday-primary'
+            'mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors',
+            selected
+              ? 'bg-monday-primary border-monday-primary text-white'
+              : 'border-border-medium hover:border-monday-primary'
           )}
         >
-          {item.name.charAt(0).toUpperCase()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
+          {selected && <Check className="w-3.5 h-3.5" />}
+        </button>
+
+        {/* The rest opens the detail popup */}
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex-1 flex items-start gap-3 min-w-0 text-left"
+        >
+          {/* Company avatar — tinted by its category color */}
+          <div
+            className={cn(
+              'w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm',
+              (group && GROUP_DOT_COLORS[group.color]) || 'bg-monday-primary'
+            )}
+          >
+            {item.name.charAt(0).toUpperCase()}
+          </div>
+
+          <div className="flex-1 min-w-0 space-y-1">
+            {/* Planned chip on its own line for a clear tag */}
             {plannedChip && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-semibold bg-monday-primary/10 text-monday-primary border border-monday-primary/30 flex-shrink-0">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-monday-primary/10 text-monday-primary border border-monday-primary/30">
                 <CalendarDays className="w-3 h-3" />
                 {plannedChip}
                 {plannedDay && <span className="opacity-70">#{plannedDay.position}</span>}
               </span>
             )}
-            <p className="text-sm font-medium text-text-primary truncate">{item.name}</p>
+            <p className="text-[15px] font-semibold text-text-primary leading-snug break-words">
+              {item.name}
+            </p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-secondary">
+              {group && <span className="truncate">{group.name}</span>}
+              {lastVisitStr && (
+                <span className="flex-shrink-0">
+                  {t('routing.lastVisit', { date: lastVisitStr })}
+                </span>
+              )}
+              {summary?.latest_inspector_name && (
+                <span className="inline-flex items-center gap-1 flex-shrink-0">
+                  <User className="w-3 h-3" />
+                  {summary.latest_inspector_name}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-text-secondary">
-            {group && <span className="truncate">{group.name}</span>}
-            {lastVisitStr && (
-              <span className="flex-shrink-0">
-                {t('routing.lastVisit', { date: lastVisitStr })}
-              </span>
-            )}
-            {summary?.latest_inspector_name && (
-              <span className="inline-flex items-center gap-1 flex-shrink-0">
-                <User className="w-3 h-3" />
-                {summary.latest_inspector_name}
-              </span>
-            )}
+
+          {/* Urgency — right on desktop, wraps under its own row on mobile */}
+          <div className="flex-shrink-0 self-start">
+            <UrgencyBadge
+              daysLeft={daysLeft}
+              hasActiveCheckin={hasActiveCheckin}
+              neverVisited={neverVisited}
+            />
           </div>
-        </div>
-        <UrgencyBadge
-          daysLeft={daysLeft}
-          hasActiveCheckin={hasActiveCheckin}
-          neverVisited={neverVisited}
-        />
-      </button>
+        </button>
+      </div>
     </div>
   )
 }

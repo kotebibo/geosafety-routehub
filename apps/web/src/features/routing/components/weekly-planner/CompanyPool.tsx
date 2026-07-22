@@ -60,7 +60,7 @@ export function CompanyPool({
           </button>
         )}
       </div>
-      <div className="p-2 space-y-1 lg:flex-1 lg:overflow-y-auto lg:min-h-0">
+      <div className="p-2 space-y-1 max-h-[45vh] overflow-y-auto lg:max-h-none lg:flex-1 lg:min-h-0">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="w-5 h-5 text-text-tertiary animate-spin" />
