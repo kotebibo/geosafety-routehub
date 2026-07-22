@@ -35,6 +35,15 @@ function weekDates(weekStart: string): string[] {
   })
 }
 
+// Monday (YYYY-MM-DD) of next week in Georgia time (UTC+4). Officers may only
+// plan next week; the UI already pins them there, this is the server guard.
+function nextWeekMondayGeorgia(): string {
+  const nowG = new Date(Date.now() + 4 * 60 * 60 * 1000)
+  const dow = (nowG.getUTCDay() + 6) % 7 // Mon=0 … Sun=6
+  const thisMonday = nowG.getTime() - dow * 86400000
+  return new Date(thisMonday + 7 * 86400000).toISOString().slice(0, 10)
+}
+
 async function roleOf(supabase: any, userId: string): Promise<string | null> {
   const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single()
   return data?.role ?? null
@@ -163,6 +172,13 @@ export async function POST(request: NextRequest) {
     const isAdmin = role?.role === 'admin'
     if (!isManager && v.inspectorId !== session.user.id)
       return NextResponse.json({ error: 'Cannot plan for another officer' }, { status: 403 })
+
+    // Officers may only plan next week (managers can plan any week).
+    if (!isManager && v.weekStart !== nextWeekMondayGeorgia())
+      return NextResponse.json(
+        { error: 'Officers may only plan next week', wrongWeek: true },
+        { status: 403 }
+      )
 
     const svc = createServiceClient() as any
     const dates = weekDates(v.weekStart)
