@@ -24,37 +24,37 @@ export function PlannerHeader({
 }: PlannerHeaderProps) {
   const t = useTranslations()
   return (
-    <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-border-light flex-shrink-0">
+    <div className="relative flex items-center justify-between gap-2 sm:gap-3 px-4 sm:px-5 py-3 flex-shrink-0 bg-gradient-to-r from-monday-primary to-monday-purple">
       <div className="flex items-center gap-2.5 min-w-0">
-        <div className="w-8 h-8 rounded-lg bg-monday-primary/10 flex items-center justify-center flex-shrink-0">
-          <CalendarDays className="w-4 h-4 text-monday-primary" />
+        <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur-sm ring-1 ring-white/25 flex items-center justify-center flex-shrink-0">
+          <CalendarDays className="w-4 h-4 text-white" />
         </div>
         <div className="min-w-0">
-          <h3 className="text-base font-semibold text-text-primary truncate">
+          <h3 className="text-base font-semibold text-white truncate">
             {t('routing.weekPlanning')}
           </h3>
-          <p className="text-xs text-text-tertiary truncate">{boardName}</p>
+          <p className="text-xs text-white/75 truncate">{boardName}</p>
         </div>
       </div>
       {/* Week nav — arrows only for managers; officers are pinned to next week */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5 rounded-full bg-white/15 ring-1 ring-white/20 px-0.5 flex-shrink-0">
         {canNavigate && (
           <button
             type="button"
             onClick={onPrevWeek}
-            className="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary"
+            className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
         )}
-        <span className="text-sm font-medium text-text-primary px-2 whitespace-nowrap">
+        <span className="text-xs sm:text-sm font-semibold text-white px-1.5 sm:px-2 whitespace-nowrap">
           {shortDate(days[0])} – {shortDate(days[6])}
         </span>
         {canNavigate && (
           <button
             type="button"
             onClick={onNextWeek}
-            className="p-1.5 rounded-lg hover:bg-bg-hover text-text-secondary"
+            className="p-1.5 rounded-full hover:bg-white/20 text-white transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -63,9 +63,9 @@ export function PlannerHeader({
       <button
         type="button"
         onClick={onClose}
-        className="p-1.5 rounded-lg hover:bg-bg-hover transition-colors flex-shrink-0"
+        className="p-1.5 rounded-full hover:bg-white/20 transition-colors flex-shrink-0"
       >
-        <X className="w-5 h-5 text-text-secondary" />
+        <X className="w-5 h-5 text-white" />
       </button>
     </div>
   )
