@@ -49,6 +49,7 @@ export function useCreateItemCheckin(boardId: string) {
       lng: number
       accuracy?: number
       notes?: string
+      photo_path?: string | null
     }) => {
       const res = await fetch('/api/checkins', {
         method: 'POST',

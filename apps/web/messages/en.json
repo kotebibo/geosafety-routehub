@@ -354,6 +354,9 @@
     "inspector": "Inspector",
     "completionDate": "Completion Date",
     "notesPlaceholder": "Notes...",
+    "addPhoto": "Add photo",
+    "photoFailed": "Photo upload failed",
+    "viewPhoto": "Photo",
     "statCurrent": "Current",
     "statRemaining": "Remaining",
     "phaseWord": "Phase"

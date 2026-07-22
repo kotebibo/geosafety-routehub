@@ -25,6 +25,7 @@ export interface LocationCheckin {
   duration_minutes?: number | null
   checkout_distance?: number | null
   location_match?: boolean | null
+  photo_path?: string | null
   // Joined fields
   inspector_name?: string
   company_name?: string

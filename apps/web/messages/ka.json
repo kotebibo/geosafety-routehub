@@ -354,6 +354,9 @@
     "inspector": "ინსპექტორი",
     "completionDate": "დასრულების თარიღი",
     "notesPlaceholder": "შენიშვნები...",
+    "addPhoto": "ფოტოს დამატება",
+    "photoFailed": "ფოტოს ატვირთვა ვერ მოხერხდა",
+    "viewPhoto": "ფოტო",
     "statCurrent": "მიმდინარე",
     "statRemaining": "დარჩენილი",
     "phaseWord": "ფაზა"

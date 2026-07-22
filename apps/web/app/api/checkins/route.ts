@@ -25,6 +25,7 @@ const createCheckinSchema = z.object({
   lng: z.number().min(-180).max(180),
   accuracy: z.number().optional(),
   notes: z.string().max(2000).optional(),
+  photo_path: z.string().max(500).nullable().optional(),
 })
 
 const checkoutSchema = z.object({
@@ -234,6 +235,7 @@ export async function POST(request: NextRequest) {
         lng: validated.lng,
         accuracy: validated.accuracy || null,
         notes: validated.notes || null,
+        photo_path: validated.photo_path || null,
         location_updated: locationUpdated,
         distance_from_location: distanceFromLocation,
       } as any)
