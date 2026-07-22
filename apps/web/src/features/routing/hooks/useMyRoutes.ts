@@ -75,11 +75,21 @@ export function useUpdateRouteStatus(inspectorId: string) {
 export function useUpdateStopStatus(inspectorId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ stopId, status }: { stopId: string; status: StopStatus }) => {
+    mutationFn: async ({
+      stopId,
+      status,
+      skipReason,
+      skipNote,
+    }: {
+      stopId: string
+      status: StopStatus
+      skipReason?: 'empty' | 'closed' | 'refused' | 'other' | null
+      skipNote?: string | null
+    }) => {
       const res = await fetch(`/api/routing/stops/${stopId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, skipReason, skipNote }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))

@@ -67,7 +67,7 @@ export function Navigation() {
       roles: ['admin', 'dispatcher'],
     },
     { href: '/inspector/plan', label: t('nav.planWeek'), icon: CalendarDays, roles: ['officer'] },
-    { href: '/inspector/routes', label: t('home.myRoutes'), icon: Route, roles: ['officer'] },
+    { href: '/inspector/routes', label: t('myWeek.title'), icon: Route, roles: ['officer'] },
   ]
 
   // Filter nav items based on user role

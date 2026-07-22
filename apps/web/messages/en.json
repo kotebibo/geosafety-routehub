@@ -2150,6 +2150,24 @@
     "submittedBanner": "Plan submitted — waiting for admin approval. Contact the admin to make changes.",
     "approvedBanner": "Plan approved"
   },
+  "myWeek": {
+    "title": "My week",
+    "done": "Done",
+    "empty": "No visits planned this week.",
+    "checkin": "Check in",
+    "defer": "Defer",
+    "deferred": "Deferred",
+    "deferTitle": "Deviate from plan",
+    "deferSaved": "Deferred",
+    "deferFailed": "Could not defer",
+    "reasonNote": "Extra note (optional)",
+    "reason": {
+      "empty": "Was empty",
+      "closed": "Was closed",
+      "refused": "They refused",
+      "other": "Other"
+    }
+  },
   "routing": {
     "title": "Routing",
     "subtitle": "Boards and companies ordered by visit deadlines",
