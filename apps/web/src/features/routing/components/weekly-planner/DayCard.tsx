@@ -38,10 +38,10 @@ export function DayCard({
     <div
       onClick={onSelect}
       className={cn(
-        'rounded-xl border p-3 cursor-pointer transition-colors min-h-[120px]',
+        'rounded-2xl border p-3 cursor-pointer transition-all min-h-[120px]',
         isSelected
-          ? 'border-monday-primary bg-monday-primary/5'
-          : 'border-border-light bg-bg-primary hover:border-border-medium'
+          ? 'border-monday-primary bg-monday-primary/5 shadow-sm'
+          : 'border-border-light bg-bg-primary hover:border-border-medium hover:shadow-sm'
       )}
     >
       <div className="flex items-center justify-between mb-2">

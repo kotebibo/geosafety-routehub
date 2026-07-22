@@ -50,8 +50,10 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
   return (
     <div
       className={cn(
-        'rounded-xl border transition-colors overflow-hidden',
-        expanded ? 'border-monday-primary bg-bg-primary' : 'border-border-light bg-bg-primary'
+        'rounded-2xl border shadow-sm transition-all overflow-hidden',
+        expanded
+          ? 'border-monday-primary/50 bg-bg-primary shadow-md'
+          : 'border-border-light bg-bg-primary hover:shadow-md'
       )}
     >
       {/* Board row — sidebar-style: letter avatar + name + location + chevron.
@@ -209,7 +211,7 @@ function BoardItemsList({ board }: { board: Board }) {
           <button
             type="button"
             onClick={() => setPlanning(true)}
-            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-monday-primary text-white text-xs font-medium hover:opacity-90 transition-opacity"
+            className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-monday-primary text-white text-xs font-semibold hover:opacity-90 active:scale-95 transition-all"
           >
             <RouteIcon className="w-3.5 h-3.5" />
             {t('routing.planRouteWithCount', { count: selected.size })}

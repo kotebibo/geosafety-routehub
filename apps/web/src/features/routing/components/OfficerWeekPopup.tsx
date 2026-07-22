@@ -176,7 +176,7 @@ export function OfficerWeekPopup({
             </p>
           ) : (
             weekRoutes.map(route => (
-              <div key={route.id} className="rounded-xl border border-border-light p-3">
+              <div key={route.id} className="rounded-2xl border border-border-light p-3 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-text-primary">
