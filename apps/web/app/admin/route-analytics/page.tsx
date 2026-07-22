@@ -7,6 +7,7 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  Clock,
   Coins,
   Fuel,
   Loader2,
@@ -25,6 +26,7 @@ import {
   type FuelType,
 } from '@/features/routing/hooks/useRouteAnalytics'
 import { OfficerWeekPopup } from '@/features/routing/components/OfficerWeekPopup'
+import { AdminWeekTabs, type AdminTab } from '@/features/routing/components/analytics/AdminWeekTabs'
 import { mondayOf, weekDays, dayKey, shortDate } from '@/features/routing/lib/week'
 
 export default function RouteAnalyticsPage() {
@@ -37,6 +39,7 @@ export default function RouteAnalyticsPage() {
   const { showToast } = useToast()
   const setFuelPrices = useSetFuelPrices()
   const [weekOffset, setWeekOffset] = useState(0)
+  const [tab, setTab] = useState<'overview' | AdminTab>('overview')
   const [selected, setSelected] = useState<OfficerWeekSummary | null>(null)
   const [priceInputs, setPriceInputs] = useState<Record<FuelType, string>>({
     petrol: '',
@@ -71,6 +74,7 @@ export default function RouteAnalyticsPage() {
       km: officers.reduce((s, o) => s + o.totalKm, 0),
       liters: officers.reduce((s, o) => s + (o.liters ?? 0), 0),
       cost: officers.reduce((s, o) => s + (o.cost ?? 0), 0),
+      minutes: officers.reduce((s, o) => s + (o.minutes ?? 0), 0),
       planning: officers.filter(o => o.days > 0).length,
     }),
     [officers]
@@ -165,96 +169,127 @@ export default function RouteAnalyticsPage() {
           </button>
         </div>
 
-        {/* Fleet totals */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <StatCard
-            label={t('routeAnalytics.planningOfficers')}
-            value={fleet.planning}
-            icon={Users}
-            color="blue"
-          />
-          <StatCard
-            label={t('routeAnalytics.distanceKm')}
-            value={Number(fleet.km.toFixed(1))}
-            icon={Navigation}
-            color="purple"
-          />
-          <StatCard
-            label={t('routeAnalytics.fuelLiters')}
-            value={Number(fleet.liters.toFixed(1))}
-            icon={Fuel}
-            color="amber"
-          />
-          <StatCard
-            label={t('routeAnalytics.totalCost')}
-            value={Number(fleet.cost.toFixed(1))}
-            icon={Coins}
-            color="green"
-          />
+        {/* Tabs */}
+        <div className="flex items-center gap-1 mb-5 border-b border-border-light overflow-x-auto">
+          {(['overview', 'requests', 'unplanned', 'deferred'] as const).map(tb => (
+            <button
+              key={tb}
+              type="button"
+              onClick={() => setTab(tb)}
+              className={cn(
+                'px-3 py-2 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors',
+                tab === tb
+                  ? 'border-monday-primary text-monday-primary'
+                  : 'border-transparent text-text-secondary hover:text-text-primary'
+              )}
+            >
+              {t(`routeAnalytics.tab.${tb}`)}
+            </button>
+          ))}
         </div>
 
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-text-tertiary animate-spin" />
-          </div>
-        ) : officers.length === 0 ? (
-          <EmptyState
-            icon={<BarChart3 className="w-16 h-16" />}
-            title={t('routeAnalytics.emptyTitle')}
-            description={t('routeAnalytics.emptyDescription')}
-          />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {officers.map(o => (
-              <button
-                key={o.officerId}
-                type="button"
-                onClick={() => setSelected(o)}
-                className={cn(
-                  'text-left rounded-xl border p-4 transition-colors',
-                  o.days > 0
-                    ? 'border-border-light bg-bg-primary hover:border-monday-primary'
-                    : 'border-border-light bg-bg-primary opacity-70 hover:opacity-100'
-                )}
-              >
-                <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-9 h-9 rounded-full bg-bg-tertiary flex items-center justify-center text-text-secondary font-medium flex-shrink-0">
-                    {o.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-text-primary truncate">{o.name}</p>
-                    <p className="text-xs text-text-tertiary">
-                      {o.days > 0
-                        ? t('routeAnalytics.daysPlanned', { count: o.days })
-                        : t('routeAnalytics.noPlan')}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="inline-flex items-center gap-1 text-text-secondary">
-                    <Navigation className="w-3.5 h-3.5" />
-                    {o.totalKm.toFixed(1)} {t('routing.km')}
-                  </span>
-                  <span className="inline-flex items-center gap-1 text-text-secondary">
-                    <Fuel className="w-3.5 h-3.5" />
-                    {o.liters != null
-                      ? `${o.liters.toFixed(1)} ${t('routeAnalytics.litersShort')}`
-                      : '—'}
-                  </span>
-                  {o.cost != null && (
-                    <span className="inline-flex items-center gap-1 text-text-secondary">
-                      <Coins className="w-3.5 h-3.5" />
-                      {o.cost.toFixed(1)} ₾
-                    </span>
-                  )}
-                  <span className="inline-flex items-center gap-1 text-text-tertiary ml-auto">
-                    <RouteIcon className="w-3.5 h-3.5" />
-                    {o.stopCount}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
+        {tab !== 'overview' && <AdminWeekTabs weekStart={weekStartKey} tab={tab} />}
+
+        {tab === 'overview' && (
+          <>
+            {/* Fleet totals */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+              <StatCard
+                label={t('routeAnalytics.planningOfficers')}
+                value={fleet.planning}
+                icon={Users}
+                color="blue"
+              />
+              <StatCard
+                label={t('routeAnalytics.distanceKm')}
+                value={Number(fleet.km.toFixed(1))}
+                icon={Navigation}
+                color="purple"
+              />
+              <StatCard
+                label={t('routeAnalytics.fuelLiters')}
+                value={Number(fleet.liters.toFixed(1))}
+                icon={Fuel}
+                color="amber"
+              />
+              <StatCard
+                label={t('routeAnalytics.totalCost')}
+                value={Number(fleet.cost.toFixed(1))}
+                icon={Coins}
+                color="green"
+              />
+              <StatCard
+                label={t('routeAnalytics.totalTime')}
+                value={fleet.minutes}
+                icon={Clock}
+                color="blue"
+              />
+            </div>
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 text-text-tertiary animate-spin" />
+              </div>
+            ) : officers.length === 0 ? (
+              <EmptyState
+                icon={<BarChart3 className="w-16 h-16" />}
+                title={t('routeAnalytics.emptyTitle')}
+                description={t('routeAnalytics.emptyDescription')}
+              />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {officers.map(o => (
+                  <button
+                    key={o.officerId}
+                    type="button"
+                    onClick={() => setSelected(o)}
+                    className={cn(
+                      'text-left rounded-xl border p-4 transition-colors',
+                      o.days > 0
+                        ? 'border-border-light bg-bg-primary hover:border-monday-primary'
+                        : 'border-border-light bg-bg-primary opacity-70 hover:opacity-100'
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <div className="w-9 h-9 rounded-full bg-bg-tertiary flex items-center justify-center text-text-secondary font-medium flex-shrink-0">
+                        {o.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-text-primary truncate">{o.name}</p>
+                        <p className="text-xs text-text-tertiary">
+                          {o.days > 0
+                            ? t('routeAnalytics.daysPlanned', { count: o.days })
+                            : t('routeAnalytics.noPlan')}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span className="inline-flex items-center gap-1 text-text-secondary">
+                        <Navigation className="w-3.5 h-3.5" />
+                        {o.totalKm.toFixed(1)} {t('routing.km')}
+                      </span>
+                      <span className="inline-flex items-center gap-1 text-text-secondary">
+                        <Fuel className="w-3.5 h-3.5" />
+                        {o.liters != null
+                          ? `${o.liters.toFixed(1)} ${t('routeAnalytics.litersShort')}`
+                          : '—'}
+                      </span>
+                      {o.cost != null && (
+                        <span className="inline-flex items-center gap-1 text-text-secondary">
+                          <Coins className="w-3.5 h-3.5" />
+                          {o.cost.toFixed(1)} ₾
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1 text-text-tertiary ml-auto">
+                        <RouteIcon className="w-3.5 h-3.5" />
+                        {o.stopCount}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 

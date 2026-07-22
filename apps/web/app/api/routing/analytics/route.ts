@@ -99,6 +99,18 @@ export async function GET(request: NextRequest) {
       agg.totalKm += r.total_distance_km || 0
     }
 
+    // Time spent this week per officer (sum of check-in durations).
+    const minutesOf = new Map<string, number>()
+    const { data: checkins } = await svc
+      .from('location_checkins')
+      .select('inspector_id, duration_minutes')
+      .in('inspector_id', activeIds)
+      .gte('created_at', `${dates[0]}T00:00:00`)
+      .lte('created_at', `${dates[6]}T23:59:59`)
+    for (const c of checkins || [])
+      if (c.duration_minutes != null)
+        minutesOf.set(c.inspector_id, (minutesOf.get(c.inspector_id) || 0) + c.duration_minutes)
+
     const officers = (users || []).map((u: any) => {
       const agg = aggOf.get(u.id)!
       const consumption = consumptionOf.get(u.id) ?? null
@@ -119,6 +131,7 @@ export async function GET(request: NextRequest) {
         days: agg.days,
         stopCount: agg.stopCount,
         visitedCount: agg.visitedCount,
+        minutes: minutesOf.get(u.id) ?? 0,
         consumption,
         liters,
         fuelType, // officer's fuel type (drives which global price applies)
