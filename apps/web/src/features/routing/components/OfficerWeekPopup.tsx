@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui-monday/Toast'
 import { useMyRoutes, type OfficerRoute } from '../hooks/useMyRoutes'
 import { useSetOfficerFuelPrice, type OfficerWeekSummary } from '../hooks/useRouteAnalytics'
+import { useOfficerWeek, useConfirmCancel } from '../hooks/useOfficerWeek'
+import { WeekExtrasSections } from './WeekExtrasSections'
 import { RouteMapModal } from './RouteMapModal'
 import { stopVisitState } from '../lib/stop-state'
 import { addDays, dayLabelOf, shortDate } from '../lib/week'
@@ -33,6 +35,8 @@ export function OfficerWeekPopup({
   const t = useTranslations()
   const { showToast } = useToast()
   const { data, isLoading } = useMyRoutes(summary.officerId)
+  const officerWeek = useOfficerWeek(summary.officerId, weekStart)
+  const confirm = useConfirmCancel()
   const routes = data?.routes ?? []
   const officerStart = data?.start ?? null
   const [mapRoute, setMapRoute] = useState<OfficerRoute | null>(null)
@@ -242,6 +246,17 @@ export function OfficerWeekPopup({
                 </div>
               </div>
             ))
+          )}
+
+          {/* Unplanned / deviation / failed — admin can confirm canceled */}
+          {officerWeek.data && (
+            <div className="mt-4">
+              <WeekExtrasSections
+                data={officerWeek.data}
+                onConfirmCancel={id => confirm.mutate(id)}
+                confirming={confirm.isPending}
+              />
+            </div>
           )}
         </div>
       </div>

@@ -25,7 +25,12 @@ import {
   type OfficerRoute,
   type RouteStop,
 } from '../../hooks/useMyRoutes'
+import { useOfficerWeek } from '../../hooks/useOfficerWeek'
+import { useCreateExtraVisit } from '../../hooks/useExtraVisits'
+import { WeekExtrasSections } from '../WeekExtrasSections'
 import { stopVisitState } from '../../lib/stop-state'
+import { resolveLocationColumns } from '../../lib/location-columns'
+import { parseCoordinates } from '@/lib/geo-utils'
 import { mondayOf, dayKey, addDays, shortDate, dayLabelOf } from '../../lib/week'
 import type { BoardColumn } from '@/types/board'
 
@@ -61,6 +66,8 @@ export function MyWeekPage() {
 
   const [checkinItemId, setCheckinItemId] = useState<string | null>(null)
   const [deferStop, setDeferStop] = useState<RouteStop | null>(null)
+  const [booking, setBooking] = useState(false)
+  const officerWeek = useOfficerWeek(user?.id || '', weekStart)
 
   const stats = useMemo(() => {
     const stops = days.flatMap(d => d.stops)
@@ -123,6 +130,11 @@ export function MyWeekPage() {
             />
           ))
         )}
+
+        {/* Unplanned / deviation / failed */}
+        {officerWeek.data && (
+          <WeekExtrasSections data={officerWeek.data} onBook={() => setBooking(true)} />
+        )}
       </div>
 
       {/* Reused board check-in sheet */}
@@ -143,6 +155,20 @@ export function MyWeekPage() {
           stop={deferStop}
           inspectorId={user?.id || ''}
           onClose={() => setDeferStop(null)}
+          t={t}
+        />
+      )}
+
+      {/* Book an unplanned visit */}
+      {booking && board && (
+        <BookUnplannedModal
+          board={board}
+          items={items}
+          columns={columns as BoardColumn[]}
+          start={data?.start ?? null}
+          inspectorId={user?.id || ''}
+          weekStart={weekStart}
+          onClose={() => setBooking(false)}
           t={t}
         />
       )}
@@ -387,6 +413,129 @@ function DeferModal({
               <SkipForward className="w-4 h-4" />
             )}
             {t('myWeek.defer')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BookUnplannedModal({
+  board,
+  items,
+  columns,
+  start,
+  inspectorId,
+  weekStart,
+  onClose,
+  t,
+}: {
+  board: { id: string }
+  items: any[]
+  columns: BoardColumn[]
+  start: { lat: number; lng: number } | null
+  inspectorId: string
+  weekStart: string
+  onClose: () => void
+  t: ReturnType<typeof useTranslations>
+}) {
+  const { showToast } = useToast()
+  const create = useCreateExtraVisit()
+  const [itemId, setItemId] = useState('')
+  const [reason, setReason] = useState('')
+  const { coordsColumnId } = resolveLocationColumns(columns)
+
+  const submit = async () => {
+    if (!itemId) return
+    // Compute the extra visit's own home→object distance (best-effort).
+    let distanceKm: number | null = null
+    const item = items.find(i => i.id === itemId)
+    const dest = coordsColumnId ? parseCoordinates(item?.data?.[coordsColumnId]) : null
+    if (start && dest) {
+      try {
+        const res = await fetch('/api/routing/route-geometry', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            locations: [
+              { lat: start.lat, lng: start.lng },
+              { lat: dest.lat, lng: dest.lng },
+            ],
+          }),
+        })
+        if (res.ok) distanceKm = (await res.json()).distanceKm ?? null
+      } catch {
+        // distance optional
+      }
+    }
+    try {
+      await create.mutateAsync({
+        inspectorId,
+        weekStart,
+        boardId: board.id,
+        boardItemId: itemId,
+        visitDate: dayKey(new Date()),
+        distanceKm,
+        reason: reason.trim() || null,
+      })
+      showToast(t('myWeek.booked'), 'success')
+      onClose()
+    } catch (err: any) {
+      showToast(err?.error || t('common.error'), 'error')
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-bg-primary w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border-light">
+          <h3 className="text-base font-semibold text-text-primary">{t('myWeek.bookUnplanned')}</h3>
+          <button type="button" onClick={onClose} className="p-1.5 rounded-lg hover:bg-bg-hover">
+            <X className="w-5 h-5 text-text-secondary" />
+          </button>
+        </div>
+        <div className="px-5 py-4 space-y-3">
+          <select
+            value={itemId}
+            onChange={e => setItemId(e.target.value)}
+            className="w-full px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-primary text-text-primary"
+          >
+            <option value="">{t('routing.pickObject')}</option>
+            {items.map(i => (
+              <option key={i.id} value={i.id}>
+                {i.name}
+              </option>
+            ))}
+          </select>
+          <textarea
+            value={reason}
+            onChange={e => setReason(e.target.value)}
+            placeholder={t('myWeek.bookReason')}
+            rows={2}
+            className="w-full px-3 py-2 text-sm rounded-xl border border-border-light bg-bg-primary text-text-primary focus:outline-none focus:border-monday-primary resize-none"
+          />
+        </div>
+        <div className="flex items-center justify-end gap-2 px-5 py-3 border-t border-border-light">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg text-sm font-medium text-text-secondary hover:bg-bg-hover"
+          >
+            {t('common.cancel')}
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!itemId || create.isPending}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-monday-primary text-white text-sm font-semibold hover:opacity-90 disabled:opacity-50"
+          >
+            {create.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <MapPin className="w-4 h-4" />
+            )}
+            {t('officerPlan.sendToAdmin')}
           </button>
         </div>
       </div>

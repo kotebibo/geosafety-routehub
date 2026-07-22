@@ -7,10 +7,12 @@ import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { notifyManagers } from '@/features/routing/lib/routing-notify'
 
 const patchSchema = z.object({
-  status: z.enum(['pending', 'visited', 'skipped']),
+  status: z.enum(['pending', 'visited', 'skipped']).optional(),
   // Only meaningful when status = 'skipped' (deferred/deviation).
   skipReason: z.enum(['empty', 'closed', 'refused', 'canceled', 'other']).nullable().optional(),
   skipNote: z.string().max(500).nullable().optional(),
+  // Admin confirms an "object canceled" deferral → counts as legit (not failed).
+  confirmCancel: z.boolean().optional(),
 })
 
 // PATCH — mark a single route stop visited/skipped/pending. Authorized against
@@ -19,7 +21,7 @@ const patchSchema = z.object({
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await requireAuth()
-    const { status, skipReason, skipNote } = patchSchema.parse(await request.json())
+    const { status, skipReason, skipNote, confirmCancel } = patchSchema.parse(await request.json())
 
     const supabase = createServerClient() as any
     const { data: roleRow } = await supabase
@@ -40,6 +42,20 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const ownerId = stop.routes?.inspector_id
     if (ownerId !== session.user.id && !isManager)
       return NextResponse.json({ error: 'Cannot modify another officer’s route' }, { status: 403 })
+
+    // Admin confirms an object-canceled deferral (no status change).
+    if (confirmCancel) {
+      if (roleRow?.role !== 'admin')
+        return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+      const { error: cErr } = await svc
+        .from('route_stops')
+        .update({ skip_confirmed: true, updated_at: new Date().toISOString() })
+        .eq('id', params.id)
+      if (cErr) throw cErr
+      return NextResponse.json({ success: true, confirmed: true })
+    }
+
+    if (!status) return NextResponse.json({ error: 'status is required' }, { status: 400 })
 
     // API vocabulary uses 'visited'; the route_stops.status constraint only
     // allows 'completed' for the done state, so translate on write.
