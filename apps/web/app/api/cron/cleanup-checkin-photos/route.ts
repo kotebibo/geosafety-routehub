@@ -10,9 +10,9 @@ const RETENTION_DAYS = 14
 function verifyCronSecret(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
   if (!secret) return process.env.NODE_ENV !== 'production'
-  const auth = request.headers.get('authorization')
-  if (auth === `Bearer ${secret}`) return true
-  return new URL(request.url).searchParams.get('secret') === secret
+  // Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`. Header only — never
+  // accept the secret via query string (it would leak into access logs).
+  return request.headers.get('authorization') === `Bearer ${secret}`
 }
 
 // Delete check-in photos older than ~14 days from Storage and clear their

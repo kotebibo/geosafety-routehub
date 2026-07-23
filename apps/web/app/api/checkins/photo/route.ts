@@ -3,7 +3,7 @@ export const maxDuration = 30
 
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/middleware/auth'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 
 const BUCKET = 'checkin-photos'
 const MAX_BYTES = 5 * 1024 * 1024
@@ -43,11 +43,27 @@ export async function POST(request: NextRequest) {
 }
 
 // GET ?path= — a short-lived signed URL to view a check-in photo (private bucket).
+// Photos are stored under `${uploaderId}/…`, so the caller may fetch only their
+// own photos; managers (admin/dispatcher) may view any officer's.
 export async function GET(request: NextRequest) {
   try {
-    await requireAuth()
+    const session = await requireAuth()
     const path = new URL(request.url).searchParams.get('path')
     if (!path) return NextResponse.json({ error: 'path is required' }, { status: 400 })
+
+    const ownerId = path.split('/')[0]
+    if (ownerId !== session.user.id) {
+      const supabase = createServerClient() as any
+      const { data: role } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', session.user.id)
+        .single()
+      const isManager = role?.role === 'admin' || role?.role === 'dispatcher'
+      if (!isManager)
+        return NextResponse.json({ error: 'Cannot view another officer’s photo' }, { status: 403 })
+    }
+
     const svc = createServiceClient() as any
     const { data, error } = await svc.storage.from(BUCKET).createSignedUrl(path, 60 * 10)
     if (error) throw error

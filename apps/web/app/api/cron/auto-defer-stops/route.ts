@@ -8,9 +8,9 @@ import { georgiaToday } from '@/lib/time'
 function verifyCronSecret(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
   if (!secret) return process.env.NODE_ENV !== 'production'
-  const auth = request.headers.get('authorization')
-  if (auth === `Bearer ${secret}`) return true
-  return new URL(request.url).searchParams.get('secret') === secret
+  // Vercel Cron sends `Authorization: Bearer <CRON_SECRET>`. Header only — never
+  // accept the secret via query string (it would leak into access logs).
+  return request.headers.get('authorization') === `Bearer ${secret}`
 }
 
 // Auto-defer: a planned stop not visited by the end of its day (runs ~21:00
