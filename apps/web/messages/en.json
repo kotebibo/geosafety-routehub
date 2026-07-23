@@ -2324,6 +2324,9 @@
     "km": "km",
     "litersPer100km": "L/100km",
     "metersShort": "m",
-    "minutesShort": "min"
+    "minutesShort": "min",
+    "comments": "Comments",
+    "noComments": "No comments yet",
+    "addComment": "Write a comment…"
   }
 }

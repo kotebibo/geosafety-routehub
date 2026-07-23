@@ -2324,6 +2324,9 @@
     "km": "კმ",
     "litersPer100km": "ლ/100კმ",
     "metersShort": "მ",
-    "minutesShort": "წთ"
+    "minutesShort": "წთ",
+    "comments": "კომენტარები",
+    "noComments": "კომენტარები არ არის",
+    "addComment": "დაწერეთ კომენტარი…"
   }
 }

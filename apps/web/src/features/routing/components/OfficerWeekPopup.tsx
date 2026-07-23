@@ -10,6 +10,7 @@ import { useMyRoutes, type OfficerRoute } from '../hooks/useMyRoutes'
 import { useSetOfficerFuelPrice, type OfficerWeekSummary } from '../hooks/useRouteAnalytics'
 import { useOfficerWeek, useConfirmCancel } from '../hooks/useOfficerWeek'
 import { WeekExtrasSections } from './WeekExtrasSections'
+import { WeekComments } from './WeekComments'
 import { RouteMapModal } from './RouteMapModal'
 import { stopVisitState } from '../lib/stop-state'
 import { addDays, dayLabelOf, shortDateStr } from '../lib/week'
@@ -297,6 +298,13 @@ export function OfficerWeekPopup({
                 onConfirmCancel={id => confirm.mutate(id)}
                 confirming={confirm.isPending}
               />
+            </div>
+          )}
+
+          {/* Plan comments — manager & officer thread */}
+          {tab === 'week' && (
+            <div className="mt-4">
+              <WeekComments inspectorId={summary.officerId} weekStart={weekStart} />
             </div>
           )}
         </div>

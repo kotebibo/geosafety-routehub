@@ -15,6 +15,7 @@ import { ExecutionPanels } from './ExecutionPanels'
 import { CompanyPool } from './CompanyPool'
 import { PlannerFooter } from './PlannerFooter'
 import { DayRouteMapModal } from './DayRouteMapModal'
+import { WeekComments } from '../WeekComments'
 
 interface WeeklyPlannerProps {
   board: Board
@@ -115,6 +116,13 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                   onAddExtra={c.addExtraVisit}
                   onRemoveExtra={c.removeExtraVisit}
                 />
+              )}
+
+              {/* Plan comments — officer & managers can discuss the week */}
+              {c.inspectorId && (
+                <div className="mt-4">
+                  <WeekComments inspectorId={c.inspectorId} weekStart={c.weekStartKey} />
+                </div>
               )}
             </div>
 
