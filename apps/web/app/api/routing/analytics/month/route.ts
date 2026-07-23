@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { createServiceClient } from '@/lib/supabase/server'
+import { georgiaDateOf, georgiaDayRange } from '@/lib/time'
 
 const DAY = 86400000
 
@@ -119,12 +120,13 @@ export async function GET(request: NextRequest) {
       .in('inspector_id', activeIds)
       .gte('date', rangeStart)
       .lte('date', rangeEnd)
+    const ciRange = georgiaDayRange(rangeStart, rangeEnd)
     const { data: checkins } = await svc
       .from('location_checkins')
       .select('inspector_id, duration_minutes, created_at')
       .in('inspector_id', activeIds)
-      .gte('created_at', `${rangeStart}T00:00:00`)
-      .lte('created_at', `${rangeEnd}T23:59:59`)
+      .gte('created_at', ciRange.gte)
+      .lte('created_at', ciRange.lte)
 
     // aggByWeek[weekIndex] = Map(officerId → Agg)
     const aggByWeek: Map<string, Agg>[] = weekStarts.map(
@@ -149,7 +151,7 @@ export async function GET(request: NextRequest) {
     }
     for (const c of checkins || []) {
       if (c.duration_minutes == null) continue
-      const wi = weekIndexOf(String(c.created_at).slice(0, 10))
+      const wi = weekIndexOf(georgiaDateOf(c.created_at))
       if (!inRange(wi)) continue
       const agg = aggByWeek[wi].get(c.inspector_id)
       if (agg) agg.minutes += c.duration_minutes

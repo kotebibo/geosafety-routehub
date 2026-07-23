@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { georgiaDayRange } from '@/lib/time'
 
 const FUEL_KEYS: Record<string, string> = {
   petrol: 'fuel_price_petrol',
@@ -84,12 +85,13 @@ export async function GET(request: NextRequest) {
       if (!allPrepaid) a.km += r.total_distance_km || 0
     }
 
+    const range = georgiaDayRange(from, to)
     const { data: checkins } = await svc
       .from('location_checkins')
       .select('inspector_id, duration_minutes')
       .in('inspector_id', activeIds)
-      .gte('created_at', `${from}T00:00:00`)
-      .lte('created_at', `${to}T23:59:59`)
+      .gte('created_at', range.gte)
+      .lte('created_at', range.lte)
     const minutesOf = new Map<string, number>()
     for (const c of checkins || [])
       if (c.duration_minutes != null)

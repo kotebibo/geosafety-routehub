@@ -3,6 +3,7 @@ export const maxDuration = 30
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { georgiaToday } from '@/lib/time'
 
 function verifyCronSecret(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const svc = createServiceClient() as any
-    const today = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    const today = georgiaToday()
 
     const { data: routes } = await svc
       .from('routes')

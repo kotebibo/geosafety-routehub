@@ -6,6 +6,7 @@ import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { notifyUser } from '@/lib/notify'
 import { notifyManagers } from '@/features/routing/lib/routing-notify'
+import { georgiaMonday } from '@/lib/time'
 
 const stopSchema = z.object({
   itemId: z.string().uuid(),
@@ -35,13 +36,19 @@ function weekDates(weekStart: string): string[] {
   })
 }
 
-// Monday (YYYY-MM-DD) of next week in Georgia time (UTC+4). Officers may only
-// plan next week; the UI already pins them there, this is the server guard.
+// Monday (YYYY-MM-DD) of the week containing a given date — used to map a prior
+// stop back to its week_plan (Monday-start, Georgian convention).
+function mondayOfDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const dt = new Date(Date.UTC(y, m - 1, d))
+  const dow = (dt.getUTCDay() + 6) % 7 // Mon=0 … Sun=6
+  return new Date(dt.getTime() - dow * 86400000).toISOString().slice(0, 10)
+}
+
+// Monday (YYYY-MM-DD) of next week in Georgia time. Officers may only plan next
+// week; the UI pins them there, this is the server guard.
 function nextWeekMondayGeorgia(): string {
-  const nowG = new Date(Date.now() + 4 * 60 * 60 * 1000)
-  const dow = (nowG.getUTCDay() + 6) % 7 // Mon=0 … Sun=6
-  const thisMonday = nowG.getTime() - dow * 86400000
-  return new Date(thisMonday + 7 * 86400000).toISOString().slice(0, 10)
+  return georgiaMonday(1)
 }
 
 async function roleOf(supabase: any, userId: string): Promise<string | null> {
@@ -98,7 +105,7 @@ async function computeWeekFuel(svc: any, inspectorId: string, weekStart: string)
 // GET ?inspectorId=&weekStart=  → the saved plan (routes + stops) for that officer's week
 export async function GET(request: NextRequest) {
   try {
-    await requireAuth()
+    const session = await requireAuth()
     const url = new URL(request.url)
     const inspectorId = url.searchParams.get('inspectorId')
     const weekStart = url.searchParams.get('weekStart')
@@ -106,6 +113,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'inspectorId and weekStart required' }, { status: 400 })
 
     const supabase = createServerClient() as any
+    // Officers may only read their own plan; managers may read anyone's.
+    const role = await roleOf(supabase, session.user.id)
+    const isManager = role === 'admin' || role === 'dispatcher'
+    if (!isManager && inspectorId !== session.user.id)
+      return NextResponse.json({ error: 'Cannot view another officer’s plan' }, { status: 403 })
+
     const dates = weekDates(weekStart)
     const { data: routes, error } = await supabase
       .from('routes')
@@ -211,17 +224,29 @@ export async function POST(request: NextRequest) {
     }
 
     // Carry-over: an object whose LATEST prior stop was an unresolved skip (not
-    // canceled+confirmed) was already paid for but never visited, so re-planning
-    // it this week must not be charged again → mark that stop prepaid. Using only
-    // the latest prior stop means a debt cleared by a later visit isn't re-applied.
+    // canceled+confirmed) AND belonged to an APPROVED week was already paid for
+    // but never visited, so re-planning it now must not be charged again → mark
+    // that stop prepaid. Requiring the prior week to be approved is essential:
+    // fuel is only "bought" at approval, so a skip in an unapproved/draft week
+    // was never paid and its distance must still be charged. Using only the
+    // latest prior stop means a debt cleared by a later visit isn't re-applied.
     const plannedItemIds = [...new Set(v.days.flatMap(d => d.stops.map(s => s.itemId)))]
     const prepaidItems = new Set<string>()
     if (plannedItemIds.length) {
-      const { data: priorRoutes } = await svc
-        .from('routes')
-        .select('date, route_stops(board_item_id, status, skip_reason, skip_confirmed)')
-        .eq('inspector_id', v.inspectorId)
-        .lt('date', v.weekStart)
+      const [{ data: priorRoutes }, { data: approvedPlans }] = await Promise.all([
+        svc
+          .from('routes')
+          .select('date, route_stops(board_item_id, status, skip_reason, skip_confirmed)')
+          .eq('inspector_id', v.inspectorId)
+          .lt('date', v.weekStart),
+        svc
+          .from('week_plans')
+          .select('week_start')
+          .eq('inspector_id', v.inspectorId)
+          .eq('status', 'approved')
+          .lt('week_start', v.weekStart),
+      ])
+      const approvedWeeks = new Set<string>((approvedPlans || []).map((p: any) => p.week_start))
       const latest = new Map<string, { date: string; status: string; canceledOk: boolean }>()
       for (const r of priorRoutes || []) {
         for (const s of r.route_stops || []) {
@@ -236,7 +261,8 @@ export async function POST(request: NextRequest) {
         }
       }
       for (const [itemId, s] of latest)
-        if (s.status === 'skipped' && !s.canceledOk) prepaidItems.add(itemId)
+        if (s.status === 'skipped' && !s.canceledOk && approvedWeeks.has(mondayOfDate(s.date)))
+          prepaidItems.add(itemId)
     }
 
     // Insert one route per non-empty day + its stops

@@ -12,6 +12,7 @@ import {
   CHECKIN_RADIUS_METERS,
 } from '@/lib/geo-utils'
 import { getEffectiveVisitTypes } from '@/features/boards/constants/checkin'
+import { georgiaToday, georgiaTimeOfDay, georgiaMonday } from '@/lib/time'
 
 const createCheckinSchema = z.object({
   inspector_id: z.string().uuid(),
@@ -34,12 +35,6 @@ const checkoutSchema = z.object({
   lng: z.number().min(-180).max(180),
   accuracy: z.number().optional(),
 })
-
-// Georgia is UTC+4 — a route's `date` is that local day, so resolve "today" in
-// the same offset when matching a check-in to its planned stop.
-function georgiaToday(): string {
-  return new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString().slice(0, 10)
-}
 
 // Reflect a visit on the officer's planned stop. Board check-ins carry
 // board_item_id (not route_stop_id), so resolve the stop through the officer's
@@ -225,10 +220,8 @@ export async function POST(request: NextRequest) {
     // items not actively planned for another day this week — are exempt.
     if (process.env.CHECKIN_ANY_DAY !== 'true' && validated.board_item_id) {
       const gsvc = createServiceClient() as any
-      const nowG = new Date(Date.now() + 4 * 60 * 60 * 1000)
-      const today = nowG.toISOString().slice(0, 10)
-      const dow = (nowG.getUTCDay() + 6) % 7
-      const monday = new Date(nowG.getTime() - dow * 86400000).toISOString().slice(0, 10)
+      const today = georgiaToday()
+      const monday = georgiaMonday(0)
       const sunday = new Date(new Date(monday).getTime() + 6 * 86400000).toISOString().slice(0, 10)
       const { data: prs } = await gsvc
         .from('routes')
@@ -288,7 +281,7 @@ export async function POST(request: NextRequest) {
         .from('route_stops')
         .update({
           status: 'in_progress',
-          actual_arrival_time: new Date().toTimeString().slice(0, 8),
+          actual_arrival_time: georgiaTimeOfDay(),
         })
         .eq('id', validated.route_stop_id)
     } else {
@@ -464,7 +457,7 @@ export async function PATCH(request: NextRequest) {
         .from('route_stops')
         .update({
           status: 'completed',
-          actual_departure_time: new Date().toTimeString().slice(0, 8),
+          actual_departure_time: georgiaTimeOfDay(),
         })
         .eq('id', (checkin as any).route_stop_id)
     } else {

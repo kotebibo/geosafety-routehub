@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { createServiceClient } from '@/lib/supabase/server'
+import { georgiaDayRange } from '@/lib/time'
 
 function weekDates(weekStart: string): string[] {
   const [y, m, d] = weekStart.split('-').map(Number)
@@ -102,14 +103,17 @@ export async function GET(request: NextRequest) {
       if (!allPrepaid) agg.totalKm += r.total_distance_km || 0
     }
 
-    // Time spent this week per officer (sum of check-in durations).
+    // Time spent this week per officer (sum of check-in durations). Bound the
+    // check-in window by the Georgia week in UTC (not naive strings) so rows
+    // near midnight land in the right week.
     const minutesOf = new Map<string, number>()
+    const range = georgiaDayRange(dates[0], dates[6])
     const { data: checkins } = await svc
       .from('location_checkins')
       .select('inspector_id, duration_minutes')
       .in('inspector_id', activeIds)
-      .gte('created_at', `${dates[0]}T00:00:00`)
-      .lte('created_at', `${dates[6]}T23:59:59`)
+      .gte('created_at', range.gte)
+      .lte('created_at', range.lte)
     for (const c of checkins || [])
       if (c.duration_minutes != null)
         minutesOf.set(c.inspector_id, (minutesOf.get(c.inspector_id) || 0) + c.duration_minutes)

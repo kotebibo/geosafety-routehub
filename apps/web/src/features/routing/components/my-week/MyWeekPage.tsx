@@ -18,6 +18,7 @@ import { useToast } from '@/components/ui-monday/Toast'
 import { useBoardItems } from '@/features/boards/hooks'
 import { useBoardColumns } from '@/features/boards/hooks/useBoardColumns'
 import { CheckinBottomSheet } from '@/features/boards/components/BoardTable/cells/CheckinBottomSheet'
+import { useServerDate } from '@/hooks/useServerDate'
 import { useOfficerBoard } from '../../hooks/useOfficerBoard'
 import {
   useMyRoutes,
@@ -50,10 +51,13 @@ export function MyWeekPage() {
     [columns]
   )
 
-  // Current week's routes only, day-ascending.
-  const weekStart = dayKey(mondayOf(0))
+  // Current week/day come from the SERVER (Georgia time), so a wrong device
+  // clock or a tab left open across midnight can't shift the day. Falls back to
+  // the local clock only until the first /api/time response.
+  const serverDate = useServerDate()
+  const weekStart = serverDate.data?.weekStart ?? dayKey(mondayOf(0))
   const weekEnd = addDays(weekStart, 6)
-  const todayKey = dayKey(new Date())
+  const todayKey = serverDate.data?.georgiaDate ?? dayKey(new Date())
   // env: true → check in on a planned stop any day; false → only its planned day.
   const anyDay = process.env.NEXT_PUBLIC_CHECKIN_ANY_DAY === 'true'
   const days = useMemo(
@@ -176,6 +180,7 @@ export function MyWeekPage() {
           start={data?.start ?? null}
           inspectorId={user?.id || ''}
           weekStart={weekStart}
+          today={todayKey}
           onClose={() => setBooking(false)}
           t={t}
         />
@@ -443,6 +448,7 @@ function BookUnplannedModal({
   start,
   inspectorId,
   weekStart,
+  today,
   onClose,
   t,
 }: {
@@ -452,6 +458,7 @@ function BookUnplannedModal({
   start: { lat: number; lng: number } | null
   inspectorId: string
   weekStart: string
+  today: string
   onClose: () => void
   t: ReturnType<typeof useTranslations>
 }) {
@@ -490,7 +497,7 @@ function BookUnplannedModal({
         weekStart,
         boardId: board.id,
         boardItemId: itemId,
-        visitDate: dayKey(new Date()),
+        visitDate: today,
         distanceKm,
         reason: reason.trim() || null,
       })
