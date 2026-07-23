@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { createServiceClient } from '@/lib/supabase/server'
+import { georgiaDayRange } from '@/lib/time'
 
 function weekDates(weekStart: string): string[] {
   const [y, m, d] = weekStart.split('-').map(Number)
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
     const dates = weekDates(weekStart)
     const { data: routes } = await svc
       .from('routes')
-      .select('inspector_id, total_distance_km, route_stops(status)')
+      .select('inspector_id, total_distance_km, route_stops(status, prepaid)')
       .in('inspector_id', activeIds)
       .in('date', dates)
 
@@ -96,8 +97,26 @@ export async function GET(request: NextRequest) {
       agg.visitedCount += stops.filter(
         (s: any) => s.status === 'completed' || s.status === 'visited'
       ).length
-      agg.totalKm += r.total_distance_km || 0
+      // A day whose stops are ALL prepaid carry-overs was already paid for last
+      // week → its km/fuel isn't charged again (matches computeWeekFuel).
+      const allPrepaid = stops.every((s: any) => s.prepaid)
+      if (!allPrepaid) agg.totalKm += r.total_distance_km || 0
     }
+
+    // Time spent this week per officer (sum of check-in durations). Bound the
+    // check-in window by the Georgia week in UTC (not naive strings) so rows
+    // near midnight land in the right week.
+    const minutesOf = new Map<string, number>()
+    const range = georgiaDayRange(dates[0], dates[6])
+    const { data: checkins } = await svc
+      .from('location_checkins')
+      .select('inspector_id, duration_minutes')
+      .in('inspector_id', activeIds)
+      .gte('created_at', range.gte)
+      .lte('created_at', range.lte)
+    for (const c of checkins || [])
+      if (c.duration_minutes != null)
+        minutesOf.set(c.inspector_id, (minutesOf.get(c.inspector_id) || 0) + c.duration_minutes)
 
     const officers = (users || []).map((u: any) => {
       const agg = aggOf.get(u.id)!
@@ -119,6 +138,7 @@ export async function GET(request: NextRequest) {
         days: agg.days,
         stopCount: agg.stopCount,
         visitedCount: agg.visitedCount,
+        minutes: minutesOf.get(u.id) ?? 0,
         consumption,
         liters,
         fuelType, // officer's fuel type (drives which global price applies)

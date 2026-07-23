@@ -160,11 +160,13 @@ export function RoutePlanningPopup({ board, items, onClose }: RoutePlanningPopup
               <div className="grid grid-cols-3 gap-2">
                 <SummaryTile
                   label={t('routing.totalDistance')}
-                  value={`${result.totalDistance.toFixed(1)} კმ`}
+                  value={`${result.totalDistance.toFixed(1)} ${t('routing.km')}`}
                 />
                 <SummaryTile
                   label={t('routing.toFirstStop')}
-                  value={startToFirst !== null ? `${startToFirst.toFixed(1)} კმ` : '—'}
+                  value={
+                    startToFirst !== null ? `${startToFirst.toFixed(1)} ${t('routing.km')}` : '—'
+                  }
                 />
                 <SummaryTile label={t('routing.stops')} value={String(companyStops.length)} />
               </div>
@@ -206,7 +208,7 @@ export function RoutePlanningPopup({ board, items, onClose }: RoutePlanningPopup
                       <p className="text-sm font-medium text-text-primary truncate">{stop.name}</p>
                     </div>
                     <span className="text-xs text-text-tertiary flex-shrink-0">
-                      +{stop.distanceFromPrevious.toFixed(1)} კმ
+                      +{stop.distanceFromPrevious.toFixed(1)} {t('routing.km')}
                     </span>
                   </div>
                 ))}

@@ -26,11 +26,14 @@ interface OSRMTableResponse {
   durations: number[][] | null; // matrix in seconds
 }
 
-// OSRM public server (free, no API key needed)
-// NOTE: This is a demo server with rate limits. For production, consider:
-// - Hosting your own OSRM instance
-// - Using a paid routing service (Mapbox, Google, HERE)
-const OSRM_BASE_URL = 'http://router.project-osrm.org';
+// OSRM base URL. Set OSRM_BASE_URL to a self-hosted instance in production —
+// the public demo server (the fallback) is rate-limited and has no SLA, so it
+// is unsuitable for the real weekly routing load. Trailing slash is trimmed so
+// both "https://host" and "https://host/" work.
+const OSRM_BASE_URL = (process.env.OSRM_BASE_URL || 'https://router.project-osrm.org').replace(
+  /\/+$/,
+  ''
+);
 const OSRM_ROUTE_URL = `${OSRM_BASE_URL}/route/v1/driving`;
 const OSRM_TABLE_URL = `${OSRM_BASE_URL}/table/v1/driving`;
 
@@ -234,6 +237,50 @@ export async function getOSRMDistanceMatrix(
     // Final fallback: Haversine formula (straight-line distance)
     console.log('⚠️ Using Haversine fallback (straight-line distances)');
     return createHaversineMatrix(locations);
+  }
+}
+
+/**
+ * Distance (km) + duration (seconds) matrices from OSRM in one Table call, so a
+ * route can be sequenced by shortest TIME (durations) while still reporting
+ * distance. Returns null if OSRM is unavailable/failed — the caller then falls
+ * back to a Haversine distance matrix.
+ */
+export async function getOSRMMatrices(
+  locations: Array<{ lat: number; lng: number }>
+): Promise<{ distances: number[][]; durations: number[][] | null } | null> {
+  const n = locations.length;
+  if (n < 2) return { distances: [[0]], durations: [[0]] };
+  if (!shouldRetryOSRM()) return null;
+
+  const coordsStr = locations.map(loc => `${loc.lng},${loc.lat}`).join(';');
+  const params = new URLSearchParams({ annotations: 'distance,duration' });
+  const url = `${OSRM_TABLE_URL}/${coordsStr}?${params}`;
+
+  try {
+    const response = await fetchWithTimeout(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      if (response.status === 429 || response.status >= 500) markOSRMUnavailable();
+      return null;
+    }
+    const data: OSRMTableResponse = await response.json();
+    if (data.code === 'Ok' && data.distances) {
+      markOSRMAvailable();
+      const distances = data.distances.map(row =>
+        row.map(d => (d !== null ? d / 1000 : 0))
+      );
+      const durations = data.durations
+        ? data.durations.map(row => row.map(d => (d !== null ? d : 0)))
+        : null;
+      return { distances, durations };
+    }
+    return null;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') markOSRMUnavailable();
+    return null;
   }
 }
 

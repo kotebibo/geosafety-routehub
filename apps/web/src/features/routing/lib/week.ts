@@ -50,3 +50,9 @@ export function addDays(dateStr: string, days: number): string {
 export function shortDate(d: Date): string {
   return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`
 }
+
+/** "DD.MM" for a YYYY-MM-DD string (the string counterpart to shortDate). */
+export function shortDateStr(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return shortDate(new Date(y, m - 1, d))
+}

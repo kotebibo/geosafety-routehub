@@ -88,6 +88,7 @@
     "loading": "იტვირთება...",
     "save": "შენახვა",
     "cancel": "გაუქმება",
+    "error": "დაფიქსირდა შეცდომა",
     "delete": "წაშლა",
     "edit": "რედაქტირება",
     "add": "დამატება",
@@ -352,6 +353,9 @@
     "inspector": "ინსპექტორი",
     "completionDate": "დასრულების თარიღი",
     "notesPlaceholder": "შენიშვნები...",
+    "addPhoto": "ფოტოს დამატება",
+    "photoFailed": "ფოტოს ატვირთვა ვერ მოხერხდა",
+    "viewPhoto": "ფოტო",
     "statCurrent": "მიმდინარე",
     "statRemaining": "დარჩენილი",
     "phaseWord": "ფაზა"
@@ -486,7 +490,10 @@
       "exportCSV": "CSV ექსპორტი",
       "exportFailed": "CSV ექსპორტი ვერ მოხერხდა"
     },
-    "meters": "მ"
+    "meters": "მ",
+    "addPhoto": "ფოტოს გადაღება",
+    "photoFailed": "ფოტოს ატვირთვა ვერ მოხერხდა",
+    "viewPhoto": "ფოტოს ნახვა"
   },
   "routes": {
     "builder": {
@@ -2034,13 +2041,61 @@
     "fuelPrice": "ბენზინის ფასი",
     "perLiter": "₾/ლ",
     "totalCost": "სულ ღირებულება, ₾",
+    "totalTime": "სულ დრო, წთ",
+    "tab": {
+      "overview": "მიმოხილვა",
+      "requests": "რექვესთები",
+      "unplanned": "დაუგეგმავი",
+      "deferred": "გადადებული",
+      "week": "კვირა",
+      "history": "ისტორია"
+    },
+    "approve": "დამტკიცება",
+    "reject": "უარყოფა",
+    "edit": "შესწორება",
+    "approved": "დამტკიცდა",
+    "rejected": "უარყოფილია",
+    "reopened": "გახსნილია რედაქტირებისთვის",
+    "noRequests": "გამოგზავნილი გეგმა არ არის",
+    "noUnplanned": "დაუგეგმავი ვიზიტი არ არის",
+    "noDeferred": "გადადებული ობიექტი არ არის",
+    "noReason": "მიზეზი არ არის მითითებული",
+    "costBreakdown": "ხარჯის დაშლა",
+    "exportWeek": "Excel (კვირა)",
+    "exportMonth": "Excel (თვე)",
+    "daysShort": "დღე",
+    "peopleCount": "{count} კაცი",
     "cost": "ღირებულება",
     "consumption100": "მოხმარება",
     "officerPrice": "ამ ოფიცრის ფასი",
     "inheritsGlobal": "იღებს გლობალურ {price} ₾/ლ",
     "invalidPrice": "ფასი არასწორია",
     "priceSaved": "ფასი შენახულია",
-    "priceSaveFailed": "ფასის შენახვა ვერ მოხერხდა"
+    "priceSaveFailed": "ფასის შენახვა ვერ მოხერხდა",
+    "period": {
+      "week": "კვირა",
+      "month": "თვე"
+    },
+    "monthTotal": "თვის ჯამი",
+    "weekLabel": "კვირა {n}",
+    "noWeekData": "გეგმა არ არის",
+    "officersShort": "ოფიცერი",
+    "audit": {
+      "empty": "ისტორია ცარიელია",
+      "plan_saved": "გეგმა შეინახა",
+      "plan_submit": "გეგმა გაიგზავნა",
+      "plan_approve": "გეგმა დამტკიცდა",
+      "plan_reopen": "გეგმა გაიხსნა რედაქტირებისთვის",
+      "stop_deferred": "ვიზიტი გადაიდო",
+      "stop_visited": "ვიზიტი შესრულდა",
+      "stop_reset": "ვიზიტი დაბრუნდა",
+      "stop_cancel_confirmed": "გაუქმება დადასტურდა",
+      "extra_visit_requested": "დაუგეგმავი ვიზიტი მოთხოვნილია",
+      "extra_visit_approved": "დაუგეგმავი ვიზიტი დამტკიცდა",
+      "extra_visit_rejected": "დაუგეგმავი ვიზიტი უარყოფილია"
+    },
+    "searchOfficer": "ძებნა სახელით ან გვარით…",
+    "noOfficerMatch": "ოფიცერი ვერ მოიძებნა"
   },
   "locations": {
     "dataLoading": "მონაცემების ჩატვირთვა...",
@@ -2130,6 +2185,46 @@
   },
   "gps": {
     "notSupported": "გეოლოკაცია არ არის მხარდაჭერილი ამ ბრაუზერში"
+  },
+  "officerPlan": {
+    "objects": "ობიექტები",
+    "fuelL": "ლ",
+    "sendToAdmin": "გაგზავნა ადმინთან",
+    "sent": "გეგმა გაიგზავნა ადმინთან",
+    "sendFailed": "გაგზავნა ვერ მოხერხდა",
+    "statusSubmitted": "გაგზავნილია",
+    "statusApproved": "დამტკიცებულია"
+  },
+  "myWeek": {
+    "title": "ჩემი კვირა",
+    "today": "დღეს",
+    "dayLocked": "სხვა დღეს",
+    "done": "შესრულებული",
+    "empty": "ამ კვირაზე დაგეგმილი ვიზიტი არ არის.",
+    "checkin": "ჩექინი",
+    "defer": "გადადება",
+    "deferred": "გადადებული",
+    "failed": "ჩავარდნილი ვიზიტები",
+    "noFailed": "ჩავარდნილი ვიზიტი არ არის",
+    "confirmed": "დადასტურდა",
+    "processing": "პროცესინგში",
+    "bookUnplanned": "დაუგეგმავის დაჯავშნა",
+    "bookReason": "რატომ გჭირდება ეს ვიზიტი?",
+    "booked": "დაუგეგმავი ვიზიტი გაიგზავნა",
+    "deferTitle": "გეგმიდან გადახვევა",
+    "deferSaved": "გადაიდო",
+    "deferFailed": "ვერ მოხერხდა",
+    "reasonNote": "დამატებითი კომენტარი (არასავალდებულო)",
+    "reason": {
+      "empty": "ცარიელი იყო",
+      "closed": "დაკეტილი იყო",
+      "refused": "უარი თქვეს",
+      "canceled": "ობიექტმა გამიუქმა ვიზიტი",
+      "other": "სხვა"
+    },
+    "openDayRoute": "მარშრუტი Google Maps-ში",
+    "dayAllDone": "ამ დღის ყველა ვიზიტი დასრულებულია ✓",
+    "resolvedCount": "დასრულებული / გადადებული ({count})"
   },
   "routing": {
     "title": "მარშრუტიზაცია",
@@ -2248,6 +2343,14 @@
     "weekCompanies": "{count} ობიექტი",
     "fuelLiters": "{liters} ლ საწვავი",
     "weekPlanned": "კვირა დაიგეგმა",
-    "noOfficerAssigned": "ოფიცერი არ არის მიბმული ამ board-ზე"
+    "noOfficerAssigned": "ოფიცერი არ არის მიბმული ამ board-ზე",
+    "km": "კმ",
+    "litersPer100km": "ლ/100კმ",
+    "metersShort": "მ",
+    "minutesShort": "წთ",
+    "comments": "კომენტარები",
+    "noComments": "კომენტარები არ არის",
+    "addComment": "დაწერეთ კომენტარი…",
+    "openInGoogleMaps": "Google Maps-ში გახსნა"
   }
 }

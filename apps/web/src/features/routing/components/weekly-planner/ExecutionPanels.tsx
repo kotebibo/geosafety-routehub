@@ -2,7 +2,7 @@
 
 import { AlertTriangle, MapPin, Plus, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
-import { shortDate } from '../../lib/week'
+import { shortDateStr } from '../../lib/week'
 import type { WeekExecution } from '../../hooks/useWeekExecution'
 import type { RoutingItem } from '../../hooks/useRoutingData'
 import type { ExtraVisit } from './types'
@@ -17,12 +17,6 @@ interface ExecutionPanelsProps {
   onToggleAdding: () => void
   onAddExtra: (itemId: string) => void
   onRemoveExtra: (itemId: string) => void
-}
-
-// DD.MM label for a YYYY-MM-DD date.
-function fmtDate(s: string): string {
-  const [y, m, d] = s.split('-').map(Number)
-  return shortDate(new Date(y, m - 1, d))
 }
 
 export function ExecutionPanels({
@@ -124,11 +118,11 @@ export function ExecutionPanels({
                 </span>
                 {v.lateVisitedOn && (
                   <span className="text-[10px] font-medium text-amber-500 flex-shrink-0">
-                    {t('routing.visitedLate', { date: fmtDate(v.lateVisitedOn) })}
+                    {t('routing.visitedLate', { date: shortDateStr(v.lateVisitedOn) })}
                   </span>
                 )}
                 <span className="text-[11px] text-text-tertiary flex-shrink-0">
-                  {fmtDate(v.date)}
+                  {shortDateStr(v.date)}
                 </span>
               </div>
             ))}

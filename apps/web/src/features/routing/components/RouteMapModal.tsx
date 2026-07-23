@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import dynamic from 'next/dynamic'
-import { X, Navigation, Fuel, Loader2, MapPin } from 'lucide-react'
+import { X, Navigation, Fuel, Loader2, MapPin, ExternalLink } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { stopVisitState, STOP_STATE_HEX } from '../lib/stop-state'
+import { googleMapsDirUrl } from '../lib/google-maps'
 
 // Leaflet touches `window` at import time — load the map only on the client.
 const RouteMapFixed = dynamic(
@@ -71,6 +72,18 @@ export function RouteMapModal({
 
   const stopKey = stops.map(s => s.id).join('|')
   const startKey = start ? `${start.lat},${start.lng}` : ''
+
+  // Open the day's route (home → objects → home, in planned order) directly in
+  // Google Maps driving directions.
+  const googleMapsUrl = useMemo(
+    () =>
+      googleMapsDirUrl([
+        ...(start ? [{ lat: start.lat, lng: start.lng }] : []),
+        ...stops.map(s => ({ lat: s.lat, lng: s.lng })),
+        ...(start ? [{ lat: start.lat, lng: start.lng }] : []),
+      ]),
+    [stopKey, startKey]
+  )
   useEffect(() => {
     if (stops.length === 0) return
     // Full loop: home → stops → back home.
@@ -159,13 +172,26 @@ export function RouteMapModal({
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1.5 rounded-lg hover:bg-bg-hover transition-colors flex-shrink-0"
-        >
-          <X className="w-5 h-5 text-text-secondary" />
-        </button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {googleMapsUrl && (
+            <a
+              href={googleMapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-monday-primary text-white shadow-sm hover:opacity-90 active:scale-95 transition-all"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t('routing.openInGoogleMaps')}</span>
+            </a>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-bg-hover transition-colors"
+          >
+            <X className="w-5 h-5 text-text-secondary" />
+          </button>
+        </div>
       </div>
 
       {/* Map */}

@@ -13,6 +13,7 @@ export interface OfficerWeekSummary {
   days: number
   stopCount: number
   visitedCount: number
+  minutes: number
   consumption: number | null
   liters: number | null
   /** The officer's fuel type (drives which global price applies). */
@@ -44,6 +45,84 @@ export function useRouteAnalytics(weekStart: string) {
   })
 }
 
+export interface WeekSlice {
+  weekStart: string
+  weekEnd: string
+  fleet: { km: number; liters: number; cost: number; minutes: number; planning: number }
+  officers: OfficerWeekSummary[]
+}
+export interface MonthAnalytics {
+  month: string
+  weekStarts: string[]
+  weeks: WeekSlice[]
+  monthTotals: { km: number; liters: number; cost: number; minutes: number }
+  globalPrices: FuelPrices
+}
+
+/** Per-week analytics slices for a whole month (YYYY-MM). Admin analytics page. */
+export function useMonthAnalytics(month: string, enabled = true) {
+  return useQuery({
+    queryKey: ['route-analytics-month', month],
+    queryFn: async (): Promise<MonthAnalytics> => {
+      const res = await fetch(`/api/routing/analytics/month?month=${month}`)
+      if (!res.ok) throw new Error('Failed to load month analytics')
+      return res.json()
+    },
+    enabled: enabled && !!month,
+    staleTime: 30_000,
+  })
+}
+
+export interface WeekRequest {
+  inspectorId: string
+  name: string | null
+  weekStart: string
+  submittedAt: string | null
+  totalKm: number
+}
+export interface AdminUnplanned {
+  id: string
+  inspectorId: string
+  officerName: string | null
+  boardItemId: string | null
+  objectName: string | null
+  date: string
+  distanceKm: number | null
+  reason: string | null
+  status: 'requested' | 'approved' | 'rejected'
+}
+export interface AdminDeferred {
+  stopId: string
+  inspectorId: string
+  officerName: string | null
+  boardItemId: string | null
+  objectName: string | null
+  date: string
+  reason: string | null
+  note: string | null
+  deferredAt: string | null
+}
+export interface AdminWeek {
+  weekStart: string
+  requests: WeekRequest[]
+  unplanned: AdminUnplanned[]
+  deferred: AdminDeferred[]
+}
+
+/** Admin/dispatcher work queue for a week: requests, unplanned, deferred. */
+export function useAdminWeek(weekStart: string) {
+  return useQuery({
+    queryKey: ['admin-week', weekStart],
+    queryFn: async (): Promise<AdminWeek> => {
+      const res = await fetch(`/api/routing/admin-week?weekStart=${weekStart}`)
+      if (!res.ok) throw new Error('Failed to load admin week')
+      return res.json()
+    },
+    enabled: !!weekStart,
+    staleTime: 15_000,
+  })
+}
+
 /** Global fuel prices per type (₾/L) that officers inherit by fuel type. */
 export function useSetFuelPrices() {
   const queryClient = useQueryClient()
@@ -62,6 +141,7 @@ export function useSetFuelPrices() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics-month'] })
     },
   })
 }
@@ -84,6 +164,7 @@ export function useSetOfficerFuelPrice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics-month'] })
     },
   })
 }

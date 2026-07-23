@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { georgiaDateOf, georgiaDayRange, georgiaToday, georgiaTimeOfDay } from '@/lib/time'
 
 // GET ?inspectorId=&boardId=&weekStart=YYYY-MM-DD
 // Execution vs plan for one officer + board in a given week:
@@ -35,10 +36,10 @@ export async function GET(request: NextRequest) {
 
     const svc = createServiceClient() as any
 
-    // Week range [weekStart, weekStart+7).
-    const start = new Date(`${weekStart}T00:00:00.000Z`)
-    const endExclusive = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
-    const weekEnd = new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+    // Week range (Sunday end, YYYY-MM-DD).
+    const weekEnd = new Date(new Date(`${weekStart}T00:00:00.000Z`).getTime() + 6 * 86400000)
+      .toISOString()
+      .slice(0, 10)
 
     // This board's items (id → name) — scopes "unplanned visits" to this board.
     const { data: items } = await svc.from('board_items').select('id, name').eq('board_id', boardId)
@@ -58,26 +59,25 @@ export async function GET(request: NextRequest) {
         if (s.board_item_id && boardItemIds.has(s.board_item_id))
           plannedByItem.set(s.board_item_id, { date: r.date, status: s.status })
 
-    // The officer's check-ins this week (on this board's items).
+    // The officer's check-ins this week (on this board's items), bounded by the
+    // Georgia week in UTC so rows near midnight land in the right week.
+    const ciRange = georgiaDayRange(weekStart, weekEnd)
     const { data: checkins } = await svc
       .from('location_checkins')
       .select('board_item_id, created_at')
       .eq('inspector_id', inspectorId)
-      .gte('created_at', start.toISOString())
-      .lt('created_at', endExclusive.toISOString())
+      .gte('created_at', ciRange.gte)
+      .lte('created_at', ciRange.lte)
       .order('created_at', { ascending: true })
-    // Georgia (UTC+4) local day of a timestamp.
-    const georgiaDay = (iso: string) =>
-      new Date(new Date(iso).getTime() + 4 * 60 * 60 * 1000).toISOString().slice(0, 10)
-    // "Now" in the Georgia frame (as if UTC) — used for the 21:00 cutoff below.
-    const georgiaNowIso = new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString()
+    // Georgia "now" as a naive local datetime, for the 21:00 cutoff comparison.
+    const georgiaNow = `${georgiaToday()}T${georgiaTimeOfDay()}`
 
     const visitedItems = new Set<string>() // any check-in this week
     const visitDayByItem = new Map<string, string>() // first visit day (unplanned display)
     const checkinOnDay = new Set<string>() // `${itemId}|${georgiaDay}`
     for (const c of checkins || []) {
       if (!c.board_item_id || !boardItemIds.has(c.board_item_id) || !c.created_at) continue
-      const day = georgiaDay(c.created_at)
+      const day = georgiaDateOf(c.created_at)
       if (!visitedItems.has(c.board_item_id)) visitDayByItem.set(c.board_item_id, day)
       visitedItems.add(c.board_item_id)
       checkinOnDay.add(`${c.board_item_id}|${day}`)
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       .filter(([itemId, p]) => {
         if (p.status === 'completed' || p.status === 'visited') return false
         if (checkinOnDay.has(`${itemId}|${p.date}`)) return false // visited on time
-        return georgiaNowIso >= `${p.date}T21:00:00.000Z` // past 21:00 of the planned day
+        return georgiaNow >= `${p.date}T21:00:00` // past 21:00 of the planned day
       })
       .map(([itemId, p]) => ({
         boardItemId: itemId,

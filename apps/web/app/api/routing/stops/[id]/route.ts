@@ -4,9 +4,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { notifyManagers } from '@/features/routing/lib/routing-notify'
+import { logRoutingAudit } from '@/features/routing/lib/routing-audit'
+import { georgiaMondayOfDate } from '@/lib/time'
 
 const patchSchema = z.object({
-  status: z.enum(['pending', 'visited', 'skipped']),
+  status: z.enum(['pending', 'visited', 'skipped']).optional(),
+  // Only meaningful when status = 'skipped' (deferred/deviation).
+  skipReason: z.enum(['empty', 'closed', 'refused', 'canceled', 'other']).nullable().optional(),
+  skipNote: z.string().max(500).nullable().optional(),
+  // Admin confirms an "object canceled" deferral → counts as legit (not failed).
+  confirmCancel: z.boolean().optional(),
 })
 
 // PATCH — mark a single route stop visited/skipped/pending. Authorized against
@@ -15,7 +23,7 @@ const patchSchema = z.object({
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await requireAuth()
-    const { status } = patchSchema.parse(await request.json())
+    const { status, skipReason, skipNote, confirmCancel } = patchSchema.parse(await request.json())
 
     const supabase = createServerClient() as any
     const { data: roleRow } = await supabase
@@ -28,7 +36,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const svc = createServiceClient() as any
     const { data: stop, error: sErr } = await svc
       .from('route_stops')
-      .select('id, route_id, routes(inspector_id)')
+      .select('id, route_id, board_item_id, routes(inspector_id, date)')
       .eq('id', params.id)
       .single()
     if (sErr || !stop) return NextResponse.json({ error: 'Stop not found' }, { status: 404 })
@@ -36,6 +44,29 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const ownerId = stop.routes?.inspector_id
     if (ownerId !== session.user.id && !isManager)
       return NextResponse.json({ error: 'Cannot modify another officer’s route' }, { status: 403 })
+    const weekStart = stop.routes?.date ? georgiaMondayOfDate(stop.routes.date) : null
+
+    // Admin confirms an object-canceled deferral (no status change).
+    if (confirmCancel) {
+      if (roleRow?.role !== 'admin')
+        return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+      const { error: cErr } = await svc
+        .from('route_stops')
+        .update({ skip_confirmed: true, updated_at: new Date().toISOString() })
+        .eq('id', params.id)
+      if (cErr) throw cErr
+      await logRoutingAudit(svc, {
+        actorId: session.user.id,
+        inspectorId: ownerId ?? null,
+        action: 'stop_cancel_confirmed',
+        entity: 'route_stop',
+        weekStart,
+        detail: { stopId: params.id, boardItemId: stop.board_item_id },
+      })
+      return NextResponse.json({ success: true, confirmed: true })
+    }
+
+    if (!status) return NextResponse.json({ error: 'status is required' }, { status: 400 })
 
     // API vocabulary uses 'visited'; the route_stops.status constraint only
     // allows 'completed' for the done state, so translate on write.
@@ -43,6 +74,16 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const now = new Date().toISOString()
     const patch: Record<string, any> = { status: dbStatus, updated_at: now }
     patch.actual_arrival_time = status === 'visited' ? now : null
+    // Deferral (deviation): record the reason + when; clear it on visit/revert.
+    if (status === 'skipped') {
+      patch.skip_reason = skipReason ?? null
+      patch.skip_note = skipNote ?? null
+      patch.deferred_at = now
+    } else {
+      patch.skip_reason = null
+      patch.skip_note = null
+      patch.deferred_at = null
+    }
 
     const { data: updated, error: uErr } = await svc
       .from('route_stops')
@@ -51,6 +92,44 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       .select('id, status, actual_arrival_time')
       .single()
     if (uErr) throw uErr
+
+    // Deferral is a plan deviation → notify managers in-app.
+    if (status === 'skipped') {
+      const [{ data: officer }, { data: item }] = await Promise.all([
+        ownerId
+          ? svc.from('users').select('full_name, email').eq('id', ownerId).maybeSingle()
+          : Promise.resolve({ data: null }),
+        stop.board_item_id
+          ? svc.from('board_items').select('name').eq('id', stop.board_item_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+      const who = officer?.full_name || officer?.email || 'ოფიცერი'
+      await notifyManagers(svc, {
+        type: 'stop_deferred',
+        title: 'გეგმიდან გადახვევა',
+        message: `${who} — ${item?.name || 'ობიექტი'}${skipReason ? ` (${skipReason})` : ''}`,
+        data: { stopId: params.id, inspectorId: ownerId, boardItemId: stop.board_item_id },
+        email: false,
+      })
+    }
+
+    await logRoutingAudit(svc, {
+      actorId: session.user.id,
+      inspectorId: ownerId ?? null,
+      action:
+        status === 'skipped'
+          ? 'stop_deferred'
+          : status === 'visited'
+            ? 'stop_visited'
+            : 'stop_reset',
+      entity: 'route_stop',
+      weekStart,
+      detail: {
+        stopId: params.id,
+        boardItemId: stop.board_item_id,
+        ...(status === 'skipped' ? { reason: skipReason ?? null, note: skipNote ?? null } : {}),
+      },
+    })
 
     return NextResponse.json({ success: true, stop: updated })
   } catch (error: any) {

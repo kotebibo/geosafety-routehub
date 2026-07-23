@@ -14,6 +14,7 @@ import {
   Loader2,
   AlertCircle,
   Trash2,
+  Camera,
 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { useAuth } from '@/contexts/AuthContext'
@@ -68,6 +69,8 @@ export function CheckinBottomSheet({
   const { showToast } = useToast()
   const [notes, setNotes] = useState('')
   const [checkinType, setCheckinType] = useState('')
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [elapsedDisplay, setElapsedDisplay] = useState('')
   const isAdmin = userRole?.role === 'admin'
 
@@ -156,6 +159,20 @@ export function CheckinBottomSheet({
   const handleCheckin = async () => {
     if (!user || !coords) return
     try {
+      // Optional photo — upload first, then attach its path to the check-in.
+      let photoPath: string | null = null
+      if (photoFile) {
+        setUploadingPhoto(true)
+        const fd = new FormData()
+        fd.append('file', photoFile)
+        const res = await fetch('/api/checkins/photo', { method: 'POST', body: fd })
+        setUploadingPhoto(false)
+        if (!res.ok) {
+          showToast(t('checkin.photoFailed'), 'error')
+          return
+        }
+        photoPath = (await res.json()).path ?? null
+      }
       await createCheckin.mutateAsync({
         inspector_id: user.id,
         board_item_id: itemId,
@@ -165,11 +182,14 @@ export function CheckinBottomSheet({
         lng: coords.lng,
         accuracy: coords.accuracy,
         notes: notes.trim() || undefined,
+        photo_path: photoPath,
       })
       setNotes('')
       setCheckinType('')
+      setPhotoFile(null)
       showToast(t('checkin.checkinSuccess'), 'success')
     } catch (err: any) {
+      setUploadingPhoto(false)
       showToast(err.error || t('checkin.checkinFailed'), 'error')
     }
   }
@@ -352,13 +372,48 @@ export function CheckinBottomSheet({
                 rows={2}
                 className="w-full px-3 py-2 text-sm bg-bg-primary border border-border-light rounded-lg resize-none focus:outline-none focus:border-monday-primary text-text-primary placeholder-text-tertiary"
               />
+
+              {/* Optional check-in photo (camera) */}
+              {!photoFile ? (
+                <label className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-border-medium text-text-secondary text-sm cursor-pointer hover:bg-bg-hover transition-colors">
+                  <Camera className="w-4 h-4" />
+                  {t('checkin.addPhoto')}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={e => setPhotoFile(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+              ) : (
+                <div className="flex items-center gap-2 p-2 rounded-xl border border-border-light">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={URL.createObjectURL(photoFile)}
+                    alt=""
+                    className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
+                  />
+                  <span className="flex-1 text-xs text-text-secondary truncate">
+                    {photoFile.name}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPhotoFile(null)}
+                    className="p-1 text-text-tertiary hover:text-red-500"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={handleCheckin}
-                disabled={!canCheckin}
+                disabled={!canCheckin || uploadingPhoto}
                 className="w-full py-3 px-4 rounded-xl bg-green-600 text-white font-semibold text-base hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
-                {createCheckin.isPending ? (
+                {createCheckin.isPending || uploadingPhoto ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
@@ -462,6 +517,24 @@ function CheckinTimelineEntry({
                 </span>
               )}
             </>
+          )}
+          {checkin.photo_path && (
+            <button
+              type="button"
+              onClick={async () => {
+                const res = await fetch(
+                  `/api/checkins/photo?path=${encodeURIComponent(checkin.photo_path!)}`
+                )
+                if (res.ok) {
+                  const { url } = await res.json()
+                  if (url) window.open(url, '_blank', 'noopener')
+                }
+              }}
+              className="inline-flex items-center gap-0.5 text-monday-primary hover:underline flex-shrink-0"
+            >
+              <Camera className="w-3 h-3" />
+              {t('checkin.viewPhoto')}
+            </button>
           )}
         </div>
       </div>
