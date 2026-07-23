@@ -1,9 +1,10 @@
 'use client'
 
-import { Loader2, MapPin, Route as RouteIcon, X } from 'lucide-react'
+import { ExternalLink, Loader2, MapPin, Route as RouteIcon, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { shortDate, DAY_LABELS_KA } from '../../lib/week'
+import { googleMapsDirUrl } from '../../lib/google-maps'
 import type { DayResult } from './types'
 
 interface DayCardProps {
@@ -14,6 +15,8 @@ interface DayCardProps {
   isSelected: boolean
   saving: boolean
   nameOf: (itemId: string) => string
+  coordsOf: (itemId: string) => { lat: number; lng: number } | null
+  start: { lat: number; lng: number } | null
   onSelect: () => void
   onRemove: (itemId: string) => void
   onSaveDay: () => void
@@ -28,12 +31,20 @@ export function DayCard({
   isSelected,
   saving,
   nameOf,
+  coordsOf,
+  start,
   onSelect,
   onRemove,
   onSaveDay,
   onViewMap,
 }: DayCardProps) {
   const t = useTranslations()
+  // Home → objects (in order) → home, straight to Google Maps driving.
+  const gmapsUrl = googleMapsDirUrl([
+    ...(start ? [start] : []),
+    ...ids.map(coordsOf).filter((c): c is { lat: number; lng: number } => c != null),
+    ...(start ? [start] : []),
+  ])
   return (
     <div
       onClick={onSelect}
@@ -97,6 +108,18 @@ export function DayCard({
               <span className="text-[11px] text-text-tertiary">—</span>
             )}
             <div className="flex items-center gap-2.5">
+              {gmapsUrl && (
+                <a
+                  href={gmapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-monday-primary hover:underline"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  {t('routing.openInGoogleMaps')}
+                </a>
+              )}
               {result && (
                 <button
                   type="button"

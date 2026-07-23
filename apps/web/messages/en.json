@@ -2342,6 +2342,7 @@
     "minutesShort": "min",
     "comments": "Comments",
     "noComments": "No comments yet",
-    "addComment": "Write a comment…"
+    "addComment": "Write a comment…",
+    "openInGoogleMaps": "Open in Google Maps"
   }
 }

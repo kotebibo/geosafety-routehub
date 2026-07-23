@@ -95,6 +95,8 @@ export function WeeklyPlanner({ board, onClose }: WeeklyPlannerProps) {
                       isSelected={i === c.selectedDay}
                       saving={c.savingDay === key}
                       nameOf={c.nameOf}
+                      coordsOf={c.coordsOf}
+                      start={c.start}
                       onSelect={() => c.setSelectedDay(i)}
                       onRemove={id => c.removeFromDay(key, id)}
                       onSaveDay={() => c.saveDay(key)}
