@@ -51,17 +51,46 @@ async function markPlannedStop(
   if (!boardItemId) return
   try {
     const svc = createServiceClient() as any
-    const { data: routes } = await svc
+    // 1. The stop planned for TODAY (normal check-in on its planned day).
+    const { data: todayRoutes } = await svc
       .from('routes')
       .select('route_stops(id, board_item_id)')
       .eq('inspector_id', inspectorId)
       .eq('date', georgiaToday())
     const stopIds: string[] = []
-    for (const r of routes || [])
+    for (const r of todayRoutes || [])
       for (const st of r.route_stops || [])
         if (st.board_item_id === boardItemId) stopIds.push(st.id)
+
+    // 2. Nothing planned today → the officer finally reached a DEFERRED object on
+    //    some other day (checked in from the "plan deviation" section). Resolve
+    //    the skipped stop for this item this week and clear its skip mark.
+    let resolvingDeviation = false
+    if (stopIds.length === 0) {
+      const monday = georgiaMonday(0)
+      const sunday = new Date(new Date(monday).getTime() + 6 * 86400000).toISOString().slice(0, 10)
+      const { data: weekRoutes } = await svc
+        .from('routes')
+        .select('route_stops(id, board_item_id, status)')
+        .eq('inspector_id', inspectorId)
+        .gte('date', monday)
+        .lte('date', sunday)
+      for (const r of weekRoutes || [])
+        for (const st of r.route_stops || [])
+          if (st.board_item_id === boardItemId && st.status === 'skipped') {
+            stopIds.push(st.id)
+            resolvingDeviation = true
+          }
+    }
+
     if (stopIds.length > 0) {
-      await svc.from('route_stops').update({ status }).in('id', stopIds)
+      const patch: Record<string, any> = { status }
+      if (resolvingDeviation) {
+        patch.skip_reason = null
+        patch.skip_note = null
+        patch.deferred_at = null
+      }
+      await svc.from('route_stops').update(patch).in('id', stopIds)
     }
   } catch (e) {
     console.error('markPlannedStop failed:', e)

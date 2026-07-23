@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl'
 import {
   CalendarCheck,
   Check,
-  ChevronDown,
   Clock,
   Loader2,
   MapPin,
@@ -146,9 +145,14 @@ export function MyWeekPage() {
           ))
         )}
 
-        {/* Unplanned / deviation / failed */}
+        {/* Unplanned / deviation / failed. Deferred stops are checked in from
+            the deviation section (any day the officer actually gets there). */}
         {officerWeek.data && (
-          <WeekExtrasSections data={officerWeek.data} onBook={() => setBooking(true)} />
+          <WeekExtrasSections
+            data={officerWeek.data}
+            onBook={() => setBooking(true)}
+            onCheckin={setCheckinItemId}
+          />
         )}
       </div>
 
@@ -211,18 +215,10 @@ function DaySection({
   onDefer: (stop: RouteStop) => void
   t: ReturnType<typeof useTranslations>
 }) {
-  const [showResolved, setShowResolved] = useState(false)
-  // Active = still to do (pending / in-progress). Resolved = checked-in (done)
-  // or deferred (skipped) — these drop out of the active list to keep it a clean
-  // "what's left" for the officer.
-  const isResolved = (s: RouteStop) => stopVisitState(s.status) === 'done' || s.status === 'skipped'
-  const active = route.stops.filter(s => !isResolved(s))
-  const resolved = route.stops.filter(isResolved)
-
-  // Google Maps route for the REMAINING stops: home → objects → home.
+  // Google Maps shows the FULL day route: home → all objects (in order) → home.
   const gmapsUrl = googleMapsDirUrl([
     ...(start ? [start] : []),
-    ...active
+    ...route.stops
       .filter(s => s.lat != null && s.lng != null)
       .map(s => ({ lat: s.lat as number, lng: s.lng as number })),
     ...(start ? [start] : []),
@@ -261,7 +257,7 @@ function DaySection({
         </span>
       </div>
 
-      {/* Big "open the remaining route in Google Maps" bar */}
+      {/* Big "open the full day route in Google Maps" bar */}
       {gmapsUrl && (
         <a
           href={gmapsUrl}
@@ -274,54 +270,18 @@ function DaySection({
         </a>
       )}
 
-      {active.length > 0 ? (
-        <div className="divide-y divide-border-light">
-          {active.map(stop => (
-            <StopRow
-              key={stop.id}
-              stop={stop}
-              checkinEnabled={checkinEnabled}
-              onCheckin={onCheckin}
-              onDefer={onDefer}
-              t={t}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="px-4 py-4 text-sm text-center text-green-600 font-medium">
-          {t('myWeek.dayAllDone')}
-        </p>
-      )}
-
-      {/* Resolved (checked-in / deferred) collapse out of the active list */}
-      {resolved.length > 0 && (
-        <div className="border-t border-border-light">
-          <button
-            type="button"
-            onClick={() => setShowResolved(v => !v)}
-            className="w-full flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-text-tertiary hover:bg-bg-hover transition-colors"
-          >
-            {t('myWeek.resolvedCount', { count: resolved.length })}
-            <ChevronDown
-              className={cn('w-3.5 h-3.5 transition-transform', showResolved && 'rotate-180')}
-            />
-          </button>
-          {showResolved && (
-            <div className="divide-y divide-border-light opacity-70">
-              {resolved.map(stop => (
-                <StopRow
-                  key={stop.id}
-                  stop={stop}
-                  checkinEnabled={checkinEnabled}
-                  onCheckin={onCheckin}
-                  onDefer={onDefer}
-                  t={t}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <div className="divide-y divide-border-light">
+        {route.stops.map(stop => (
+          <StopRow
+            key={stop.id}
+            stop={stop}
+            checkinEnabled={checkinEnabled}
+            onCheckin={onCheckin}
+            onDefer={onDefer}
+            t={t}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -342,8 +302,7 @@ function StopRow({
   const state = stopVisitState(stop.status)
   const skipped = stop.status === 'skipped'
   const done = state === 'done'
-  // Deviations (skipped) can be checked in any day; planned stops obey the day rule.
-  const canCheckin = checkinEnabled || skipped
+  const canCheckin = checkinEnabled
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-bg-secondary/40">
@@ -369,7 +328,12 @@ function StopRow({
       </span>
 
       <div className="flex-1 min-w-0">
-        <p className={cn('text-sm text-text-primary truncate', done && 'line-through opacity-70')}>
+        <p
+          className={cn(
+            'text-sm text-text-primary truncate',
+            (done || skipped) && 'line-through opacity-70'
+          )}
+        >
           {stop.name || t('inspectorRoutes.unknownStop')}
         </p>
         <div className="flex items-center gap-2 text-[11px] text-text-tertiary mt-0.5">
@@ -383,8 +347,10 @@ function StopRow({
         </div>
       </div>
 
-      {/* Actions — hidden once done; day-locked stops show a hint instead */}
+      {/* Actions — a deferred stop is struck-through here and checked in from the
+          "plan deviation" section instead; done stops show nothing. */}
       {!done &&
+        !skipped &&
         stop.boardItemId &&
         (canCheckin ? (
           <div className="flex items-center gap-1.5 flex-shrink-0">

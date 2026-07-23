@@ -14,6 +14,8 @@ interface WeekExtrasSectionsProps {
   show?: ExtrasSection[]
   /** Officer-only: show a "book unplanned visit" action. */
   onBook?: () => void
+  /** Officer-only: check in a deviated stop from here (any day). */
+  onCheckin?: (boardItemId: string) => void
   /** Admin-only: confirm an object-canceled deferral. */
   onConfirmCancel?: (stopId: string) => void
   confirming?: boolean
@@ -25,6 +27,7 @@ export function WeekExtrasSections({
   data,
   show = ['unplanned', 'deviation', 'failed'],
   onBook,
+  onCheckin,
   onConfirmCancel,
   confirming,
 }: WeekExtrasSectionsProps) {
@@ -75,6 +78,7 @@ export function WeekExtrasSections({
             <DeviationRow
               key={s.stopId}
               s={s}
+              onCheckin={onCheckin}
               onConfirmCancel={onConfirmCancel}
               confirming={confirming}
               t={t}
@@ -109,11 +113,13 @@ export function WeekExtrasSections({
 
 function DeviationRow({
   s,
+  onCheckin,
   onConfirmCancel,
   confirming,
   t,
 }: {
   s: StopExtraRow
+  onCheckin?: (boardItemId: string) => void
   onConfirmCancel?: (stopId: string) => void
   confirming?: boolean
   t: ReturnType<typeof useTranslations>
@@ -124,6 +130,18 @@ function DeviationRow({
   return (
     <Row name={s.name} date={s.date}>
       {reasonText && <span className="text-[11px] text-text-secondary truncate">{reasonText}</span>}
+      {/* Officer checks in a deviated object from here, whichever day they reach
+          it. Not for object-canceled deferrals (they were told not to come). */}
+      {onCheckin && !canceled && s.boardItemId && (
+        <button
+          type="button"
+          onClick={() => onCheckin(s.boardItemId!)}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-monday-primary text-white hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
+        >
+          <MapPin className="w-3 h-3" />
+          {t('myWeek.checkin')}
+        </button>
+      )}
       {canceled &&
         (s.confirmed ? (
           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-500/10 text-green-600 border border-green-500/30">
