@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       .from('routes')
       .select(
         'id, name, date, status, start_time, end_time, total_distance_km, ' +
-          'route_stops(id, board_item_id, company_id, position, status, distance_from_previous_km)'
+          'route_stops(id, board_item_id, company_id, position, status, distance_from_previous_km, skip_reason, skip_note)'
       )
       .eq('inspector_id', inspectorId)
       .order('date', { ascending: true })
@@ -163,6 +163,8 @@ export async function GET(request: NextRequest) {
             id: s.id,
             position: s.position,
             status: s.status,
+            skipReason: s.skip_reason ?? null,
+            skipNote: s.skip_note ?? null,
             distanceFromPrevious: s.distance_from_previous_km,
             boardItemId: s.board_item_id,
             name: nameById.get(s.board_item_id) || nameById.get(s.company_id) || null,

@@ -224,32 +224,52 @@ export function OfficerWeekPopup({
                     )}
                   </div>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {route.stops.map(stop => {
                     const state = stopVisitState(stop.status)
                     const done = state === 'done'
+                    const skipped = stop.status === 'skipped'
                     return (
-                      <div key={stop.id} className="flex items-center gap-2 text-xs">
+                      <div
+                        key={stop.id}
+                        className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
+                      >
                         <span
                           className={cn(
                             'w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold border',
-                            state === 'done'
+                            done
                               ? 'bg-green-500 border-green-500 text-white'
                               : state === 'in_progress'
                                 ? 'bg-amber-500 border-amber-500 text-white'
-                                : 'border-border-medium text-text-tertiary'
+                                : skipped
+                                  ? 'bg-red-500/10 border-red-500/40 text-red-500'
+                                  : 'border-border-medium text-text-tertiary'
                           )}
                         >
-                          {done ? <Check className="w-2.5 h-2.5" /> : stop.position}
+                          {done ? (
+                            <Check className="w-2.5 h-2.5" />
+                          ) : skipped ? (
+                            <X className="w-2.5 h-2.5" />
+                          ) : (
+                            stop.position
+                          )}
                         </span>
                         <span
                           className={cn(
-                            'flex-1 truncate text-text-primary',
-                            done && 'line-through'
+                            'flex-1 min-w-0 truncate',
+                            done && 'text-text-primary line-through',
+                            skipped ? 'text-text-secondary' : 'text-text-primary'
                           )}
                         >
                           {stop.name || t('inspectorRoutes.unknownStop')}
                         </span>
+                        {/* Deferred: didn't go that day — show it + the reason */}
+                        {skipped && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-500/10 text-red-500 border border-red-500/30 flex-shrink-0">
+                            {t('myWeek.deferred')}
+                            {stop.skipReason ? ` · ${t(`myWeek.reason.${stop.skipReason}`)}` : ''}
+                          </span>
+                        )}
                         {stop.durationMinutes != null && (
                           <span className="text-[11px] text-text-tertiary flex-shrink-0">
                             {t('routing.stopDuration', { min: stop.durationMinutes })}

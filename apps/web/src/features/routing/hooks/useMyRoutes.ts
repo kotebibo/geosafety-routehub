@@ -11,6 +11,8 @@ export interface RouteStop {
   id: string
   position: number
   status: StopStatus | null
+  skipReason: 'empty' | 'closed' | 'refused' | 'canceled' | 'other' | null
+  skipNote: string | null
   distanceFromPrevious: number | null
   boardItemId: string | null
   name: string | null
