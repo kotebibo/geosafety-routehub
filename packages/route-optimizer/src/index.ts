@@ -4,7 +4,7 @@
  */
 
 import { createDistanceMatrix, calculateDistance } from './distance';
-import { getOSRMDistanceMatrix, getRouteWithGeometry } from './osrm';
+import { getOSRMMatrices, getRouteWithGeometry } from './osrm';
 import type { Location, OptimizationOptions, OptimizedRoute, RouteStop } from './types';
 
 /**
@@ -112,48 +112,45 @@ export async function optimizeRoute(
   // Limit locations
   const limitedLocations = locations.slice(0, maxStops);
 
-  let distanceMatrix: number[][];
+  let distanceMatrix: number[][]; // km — used for reported distances
+  // Cost matrix we minimize when sequencing. Duration (seconds) when OSRM gives
+  // it, so the route is ordered by shortest TIME; otherwise distance.
+  let costMatrix: number[][];
   let usingRealRoads = false;
 
   // Try OSRM for real roads (Table API supports up to ~100 locations efficiently)
   if (useRealRoads && limitedLocations.length <= 100) {
-    try {
-      console.log('Fetching real road distances from OSRM...');
-      distanceMatrix = await getOSRMDistanceMatrix(limitedLocations);
-
-      const hasValidDistances = distanceMatrix.some(row =>
-        row.some(dist => dist > 0)
-      );
-
-      if (hasValidDistances) {
-        usingRealRoads = true;
-        console.log('✅ Using OSRM real road distances');
-      } else {
-        throw new Error('OSRM returned empty distances');
-      }
-    } catch (error) {
-      console.warn('⚠️ OSRM failed, falling back to Haversine:', error);
+    const matrices = await getOSRMMatrices(limitedLocations);
+    if (matrices && matrices.distances.some(row => row.some(dist => dist > 0))) {
+      distanceMatrix = matrices.distances;
+      costMatrix = matrices.durations ?? matrices.distances;
+      usingRealRoads = true;
+      console.log(`✅ Using OSRM real roads (sequencing by ${matrices.durations ? 'time' : 'distance'})`);
+    } else {
+      console.warn('⚠️ OSRM failed, falling back to Haversine');
       distanceMatrix = createDistanceMatrix(limitedLocations);
+      costMatrix = distanceMatrix;
     }
   } else {
     if (limitedLocations.length > 100) {
       console.log(`⚠️ ${limitedLocations.length} locations exceeds OSRM limit, using Haversine`);
     }
     distanceMatrix = createDistanceMatrix(limitedLocations);
+    costMatrix = distanceMatrix;
   }
 
-  // Run optimization
+  // Run optimization — minimize the cost matrix (time when available).
   let optimizedIndices: number[];
 
   if (algorithm === 'nearest-neighbor') {
-    optimizedIndices = nearestNeighborIndices(distanceMatrix);
+    optimizedIndices = nearestNeighborIndices(costMatrix);
   } else if (algorithm === '2-opt') {
     const initial = Array.from({ length: limitedLocations.length }, (_, i) => i);
-    optimizedIndices = twoOptIndices(distanceMatrix, initial);
+    optimizedIndices = twoOptIndices(costMatrix, initial);
   } else {
     // Hybrid
-    const nnRoute = nearestNeighborIndices(distanceMatrix);
-    optimizedIndices = twoOptIndices(distanceMatrix, nnRoute);
+    const nnRoute = nearestNeighborIndices(costMatrix);
+    optimizedIndices = twoOptIndices(costMatrix, nnRoute);
   }
 
   // Build result

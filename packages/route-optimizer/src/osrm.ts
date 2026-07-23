@@ -241,6 +241,50 @@ export async function getOSRMDistanceMatrix(
 }
 
 /**
+ * Distance (km) + duration (seconds) matrices from OSRM in one Table call, so a
+ * route can be sequenced by shortest TIME (durations) while still reporting
+ * distance. Returns null if OSRM is unavailable/failed — the caller then falls
+ * back to a Haversine distance matrix.
+ */
+export async function getOSRMMatrices(
+  locations: Array<{ lat: number; lng: number }>
+): Promise<{ distances: number[][]; durations: number[][] | null } | null> {
+  const n = locations.length;
+  if (n < 2) return { distances: [[0]], durations: [[0]] };
+  if (!shouldRetryOSRM()) return null;
+
+  const coordsStr = locations.map(loc => `${loc.lng},${loc.lat}`).join(';');
+  const params = new URLSearchParams({ annotations: 'distance,duration' });
+  const url = `${OSRM_TABLE_URL}/${coordsStr}?${params}`;
+
+  try {
+    const response = await fetchWithTimeout(url, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (!response.ok) {
+      if (response.status === 429 || response.status >= 500) markOSRMUnavailable();
+      return null;
+    }
+    const data: OSRMTableResponse = await response.json();
+    if (data.code === 'Ok' && data.distances) {
+      markOSRMAvailable();
+      const distances = data.distances.map(row =>
+        row.map(d => (d !== null ? d / 1000 : 0))
+      );
+      const durations = data.durations
+        ? data.durations.map(row => row.map(d => (d !== null ? d : 0)))
+        : null;
+      return { distances, durations };
+    }
+    return null;
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') markOSRMUnavailable();
+    return null;
+  }
+}
+
+/**
  * Fallback: Get distance matrix using pairwise requests
  * Used when Table service fails. Uses Haversine for individual failures.
  */
