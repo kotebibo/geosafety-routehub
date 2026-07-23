@@ -4,6 +4,7 @@ export const maxDuration = 30
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { georgiaToday } from '@/lib/time'
+import { notifyManagers } from '@/features/routing/lib/routing-notify'
 
 function verifyCronSecret(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET
@@ -26,18 +27,44 @@ export async function GET(request: NextRequest) {
 
     const { data: routes } = await svc
       .from('routes')
-      .select('date, route_stops(id, status)')
+      .select('inspector_id, date, route_stops(id, status)')
       .lte('date', today)
 
     const stopIds: string[] = []
+    const missedByOfficer = new Map<string, number>() // inspector_id → count auto-deferred
     for (const r of routes || [])
-      for (const s of r.route_stops || []) if (s.status === 'pending') stopIds.push(s.id)
+      for (const s of r.route_stops || [])
+        if (s.status === 'pending') {
+          stopIds.push(s.id)
+          if (r.inspector_id)
+            missedByOfficer.set(r.inspector_id, (missedByOfficer.get(r.inspector_id) || 0) + 1)
+        }
 
     if (stopIds.length > 0) {
       await svc
         .from('route_stops')
         .update({ status: 'skipped', deferred_at: new Date().toISOString() })
         .in('id', stopIds)
+
+      // A planned object with no check-in by day's end is a missed visit —
+      // alert managers (in-app) per officer. The stops now show red in the UI.
+      const officerIds = [...missedByOfficer.keys()]
+      const { data: users } = await svc
+        .from('users')
+        .select('id, full_name, email')
+        .in('id', officerIds)
+      const nameOf = new Map<string, string>(
+        (users || []).map((u: any) => [u.id, u.full_name || u.email || 'ოფიცერი'])
+      )
+      for (const [inspectorId, count] of missedByOfficer) {
+        await notifyManagers(svc, {
+          type: 'stops_auto_deferred',
+          title: 'ვიზიტები ვერ შესრულდა',
+          message: `${nameOf.get(inspectorId) ?? 'ოფიცერი'} — ${count} ობიექტი დღეს ვერ მოინახულა`,
+          data: { inspectorId, count },
+          email: false,
+        })
+      }
     }
 
     return NextResponse.json({

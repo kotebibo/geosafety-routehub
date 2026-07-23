@@ -1,9 +1,11 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Check, Loader2, MapPin, Plus } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { DAY_LABELS_KA } from '../../lib/week'
+import { UrgencyBadge } from '../UrgencyBadge'
 import type { RoutingItem } from '../../hooks/useRoutingData'
 
 interface CompanyPoolProps {
@@ -32,6 +34,12 @@ export function CompanyPool({
   onGeocode,
 }: CompanyPoolProps) {
   const t = useTranslations()
+  // Prioritize objects whose visit deadline is closest — overdue (negative
+  // daysLeft) first, then soonest; objects with no deadline last.
+  const sorted = useMemo(() => {
+    const rank = (ri: RoutingItem) => (ri.daysLeft == null ? Number.POSITIVE_INFINITY : ri.daysLeft)
+    return [...items].sort((a, b) => rank(a) - rank(b))
+  }, [items])
   return (
     <div className="w-full lg:w-80 flex-shrink-0 border-t lg:border-t-0 lg:border-l border-border-light flex flex-col min-h-0">
       <div className="px-4 py-2.5 border-b border-border-light flex-shrink-0">
@@ -66,7 +74,7 @@ export function CompanyPool({
             <Loader2 className="w-5 h-5 text-text-tertiary animate-spin" />
           </div>
         ) : (
-          items.map(ri => {
+          sorted.map(ri => {
             const assignedDay = dayOfItem(ri.item.id)
             const onSelected = assignedDay === selectedDay
             const coords = hasCoords(ri.item.id)
@@ -98,14 +106,20 @@ export function CompanyPool({
                 </span>
                 <span className="flex-1 min-w-0">
                   <span className="block text-sm text-text-primary truncate">{ri.item.name}</span>
-                  {!coords && (
-                    <span className="block text-[10px] text-orange-500">
-                      {t('routing.noCoords')}
-                    </span>
-                  )}
+                  <span className="mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    {/* Visit deadline — the whole point of the priority sort */}
+                    <UrgencyBadge
+                      daysLeft={ri.daysLeft}
+                      hasActiveCheckin={ri.hasActiveCheckin}
+                      neverVisited={ri.neverVisited}
+                    />
+                    {!coords && (
+                      <span className="text-[10px] text-orange-500">{t('routing.noCoords')}</span>
+                    )}
+                  </span>
                 </span>
                 {assignedDay >= 0 && assignedDay !== selectedDay && (
-                  <span className="text-[10px] text-text-tertiary flex-shrink-0">
+                  <span className="text-[10px] text-text-tertiary flex-shrink-0 self-start">
                     {DAY_LABELS_KA[assignedDay]}
                   </span>
                 )}
