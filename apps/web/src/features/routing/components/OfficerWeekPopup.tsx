@@ -11,6 +11,7 @@ import { useSetOfficerFuelPrice, type OfficerWeekSummary } from '../hooks/useRou
 import { useOfficerWeek, useConfirmCancel } from '../hooks/useOfficerWeek'
 import { WeekExtrasSections } from './WeekExtrasSections'
 import { WeekComments } from './WeekComments'
+import { WeekHistory } from './WeekHistory'
 import { RouteMapModal } from './RouteMapModal'
 import { stopVisitState } from '../lib/stop-state'
 import { addDays, dayLabelOf, shortDateStr } from '../lib/week'
@@ -36,7 +37,7 @@ export function OfficerWeekPopup({
   const routes = data?.routes ?? []
   const officerStart = data?.start ?? null
   const [mapRoute, setMapRoute] = useState<OfficerRoute | null>(null)
-  const [tab, setTab] = useState<'week' | 'failed'>('week')
+  const [tab, setTab] = useState<'week' | 'failed' | 'history'>('week')
   const setOfficerPrice = useSetOfficerFuelPrice()
   const failedCount = officerWeek.data?.failed.length ?? 0
 
@@ -179,11 +180,16 @@ export function OfficerWeekPopup({
               </span>
             )}
           </TabButton>
+          <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
+            {t('routeAnalytics.tab.history')}
+          </TabButton>
         </div>
 
         {/* Per-day breakdown */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {tab === 'failed' ? (
+          {tab === 'history' ? (
+            <WeekHistory inspectorId={summary.officerId} weekStart={weekStart} />
+          ) : tab === 'failed' ? (
             officerWeek.data ? (
               <WeekExtrasSections data={officerWeek.data} show={['failed']} />
             ) : (

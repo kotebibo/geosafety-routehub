@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { notifyManagers } from '@/features/routing/lib/routing-notify'
+import { logRoutingAudit } from '@/features/routing/lib/routing-audit'
+import { georgiaMondayOfDate } from '@/lib/time'
 
 const patchSchema = z.object({
   status: z.enum(['pending', 'visited', 'skipped']).optional(),
@@ -34,7 +36,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const svc = createServiceClient() as any
     const { data: stop, error: sErr } = await svc
       .from('route_stops')
-      .select('id, route_id, board_item_id, routes(inspector_id)')
+      .select('id, route_id, board_item_id, routes(inspector_id, date)')
       .eq('id', params.id)
       .single()
     if (sErr || !stop) return NextResponse.json({ error: 'Stop not found' }, { status: 404 })
@@ -42,6 +44,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const ownerId = stop.routes?.inspector_id
     if (ownerId !== session.user.id && !isManager)
       return NextResponse.json({ error: 'Cannot modify another officer’s route' }, { status: 403 })
+    const weekStart = stop.routes?.date ? georgiaMondayOfDate(stop.routes.date) : null
 
     // Admin confirms an object-canceled deferral (no status change).
     if (confirmCancel) {
@@ -52,6 +55,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         .update({ skip_confirmed: true, updated_at: new Date().toISOString() })
         .eq('id', params.id)
       if (cErr) throw cErr
+      await logRoutingAudit(svc, {
+        actorId: session.user.id,
+        inspectorId: ownerId ?? null,
+        action: 'stop_cancel_confirmed',
+        entity: 'route_stop',
+        weekStart,
+        detail: { stopId: params.id, boardItemId: stop.board_item_id },
+      })
       return NextResponse.json({ success: true, confirmed: true })
     }
 
@@ -101,6 +112,24 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
         email: false,
       })
     }
+
+    await logRoutingAudit(svc, {
+      actorId: session.user.id,
+      inspectorId: ownerId ?? null,
+      action:
+        status === 'skipped'
+          ? 'stop_deferred'
+          : status === 'visited'
+            ? 'stop_visited'
+            : 'stop_reset',
+      entity: 'route_stop',
+      weekStart,
+      detail: {
+        stopId: params.id,
+        boardItemId: stop.board_item_id,
+        ...(status === 'skipped' ? { reason: skipReason ?? null, note: skipNote ?? null } : {}),
+      },
+    })
 
     return NextResponse.json({ success: true, stop: updated })
   } catch (error: any) {

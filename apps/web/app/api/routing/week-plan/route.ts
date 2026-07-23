@@ -6,6 +6,7 @@ import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { notifyUser } from '@/lib/notify'
 import { notifyManagers } from '@/features/routing/lib/routing-notify'
+import { logRoutingAudit } from '@/features/routing/lib/routing-audit'
 import { georgiaMonday } from '@/lib/time'
 
 const stopSchema = z.object({
@@ -344,6 +345,15 @@ export async function POST(request: NextRequest) {
       { onConflict: 'inspector_id,week_start' }
     )
 
+    await logRoutingAudit(svc, {
+      actorId: session.user.id,
+      inspectorId: v.inspectorId,
+      action: 'plan_saved',
+      entity: 'week_plan',
+      weekStart: v.weekStart,
+      detail: { savedDays, savedStops, byManager: isManager },
+    })
+
     return NextResponse.json({ success: true, savedDays, savedStops })
   } catch (error: any) {
     if (error.name === 'UnauthorizedError')
@@ -439,6 +449,18 @@ export async function PATCH(request: NextRequest) {
         email: false,
       })
     }
+
+    await logRoutingAudit(svc, {
+      actorId: session.user.id,
+      inspectorId,
+      action: `plan_${action}`, // plan_submit | plan_approve | plan_reopen
+      entity: 'week_plan',
+      weekStart,
+      detail:
+        action === 'approve'
+          ? { km: data?.total_km, liters: data?.fuel_liters, cost: data?.fuel_cost }
+          : {},
+    })
 
     return NextResponse.json({ success: true, plan: data })
   } catch (error: any) {

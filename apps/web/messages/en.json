@@ -2044,7 +2044,8 @@
       "requests": "Requests",
       "unplanned": "Unplanned",
       "deferred": "Deferred",
-      "week": "Week"
+      "week": "Week",
+      "history": "History"
     },
     "approve": "Approve",
     "reject": "Reject",
@@ -2075,7 +2076,21 @@
     "monthTotal": "Month total",
     "weekLabel": "Week {n}",
     "noWeekData": "No plan",
-    "officersShort": "Officers"
+    "officersShort": "Officers",
+    "audit": {
+      "empty": "No history yet",
+      "plan_saved": "Plan saved",
+      "plan_submit": "Plan submitted",
+      "plan_approve": "Plan approved",
+      "plan_reopen": "Plan reopened",
+      "stop_deferred": "Visit deferred",
+      "stop_visited": "Visit completed",
+      "stop_reset": "Visit reset",
+      "stop_cancel_confirmed": "Cancellation confirmed",
+      "extra_visit_requested": "Unplanned visit requested",
+      "extra_visit_approved": "Unplanned visit approved",
+      "extra_visit_rejected": "Unplanned visit rejected"
+    }
   },
   "locations": {
     "dataLoading": "Loading data...",

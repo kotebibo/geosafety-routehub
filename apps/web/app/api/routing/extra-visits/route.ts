@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { notifyManagers } from '@/features/routing/lib/routing-notify'
+import { logRoutingAudit } from '@/features/routing/lib/routing-audit'
+import { georgiaMondayOfDate } from '@/lib/time'
 
 async function roleOf(supabase: any, userId: string): Promise<string | null> {
   const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single()
@@ -123,6 +125,15 @@ export async function POST(request: NextRequest) {
       email: true,
     })
 
+    await logRoutingAudit(svc, {
+      actorId: session.user.id,
+      inspectorId: v.inspectorId,
+      action: 'extra_visit_requested',
+      entity: 'extra_visit',
+      weekStart: georgiaMondayOfDate(v.visitDate),
+      detail: { extraVisitId: data.id, boardItemId: v.boardItemId, objectName: item?.name ?? null },
+    })
+
     return NextResponse.json({ success: true, visit: data })
   } catch (error: any) {
     if (error.name === 'UnauthorizedError')
@@ -164,6 +175,16 @@ export async function PATCH(request: NextRequest) {
       .select()
       .single()
     if (error) throw error
+
+    await logRoutingAudit(svc, {
+      actorId: session.user.id,
+      inspectorId: data?.inspector_id ?? null,
+      action: action === 'approve' ? 'extra_visit_approved' : 'extra_visit_rejected',
+      entity: 'extra_visit',
+      weekStart: data?.visit_date ? georgiaMondayOfDate(data.visit_date) : null,
+      detail: { extraVisitId: id, boardItemId: data?.board_item_id ?? null },
+    })
+
     return NextResponse.json({ success: true, visit: data })
   } catch (error: any) {
     if (error.name === 'UnauthorizedError')

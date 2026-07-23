@@ -2044,7 +2044,8 @@
       "requests": "რექვესთები",
       "unplanned": "დაუგეგმავი",
       "deferred": "გადადებული",
-      "week": "კვირა"
+      "week": "კვირა",
+      "history": "ისტორია"
     },
     "approve": "დამტკიცება",
     "reject": "უარყოფა",
@@ -2075,7 +2076,21 @@
     "monthTotal": "თვის ჯამი",
     "weekLabel": "კვირა {n}",
     "noWeekData": "გეგმა არ არის",
-    "officersShort": "ოფიცერი"
+    "officersShort": "ოფიცერი",
+    "audit": {
+      "empty": "ისტორია ცარიელია",
+      "plan_saved": "გეგმა შეინახა",
+      "plan_submit": "გეგმა გაიგზავნა",
+      "plan_approve": "გეგმა დამტკიცდა",
+      "plan_reopen": "გეგმა გაიხსნა რედაქტირებისთვის",
+      "stop_deferred": "ვიზიტი გადაიდო",
+      "stop_visited": "ვიზიტი შესრულდა",
+      "stop_reset": "ვიზიტი დაბრუნდა",
+      "stop_cancel_confirmed": "გაუქმება დადასტურდა",
+      "extra_visit_requested": "დაუგეგმავი ვიზიტი მოთხოვნილია",
+      "extra_visit_approved": "დაუგეგმავი ვიზიტი დამტკიცდა",
+      "extra_visit_rejected": "დაუგეგმავი ვიზიტი უარყოფილია"
+    }
   },
   "locations": {
     "dataLoading": "მონაცემების ჩატვირთვა...",
