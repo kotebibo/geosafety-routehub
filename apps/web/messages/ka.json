@@ -490,7 +490,10 @@
       "exportCSV": "CSV ექსპორტი",
       "exportFailed": "CSV ექსპორტი ვერ მოხერხდა"
     },
-    "meters": "მ"
+    "meters": "მ",
+    "addPhoto": "ფოტოს გადაღება",
+    "photoFailed": "ფოტოს ატვირთვა ვერ მოხერხდა",
+    "viewPhoto": "ფოტოს ნახვა"
   },
   "routes": {
     "builder": {

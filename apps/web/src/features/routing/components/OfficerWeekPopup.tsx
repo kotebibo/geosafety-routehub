@@ -277,6 +277,12 @@ export function OfficerWeekPopup({
                             {stop.skipReason ? ` · ${t(`myWeek.reason.${stop.skipReason}`)}` : ''}
                           </span>
                         )}
+                        {/* The officer's hand-written reason (the real detail) */}
+                        {skipped && stop.skipNote && (
+                          <span className="text-[11px] text-text-secondary truncate min-w-0">
+                            „{stop.skipNote}"
+                          </span>
+                        )}
                         {stop.durationMinutes != null && (
                           <span className="text-[11px] text-text-tertiary flex-shrink-0">
                             {t('routing.stopDuration', { min: stop.durationMinutes })}

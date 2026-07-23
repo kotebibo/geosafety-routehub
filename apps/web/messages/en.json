@@ -490,7 +490,10 @@
       "exportCSV": "Export CSV",
       "exportFailed": "Failed to export CSV"
     },
-    "meters": "m"
+    "meters": "m",
+    "addPhoto": "Take a photo",
+    "photoFailed": "Photo upload failed",
+    "viewPhoto": "View photo"
   },
   "routes": {
     "builder": {
