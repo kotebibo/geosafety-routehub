@@ -5,6 +5,7 @@ import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { parseCoordinates } from '@/lib/geo-utils'
 import { resolveLocationColumns } from '@/features/routing/lib/location-columns'
+import { georgiaDateOf } from '@/lib/time'
 
 // GET ?inspectorId=&from=&to= — an officer's routes with stops and resolved
 // company (board item) names. Officers see only their own; admin/dispatcher
@@ -129,11 +130,9 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: true })
       for (const c of checkins || []) {
         if (!c.board_item_id || !c.created_at) continue
-        // Key by the Georgia-local (UTC+4) day, matching how a route's date and
-        // the check-in→stop status write are computed. Latest per item+day wins.
-        const day = new Date(new Date(c.created_at).getTime() + 4 * 60 * 60 * 1000)
-          .toISOString()
-          .slice(0, 10)
+        // Key by the Georgia-local day, matching how a route's date and the
+        // check-in→stop status write are computed. Latest per item+day wins.
+        const day = georgiaDateOf(c.created_at)
         checkinByItemDate.set(`${c.board_item_id}|${day}`, {
           checkedInAt: c.created_at,
           checkedOutAt: c.checked_out_at ?? null,
