@@ -15,6 +15,7 @@ import { WeekHistory } from './WeekHistory'
 import { RouteMapModal } from './RouteMapModal'
 import { stopVisitState } from '../lib/stop-state'
 import { addDays, dayLabelOf, shortDateStr } from '../lib/week'
+import { deferReasonText } from '../lib/defer-reason'
 
 interface OfficerWeekPopupProps {
   summary: OfficerWeekSummary
@@ -270,19 +271,18 @@ export function OfficerWeekPopup({
                         >
                           {stop.name || t('inspectorRoutes.unknownStop')}
                         </span>
-                        {/* Deferred: didn't go that day — show it + the reason */}
-                        {skipped && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-500/10 text-red-500 border border-red-500/30 flex-shrink-0">
-                            {t('myWeek.deferred')}
-                            {stop.skipReason ? ` · ${t(`myWeek.reason.${stop.skipReason}`)}` : ''}
-                          </span>
-                        )}
-                        {/* The officer's hand-written reason (the real detail) */}
-                        {skipped && stop.skipNote && (
-                          <span className="text-[11px] text-text-secondary truncate min-w-0">
-                            „{stop.skipNote}"
-                          </span>
-                        )}
+                        {/* Deferred: didn't go that day. The reason = the officer's
+                            hand-written note if any, else the picked enum. */}
+                        {skipped &&
+                          (() => {
+                            const reasonText = deferReasonText(stop.skipReason, stop.skipNote, t)
+                            return (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-500/10 text-red-500 border border-red-500/30 flex-shrink-0 max-w-full truncate">
+                                {t('myWeek.deferred')}
+                                {reasonText ? ` · ${reasonText}` : ''}
+                              </span>
+                            )
+                          })()}
                         {stop.durationMinutes != null && (
                           <span className="text-[11px] text-text-tertiary flex-shrink-0">
                             {t('routing.stopDuration', { min: stop.durationMinutes })}

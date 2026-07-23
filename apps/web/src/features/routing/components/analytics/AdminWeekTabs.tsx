@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui-monday/Toast'
 import { useAdminWeek } from '../../hooks/useRouteAnalytics'
 import { useWeekPlanAction } from '../../hooks/useWeekPlan'
 import { shortDateStr } from '../../lib/week'
+import { deferReasonText } from '../../lib/defer-reason'
 import { useReviewExtraVisit } from '../../hooks/useExtraVisits'
 
 export type AdminTab = 'requests' | 'unplanned' | 'deferred'
@@ -194,14 +195,16 @@ function DeferredList({
               {r.officerName} · {shortDateStr(r.date)}
             </p>
             <div className="mt-1.5 flex items-center gap-2 flex-wrap">
-              {r.reason ? (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-500/10 text-red-500 border border-red-500/30">
-                  {t(`myWeek.reason.${r.reason}`)}
-                </span>
-              ) : (
-                <span className="text-[11px] text-amber-500">{t('routeAnalytics.noReason')}</span>
-              )}
-              {r.note && <span className="text-[11px] text-text-secondary">{r.note}</span>}
+              {(() => {
+                const reasonText = deferReasonText(r.reason, r.note, t)
+                return reasonText ? (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-500/10 text-red-500 border border-red-500/30">
+                    {reasonText}
+                  </span>
+                ) : (
+                  <span className="text-[11px] text-amber-500">{t('routeAnalytics.noReason')}</span>
+                )
+              })()}
             </div>
           </div>
         </div>

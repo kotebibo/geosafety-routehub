@@ -4,6 +4,7 @@ import { useTranslations } from 'next-intl'
 import { AlertTriangle, Check, Clock, Loader2, MapPin, Plus, TrendingDown } from 'lucide-react'
 import type { OfficerWeek, StopExtraRow } from '../hooks/useOfficerWeek'
 import { shortDateStr } from '../lib/week'
+import { deferReasonText } from '../lib/defer-reason'
 
 type ExtrasSection = 'unplanned' | 'deviation' | 'failed'
 
@@ -90,15 +91,16 @@ export function WeekExtrasSections({
           count={data.failed.length}
           empty={data.failed.length === 0 ? t('myWeek.noFailed') : null}
         >
-          {data.failed.map(s => (
-            <Row key={s.stopId} name={s.name} date={s.date}>
-              {s.reason && (
-                <span className="text-[11px] text-red-500 truncate">
-                  {t(`myWeek.reason.${s.reason}`)}
-                </span>
-              )}
-            </Row>
-          ))}
+          {data.failed.map(s => {
+            const reasonText = deferReasonText(s.reason, s.note, t)
+            return (
+              <Row key={s.stopId} name={s.name} date={s.date}>
+                {reasonText && (
+                  <span className="text-[11px] text-red-500 truncate">{reasonText}</span>
+                )}
+              </Row>
+            )
+          })}
         </Section>
       )}
     </div>
@@ -118,14 +120,10 @@ function DeviationRow({
 }) {
   const canceled = s.reason === 'canceled'
   const processing = canceled && !s.confirmed
+  const reasonText = deferReasonText(s.reason, s.note, t)
   return (
     <Row name={s.name} date={s.date}>
-      {s.reason && (
-        <span className="text-[11px] text-text-secondary truncate">
-          {t(`myWeek.reason.${s.reason}`)}
-        </span>
-      )}
-      {s.note && <span className="text-[11px] text-text-tertiary truncate">{s.note}</span>}
+      {reasonText && <span className="text-[11px] text-text-secondary truncate">{reasonText}</span>}
       {canceled &&
         (s.confirmed ? (
           <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-green-500/10 text-green-600 border border-green-500/30">
