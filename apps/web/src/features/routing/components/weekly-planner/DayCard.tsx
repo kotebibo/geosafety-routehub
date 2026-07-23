@@ -1,9 +1,10 @@
 'use client'
 
-import { Loader2, MapPin, Route as RouteIcon, X } from 'lucide-react'
+import { ExternalLink, Loader2, MapPin, Route as RouteIcon, X } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { shortDate, DAY_LABELS_KA } from '../../lib/week'
+import { googleMapsDirUrl } from '../../lib/google-maps'
 import type { DayResult } from './types'
 
 interface DayCardProps {
@@ -14,6 +15,8 @@ interface DayCardProps {
   isSelected: boolean
   saving: boolean
   nameOf: (itemId: string) => string
+  coordsOf: (itemId: string) => { lat: number; lng: number } | null
+  start: { lat: number; lng: number } | null
   onSelect: () => void
   onRemove: (itemId: string) => void
   onSaveDay: () => void
@@ -28,36 +31,54 @@ export function DayCard({
   isSelected,
   saving,
   nameOf,
+  coordsOf,
+  start,
   onSelect,
   onRemove,
   onSaveDay,
   onViewMap,
 }: DayCardProps) {
   const t = useTranslations()
+  // Home → objects (in order) → home, straight to Google Maps driving.
+  const gmapsUrl = googleMapsDirUrl([
+    ...(start ? [start] : []),
+    ...ids.map(coordsOf).filter((c): c is { lat: number; lng: number } => c != null),
+    ...(start ? [start] : []),
+  ])
   return (
     <div
       onClick={onSelect}
       className={cn(
-        'rounded-xl border p-3 cursor-pointer transition-colors min-h-[120px]',
+        'rounded-2xl border p-3 cursor-pointer transition-all min-h-[120px]',
         isSelected
-          ? 'border-monday-primary bg-monday-primary/5'
-          : 'border-border-light bg-bg-primary hover:border-border-medium'
+          ? 'border-monday-primary/60 bg-gradient-to-br from-monday-primary/10 to-monday-purple/5 ring-2 ring-monday-primary/20 shadow-md'
+          : 'border-border-light bg-bg-primary hover:border-monday-primary/40 hover:shadow-sm'
       )}
     >
       <div className="flex items-center justify-between mb-2">
-        <div>
-          <span className="text-sm font-semibold text-text-primary">{DAY_LABELS_KA[dayIndex]}</span>
-          <span className="text-xs text-text-tertiary ml-1.5">{shortDate(date)}</span>
+        <div className="flex items-center gap-2 min-w-0">
+          <span
+            className={cn(
+              'inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold flex-shrink-0',
+              isSelected ? 'bg-monday-primary text-white' : 'bg-bg-tertiary text-text-secondary'
+            )}
+          >
+            {DAY_LABELS_KA[dayIndex]}
+          </span>
+          <span className="text-xs text-text-tertiary">{shortDate(date)}</span>
         </div>
         {ids.length > 0 && (
-          <span className="text-[11px] text-text-tertiary">
-            {t('routing.companiesCount', { count: ids.length })}
+          <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-monday-primary/10 text-monday-primary flex-shrink-0">
+            {ids.length}
           </span>
         )}
       </div>
 
       {ids.length === 0 ? (
-        <p className="text-xs text-text-tertiary py-2">{t('routing.dayEmpty')}</p>
+        <div className="flex flex-col items-center justify-center py-4 text-center">
+          <MapPin className="w-5 h-5 text-text-tertiary/50 mb-1" />
+          <p className="text-xs text-text-tertiary">{t('routing.dayEmpty')}</p>
+        </div>
       ) : (
         <div className="space-y-1">
           {ids.map((id, idx) => (
@@ -87,6 +108,18 @@ export function DayCard({
               <span className="text-[11px] text-text-tertiary">—</span>
             )}
             <div className="flex items-center gap-2.5">
+              {gmapsUrl && (
+                <a
+                  href={gmapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={e => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 text-[11px] font-medium text-monday-primary hover:underline"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  {t('routing.openInGoogleMaps')}
+                </a>
+              )}
               {result && (
                 <button
                   type="button"

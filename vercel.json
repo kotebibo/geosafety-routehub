@@ -55,6 +55,14 @@
     {
       "path": "/api/cron/cleanup-auth",
       "schedule": "30 2 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-checkin-photos",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/auto-defer-stops",
+      "schedule": "0 17 * * *"
     }
   ],
   "redirects": [

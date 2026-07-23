@@ -50,8 +50,10 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
   return (
     <div
       className={cn(
-        'rounded-xl border transition-colors overflow-hidden',
-        expanded ? 'border-monday-primary bg-bg-primary' : 'border-border-light bg-bg-primary'
+        'rounded-2xl border shadow-sm transition-all overflow-hidden',
+        expanded
+          ? 'border-monday-primary/50 bg-bg-primary shadow-md'
+          : 'border-border-light bg-bg-primary hover:shadow-md'
       )}
     >
       {/* Board row — sidebar-style: letter avatar + name + location + chevron.
@@ -59,14 +61,14 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
           nested-button markup; the row area itself toggles expand. */}
       <div
         className={cn(
-          'w-full flex items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-bg-hover cursor-pointer',
+          'w-full flex items-center gap-2.5 px-3 py-3 transition-colors hover:bg-bg-hover cursor-pointer',
           expanded && 'bg-bg-selected'
         )}
         onClick={() => setExpanded(v => !v)}
       >
         <div
           className={cn(
-            'w-6 h-6 rounded flex items-center justify-center text-white text-[11px] font-semibold flex-shrink-0',
+            'w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm',
             BOARD_COLORS[board.color || 'primary'] || 'bg-monday-primary'
           )}
         >
@@ -74,7 +76,7 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
         </div>
         <span
           className={cn(
-            'flex-1 text-left text-sm font-medium truncate',
+            'flex-1 text-left text-sm font-semibold truncate',
             expanded ? 'text-monday-primary' : 'text-text-primary'
           )}
         >
@@ -82,7 +84,7 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
         </span>
         {/* Admin assigns the officer this board belongs to */}
         {isAdmin && <AssignOfficerControl board={board} />}
-        {/* Weekly route planner */}
+        {/* Weekly route planner — the primary action */}
         <button
           type="button"
           onClick={e => {
@@ -90,7 +92,7 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
             setWeekPlanning(true)
           }}
           title={t('routing.weekPlanning')}
-          className="flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-bg-tertiary text-text-tertiary hover:bg-bg-hover transition-colors flex-shrink-0"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-monday-primary text-white shadow-sm hover:opacity-90 active:scale-95 transition-all flex-shrink-0"
         >
           <CalendarDays className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">{t('routing.planWeekShort')}</span>
@@ -157,8 +159,8 @@ function BoardItemsList({ board }: { board: Board }) {
   }
 
   return (
-    <div className="border-t border-border-light">
-      <div className="flex items-center gap-2 px-4 py-2 text-xs text-text-tertiary">
+    <div className="border-t border-border-light animate-in fade-in slide-in-from-top-1 duration-300">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 text-xs text-text-tertiary">
         <span>{t('routing.companiesCount', { count: items.length })}</span>
         {plannedCount > 0 && (
           <span className="px-2 py-0.5 rounded-full font-medium bg-monday-primary/10 text-monday-primary border border-monday-primary/30">
@@ -171,7 +173,7 @@ function BoardItemsList({ board }: { board: Board }) {
           </span>
         )}
       </div>
-      <div className="divide-y divide-border-light">
+      <div className="px-2 sm:px-2.5 pb-2 space-y-2">
         {items.slice(0, visibleCount).map(ri => (
           <ItemRow
             key={ri.item.id}
@@ -209,7 +211,7 @@ function BoardItemsList({ board }: { board: Board }) {
           <button
             type="button"
             onClick={() => setPlanning(true)}
-            className="ml-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-monday-primary text-white text-xs font-medium hover:opacity-90 transition-opacity"
+            className="ml-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-monday-primary text-white text-xs font-semibold hover:opacity-90 active:scale-95 transition-all"
           >
             <RouteIcon className="w-3.5 h-3.5" />
             {t('routing.planRouteWithCount', { count: selected.size })}
@@ -261,72 +263,75 @@ function ItemRow({ routingItem, selected, onToggleSelect, onOpen }: ItemRowProps
   return (
     <div
       className={cn(
-        'w-full flex items-center gap-2 px-3 py-1.5 transition-colors',
-        selected ? 'bg-monday-primary/5' : 'hover:bg-bg-hover'
+        'rounded-xl border p-3 transition-all',
+        selected
+          ? 'border-monday-primary/50 bg-monday-primary/5 shadow-sm'
+          : 'border-border-light bg-bg-primary hover:border-monday-primary/40 hover:shadow-sm'
       )}
     >
-      {/* Selection checkbox */}
-      <button
-        type="button"
-        onClick={onToggleSelect}
-        aria-label={t('routing.selectCompany')}
-        className={cn(
-          'w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors',
-          selected
-            ? 'bg-monday-primary border-monday-primary text-white'
-            : 'border-border-medium hover:border-monday-primary'
-        )}
-      >
-        {selected && <Check className="w-3 h-3" />}
-      </button>
-
-      {/* The rest opens the detail popup */}
-      <button
-        type="button"
-        onClick={onOpen}
-        className="flex-1 flex items-center gap-2.5 min-w-0 text-left"
-      >
-        {/* Company avatar — same style as board rows, tinted by its category color */}
-        <div
+      <div className="flex items-start gap-3">
+        {/* Selection checkbox */}
+        <button
+          type="button"
+          onClick={onToggleSelect}
+          aria-label={t('routing.selectCompany')}
           className={cn(
-            'w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-semibold flex-shrink-0',
-            (group && GROUP_DOT_COLORS[group.color]) || 'bg-monday-primary'
+            'mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors',
+            selected
+              ? 'bg-monday-primary border-monday-primary text-white'
+              : 'border-border-medium hover:border-monday-primary'
           )}
         >
-          {item.name.charAt(0).toUpperCase()}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 min-w-0">
-            {plannedChip && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[11px] font-semibold bg-monday-primary/10 text-monday-primary border border-monday-primary/30 flex-shrink-0">
-                <CalendarDays className="w-3 h-3" />
-                {plannedChip}
-                {plannedDay && <span className="opacity-70">#{plannedDay.position}</span>}
-              </span>
+          {selected && <Check className="w-3.5 h-3.5" />}
+        </button>
+
+        {/* The rest opens the detail popup */}
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex-1 flex items-start gap-3 min-w-0 text-left"
+        >
+          {/* Company avatar — tinted by its category color */}
+          <div
+            className={cn(
+              'w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 shadow-sm',
+              (group && GROUP_DOT_COLORS[group.color]) || 'bg-monday-primary'
             )}
-            <p className="text-sm font-medium text-text-primary truncate">{item.name}</p>
+          >
+            {item.name.charAt(0).toUpperCase()}
           </div>
-          <div className="flex items-center gap-2 text-xs text-text-secondary">
-            {group && <span className="truncate">{group.name}</span>}
-            {lastVisitStr && (
-              <span className="flex-shrink-0">
-                {t('routing.lastVisit', { date: lastVisitStr })}
-              </span>
-            )}
-            {summary?.latest_inspector_name && (
-              <span className="inline-flex items-center gap-1 flex-shrink-0">
-                <User className="w-3 h-3" />
-                {summary.latest_inspector_name}
-              </span>
-            )}
+
+          <div className="flex-1 min-w-0 space-y-1.5">
+            {/* Tags row — planned chip + urgency, both wrap so they never squeeze
+                the name (which would otherwise break one char per line on mobile) */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {plannedChip && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-monday-primary/10 text-monday-primary border border-monday-primary/30">
+                  <CalendarDays className="w-3 h-3" />
+                  {plannedChip}
+                  {plannedDay && <span className="opacity-70">#{plannedDay.position}</span>}
+                </span>
+              )}
+              <UrgencyBadge
+                daysLeft={daysLeft}
+                hasActiveCheckin={hasActiveCheckin}
+                neverVisited={neverVisited}
+              />
+            </div>
+            <p className="text-[15px] font-semibold text-text-primary leading-snug">{item.name}</p>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-secondary">
+              {group && <span className="truncate max-w-full">{group.name}</span>}
+              {lastVisitStr && <span>{t('routing.lastVisit', { date: lastVisitStr })}</span>}
+              {summary?.latest_inspector_name && (
+                <span className="inline-flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  {summary.latest_inspector_name}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-        <UrgencyBadge
-          daysLeft={daysLeft}
-          hasActiveCheckin={hasActiveCheckin}
-          neverVisited={neverVisited}
-        />
-      </button>
+        </button>
+      </div>
     </div>
   )
 }

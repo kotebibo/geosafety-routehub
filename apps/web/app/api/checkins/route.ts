@@ -9,9 +9,14 @@ import {
   nearestWithinRadius,
   haversineMeters,
   isWithinRadius,
-  CHECKIN_RADIUS_METERS,
 } from '@/lib/geo-utils'
 import { getEffectiveVisitTypes } from '@/features/boards/constants/checkin'
+import { georgiaToday, georgiaTimeOfDay, georgiaMonday } from '@/lib/time'
+
+// Check-in geofence radius, read per request so env/config wins at runtime.
+// TEMP: defaults to 150 KM for stage test data (seeded check-ins pass anywhere);
+// set CHECKIN_RADIUS_METERS=150 in env to restore the real 150 m rule.
+const checkinRadius = () => Number(process.env.CHECKIN_RADIUS_METERS) || 150_000
 
 const createCheckinSchema = z.object({
   inspector_id: z.string().uuid(),
@@ -25,6 +30,7 @@ const createCheckinSchema = z.object({
   lng: z.number().min(-180).max(180),
   accuracy: z.number().optional(),
   notes: z.string().max(2000).optional(),
+  photo_path: z.string().max(500).nullable().optional(),
 })
 
 const checkoutSchema = z.object({
@@ -33,12 +39,6 @@ const checkoutSchema = z.object({
   lng: z.number().min(-180).max(180),
   accuracy: z.number().optional(),
 })
-
-// Georgia is UTC+4 — a route's `date` is that local day, so resolve "today" in
-// the same offset when matching a check-in to its planned stop.
-function georgiaToday(): string {
-  return new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString().slice(0, 10)
-}
 
 // Reflect a visit on the officer's planned stop. Board check-ins carry
 // board_item_id (not route_stop_id), so resolve the stop through the officer's
@@ -55,17 +55,46 @@ async function markPlannedStop(
   if (!boardItemId) return
   try {
     const svc = createServiceClient() as any
-    const { data: routes } = await svc
+    // 1. The stop planned for TODAY (normal check-in on its planned day).
+    const { data: todayRoutes } = await svc
       .from('routes')
       .select('route_stops(id, board_item_id)')
       .eq('inspector_id', inspectorId)
       .eq('date', georgiaToday())
     const stopIds: string[] = []
-    for (const r of routes || [])
+    for (const r of todayRoutes || [])
       for (const st of r.route_stops || [])
         if (st.board_item_id === boardItemId) stopIds.push(st.id)
+
+    // 2. Nothing planned today → the officer finally reached a DEFERRED object on
+    //    some other day (checked in from the "plan deviation" section). Resolve
+    //    the skipped stop for this item this week and clear its skip mark.
+    let resolvingDeviation = false
+    if (stopIds.length === 0) {
+      const monday = georgiaMonday(0)
+      const sunday = new Date(new Date(monday).getTime() + 6 * 86400000).toISOString().slice(0, 10)
+      const { data: weekRoutes } = await svc
+        .from('routes')
+        .select('route_stops(id, board_item_id, status)')
+        .eq('inspector_id', inspectorId)
+        .gte('date', monday)
+        .lte('date', sunday)
+      for (const r of weekRoutes || [])
+        for (const st of r.route_stops || [])
+          if (st.board_item_id === boardItemId && st.status === 'skipped') {
+            stopIds.push(st.id)
+            resolvingDeviation = true
+          }
+    }
+
     if (stopIds.length > 0) {
-      await svc.from('route_stops').update({ status }).in('id', stopIds)
+      const patch: Record<string, any> = { status }
+      if (resolvingDeviation) {
+        patch.skip_reason = null
+        patch.skip_note = null
+        patch.deferred_at = null
+      }
+      await svc.from('route_stops').update(patch).in('id', stopIds)
     }
   } catch (e) {
     console.error('markPlannedStop failed:', e)
@@ -165,16 +194,16 @@ export async function POST(request: NextRequest) {
             validated.lng,
             targets,
             validated.accuracy,
-            CHECKIN_RADIUS_METERS
+            checkinRadius()
           )
           if (nearest) {
             distanceFromLocation = nearest.distance
             if (!nearest.within && !geofenceBypass) {
               return NextResponse.json(
                 {
-                  error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
+                  error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე. ჩეკ-ინისთვის საჭიროა ${checkinRadius()}მ რადიუსში ყოფნა.`,
                   distance: distanceFromLocation,
-                  max_radius: CHECKIN_RADIUS_METERS,
+                  max_radius: checkinRadius(),
                 },
                 { status: 422 }
               )
@@ -197,14 +226,14 @@ export async function POST(request: NextRequest) {
             haversineMeters(validated.lat, validated.lng, loc.lat, loc.lng)
           )
           if (
-            !isWithinRadius(distanceFromLocation, validated.accuracy, CHECKIN_RADIUS_METERS) &&
+            !isWithinRadius(distanceFromLocation, validated.accuracy, checkinRadius()) &&
             !geofenceBypass
           ) {
             return NextResponse.json(
               {
-                error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე კომპანიის ლოკაციიდან. ჩეკ-ინისთვის საჭიროა ${CHECKIN_RADIUS_METERS}მ რადიუსში ყოფნა.`,
+                error: `თქვენ იმყოფებით ${distanceFromLocation}მ მანძილზე კომპანიის ლოკაციიდან. ჩეკ-ინისთვის საჭიროა ${checkinRadius()}მ რადიუსში ყოფნა.`,
                 distance: distanceFromLocation,
-                max_radius: CHECKIN_RADIUS_METERS,
+                max_radius: checkinRadius(),
               },
               { status: 422 }
             )
@@ -217,6 +246,32 @@ export async function POST(request: NextRequest) {
           locationUpdated = true
         }
       }
+    }
+
+    // Day rule (env CHECKIN_ANY_DAY=false): a planned stop can only be checked
+    // in on its planned day. Deferred (skipped) stops and unplanned items —
+    // items not actively planned for another day this week — are exempt.
+    if (process.env.CHECKIN_ANY_DAY !== 'true' && validated.board_item_id) {
+      const gsvc = createServiceClient() as any
+      const today = georgiaToday()
+      const monday = georgiaMonday(0)
+      const sunday = new Date(new Date(monday).getTime() + 6 * 86400000).toISOString().slice(0, 10)
+      const { data: prs } = await gsvc
+        .from('routes')
+        .select('date, route_stops(board_item_id, status)')
+        .eq('inspector_id', validated.inspector_id)
+        .gte('date', monday)
+        .lte('date', sunday)
+      const activeDays = new Set<string>()
+      for (const r of prs || [])
+        for (const s of r.route_stops || [])
+          if (s.board_item_id === validated.board_item_id && s.status !== 'skipped')
+            activeDays.add(r.date)
+      if (activeDays.size > 0 && !activeDays.has(today))
+        return NextResponse.json(
+          { error: 'ჩექინი მხოლოდ დაგეგმილ დღეს შეიძლება', wrongDay: true },
+          { status: 422 }
+        )
     }
 
     const { data: checkin, error } = await supabase
@@ -234,6 +289,7 @@ export async function POST(request: NextRequest) {
         lng: validated.lng,
         accuracy: validated.accuracy || null,
         notes: validated.notes || null,
+        photo_path: validated.photo_path || null,
         location_updated: locationUpdated,
         distance_from_location: distanceFromLocation,
       } as any)
@@ -258,7 +314,7 @@ export async function POST(request: NextRequest) {
         .from('route_stops')
         .update({
           status: 'in_progress',
-          actual_arrival_time: new Date().toTimeString().slice(0, 8),
+          actual_arrival_time: georgiaTimeOfDay(),
         })
         .eq('id', validated.route_stop_id)
     } else {
@@ -405,11 +461,7 @@ export async function PATCH(request: NextRequest) {
     const checkoutDistance = Math.round(
       haversineMeters(checkin.lat, checkin.lng, validated.lat, validated.lng)
     )
-    const locationMatch = isWithinRadius(
-      checkoutDistance,
-      validated.accuracy,
-      CHECKIN_RADIUS_METERS
-    )
+    const locationMatch = isWithinRadius(checkoutDistance, validated.accuracy, checkinRadius())
 
     const { data: updated, error: updateError } = await supabase
       .from('location_checkins')
@@ -434,7 +486,7 @@ export async function PATCH(request: NextRequest) {
         .from('route_stops')
         .update({
           status: 'completed',
-          actual_departure_time: new Date().toTimeString().slice(0, 8),
+          actual_departure_time: georgiaTimeOfDay(),
         })
         .eq('id', (checkin as any).route_stop_id)
     } else {

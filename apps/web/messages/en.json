@@ -88,6 +88,7 @@
     "loading": "Loading...",
     "save": "Save",
     "cancel": "Cancel",
+    "error": "Something went wrong",
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
@@ -352,6 +353,9 @@
     "inspector": "Inspector",
     "completionDate": "Completion Date",
     "notesPlaceholder": "Notes...",
+    "addPhoto": "Add photo",
+    "photoFailed": "Photo upload failed",
+    "viewPhoto": "Photo",
     "statCurrent": "Current",
     "statRemaining": "Remaining",
     "phaseWord": "Phase"
@@ -486,7 +490,10 @@
       "exportCSV": "Export CSV",
       "exportFailed": "Failed to export CSV"
     },
-    "meters": "m"
+    "meters": "m",
+    "addPhoto": "Take a photo",
+    "photoFailed": "Photo upload failed",
+    "viewPhoto": "View photo"
   },
   "routes": {
     "builder": {
@@ -2034,13 +2041,61 @@
     "fuelPrice": "Fuel price",
     "perLiter": "₾/L",
     "totalCost": "Total cost, ₾",
+    "totalTime": "Total time, min",
+    "tab": {
+      "overview": "Overview",
+      "requests": "Requests",
+      "unplanned": "Unplanned",
+      "deferred": "Deferred",
+      "week": "Week",
+      "history": "History"
+    },
+    "approve": "Approve",
+    "reject": "Reject",
+    "edit": "Edit",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "reopened": "Reopened for editing",
+    "noRequests": "No submitted plans",
+    "noUnplanned": "No unplanned visits",
+    "noDeferred": "No deferred objects",
+    "noReason": "No reason given",
+    "costBreakdown": "Cost breakdown",
+    "exportWeek": "Excel (week)",
+    "exportMonth": "Excel (month)",
+    "daysShort": "Days",
+    "peopleCount": "{count} people",
     "cost": "Cost",
     "consumption100": "Consumption",
     "officerPrice": "This officer's price",
     "inheritsGlobal": "inherits global {price} ₾/L",
     "invalidPrice": "Invalid price",
     "priceSaved": "Price saved",
-    "priceSaveFailed": "Could not save price"
+    "priceSaveFailed": "Could not save price",
+    "period": {
+      "week": "Week",
+      "month": "Month"
+    },
+    "monthTotal": "Month total",
+    "weekLabel": "Week {n}",
+    "noWeekData": "No plan",
+    "officersShort": "Officers",
+    "audit": {
+      "empty": "No history yet",
+      "plan_saved": "Plan saved",
+      "plan_submit": "Plan submitted",
+      "plan_approve": "Plan approved",
+      "plan_reopen": "Plan reopened",
+      "stop_deferred": "Visit deferred",
+      "stop_visited": "Visit completed",
+      "stop_reset": "Visit reset",
+      "stop_cancel_confirmed": "Cancellation confirmed",
+      "extra_visit_requested": "Unplanned visit requested",
+      "extra_visit_approved": "Unplanned visit approved",
+      "extra_visit_rejected": "Unplanned visit rejected"
+    },
+    "searchOfficer": "Search by name…",
+    "noOfficerMatch": "No officer found"
   },
   "locations": {
     "dataLoading": "Loading data...",
@@ -2130,6 +2185,46 @@
   },
   "gps": {
     "notSupported": "Geolocation is not supported by this browser"
+  },
+  "officerPlan": {
+    "objects": "Objects",
+    "fuelL": "L",
+    "sendToAdmin": "Send to admin",
+    "sent": "Plan sent to the admin",
+    "sendFailed": "Could not send",
+    "statusSubmitted": "Submitted",
+    "statusApproved": "Approved"
+  },
+  "myWeek": {
+    "title": "My week",
+    "today": "Today",
+    "dayLocked": "Another day",
+    "done": "Done",
+    "empty": "No visits planned this week.",
+    "checkin": "Check in",
+    "defer": "Defer",
+    "deferred": "Deferred",
+    "failed": "Failed visits",
+    "noFailed": "No failed visits",
+    "confirmed": "Confirmed",
+    "processing": "Processing",
+    "bookUnplanned": "Book unplanned",
+    "bookReason": "Why do you need this visit?",
+    "booked": "Unplanned visit sent",
+    "deferTitle": "Deviate from plan",
+    "deferSaved": "Deferred",
+    "deferFailed": "Could not defer",
+    "reasonNote": "Extra note (optional)",
+    "reason": {
+      "empty": "Was empty",
+      "closed": "Was closed",
+      "refused": "They refused",
+      "canceled": "Object canceled the visit",
+      "other": "Other"
+    },
+    "openDayRoute": "Route in Google Maps",
+    "dayAllDone": "All visits done for this day ✓",
+    "resolvedCount": "Done / deferred ({count})"
   },
   "routing": {
     "title": "Routing",
@@ -2248,6 +2343,14 @@
     "weekCompanies": "{count} objects",
     "fuelLiters": "{liters} L fuel",
     "weekPlanned": "Week planned",
-    "noOfficerAssigned": "No officer assigned to this board"
+    "noOfficerAssigned": "No officer assigned to this board",
+    "km": "km",
+    "litersPer100km": "L/100km",
+    "metersShort": "m",
+    "minutesShort": "min",
+    "comments": "Comments",
+    "noComments": "No comments yet",
+    "addComment": "Write a comment…",
+    "openInGoogleMaps": "Open in Google Maps"
   }
 }

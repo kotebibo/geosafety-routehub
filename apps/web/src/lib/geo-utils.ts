@@ -9,7 +9,11 @@ export function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-export const CHECKIN_RADIUS_METERS = 150
+// TEMP (stage test data): the check-in geofence is bumped to 150 KM so seeded
+// test check-ins pass from anywhere while we load test data. It's env-overridable
+// so real config wins; to restore the real 150 m rule, set
+// CHECKIN_RADIUS_METERS=150 in env (or change the fallback back to 150).
+export const CHECKIN_RADIUS_METERS = Number(process.env.CHECKIN_RADIUS_METERS) || 150_000
 
 // GPS accuracy is a margin of error, not noise to ignore — a reading whose
 // accuracy radius overlaps the geofence should still be accepted, since the

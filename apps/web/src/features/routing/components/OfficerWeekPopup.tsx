@@ -8,20 +8,20 @@ import { cn } from '@/lib/utils'
 import { useToast } from '@/components/ui-monday/Toast'
 import { useMyRoutes, type OfficerRoute } from '../hooks/useMyRoutes'
 import { useSetOfficerFuelPrice, type OfficerWeekSummary } from '../hooks/useRouteAnalytics'
+import { useOfficerWeek, useConfirmCancel } from '../hooks/useOfficerWeek'
+import { WeekExtrasSections } from './WeekExtrasSections'
+import { WeekComments } from './WeekComments'
+import { WeekHistory } from './WeekHistory'
 import { RouteMapModal } from './RouteMapModal'
 import { stopVisitState } from '../lib/stop-state'
-import { addDays, dayLabelOf, shortDate } from '../lib/week'
+import { addDays, dayLabelOf, shortDateStr } from '../lib/week'
+import { deferReasonText } from '../lib/defer-reason'
 
 interface OfficerWeekPopupProps {
   summary: OfficerWeekSummary
   weekStart: string
   typePrice: number | null
   onClose: () => void
-}
-
-function shortDateStr(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  return shortDate(new Date(y, m - 1, d))
 }
 
 export function OfficerWeekPopup({
@@ -33,10 +33,14 @@ export function OfficerWeekPopup({
   const t = useTranslations()
   const { showToast } = useToast()
   const { data, isLoading } = useMyRoutes(summary.officerId)
+  const officerWeek = useOfficerWeek(summary.officerId, weekStart)
+  const confirm = useConfirmCancel()
   const routes = data?.routes ?? []
   const officerStart = data?.start ?? null
   const [mapRoute, setMapRoute] = useState<OfficerRoute | null>(null)
+  const [tab, setTab] = useState<'week' | 'failed' | 'history'>('week')
   const setOfficerPrice = useSetOfficerFuelPrice()
+  const failedCount = officerWeek.data?.failed.length ?? 0
 
   // Per-officer price override (empty → inherits the global price). Cost updates
   // live as the value is typed.
@@ -135,7 +139,7 @@ export function OfficerWeekPopup({
                 value={priceInput}
                 onChange={e => setPriceInput(e.target.value)}
                 placeholder={typePrice != null ? String(typePrice) : '0.00'}
-                className="w-20 px-2 py-1 rounded-lg border border-border-light bg-bg-primary text-sm text-text-primary text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="w-20 px-2 py-1 rounded-xl border border-border-light bg-bg-primary text-sm text-text-primary text-right transition-colors focus:outline-none focus:border-monday-primary focus:ring-2 focus:ring-monday-primary/20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
               <span className="text-text-tertiary">{t('routeAnalytics.perLiter')}</span>
               <button
@@ -164,9 +168,37 @@ export function OfficerWeekPopup({
           </div>
         </div>
 
+        {/* Tabs: week plan vs. failed (carried-over, paid-but-unvisited) */}
+        <div className="flex items-center gap-1 px-4 pt-3">
+          <TabButton active={tab === 'week'} onClick={() => setTab('week')}>
+            {t('routeAnalytics.tab.week')}
+          </TabButton>
+          <TabButton active={tab === 'failed'} onClick={() => setTab('failed')}>
+            {t('myWeek.failed')}
+            {failedCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-500/15 text-red-500">
+                {failedCount}
+              </span>
+            )}
+          </TabButton>
+          <TabButton active={tab === 'history'} onClick={() => setTab('history')}>
+            {t('routeAnalytics.tab.history')}
+          </TabButton>
+        </div>
+
         {/* Per-day breakdown */}
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {isLoading ? (
+          {tab === 'history' ? (
+            <WeekHistory inspectorId={summary.officerId} weekStart={weekStart} />
+          ) : tab === 'failed' ? (
+            officerWeek.data ? (
+              <WeekExtrasSections data={officerWeek.data} show={['failed']} />
+            ) : (
+              <div className="flex items-center justify-center py-10">
+                <Loader2 className="w-6 h-6 text-text-tertiary animate-spin" />
+              </div>
+            )
+          ) : isLoading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="w-6 h-6 text-text-tertiary animate-spin" />
             </div>
@@ -176,7 +208,7 @@ export function OfficerWeekPopup({
             </p>
           ) : (
             weekRoutes.map(route => (
-              <div key={route.id} className="rounded-xl border border-border-light p-3">
+              <div key={route.id} className="rounded-2xl border border-border-light p-3 shadow-sm">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-text-primary">
@@ -200,32 +232,57 @@ export function OfficerWeekPopup({
                     )}
                   </div>
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {route.stops.map(stop => {
                     const state = stopVisitState(stop.status)
                     const done = state === 'done'
+                    const skipped = stop.status === 'skipped'
                     return (
-                      <div key={stop.id} className="flex items-center gap-2 text-xs">
+                      <div
+                        key={stop.id}
+                        className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs"
+                      >
                         <span
                           className={cn(
                             'w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 text-[9px] font-bold border',
-                            state === 'done'
+                            done
                               ? 'bg-green-500 border-green-500 text-white'
                               : state === 'in_progress'
                                 ? 'bg-amber-500 border-amber-500 text-white'
-                                : 'border-border-medium text-text-tertiary'
+                                : skipped
+                                  ? 'bg-red-500/10 border-red-500/40 text-red-500'
+                                  : 'border-border-medium text-text-tertiary'
                           )}
                         >
-                          {done ? <Check className="w-2.5 h-2.5" /> : stop.position}
+                          {done ? (
+                            <Check className="w-2.5 h-2.5" />
+                          ) : skipped ? (
+                            <X className="w-2.5 h-2.5" />
+                          ) : (
+                            stop.position
+                          )}
                         </span>
                         <span
                           className={cn(
-                            'flex-1 truncate text-text-primary',
-                            done && 'line-through'
+                            'flex-1 min-w-0 truncate',
+                            done && 'text-text-primary line-through',
+                            skipped ? 'text-text-secondary' : 'text-text-primary'
                           )}
                         >
                           {stop.name || t('inspectorRoutes.unknownStop')}
                         </span>
+                        {/* Deferred: didn't go that day. The reason = the officer's
+                            hand-written note if any, else the picked enum. */}
+                        {skipped &&
+                          (() => {
+                            const reasonText = deferReasonText(stop.skipReason, stop.skipNote, t)
+                            return (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-500/10 text-red-500 border border-red-500/30 flex-shrink-0 max-w-full truncate">
+                                {t('myWeek.deferred')}
+                                {reasonText ? ` · ${reasonText}` : ''}
+                              </span>
+                            )
+                          })()}
                         {stop.durationMinutes != null && (
                           <span className="text-[11px] text-text-tertiary flex-shrink-0">
                             {t('routing.stopDuration', { min: stop.durationMinutes })}
@@ -242,6 +299,25 @@ export function OfficerWeekPopup({
                 </div>
               </div>
             ))
+          )}
+
+          {/* Unplanned / deviation — admin can confirm canceled (failed → own tab) */}
+          {tab === 'week' && officerWeek.data && (
+            <div className="mt-4">
+              <WeekExtrasSections
+                data={officerWeek.data}
+                show={['unplanned', 'deviation']}
+                onConfirmCancel={id => confirm.mutate(id)}
+                confirming={confirm.isPending}
+              />
+            </div>
+          )}
+
+          {/* Plan comments — manager & officer thread */}
+          {tab === 'week' && (
+            <div className="mt-4">
+              <WeekComments inspectorId={summary.officerId} weekStart={weekStart} />
+            </div>
           )}
         </div>
       </div>
@@ -279,6 +355,31 @@ export function OfficerWeekPopup({
   )
 
   return createPortal(content, document.body)
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+        active
+          ? 'bg-monday-primary/10 text-monday-primary'
+          : 'text-text-secondary hover:bg-bg-hover'
+      )}
+    >
+      {children}
+    </button>
+  )
 }
 
 function Total({

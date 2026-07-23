@@ -198,7 +198,9 @@ export function OfficerTransportModal({
                     placeholder="7.5"
                     className="w-full px-3 py-2 text-sm bg-bg-primary border border-border-light rounded-lg focus:outline-none focus:border-monday-primary text-text-primary"
                   />
-                  <span className="text-sm text-text-tertiary flex-shrink-0">ლ/100კმ</span>
+                  <span className="text-sm text-text-tertiary flex-shrink-0">
+                    {t('routing.litersPer100km')}
+                  </span>
                 </div>
               </Field>
             </>

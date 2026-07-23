@@ -16,13 +16,15 @@ interface NotifyOptions {
   title: string
   message: string
   data?: Record<string, any>
+  /** Also send an email. Default true; pass false for in-app-only notifications. */
+  email?: boolean
 }
 
 /**
- * Create in-app notification and send email (fire-and-forget).
+ * Create in-app notification and (optionally) send email (fire-and-forget).
  */
 export async function notifyUser(options: NotifyOptions): Promise<string | null> {
-  const { supabase, userId, type, title, message, data = {} } = options
+  const { supabase, userId, type, title, message, data = {}, email = true } = options
 
   // 1. Create in-app notification
   const { data: notificationId, error } = await supabase.rpc('create_notification', {
@@ -38,10 +40,12 @@ export async function notifyUser(options: NotifyOptions): Promise<string | null>
     return null
   }
 
-  // 2. Send email (fire-and-forget, don't block on failure)
-  sendNotificationEmail({ supabase, userId, type, title, message, data }).catch(err => {
-    console.error('Email notification failed:', err)
-  })
+  // 2. Send email (fire-and-forget, don't block on failure) — opt-out with email:false
+  if (email) {
+    sendNotificationEmail({ supabase, userId, type, title, message, data }).catch(err => {
+      console.error('Email notification failed:', err)
+    })
+  }
 
   return notificationId
 }
@@ -88,9 +92,10 @@ export async function notifyUsers(
   type: string,
   title: string,
   message: string,
-  data: Record<string, any> = {}
+  data: Record<string, any> = {},
+  email = true
 ): Promise<void> {
   await Promise.allSettled(
-    userIds.map(userId => notifyUser({ supabase, userId, type, title, message, data }))
+    userIds.map(userId => notifyUser({ supabase, userId, type, title, message, data, email }))
   )
 }

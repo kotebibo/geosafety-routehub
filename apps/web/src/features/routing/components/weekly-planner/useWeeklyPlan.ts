@@ -25,7 +25,7 @@ import type { DayResult, ExtraVisit } from './types'
  * address geocoding, and ad-hoc extra visits. The component tree consumes this
  * and stays purely presentational.
  */
-export function useWeeklyPlan(board: Board) {
+export function useWeeklyPlan(board: Board, opts?: { initialWeekOffset?: number }) {
   const t = useTranslations()
   const { user } = useAuth()
   const { showToast } = useToast()
@@ -60,7 +60,7 @@ export function useWeeklyPlan(board: Board) {
     return null
   }, [boardStart, transport])
 
-  const [weekOffset, setWeekOffset] = useState(0)
+  const [weekOffset, setWeekOffset] = useState(opts?.initialWeekOffset ?? 0)
   const [selectedDay, setSelectedDay] = useState(0) // index 0..6
   // day key -> company ids assigned to that day
   const [assignments, setAssignments] = useState<Record<string, string[]>>({})
@@ -423,6 +423,10 @@ export function useWeeklyPlan(board: Board) {
     days,
     monday,
     isCurrentWeek,
+    weekStartKey,
+    inspectorId,
+    planStatus: (existingPlan?.status ?? 'draft') as 'draft' | 'submitted' | 'approved',
+    planSnapshot: existingPlan?.plan ?? null,
     // selection
     selectedDay,
     setSelectedDay,

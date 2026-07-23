@@ -11,6 +11,8 @@ export interface RouteStop {
   id: string
   position: number
   status: StopStatus | null
+  skipReason: 'empty' | 'closed' | 'refused' | 'canceled' | 'other' | null
+  skipNote: string | null
   distanceFromPrevious: number | null
   boardItemId: string | null
   name: string | null
@@ -75,11 +77,21 @@ export function useUpdateRouteStatus(inspectorId: string) {
 export function useUpdateStopStatus(inspectorId: string) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: async ({ stopId, status }: { stopId: string; status: StopStatus }) => {
+    mutationFn: async ({
+      stopId,
+      status,
+      skipReason,
+      skipNote,
+    }: {
+      stopId: string
+      status: StopStatus
+      skipReason?: 'empty' | 'closed' | 'refused' | 'canceled' | 'other' | null
+      skipNote?: string | null
+    }) => {
       const res = await fetch(`/api/routing/stops/${stopId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, skipReason, skipNote }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
@@ -89,6 +101,12 @@ export function useUpdateStopStatus(inspectorId: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-routes', inspectorId] })
+      // A deferral also shows in the deviation sections (officer-week), the
+      // admin deferred tab (admin-week) and the change history — refresh them so
+      // the UI updates without a page refresh.
+      queryClient.invalidateQueries({ queryKey: ['officer-week'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-week'] })
+      queryClient.invalidateQueries({ queryKey: ['routing-audit'] })
     },
   })
 }
