@@ -26,11 +26,14 @@ interface OSRMTableResponse {
   durations: number[][] | null; // matrix in seconds
 }
 
-// OSRM public server (free, no API key needed)
-// NOTE: This is a demo server with rate limits. For production, consider:
-// - Hosting your own OSRM instance
-// - Using a paid routing service (Mapbox, Google, HERE)
-const OSRM_BASE_URL = 'http://router.project-osrm.org';
+// OSRM base URL. Set OSRM_BASE_URL to a self-hosted instance in production —
+// the public demo server (the fallback) is rate-limited and has no SLA, so it
+// is unsuitable for the real weekly routing load. Trailing slash is trimmed so
+// both "https://host" and "https://host/" work.
+const OSRM_BASE_URL = (process.env.OSRM_BASE_URL || 'https://router.project-osrm.org').replace(
+  /\/+$/,
+  ''
+);
 const OSRM_ROUTE_URL = `${OSRM_BASE_URL}/route/v1/driving`;
 const OSRM_TABLE_URL = `${OSRM_BASE_URL}/table/v1/driving`;
 
