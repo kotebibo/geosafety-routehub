@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
+// The geofence radius defaults to 150 KM (stage test data); pin it to the real
+// 150 m rule here so these tests exercise the actual geofence behaviour.
+process.env.CHECKIN_RADIUS_METERS = '150'
+
 // --- Mock setup ---
 
 // Use RFC 4122 v4 UUIDs (version nibble = 4, variant nibble = 8/9/a/b)
