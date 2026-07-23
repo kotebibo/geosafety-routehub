@@ -210,18 +210,35 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       )
 
-    // Wipe existing PLANNED routes for this officer+week (leave completed ones alone)
+    // Replace the week's plan while PRESERVING executed history: only PENDING
+    // stops are removed. Stops that are completed / in_progress / skipped stay
+    // (along with their location_checkins links), and a route is deleted only
+    // when it has no such stop left. Officers only ever plan an all-pending next
+    // week; this matters when an admin edits a week already in progress — a plain
+    // wipe would delete completed stops and orphan their check-ins.
     const { data: existing } = await svc
       .from('routes')
-      .select('id')
+      .select('id, date, route_stops(id, board_item_id, status)')
       .eq('inspector_id', v.inspectorId)
       .in('date', dates)
       .eq('status', 'planned')
-    const oldIds = (existing || []).map((r: any) => r.id)
-    if (oldIds.length) {
-      await svc.from('route_stops').delete().in('route_id', oldIds)
-      await svc.from('routes').delete().in('id', oldIds)
+    const routeByDate = new Map<string, string>() // date → surviving route id
+    const keptItemsByDate = new Map<string, Set<string>>() // date → items already executed
+    const pendingStopIds: string[] = []
+    const emptyRouteIds: string[] = []
+    for (const r of existing || []) {
+      const stops = r.route_stops || []
+      const kept = stops.filter((s: any) => s.status !== 'pending')
+      for (const s of stops) if (s.status === 'pending') pendingStopIds.push(s.id)
+      if (kept.length === 0) {
+        emptyRouteIds.push(r.id)
+      } else {
+        routeByDate.set(r.date, r.id)
+        keptItemsByDate.set(r.date, new Set(kept.map((s: any) => s.board_item_id).filter(Boolean)))
+      }
     }
+    if (pendingStopIds.length) await svc.from('route_stops').delete().in('id', pendingStopIds)
+    if (emptyRouteIds.length) await svc.from('routes').delete().in('id', emptyRouteIds)
 
     // Carry-over: an object whose LATEST prior stop was an unresolved skip (not
     // canceled+confirmed) AND belonged to an APPROVED week was already paid for
@@ -265,36 +282,52 @@ export async function POST(request: NextRequest) {
           prepaidItems.add(itemId)
     }
 
-    // Insert one route per non-empty day + its stops
+    // Insert the plan per non-empty day. Reuse a surviving route for the date
+    // (append to it, refresh km) or create one; never re-insert an item already
+    // executed that day (kept above) so history isn't duplicated.
     let savedDays = 0
     let savedStops = 0
     for (const day of v.days) {
       if (day.stops.length === 0) continue
-      const { data: route, error: rErr } = await svc
-        .from('routes')
-        .insert({
-          name: `კვირის მარშრუტი — ${day.date}`,
-          date: day.date,
-          inspector_id: v.inspectorId,
-          status: 'planned',
-          total_distance_km: day.km ?? null,
-          optimization_type: 'distance',
-        })
-        .select('id')
-        .single()
-      if (rErr) throw rErr
-      const stops = day.stops.map(s => ({
-        route_id: route.id,
-        board_item_id: s.itemId,
-        position: s.position,
-        status: 'pending',
-        distance_from_previous_km: s.distanceFromPrevious ?? null,
-        prepaid: prepaidItems.has(s.itemId),
-      }))
-      const { error: sErr } = await svc.from('route_stops').insert(stops)
-      if (sErr) throw sErr
+      let routeId = routeByDate.get(day.date)
+      if (routeId) {
+        await svc
+          .from('routes')
+          .update({ total_distance_km: day.km ?? null })
+          .eq('id', routeId)
+      } else {
+        const { data: route, error: rErr } = await svc
+          .from('routes')
+          .insert({
+            name: `კვირის მარშრუტი — ${day.date}`,
+            date: day.date,
+            inspector_id: v.inspectorId,
+            status: 'planned',
+            total_distance_km: day.km ?? null,
+            optimization_type: 'distance',
+          })
+          .select('id')
+          .single()
+        if (rErr) throw rErr
+        routeId = route.id
+      }
+      const already = keptItemsByDate.get(day.date) ?? new Set<string>()
+      const stops = day.stops
+        .filter(s => !already.has(s.itemId))
+        .map(s => ({
+          route_id: routeId,
+          board_item_id: s.itemId,
+          position: s.position,
+          status: 'pending',
+          distance_from_previous_km: s.distanceFromPrevious ?? null,
+          prepaid: prepaidItems.has(s.itemId),
+        }))
+      if (stops.length) {
+        const { error: sErr } = await svc.from('route_stops').insert(stops)
+        if (sErr) throw sErr
+        savedStops += stops.length
+      }
       savedDays++
-      savedStops += stops.length
     }
 
     // Any edit re-opens the plan as a draft — a submitted/approved plan that an
