@@ -108,7 +108,13 @@ export function useWeekPlanAction() {
       queryClient.invalidateQueries({
         queryKey: ['week-plan', variables.inspectorId, variables.weekStart],
       })
+      // submit/approve/reopen shows in the admin requests tab (admin-week), both
+      // analytics views and the change history — refresh all so the list/metrics
+      // update immediately, not after a refresh.
       queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics-month'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-week'] })
+      queryClient.invalidateQueries({ queryKey: ['routing-audit'] })
     },
   })
 }

@@ -141,6 +141,7 @@ export function useSetFuelPrices() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics-month'] })
     },
   })
 }
@@ -163,6 +164,7 @@ export function useSetOfficerFuelPrice() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics-month'] })
     },
   })
 }

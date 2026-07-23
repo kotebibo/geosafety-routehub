@@ -59,6 +59,11 @@ export function useCreateExtraVisit() {
     },
     onSuccess: (_data, v) => {
       queryClient.invalidateQueries({ queryKey: ['extra-visits', v.inspectorId, v.weekStart] })
+      // The visible "unplanned" lists read officer-week / admin-week, so refresh
+      // those too — otherwise a booked visit only shows after a manual refresh.
+      queryClient.invalidateQueries({ queryKey: ['officer-week'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-week'] })
+      queryClient.invalidateQueries({ queryKey: ['routing-audit'] })
     },
   })
 }
@@ -81,6 +86,11 @@ export function useReviewExtraVisit() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['extra-visits'] })
+      // Approve/reject is shown in the admin requests tab (admin-week) and the
+      // per-officer popup (officer-week) — refresh both immediately.
+      queryClient.invalidateQueries({ queryKey: ['admin-week'] })
+      queryClient.invalidateQueries({ queryKey: ['officer-week'] })
+      queryClient.invalidateQueries({ queryKey: ['routing-audit'] })
     },
   })
 }

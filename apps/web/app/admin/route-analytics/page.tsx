@@ -461,6 +461,7 @@ export default function RouteAnalyticsPage() {
 
       {selected && (
         <OfficerWeekPopup
+          key={`${selected.summary.officerId}-${selected.weekStart}`}
           summary={selected.summary}
           weekStart={selected.weekStart}
           typePrice={selected.summary.fuelType ? (gp?.[selected.summary.fuelType] ?? null) : null}

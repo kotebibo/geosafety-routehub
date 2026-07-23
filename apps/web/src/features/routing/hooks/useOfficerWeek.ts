@@ -66,6 +66,7 @@ export function useConfirmCancel() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['officer-week'] })
       queryClient.invalidateQueries({ queryKey: ['admin-week'] })
+      queryClient.invalidateQueries({ queryKey: ['routing-audit'] })
     },
   })
 }

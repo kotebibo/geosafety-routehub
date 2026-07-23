@@ -73,6 +73,12 @@ export function useCreateItemCheckin(boardId: string) {
         queryKey: [...queryKeys.routes.all, 'board-items', boardId],
       })
       queryClient.invalidateQueries({ queryKey: queryKeys.boardColumns.all })
+      // A check-in writes route_stops.status, so the officer's My Week list and
+      // the routing views must refresh immediately (broad keys — no-op when
+      // those queries aren't mounted).
+      queryClient.invalidateQueries({ queryKey: ['my-routes'] })
+      queryClient.invalidateQueries({ queryKey: ['officer-week'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
     },
   })
 }
@@ -94,11 +100,15 @@ export function useDeleteCheckin(boardId: string) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.checkins.byItem(variables.board_item_id),
       })
+      queryClient.invalidateQueries({ queryKey: ['my-routes'] })
+      queryClient.invalidateQueries({ queryKey: ['officer-week'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
     },
   })
 }
 
 export function useCheckout(boardId: string) {
+  // Check-out marks the stop completed — the routing views (below) must refresh.
   const queryClient = useQueryClient()
 
   return useMutation({
@@ -130,6 +140,9 @@ export function useCheckout(boardId: string) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.checkins.byItem(variables.board_item_id),
       })
+      queryClient.invalidateQueries({ queryKey: ['my-routes'] })
+      queryClient.invalidateQueries({ queryKey: ['officer-week'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
     },
   })
 }
