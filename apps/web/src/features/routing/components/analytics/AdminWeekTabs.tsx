@@ -5,6 +5,7 @@ import { AlertTriangle, Check, Loader2, MapPin, Navigation, X } from 'lucide-rea
 import { useToast } from '@/components/ui-monday/Toast'
 import { useAdminWeek } from '../../hooks/useRouteAnalytics'
 import { useWeekPlanAction } from '../../hooks/useWeekPlan'
+import { shortDateStr } from '../../lib/week'
 import { useReviewExtraVisit } from '../../hooks/useExtraVisits'
 
 export type AdminTab = 'requests' | 'unplanned' | 'deferred'
@@ -133,7 +134,7 @@ function UnplannedList({
               {r.objectName || t('routing.unknownStop')}
             </p>
             <p className="text-xs text-text-tertiary truncate">
-              {r.officerName} · {shortDate(r.date)}
+              {r.officerName} · {shortDateStr(r.date)}
               {r.distanceKm != null && ` · ${r.distanceKm.toFixed(1)} ${t('routing.km')}`}
             </p>
           </div>
@@ -190,7 +191,7 @@ function DeferredList({
               {r.objectName || t('routing.unknownStop')}
             </p>
             <p className="text-xs text-text-tertiary truncate">
-              {r.officerName} · {shortDate(r.date)}
+              {r.officerName} · {shortDateStr(r.date)}
             </p>
             <div className="mt-1.5 flex items-center gap-2 flex-wrap">
               {r.reason ? (
@@ -239,9 +240,4 @@ function Empty({ text }: { text: string }) {
       <p className="text-sm text-text-secondary">{text}</p>
     </div>
   )
-}
-
-function shortDate(dateStr: string): string {
-  const [, m, d] = dateStr.split('-')
-  return `${d}.${m}`
 }

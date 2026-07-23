@@ -444,7 +444,12 @@ export default function RouteAnalyticsPage() {
                           : '—'}
                       </Chip>
                       {o.cost != null && <Chip icon={Coins}>{o.cost.toFixed(1)} ₾</Chip>}
-                      {o.minutes > 0 && <Chip icon={Clock}>{o.minutes}წთ</Chip>}
+                      {o.minutes > 0 && (
+                        <Chip icon={Clock}>
+                          {o.minutes}
+                          {t('routing.minutesShort')}
+                        </Chip>
+                      )}
                     </div>
                   </button>
                 ))}

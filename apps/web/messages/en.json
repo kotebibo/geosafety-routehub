@@ -2320,6 +2320,10 @@
     "weekCompanies": "{count} objects",
     "fuelLiters": "{liters} L fuel",
     "weekPlanned": "Week planned",
-    "noOfficerAssigned": "No officer assigned to this board"
+    "noOfficerAssigned": "No officer assigned to this board",
+    "km": "km",
+    "litersPer100km": "L/100km",
+    "metersShort": "m",
+    "minutesShort": "min"
   }
 }

@@ -210,7 +210,10 @@ function GpsPanel({
             <span className="text-xs text-text-primary flex-1">
               {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
             </span>
-            <span className="text-[11px] text-text-tertiary">±{coords.accuracy}მ</span>
+            <span className="text-[11px] text-text-tertiary">
+              ±{coords.accuracy}
+              {t('routing.metersShort')}
+            </span>
           </>
         ) : error ? (
           <>

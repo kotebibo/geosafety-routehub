@@ -2320,6 +2320,10 @@
     "weekCompanies": "{count} ობიექტი",
     "fuelLiters": "{liters} ლ საწვავი",
     "weekPlanned": "კვირა დაიგეგმა",
-    "noOfficerAssigned": "ოფიცერი არ არის მიბმული ამ board-ზე"
+    "noOfficerAssigned": "ოფიცერი არ არის მიბმული ამ board-ზე",
+    "km": "კმ",
+    "litersPer100km": "ლ/100კმ",
+    "metersShort": "მ",
+    "minutesShort": "წთ"
   }
 }

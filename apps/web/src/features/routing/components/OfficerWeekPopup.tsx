@@ -12,18 +12,13 @@ import { useOfficerWeek, useConfirmCancel } from '../hooks/useOfficerWeek'
 import { WeekExtrasSections } from './WeekExtrasSections'
 import { RouteMapModal } from './RouteMapModal'
 import { stopVisitState } from '../lib/stop-state'
-import { addDays, dayLabelOf, shortDate } from '../lib/week'
+import { addDays, dayLabelOf, shortDateStr } from '../lib/week'
 
 interface OfficerWeekPopupProps {
   summary: OfficerWeekSummary
   weekStart: string
   typePrice: number | null
   onClose: () => void
-}
-
-function shortDateStr(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  return shortDate(new Date(y, m - 1, d))
 }
 
 export function OfficerWeekPopup({

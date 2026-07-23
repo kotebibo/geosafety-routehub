@@ -8,16 +8,11 @@ import {
   type OfficerWeekSummary,
   type WeekSlice,
 } from '../../hooks/useRouteAnalytics'
-import { shortDate } from '../../lib/week'
+import { shortDateStr } from '../../lib/week'
 
 interface MonthBreakdownProps {
   month: string // YYYY-MM
   onSelect: (summary: OfficerWeekSummary, weekStart: string) => void
-}
-
-function fmtDate(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  return shortDate(new Date(y, m - 1, d))
 }
 
 // Month analytics as weekly slices — one card per week, each with fleet totals
@@ -105,7 +100,7 @@ function WeekSliceCard({
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-sm font-bold text-text-primary">{monthLabel}</span>
           <span className="text-xs text-text-tertiary whitespace-nowrap">
-            {fmtDate(week.weekStart)} – {fmtDate(week.weekEnd)}
+            {shortDateStr(week.weekStart)} – {shortDateStr(week.weekEnd)}
           </span>
         </div>
         <div className="flex items-center gap-3 text-xs text-text-secondary">

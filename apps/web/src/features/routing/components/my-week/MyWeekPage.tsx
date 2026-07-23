@@ -32,7 +32,7 @@ import { WeekExtrasSections } from '../WeekExtrasSections'
 import { stopVisitState } from '../../lib/stop-state'
 import { resolveLocationColumns } from '../../lib/location-columns'
 import { parseCoordinates } from '@/lib/geo-utils'
-import { mondayOf, dayKey, addDays, shortDate, dayLabelOf } from '../../lib/week'
+import { mondayOf, dayKey, addDays, shortDateStr, dayLabelOf } from '../../lib/week'
 import type { BoardColumn } from '@/types/board'
 
 const SKIP_REASONS = ['empty', 'closed', 'refused', 'canceled', 'other'] as const
@@ -564,11 +564,6 @@ function BookUnplannedModal({
       </div>
     </div>
   )
-}
-
-function shortDateStr(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  return shortDate(new Date(y, m - 1, d))
 }
 
 function GlassStat({

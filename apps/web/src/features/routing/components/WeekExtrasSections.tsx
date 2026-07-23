@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl'
 import { AlertTriangle, Check, Clock, Loader2, MapPin, Plus, TrendingDown } from 'lucide-react'
 import type { OfficerWeek, StopExtraRow } from '../hooks/useOfficerWeek'
+import { shortDateStr } from '../lib/week'
 
 type ExtrasSection = 'unplanned' | 'deviation' | 'failed'
 
@@ -15,11 +16,6 @@ interface WeekExtrasSectionsProps {
   /** Admin-only: confirm an object-canceled deferral. */
   onConfirmCancel?: (stopId: string) => void
   confirming?: boolean
-}
-
-function fmt(dateStr: string): string {
-  const [, m, d] = dateStr.split('-')
-  return `${d}.${m}`
 }
 
 // The three routing-extras sections (unplanned / deviation / failed), shared by
@@ -214,7 +210,7 @@ function Row({
       )}
       <span className="flex-1 truncate text-text-primary">{name || t('routing.unknownStop')}</span>
       {children}
-      <span className="text-[11px] text-text-tertiary flex-shrink-0">{fmt(date)}</span>
+      <span className="text-[11px] text-text-tertiary flex-shrink-0">{shortDateStr(date)}</span>
     </div>
   )
 }
