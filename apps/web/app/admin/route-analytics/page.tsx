@@ -14,6 +14,7 @@ import {
   Loader2,
   Navigation,
   PieChart,
+  Search,
   Users,
   type LucideIcon,
 } from 'lucide-react'
@@ -52,6 +53,7 @@ export default function RouteAnalyticsPage() {
     weekStart: string
   } | null>(null)
   const [breakdown, setBreakdown] = useState(false)
+  const [officerQuery, setOfficerQuery] = useState('')
   const [exporting, setExporting] = useState<'week' | 'month' | null>(null)
   const [priceInputs, setPriceInputs] = useState<Record<FuelType, string>>({
     petrol: '',
@@ -91,6 +93,11 @@ export default function RouteAnalyticsPage() {
   }, [gp?.petrol, gp?.diesel, gp?.gas])
 
   const officers = data?.officers ?? []
+  const filteredOfficers = useMemo(() => {
+    const q = officerQuery.trim().toLowerCase()
+    if (!q) return officers
+    return officers.filter(o => (o.name || o.email || '').toLowerCase().includes(q))
+  }, [officers, officerQuery])
   const fleet = useMemo(
     () => ({
       km: officers.reduce((s, o) => s + o.totalKm, 0),
@@ -389,6 +396,20 @@ export default function RouteAnalyticsPage() {
               />
             </div>
 
+            {/* Search officers by name */}
+            {officers.length > 0 && (
+              <div className="relative mb-4">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-tertiary pointer-events-none" />
+                <input
+                  type="text"
+                  value={officerQuery}
+                  onChange={e => setOfficerQuery(e.target.value)}
+                  placeholder={t('routeAnalytics.searchOfficer')}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border-light bg-bg-primary text-sm text-text-primary transition-colors focus:outline-none focus:border-monday-primary focus:ring-2 focus:ring-monday-primary/20"
+                />
+              </div>
+            )}
+
             {isLoading ? (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="w-8 h-8 text-text-tertiary animate-spin" />
@@ -399,9 +420,13 @@ export default function RouteAnalyticsPage() {
                 title={t('routeAnalytics.emptyTitle')}
                 description={t('routeAnalytics.emptyDescription')}
               />
+            ) : filteredOfficers.length === 0 ? (
+              <p className="text-sm text-text-tertiary text-center py-10">
+                {t('routeAnalytics.noOfficerMatch')}
+              </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {officers.map((o, i) => (
+                {filteredOfficers.map((o, i) => (
                   <button
                     key={o.officerId}
                     type="button"

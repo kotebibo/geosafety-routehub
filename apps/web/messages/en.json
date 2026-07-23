@@ -2093,7 +2093,9 @@
       "extra_visit_requested": "Unplanned visit requested",
       "extra_visit_approved": "Unplanned visit approved",
       "extra_visit_rejected": "Unplanned visit rejected"
-    }
+    },
+    "searchOfficer": "Search by name…",
+    "noOfficerMatch": "No officer found"
   },
   "locations": {
     "dataLoading": "Loading data...",

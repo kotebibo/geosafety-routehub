@@ -2093,7 +2093,9 @@
       "extra_visit_requested": "დაუგეგმავი ვიზიტი მოთხოვნილია",
       "extra_visit_approved": "დაუგეგმავი ვიზიტი დამტკიცდა",
       "extra_visit_rejected": "დაუგეგმავი ვიზიტი უარყოფილია"
-    }
+    },
+    "searchOfficer": "ძებნა სახელით ან გვარით…",
+    "noOfficerMatch": "ოფიცერი ვერ მოიძებნა"
   },
   "locations": {
     "dataLoading": "მონაცემების ჩატვირთვა...",
