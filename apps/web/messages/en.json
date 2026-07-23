@@ -2219,7 +2219,10 @@
       "refused": "They refused",
       "canceled": "Object canceled the visit",
       "other": "Other"
-    }
+    },
+    "openDayRoute": "Route in Google Maps",
+    "dayAllDone": "All visits done for this day ✓",
+    "resolvedCount": "Done / deferred ({count})"
   },
   "routing": {
     "title": "Routing",

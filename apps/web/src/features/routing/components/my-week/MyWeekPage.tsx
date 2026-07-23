@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 import {
   CalendarCheck,
   Check,
+  ChevronDown,
   Clock,
   Loader2,
   MapPin,
@@ -33,6 +34,7 @@ import { stopVisitState } from '../../lib/stop-state'
 import { resolveLocationColumns } from '../../lib/location-columns'
 import { parseCoordinates } from '@/lib/geo-utils'
 import { mondayOf, dayKey, addDays, shortDateStr, dayLabelOf } from '../../lib/week'
+import { googleMapsDirUrl } from '../../lib/google-maps'
 import type { BoardColumn } from '@/types/board'
 
 const SKIP_REASONS = ['empty', 'closed', 'refused', 'canceled', 'other'] as const
@@ -136,6 +138,7 @@ export function MyWeekPage() {
               index={i}
               isToday={route.date === todayKey}
               checkinEnabled={anyDay || route.date === todayKey}
+              start={data?.start ?? null}
               onCheckin={setCheckinItemId}
               onDefer={setDeferStop}
               t={t}
@@ -194,6 +197,7 @@ function DaySection({
   index,
   isToday,
   checkinEnabled,
+  start,
   onCheckin,
   onDefer,
   t,
@@ -202,10 +206,28 @@ function DaySection({
   index: number
   isToday: boolean
   checkinEnabled: boolean
+  start: { lat: number; lng: number } | null
   onCheckin: (itemId: string) => void
   onDefer: (stop: RouteStop) => void
   t: ReturnType<typeof useTranslations>
 }) {
+  const [showResolved, setShowResolved] = useState(false)
+  // Active = still to do (pending / in-progress). Resolved = checked-in (done)
+  // or deferred (skipped) — these drop out of the active list to keep it a clean
+  // "what's left" for the officer.
+  const isResolved = (s: RouteStop) => stopVisitState(s.status) === 'done' || s.status === 'skipped'
+  const active = route.stops.filter(s => !isResolved(s))
+  const resolved = route.stops.filter(isResolved)
+
+  // Google Maps route for the REMAINING stops: home → objects → home.
+  const gmapsUrl = googleMapsDirUrl([
+    ...(start ? [start] : []),
+    ...active
+      .filter(s => s.lat != null && s.lng != null)
+      .map(s => ({ lat: s.lat as number, lng: s.lng as number })),
+    ...(start ? [start] : []),
+  ])
+
   return (
     <div
       style={{ animationDelay: `${index * 70}ms`, animationFillMode: 'backwards' }}
@@ -238,18 +260,68 @@ function DaySection({
           {(route.totalDistanceKm ?? 0).toFixed(1)} {t('inspectorRoutes.km')}
         </span>
       </div>
-      <div className="divide-y divide-border-light">
-        {route.stops.map(stop => (
-          <StopRow
-            key={stop.id}
-            stop={stop}
-            checkinEnabled={checkinEnabled}
-            onCheckin={onCheckin}
-            onDefer={onDefer}
-            t={t}
-          />
-        ))}
-      </div>
+
+      {/* Big "open the remaining route in Google Maps" bar */}
+      {gmapsUrl && (
+        <a
+          href={gmapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 px-4 py-2.5 bg-monday-primary/10 text-monday-primary font-semibold text-sm border-b border-border-light hover:bg-monday-primary/15 active:scale-[0.99] transition-all"
+        >
+          <MapPin className="w-4 h-4" />
+          {t('myWeek.openDayRoute')}
+        </a>
+      )}
+
+      {active.length > 0 ? (
+        <div className="divide-y divide-border-light">
+          {active.map(stop => (
+            <StopRow
+              key={stop.id}
+              stop={stop}
+              checkinEnabled={checkinEnabled}
+              onCheckin={onCheckin}
+              onDefer={onDefer}
+              t={t}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="px-4 py-4 text-sm text-center text-green-600 font-medium">
+          {t('myWeek.dayAllDone')}
+        </p>
+      )}
+
+      {/* Resolved (checked-in / deferred) collapse out of the active list */}
+      {resolved.length > 0 && (
+        <div className="border-t border-border-light">
+          <button
+            type="button"
+            onClick={() => setShowResolved(v => !v)}
+            className="w-full flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-text-tertiary hover:bg-bg-hover transition-colors"
+          >
+            {t('myWeek.resolvedCount', { count: resolved.length })}
+            <ChevronDown
+              className={cn('w-3.5 h-3.5 transition-transform', showResolved && 'rotate-180')}
+            />
+          </button>
+          {showResolved && (
+            <div className="divide-y divide-border-light opacity-70">
+              {resolved.map(stop => (
+                <StopRow
+                  key={stop.id}
+                  stop={stop}
+                  checkinEnabled={checkinEnabled}
+                  onCheckin={onCheckin}
+                  onDefer={onDefer}
+                  t={t}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

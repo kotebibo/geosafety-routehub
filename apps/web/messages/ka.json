@@ -2219,7 +2219,10 @@
       "refused": "უარი თქვეს",
       "canceled": "ობიექტმა გამიუქმა ვიზიტი",
       "other": "სხვა"
-    }
+    },
+    "openDayRoute": "მარშრუტი Google Maps-ში",
+    "dayAllDone": "ამ დღის ყველა ვიზიტი დასრულებულია ✓",
+    "resolvedCount": "დასრულებული / გადადებული ({count})"
   },
   "routing": {
     "title": "მარშრუტიზაცია",
