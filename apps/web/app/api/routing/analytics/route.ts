@@ -78,13 +78,36 @@ export async function GET(request: NextRequest) {
     const dates = weekDates(weekStart)
     const { data: routes } = await svc
       .from('routes')
-      .select('inspector_id, total_distance_km, route_stops(status, prepaid)')
+      .select(
+        'inspector_id, total_distance_km, route_stops(status, prepaid, distance_from_previous_km)'
+      )
       .in('inspector_id', activeIds)
       .in('date', dates)
 
-    type Agg = { totalKm: number; days: number; stopCount: number; visitedCount: number }
+    // Weeks whose fuel was actually bought (approved) — only those carry a
+    // "wasted fuel" debt when an object is paid for but not visited.
+    const { data: approvedPlans } = await svc
+      .from('week_plans')
+      .select('inspector_id')
+      .eq('week_start', weekStart)
+      .eq('status', 'approved')
+      .in('inspector_id', activeIds)
+    const approvedSet = new Set<string>((approvedPlans || []).map((p: any) => p.inspector_id))
+
+    // wastedKm = distance of paid-for objects that were NOT visited (skipped/
+    // failed, non-prepaid) in an approved week — the officer's fuel "debt".
+    type Agg = {
+      totalKm: number
+      days: number
+      stopCount: number
+      visitedCount: number
+      wastedKm: number
+    }
     const aggOf = new Map<string, Agg>(
-      activeIds.map((id: string) => [id, { totalKm: 0, days: 0, stopCount: 0, visitedCount: 0 }])
+      activeIds.map((id: string) => [
+        id,
+        { totalKm: 0, days: 0, stopCount: 0, visitedCount: 0, wastedKm: 0 },
+      ])
     )
     for (const r of routes || []) {
       const agg = aggOf.get(r.inspector_id)
@@ -101,6 +124,10 @@ export async function GET(request: NextRequest) {
       // week → its km/fuel isn't charged again (matches computeWeekFuel).
       const allPrepaid = stops.every((s: any) => s.prepaid)
       if (!allPrepaid) agg.totalKm += r.total_distance_km || 0
+      if (approvedSet.has(r.inspector_id))
+        for (const s of stops)
+          if (!s.prepaid && (s.status === 'skipped' || s.status === 'failed'))
+            agg.wastedKm += s.distance_from_previous_km || 0
     }
 
     // Time spent this week per officer (sum of check-in durations). Bound the
@@ -130,6 +157,10 @@ export async function GET(request: NextRequest) {
       const typePrice = fuelType ? globalPrices[fuelType] : null
       const fuelPrice = priceOverride ?? typePrice
       const cost = liters != null && fuelPrice != null ? liters * fuelPrice : null
+      // Fuel already bought for objects the officer never reached this week.
+      const wastedLiters =
+        consumption != null && agg.wastedKm > 0 ? (agg.wastedKm * consumption) / 100 : 0
+      const wastedCost = fuelPrice != null ? wastedLiters * fuelPrice : 0
       return {
         officerId: u.id,
         name: u.full_name || u.email,
@@ -141,6 +172,9 @@ export async function GET(request: NextRequest) {
         minutes: minutesOf.get(u.id) ?? 0,
         consumption,
         liters,
+        wastedKm: agg.wastedKm,
+        wastedLiters,
+        wastedCost,
         fuelType, // officer's fuel type (drives which global price applies)
         priceOverride, // the officer's own override (null → inherits by type)
         fuelPrice, // effective price used for cost

@@ -2095,7 +2095,10 @@
       "extra_visit_rejected": "დაუგეგმავი ვიზიტი უარყოფილია"
     },
     "searchOfficer": "ძებნა სახელით ან გვარით…",
-    "noOfficerMatch": "ოფიცერი ვერ მოიძებნა"
+    "noOfficerMatch": "ოფიცერი ვერ მოიძებნა",
+    "wastedFuel": "ზედმეტი საწვავი (ვალი)",
+    "wastedFuelShort": "ვალი",
+    "total": "ჯამი"
   },
   "locations": {
     "dataLoading": "მონაცემების ჩატვირთვა...",

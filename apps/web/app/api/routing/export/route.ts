@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
-import { georgiaDayRange } from '@/lib/time'
+import { georgiaDayRange, georgiaMondayOfDate } from '@/lib/time'
 
 const FUEL_KEYS: Record<string, string> = {
   petrol: 'fuel_price_petrol',
@@ -64,12 +64,28 @@ export async function GET(request: NextRequest) {
 
     const { data: routes } = await svc
       .from('routes')
-      .select('inspector_id, total_distance_km, route_stops(status, prepaid)')
+      .select(
+        'inspector_id, date, total_distance_km, route_stops(status, prepaid, distance_from_previous_km)'
+      )
       .in('inspector_id', activeIds)
       .gte('date', from)
       .lte('date', to)
-    const agg = new Map<string, { km: number; days: number; stops: number; visited: number }>()
-    for (const id of activeIds) agg.set(id, { km: 0, days: 0, stops: 0, visited: 0 })
+    // Approved (fuel-bought) weeks — only these carry a wasted-fuel debt.
+    const { data: approvedPlans } = await svc
+      .from('week_plans')
+      .select('inspector_id, week_start')
+      .eq('status', 'approved')
+      .in('inspector_id', activeIds)
+      .gte('week_start', georgiaMondayOfDate(from))
+      .lte('week_start', to)
+    const approvedSet = new Set<string>(
+      (approvedPlans || []).map((p: any) => `${p.inspector_id}|${p.week_start}`)
+    )
+    const agg = new Map<
+      string,
+      { km: number; days: number; stops: number; visited: number; wastedKm: number }
+    >()
+    for (const id of activeIds) agg.set(id, { km: 0, days: 0, stops: 0, visited: 0, wastedKm: 0 })
     for (const r of routes || []) {
       const a = agg.get(r.inspector_id)
       if (!a) continue
@@ -83,6 +99,10 @@ export async function GET(request: NextRequest) {
       // All-prepaid carry-over days were already paid for → exclude from km/fuel.
       const allPrepaid = stops.every((s: any) => s.prepaid)
       if (!allPrepaid) a.km += r.total_distance_km || 0
+      if (approvedSet.has(`${r.inspector_id}|${georgiaMondayOfDate(r.date)}`))
+        for (const s of stops)
+          if (!s.prepaid && (s.status === 'skipped' || s.status === 'failed'))
+            a.wastedKm += s.distance_from_previous_km || 0
     }
 
     const range = georgiaDayRange(from, to)
@@ -115,6 +135,9 @@ export async function GET(request: NextRequest) {
       const typePrice = fuelType ? toPrice(priceByKey.get(FUEL_KEYS[fuelType])) : null
       const price = t?.fuel_price_per_liter ?? typePrice
       const cost = liters != null && price != null ? liters * price : null
+      const wastedLiters =
+        consumption != null && a.wastedKm > 0 ? (a.wastedKm * consumption) / 100 : 0
+      const wasted = price != null ? wastedLiters * price : 0
       return {
         name: u.full_name || u.email,
         org: t?.org ?? null,
@@ -125,6 +148,7 @@ export async function GET(request: NextRequest) {
         km: Number(a.km.toFixed(1)),
         liters: liters != null ? Number(liters.toFixed(1)) : null,
         cost: cost != null ? Number(cost.toFixed(1)) : null,
+        wasted: Number(wasted.toFixed(1)),
         minutes: minutesOf.get(u.id) ?? 0,
         unplanned: extraOf.get(u.id) ?? 0,
       }

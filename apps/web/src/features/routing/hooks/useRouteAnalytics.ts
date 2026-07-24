@@ -16,6 +16,11 @@ export interface OfficerWeekSummary {
   minutes: number
   consumption: number | null
   liters: number | null
+  /** Fuel bought for objects the officer never reached this week (skipped/failed
+   *  in an approved week) — the officer's fuel "debt". */
+  wastedKm: number
+  wastedLiters: number
+  wastedCost: number
   /** The officer's fuel type (drives which global price applies). */
   fuelType: FuelType | null
   /** The officer's own price override (null → inherits the type's global price). */
@@ -48,14 +53,21 @@ export function useRouteAnalytics(weekStart: string) {
 export interface WeekSlice {
   weekStart: string
   weekEnd: string
-  fleet: { km: number; liters: number; cost: number; minutes: number; planning: number }
+  fleet: {
+    km: number
+    liters: number
+    cost: number
+    minutes: number
+    planning: number
+    wastedCost: number
+  }
   officers: OfficerWeekSummary[]
 }
 export interface MonthAnalytics {
   month: string
   weekStarts: string[]
   weeks: WeekSlice[]
-  monthTotals: { km: number; liters: number; cost: number; minutes: number }
+  monthTotals: { km: number; liters: number; cost: number; minutes: number; wastedCost: number }
   globalPrices: FuelPrices
 }
 
