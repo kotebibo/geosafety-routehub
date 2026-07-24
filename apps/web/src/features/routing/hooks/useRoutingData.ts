@@ -135,13 +135,13 @@ export function useRoutingItems(boardId: string, plannedByItemId?: Map<string, P
  */
 export function useBoardWeekPlan(board: Board): Map<string, PlannedDay> {
   const officerId = board.settings?.assigned_officer_id ?? ''
-  const { data } = useMyRoutes(officerId)
+  const weekStart = dayKey(mondayOf(0))
+  const weekEnd = addDays(weekStart, 6)
+  const { data } = useMyRoutes(officerId, weekStart, weekEnd)
 
   return useMemo(() => {
     const map = new Map<string, PlannedDay>()
     if (!data?.routes) return map
-    const weekStart = dayKey(mondayOf(0))
-    const weekEnd = addDays(weekStart, 6)
     for (const r of data.routes) {
       if (r.date < weekStart || r.date > weekEnd) continue
       for (const s of r.stops) {
@@ -154,5 +154,5 @@ export function useBoardWeekPlan(board: Board): Map<string, PlannedDay> {
       }
     }
     return map
-  }, [data])
+  }, [data, weekStart, weekEnd])
 }

@@ -18,7 +18,6 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
-import * as XLSX from 'xlsx'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui-monday/Toast'
@@ -103,6 +102,7 @@ export default function RouteAnalyticsPage() {
       km: officers.reduce((s, o) => s + o.totalKm, 0),
       liters: officers.reduce((s, o) => s + (o.liters ?? 0), 0),
       cost: officers.reduce((s, o) => s + (o.cost ?? 0), 0),
+      wastedCost: officers.reduce((s, o) => s + (o.wastedCost ?? 0), 0),
       minutes: officers.reduce((s, o) => s + (o.minutes ?? 0), 0),
       planning: officers.filter(o => o.days > 0).length,
     }),
@@ -153,7 +153,8 @@ export default function RouteAnalyticsPage() {
         t('myWeek.done'),
         t('routing.km'),
         t('officerPlan.fuelL'),
-        '₾',
+        `${t('routeAnalytics.cost')} ₾`,
+        `${t('routeAnalytics.wastedFuel')} ₾`,
         t('routeAnalytics.totalTime'),
         t('routeAnalytics.tab.unplanned'),
       ]
@@ -167,10 +168,31 @@ export default function RouteAnalyticsPage() {
         r.km,
         r.liters ?? '',
         r.cost ?? '',
+        r.wasted ?? 0,
         r.minutes,
         r.unplanned,
       ])
-      const ws = XLSX.utils.aoa_to_sheet([header, ...body])
+      // Totals row: fleet cost + wasted (the two money columns) summed.
+      const sum = (k: string) =>
+        Number((rows as any[]).reduce((s, r) => s + (Number(r[k]) || 0), 0).toFixed(1))
+      const totals = [
+        t('routeAnalytics.total'),
+        '',
+        '',
+        '',
+        '',
+        '',
+        sum('km'),
+        sum('liters'),
+        sum('cost'),
+        sum('wasted'),
+        sum('minutes'),
+        sum('unplanned'),
+      ]
+      // Load xlsx lazily — it's a heavy lib and only needed on export click,
+      // not on every page visit.
+      const XLSX = await import('xlsx')
+      const ws = XLSX.utils.aoa_to_sheet([header, ...body, [], totals])
       const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, 'Routing')
       XLSX.writeFile(wb, `routing-${scope}-${from}.xlsx`)
@@ -232,6 +254,7 @@ export default function RouteAnalyticsPage() {
                   onClick={() =>
                     period === 'week' ? setWeekOffset(w => w - 1) : setMonthOffset(w => w - 1)
                   }
+                  aria-label={t('common.previous')}
                   className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -244,6 +267,7 @@ export default function RouteAnalyticsPage() {
                   onClick={() =>
                     period === 'week' ? setWeekOffset(w => w + 1) : setMonthOffset(w => w + 1)
                   }
+                  aria-label={t('common.next')}
                   className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -363,7 +387,7 @@ export default function RouteAnalyticsPage() {
         {period === 'week' && tab === 'overview' && (
           <>
             {/* Fleet totals */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
               <StatCard
                 label={t('routeAnalytics.planningOfficers')}
                 value={fleet.planning}
@@ -387,6 +411,12 @@ export default function RouteAnalyticsPage() {
                 value={Number(fleet.cost.toFixed(1))}
                 icon={Coins}
                 color="green"
+              />
+              <StatCard
+                label={t('routeAnalytics.wastedFuel')}
+                value={`${fleet.wastedCost.toFixed(1)} ₾`}
+                icon={Coins}
+                color="red"
               />
               <StatCard
                 label={t('routeAnalytics.totalTime')}
@@ -469,6 +499,12 @@ export default function RouteAnalyticsPage() {
                           : '—'}
                       </Chip>
                       {o.cost != null && <Chip icon={Coins}>{o.cost.toFixed(1)} ₾</Chip>}
+                      {o.wastedCost > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-red-500/10 text-red-500 text-xs font-medium">
+                          <Coins className="w-3.5 h-3.5" />
+                          {o.wastedCost.toFixed(1)} ₾ · {t('routeAnalytics.wastedFuelShort')}
+                        </span>
+                      )}
                       {o.minutes > 0 && (
                         <Chip icon={Clock}>
                           {o.minutes}

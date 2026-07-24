@@ -2095,7 +2095,10 @@
       "extra_visit_rejected": "Unplanned visit rejected"
     },
     "searchOfficer": "Search by name…",
-    "noOfficerMatch": "No officer found"
+    "noOfficerMatch": "No officer found",
+    "wastedFuel": "Wasted fuel (debt)",
+    "wastedFuelShort": "Debt",
+    "total": "Total"
   },
   "locations": {
     "dataLoading": "Loading data...",

@@ -187,6 +187,7 @@ export function RouteMapModal({
           <button
             type="button"
             onClick={onClose}
+            aria-label={t('common.close')}
             className="p-1.5 rounded-lg hover:bg-bg-hover transition-colors"
           >
             <X className="w-5 h-5 text-text-secondary" />

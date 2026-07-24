@@ -165,6 +165,26 @@ export async function POST(request: NextRequest) {
         .eq('id', validated.board_item_id)
         .single()
 
+      // Board ownership: block a non-manager only from checking in on a board
+      // explicitly assigned to a DIFFERENT officer (the cross-team IDOR — the UI
+      // never exposes other teams' items, but the service client below would
+      // otherwise let a crafted request mutate their item stage). A board with no
+      // assigned officer has no owner to impersonate, so it stays open — matching
+      // pre-routing behaviour and not breaking check-ins on unassigned boards.
+      if (item && !isAdminOrDispatcher) {
+        const { data: board } = await serviceClient
+          .from('boards')
+          .select('settings')
+          .eq('id', item.board_id)
+          .maybeSingle()
+        const assignedOfficer = (board?.settings as any)?.assigned_officer_id ?? null
+        if (assignedOfficer && assignedOfficer !== validated.inspector_id)
+          return NextResponse.json(
+            { error: 'Cannot check in on an object outside your board' },
+            { status: 403 }
+          )
+      }
+
       if (item) {
         // Config comes from the checkin column the sheet was opened from;
         // fall back to the board's first checkin column for older clients.

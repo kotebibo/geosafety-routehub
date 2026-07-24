@@ -33,7 +33,7 @@ export function MonthBreakdown({ month, onSelect }: MonthBreakdownProps) {
   return (
     <div className="space-y-6">
       {/* Month totals */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <TotalCard
           icon={Navigation}
           label={t('routeAnalytics.distanceKm')}
@@ -51,6 +51,12 @@ export function MonthBreakdown({ month, onSelect }: MonthBreakdownProps) {
           label={t('routeAnalytics.totalCost')}
           value={`${monthTotals.cost.toFixed(1)} ₾`}
           tint="green"
+        />
+        <TotalCard
+          icon={Coins}
+          label={t('routeAnalytics.wastedFuel')}
+          value={`${monthTotals.wastedCost.toFixed(1)} ₾`}
+          tint="red"
         />
         <TotalCard
           icon={Clock}
@@ -116,6 +122,12 @@ function WeekSliceCard({
             <Coins className="w-3.5 h-3.5 text-text-tertiary" />
             {week.fleet.cost.toFixed(1)} ₾
           </span>
+          {week.fleet.wastedCost > 0 && (
+            <span className="inline-flex items-center gap-1 font-semibold text-red-500">
+              <Coins className="w-3.5 h-3.5" />
+              {week.fleet.wastedCost.toFixed(1)} ₾
+            </span>
+          )}
         </div>
       </div>
 
@@ -154,6 +166,7 @@ const TINTS = {
   amber: 'bg-amber-500/10 text-amber-500',
   green: 'bg-green-500/10 text-green-600',
   blue: 'bg-bright-blue/10 text-bright-blue',
+  red: 'bg-red-500/10 text-red-500',
 } as const
 
 function TotalCard({

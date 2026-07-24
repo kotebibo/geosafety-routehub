@@ -32,7 +32,7 @@ export function OfficerWeekPopup({
 }: OfficerWeekPopupProps) {
   const t = useTranslations()
   const { showToast } = useToast()
-  const { data, isLoading } = useMyRoutes(summary.officerId)
+  const { data, isLoading } = useMyRoutes(summary.officerId, weekStart, addDays(weekStart, 6))
   const officerWeek = useOfficerWeek(summary.officerId, weekStart)
   const confirm = useConfirmCancel()
   const routes = data?.routes ?? []
@@ -94,6 +94,7 @@ export function OfficerWeekPopup({
           <button
             type="button"
             onClick={onClose}
+            aria-label={t('common.close')}
             className="p-1.5 rounded-lg hover:bg-bg-hover transition-colors flex-shrink-0"
           >
             <X className="w-5 h-5 text-text-secondary" />
@@ -166,6 +167,16 @@ export function OfficerWeekPopup({
               {liveCost != null ? `${liveCost.toFixed(1)} ₾` : '—'}
             </span>
           </div>
+          {/* Fuel bought for objects the officer never reached (debt). */}
+          {summary.wastedCost > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="inline-flex items-center gap-1 text-red-500">
+                <Coins className="w-3.5 h-3.5" />
+                {t('routeAnalytics.wastedFuel')}
+              </span>
+              <span className="font-medium text-red-500">{summary.wastedCost.toFixed(1)} ₾</span>
+            </div>
+          )}
         </div>
 
         {/* Tabs: week plan vs. failed (carried-over, paid-but-unvisited) */}
