@@ -47,6 +47,8 @@ import {
   SelectContent,
   SelectItem,
 } from '@/shared/components/ui/select'
+import { PhoneInput } from '@/shared/components/ui/PhoneInput'
+import { formatPhoneInput } from '@/lib/phone/format'
 
 export default function UserManagementPage() {
   const t = useTranslations()
@@ -165,7 +167,7 @@ export default function UserManagementPage() {
     setEditingUserId(user.id)
     setEditForm({
       full_name: user.full_name || '',
-      phone: user.phone || '',
+      phone: formatPhoneInput(user.phone || ''),
       role: user.role?.role || '',
     })
   }
@@ -413,12 +415,11 @@ export default function UserManagementPage() {
                   <label className="block text-sm font-medium text-text-secondary mb-1">
                     {t('admin.users.phone')}
                   </label>
-                  <input
-                    type="text"
+                  <PhoneInput
                     value={createForm.phone}
-                    onChange={e => setCreateForm({ ...createForm, phone: e.target.value })}
+                    onChange={phone => setCreateForm({ ...createForm, phone })}
                     className="w-full px-3 py-2 bg-bg-primary text-text-primary border border-border-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-monday-primary placeholder-text-tertiary"
-                    placeholder="+995 ..."
+                    placeholder="+995 555 99 22 12"
                   />
                 </div>
 
@@ -763,10 +764,9 @@ export default function UserManagementPage() {
                             placeholder={t('admin.users.fullName')}
                             className="w-full px-3 py-1.5 border border-border-medium rounded text-sm"
                           />
-                          <input
-                            type="text"
+                          <PhoneInput
                             value={editForm.phone}
-                            onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                            onChange={phone => setEditForm({ ...editForm, phone })}
                             placeholder={t('admin.users.phone')}
                             className="w-full px-3 py-1.5 border border-border-medium rounded text-sm"
                           />
@@ -787,7 +787,7 @@ export default function UserManagementPage() {
                             {user.phone && (
                               <p className="text-sm text-text-secondary flex items-center gap-1">
                                 <Phone className="w-3 h-3" />
-                                {user.phone}
+                                {formatPhoneInput(user.phone)}
                               </p>
                             )}
                           </div>
