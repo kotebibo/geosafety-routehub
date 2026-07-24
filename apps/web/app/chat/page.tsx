@@ -32,6 +32,7 @@ import {
   Pin,
   Pencil,
   MoreVertical,
+  Download,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { ChatSkeleton } from '@/features/chat/components/ChatSkeleton'
@@ -178,16 +179,20 @@ const MarkdownContent = memo(function MarkdownContent({
           else downloadRowsAsXlsx(rows, filename)
         }
         const exportButtonClass =
-          'rounded border border-border-light bg-bg-primary px-1.5 py-0.5 text-[10px] font-medium text-text-secondary hover:text-text-primary'
+          'inline-flex items-center gap-1 rounded border border-border-light bg-bg-primary px-1.5 py-0.5 text-[10px] font-medium text-text-secondary transition-colors hover:bg-bg-hover hover:text-text-primary'
+        // Buttons live outside the overflow-x-auto container: absolutely
+        // positioned children of a scroll container scroll with the content,
+        // which pushed the buttons mid-table whenever the table overflowed.
         return (
-          <div className="group/table relative overflow-x-auto pt-1">
-            <div className="absolute right-0 top-0 z-10 flex gap-1 md:opacity-0 md:transition-opacity md:group-hover/table:opacity-100">
+          <div className="pt-1">
+            <div className="mb-1 flex justify-end gap-1">
               <button
                 type="button"
                 onClick={() => exportRows('csv')}
                 title={t('chat.exportCsv')}
                 className={exportButtonClass}
               >
+                <Download className="h-3 w-3" />
                 CSV
               </button>
               <button
@@ -196,10 +201,13 @@ const MarkdownContent = memo(function MarkdownContent({
                 title={t('chat.exportXlsx')}
                 className={exportButtonClass}
               >
+                <Download className="h-3 w-3" />
                 XLSX
               </button>
             </div>
-            <table className="w-full border-collapse text-xs">{children}</table>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-xs">{children}</table>
+            </div>
           </div>
         )
       },
