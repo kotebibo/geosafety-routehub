@@ -16,10 +16,3 @@ export const STOP_STATE_HEX: Record<StopVisitState, string> = {
   in_progress: '#F59E0B', // amber (in progress)
   done: '#22C55E', // green (done)
 }
-
-/** Tailwind text/bg classes per state (for list rows / badges). */
-export const STOP_STATE_CLASS: Record<StopVisitState, string> = {
-  pending: 'bg-bg-tertiary text-text-tertiary',
-  in_progress: 'bg-amber-500/15 text-amber-500 border border-amber-500/30',
-  done: 'bg-green-500/15 text-green-600 border border-green-500/30',
-}

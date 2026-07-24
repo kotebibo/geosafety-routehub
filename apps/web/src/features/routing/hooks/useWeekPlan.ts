@@ -80,6 +80,15 @@ export function useSaveWeekPlan() {
       queryClient.invalidateQueries({
         queryKey: ['week-plan', variables.inspectorId, variables.weekStart],
       })
+      // Saving rewrites the officer's routes/stops — refresh everything derived
+      // from them so the week reads consistently without a manual reload:
+      // My Week + board chips (my-routes), the planner's execution panels
+      // (week-execution) and, when a manager saves, the analytics/requests views.
+      queryClient.invalidateQueries({ queryKey: ['my-routes', variables.inspectorId] })
+      queryClient.invalidateQueries({ queryKey: ['week-execution'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics'] })
+      queryClient.invalidateQueries({ queryKey: ['route-analytics-month'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-week'] })
     },
   })
 }

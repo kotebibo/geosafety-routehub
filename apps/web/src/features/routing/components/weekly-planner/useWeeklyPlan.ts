@@ -10,6 +10,7 @@ import { resolveLocation, DEFAULT_GEOCODE_CITY } from '../../lib/geocode'
 import { resolveLocationColumns } from '../../lib/location-columns'
 import { useSetItemCoords } from '../../hooks/useSetItemCoords'
 import { useRoutingItems } from '../../hooks/useRoutingData'
+import { useServerDate } from '@/hooks/useServerDate'
 import { useInspectorLocation } from '../../hooks/useInspectorLocation'
 import { useOfficerTransport } from '../../hooks/useOfficerTransport'
 import { useRouteOptimizer } from '../../hooks/useRouteOptimizer'
@@ -36,6 +37,7 @@ export function useWeeklyPlan(board: Board, opts?: { initialWeekOffset?: number 
   const { data: transport } = useOfficerTransport(inspectorId)
   const { data: columns = [] } = useBoardColumns(board.board_type, board.id)
   const optimizer = useRouteOptimizer()
+  const serverDate = useServerDate()
 
   // Start-point cascade: the board's explicit start wins; otherwise fall back to
   // the assigned officer's profile route-start, then their home location.
@@ -305,7 +307,10 @@ export function useWeeklyPlan(board: Board, opts?: { initialWeekOffset?: number 
 
   // Mid-week ad-hoc visit: enabled only for the current week (weekOffset 0).
   const isCurrentWeek = weekOffset === 0
-  const todayKey = dayKey(new Date())
+  // "Today" comes from the server (Georgia date), not the device clock — a wrong
+  // or drifting local clock must not shift which day the planner treats as today.
+  // Falls back to the device date only for the brief window before it loads.
+  const todayKey = serverDate.data?.georgiaDate ?? dayKey(new Date())
   const todayIndex = days.findIndex(d => dayKey(d) === todayKey)
   const assignedThisWeek = useMemo(() => new Set(Object.values(assignments).flat()), [assignments])
   const extraIds = useMemo(() => new Set(extraVisits.map(e => e.itemId)), [extraVisits])

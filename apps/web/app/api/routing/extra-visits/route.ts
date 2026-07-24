@@ -2,16 +2,11 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireAuth } from '@/middleware/auth'
-import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { requireAuth, getRole } from '@/middleware/auth'
+import { createServiceClient } from '@/lib/supabase/server'
 import { notifyManagers } from '@/features/routing/lib/routing-notify'
 import { logRoutingAudit } from '@/features/routing/lib/routing-audit'
 import { georgiaMondayOfDate } from '@/lib/time'
-
-async function roleOf(supabase: any, userId: string): Promise<string | null> {
-  const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single()
-  return data?.role ?? null
-}
 
 function weekRange(weekStart: string): { from: string; to: string } {
   const [y, m, d] = weekStart.split('-').map(Number)
@@ -30,8 +25,7 @@ export async function GET(request: NextRequest) {
     if (!inspectorId || !weekStart)
       return NextResponse.json({ error: 'inspectorId and weekStart required' }, { status: 400 })
 
-    const supabase = createServerClient() as any
-    const role = await roleOf(supabase, session.user.id)
+    const role = await getRole(session.user.id)
     const isManager = role === 'admin' || role === 'dispatcher'
     if (inspectorId !== session.user.id && !isManager)
       return NextResponse.json({ error: 'Cannot view another officer’s visits' }, { status: 403 })
@@ -85,11 +79,10 @@ const createSchema = z.object({
 // POST — request an extra visit (officer own, or admin on their behalf).
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerClient() as any
     const session = await requireAuth()
     const v = createSchema.parse(await request.json())
 
-    const role = await roleOf(supabase, session.user.id)
+    const role = await getRole(session.user.id)
     const isManager = role === 'admin' || role === 'dispatcher'
     if (v.inspectorId !== session.user.id && !isManager)
       return NextResponse.json({ error: 'Cannot add for another officer' }, { status: 403 })
@@ -156,11 +149,10 @@ const patchSchema = z.object({
 // PATCH — admin approves/rejects an extra-visit request.
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = createServerClient() as any
     const session = await requireAuth()
     const { id, action } = patchSchema.parse(await request.json())
 
-    if ((await roleOf(supabase, session.user.id)) !== 'admin')
+    if ((await getRole(session.user.id)) !== 'admin')
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
 
     const svc = createServiceClient() as any

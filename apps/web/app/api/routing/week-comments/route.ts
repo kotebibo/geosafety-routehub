@@ -2,8 +2,8 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireAuth } from '@/middleware/auth'
-import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { requireAuth, getRole } from '@/middleware/auth'
+import { createServiceClient } from '@/lib/supabase/server'
 import { notifyUser } from '@/lib/notify'
 import { notifyManagers } from '@/features/routing/lib/routing-notify'
 
@@ -12,11 +12,6 @@ const postSchema = z.object({
   weekStart: z.string(),
   body: z.string().trim().min(1).max(2000),
 })
-
-async function roleOf(supabase: any, userId: string): Promise<string | null> {
-  const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single()
-  return data?.role ?? null
-}
 
 // GET ?inspectorId=&weekStart= — comments on an officer's week (oldest first).
 // Officer sees own; managers any.
@@ -29,8 +24,7 @@ export async function GET(request: NextRequest) {
     if (!inspectorId || !weekStart)
       return NextResponse.json({ error: 'inspectorId and weekStart required' }, { status: 400 })
 
-    const supabase = createServerClient() as any
-    const role = await roleOf(supabase, session.user.id)
+    const role = await getRole(session.user.id)
     const isManager = role === 'admin' || role === 'dispatcher'
     if (!isManager && inspectorId !== session.user.id)
       return NextResponse.json({ error: 'Cannot view another officer’s comments' }, { status: 403 })
@@ -77,8 +71,7 @@ export async function POST(request: NextRequest) {
     const session = await requireAuth()
     const { inspectorId, weekStart, body } = postSchema.parse(await request.json())
 
-    const supabase = createServerClient() as any
-    const role = await roleOf(supabase, session.user.id)
+    const role = await getRole(session.user.id)
     const isManager = role === 'admin' || role === 'dispatcher'
     if (!isManager && inspectorId !== session.user.id)
       return NextResponse.json(

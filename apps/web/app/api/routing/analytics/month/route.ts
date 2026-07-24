@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { georgiaDateOf, georgiaDayRange } from '@/lib/time'
+import { FUEL_KEYS, toPrice } from '@/features/routing/lib/fuel-pricing'
 
 const DAY = 86400000
 
@@ -26,18 +27,13 @@ function monthWeeks(month: string): { weekStarts: string[]; rangeStart: string; 
   return { weekStarts, rangeStart, rangeEnd }
 }
 
-const FUEL_KEYS = {
-  petrol: 'fuel_price_petrol',
-  diesel: 'fuel_price_diesel',
-  gas: 'fuel_price_gas',
-} as const
-
 interface Agg {
   totalKm: number
   days: number
   stopCount: number
   visitedCount: number
   minutes: number
+  wastedKm: number
 }
 
 // GET ?month=YYYY-MM — per-week analytics slices for a whole month. Each slice
@@ -79,10 +75,42 @@ export async function GET(request: NextRequest) {
         globalPrices: emptyPrices(),
       })
 
-    const { data: transport } = await svc
-      .from('officer_transport')
-      .select('user_id, consumption_l_per_100km, fuel_price_per_liter, fuel_type')
-      .in('user_id', activeIds)
+    // All five reads depend only on activeIds/range — run them together.
+    const ciRange = georgiaDayRange(rangeStart, rangeEnd)
+    const [
+      { data: transport },
+      { data: priceRows },
+      { data: routes },
+      { data: approvedPlans },
+      { data: checkins },
+    ] = await Promise.all([
+      svc
+        .from('officer_transport')
+        .select('user_id, consumption_l_per_100km, fuel_price_per_liter, fuel_type')
+        .in('user_id', activeIds),
+      svc.from('app_settings').select('key, value').in('key', Object.values(FUEL_KEYS)),
+      svc
+        .from('routes')
+        .select(
+          'inspector_id, date, total_distance_km, route_stops(status, prepaid, distance_from_previous_km)'
+        )
+        .in('inspector_id', activeIds)
+        .gte('date', rangeStart)
+        .lte('date', rangeEnd),
+      // Approved (fuel-bought) weeks — only these carry a wasted-fuel debt.
+      svc
+        .from('week_plans')
+        .select('inspector_id, week_start')
+        .eq('status', 'approved')
+        .in('inspector_id', activeIds)
+        .in('week_start', weekStarts),
+      svc
+        .from('location_checkins')
+        .select('inspector_id, duration_minutes, created_at')
+        .in('inspector_id', activeIds)
+        .gte('created_at', ciRange.gte)
+        .lte('created_at', ciRange.lte),
+    ])
     const consumptionOf = new Map<string, number | null>(
       (transport || []).map((t: any) => [t.user_id, t.consumption_l_per_100km])
     )
@@ -93,16 +121,7 @@ export async function GET(request: NextRequest) {
       (transport || []).map((t: any) => [t.user_id, t.fuel_type])
     )
 
-    const { data: priceRows } = await svc
-      .from('app_settings')
-      .select('key, value')
-      .in('key', Object.values(FUEL_KEYS))
     const priceByKey = new Map<string, string>((priceRows || []).map((r: any) => [r.key, r.value]))
-    const toPrice = (v: unknown): number | null => {
-      if (v == null || v === '') return null
-      const n = Number(v)
-      return isNaN(n) ? null : n
-    }
     const globalPrices = {
       petrol: toPrice(priceByKey.get(FUEL_KEYS.petrol)),
       diesel: toPrice(priceByKey.get(FUEL_KEYS.diesel)),
@@ -114,19 +133,9 @@ export async function GET(request: NextRequest) {
     const weekIndexOf = (dateStr: string): number =>
       Math.floor((Date.parse(`${dateStr}T00:00:00Z`) - firstMondayMs) / (7 * DAY))
 
-    const { data: routes } = await svc
-      .from('routes')
-      .select('inspector_id, date, total_distance_km, route_stops(status, prepaid)')
-      .in('inspector_id', activeIds)
-      .gte('date', rangeStart)
-      .lte('date', rangeEnd)
-    const ciRange = georgiaDayRange(rangeStart, rangeEnd)
-    const { data: checkins } = await svc
-      .from('location_checkins')
-      .select('inspector_id, duration_minutes, created_at')
-      .in('inspector_id', activeIds)
-      .gte('created_at', ciRange.gte)
-      .lte('created_at', ciRange.lte)
+    const approvedSet = new Set<string>(
+      (approvedPlans || []).map((p: any) => `${p.inspector_id}|${p.week_start}`)
+    )
 
     // aggByWeek[weekIndex] = Map(officerId → Agg)
     const aggByWeek: Map<string, Agg>[] = weekStarts.map(
@@ -148,6 +157,10 @@ export async function GET(request: NextRequest) {
       ).length
       const allPrepaid = stops.every((s: any) => s.prepaid)
       if (!allPrepaid) agg.totalKm += r.total_distance_km || 0
+      if (approvedSet.has(`${r.inspector_id}|${weekStarts[wi]}`))
+        for (const s of stops)
+          if (!s.prepaid && (s.status === 'skipped' || s.status === 'failed'))
+            agg.wastedKm += s.distance_from_previous_km || 0
     }
     for (const c of checkins || []) {
       if (c.duration_minutes == null) continue
@@ -166,6 +179,9 @@ export async function GET(request: NextRequest) {
       const typePrice = fuelType ? globalPrices[fuelType] : null
       const fuelPrice = priceOverride ?? typePrice
       const cost = liters != null && fuelPrice != null ? liters * fuelPrice : null
+      const wastedLiters =
+        consumption != null && agg.wastedKm > 0 ? (agg.wastedKm * consumption) / 100 : 0
+      const wastedCost = fuelPrice != null ? wastedLiters * fuelPrice : 0
       return {
         officerId: u.id,
         name: u.full_name || u.email,
@@ -177,6 +193,9 @@ export async function GET(request: NextRequest) {
         minutes: agg.minutes,
         consumption,
         liters,
+        wastedKm: agg.wastedKm,
+        wastedLiters,
+        wastedCost,
         fuelType,
         priceOverride,
         fuelPrice,
@@ -195,8 +214,9 @@ export async function GET(request: NextRequest) {
           cost: s.cost + (o.cost ?? 0),
           minutes: s.minutes + o.minutes,
           planning: s.planning + (o.days > 0 ? 1 : 0),
+          wastedCost: s.wastedCost + (o.wastedCost ?? 0),
         }),
-        { km: 0, liters: 0, cost: 0, minutes: 0, planning: 0 }
+        { km: 0, liters: 0, cost: 0, minutes: 0, planning: 0, wastedCost: 0 }
       )
       return {
         weekStart,
@@ -212,6 +232,7 @@ export async function GET(request: NextRequest) {
         liters: s.liters + w.fleet.liters,
         cost: s.cost + w.fleet.cost,
         minutes: s.minutes + w.fleet.minutes,
+        wastedCost: s.wastedCost + w.fleet.wastedCost,
       }),
       empty()
     )
@@ -228,10 +249,10 @@ export async function GET(request: NextRequest) {
 }
 
 function blank(): Agg {
-  return { totalKm: 0, days: 0, stopCount: 0, visitedCount: 0, minutes: 0 }
+  return { totalKm: 0, days: 0, stopCount: 0, visitedCount: 0, minutes: 0, wastedKm: 0 }
 }
 function empty() {
-  return { km: 0, liters: 0, cost: 0, minutes: 0 }
+  return { km: 0, liters: 0, cost: 0, minutes: 0, wastedCost: 0 }
 }
 function emptyPrices() {
   return { petrol: null, diesel: null, gas: null }

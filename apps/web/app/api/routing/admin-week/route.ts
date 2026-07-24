@@ -3,13 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
-
-function weekDates(weekStart: string): string[] {
-  const [y, m, d] = weekStart.split('-').map(Number)
-  return Array.from({ length: 7 }, (_, i) =>
-    new Date(Date.UTC(y, m - 1, d + i)).toISOString().slice(0, 10)
-  )
-}
+import { weekDatesFrom } from '@/lib/time'
 
 // GET ?weekStart= — admin/dispatcher work queue for a week:
 //   requests   — submitted week plans awaiting approval (officer + km/fuel)
@@ -31,7 +25,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
 
     const svc = createServiceClient() as any
-    const dates = weekDates(weekStart)
+    const dates = weekDatesFrom(weekStart)
     const weekEnd = dates[6]
 
     // Names: officers (users) + board items resolved lazily below.
@@ -50,12 +44,31 @@ export async function GET(request: NextRequest) {
       for (const it of data || []) nameOfItem.set(it.id, it.name)
     }
 
-    // --- Requests: submitted week plans for this week ---
-    const { data: planRows } = await svc
-      .from('week_plans')
-      .select('id, inspector_id, week_start, status, submitted_at')
-      .eq('week_start', weekStart)
-      .eq('status', 'submitted')
+    // The three list queries are independent (same week window) — run together.
+    const [{ data: planRows }, { data: evRows }, { data: defRoutes }] = await Promise.all([
+      // Requests: submitted week plans for this week
+      svc
+        .from('week_plans')
+        .select('id, inspector_id, week_start, status, submitted_at')
+        .eq('week_start', weekStart)
+        .eq('status', 'submitted'),
+      // Unplanned: extra-visit requests this week
+      svc
+        .from('extra_visits')
+        .select('id, inspector_id, board_item_id, visit_date, distance_km, reason, status')
+        .gte('visit_date', weekStart)
+        .lte('visit_date', weekEnd)
+        .order('created_at', { ascending: true }),
+      // Deferred: skipped stops on this week's routes
+      svc
+        .from('routes')
+        .select(
+          'date, inspector_id, route_stops(id, board_item_id, status, skip_reason, skip_note, deferred_at)'
+        )
+        .in('date', dates),
+    ])
+
+    // --- Requests ---
     await resolveUsers((planRows || []).map((p: any) => p.inspector_id))
     // km per requesting officer (sum of the week's routes)
     const reqIds = (planRows || []).map((p: any) => p.inspector_id)
@@ -80,13 +93,7 @@ export async function GET(request: NextRequest) {
       totalKm: kmByOfficer.get(p.inspector_id) ?? 0,
     }))
 
-    // --- Unplanned: extra-visit requests this week ---
-    const { data: evRows } = await svc
-      .from('extra_visits')
-      .select('id, inspector_id, board_item_id, visit_date, distance_km, reason, status')
-      .gte('visit_date', weekStart)
-      .lte('visit_date', weekEnd)
-      .order('created_at', { ascending: true })
+    // --- Unplanned ---
     await resolveUsers((evRows || []).map((e: any) => e.inspector_id))
     await resolveItems((evRows || []).map((e: any) => e.board_item_id).filter(Boolean))
     const unplanned = (evRows || []).map((e: any) => ({
@@ -101,13 +108,7 @@ export async function GET(request: NextRequest) {
       status: e.status,
     }))
 
-    // --- Deferred: skipped stops on this week's routes ---
-    const { data: defRoutes } = await svc
-      .from('routes')
-      .select(
-        'date, inspector_id, route_stops(id, board_item_id, status, skip_reason, skip_note, deferred_at)'
-      )
-      .in('date', dates)
+    // --- Deferred ---
     const deferred: any[] = []
     for (const r of defRoutes || []) {
       for (const st of r.route_stops || []) {

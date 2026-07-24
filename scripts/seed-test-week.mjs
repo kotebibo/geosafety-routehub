@@ -157,15 +157,34 @@ async function main() {
         const dates = Array.from({ length: 7 }, (_, i) => isoDate(monday + i * DAY))
         const { data: old } = await db
           .from('routes')
-          .select('id')
+          .select('id, route_stops(id)')
           .eq('inspector_id', o.id)
           .in('date', dates)
         const oldIds = (old || []).map(r => r.id)
+        // Delete check-ins by STOP id (the FK is ON DELETE SET NULL, so deleting
+        // routes/stops alone would orphan them → doubled visit history on re-run).
+        // Also sweep by inspector+week-window to clear any orphans a prior buggy
+        // run already detached from their stop.
+        const oldStopIds = (old || []).flatMap(r => (r.route_stops || []).map(s => s.id))
+        if (oldStopIds.length)
+          await db.from('location_checkins').delete().in('route_stop_id', oldStopIds)
+        await db
+          .from('location_checkins')
+          .delete()
+          .eq('inspector_id', o.id)
+          .gte('created_at', iso(monday))
+          .lt('created_at', iso(monday + 7 * DAY))
         if (oldIds.length) {
           await db.from('route_stops').delete().in('route_id', oldIds)
-          await db.from('location_checkins').delete().in('route_stop_id', oldIds) // safety
           await db.from('routes').delete().in('id', oldIds)
         }
+        // week_plan_comments has no unique key on (inspector, week) — clear this
+        // officer's week comments so re-running doesn't stack duplicates.
+        await db
+          .from('week_plan_comments')
+          .delete()
+          .eq('inspector_id', o.id)
+          .eq('week_start', weekStart)
       }
 
       // distribute up to 14 items across the week, ~2 per day

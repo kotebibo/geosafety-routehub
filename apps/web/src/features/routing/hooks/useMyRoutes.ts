@@ -38,12 +38,20 @@ export interface MyRoutesResult {
   start: { lat: number; lng: number } | null
 }
 
-/** An officer's planned/in-progress/completed routes (managers may pass any id). */
-export function useMyRoutes(inspectorId: string) {
+/**
+ * An officer's routes (managers may pass any id). Always pass a `from`/`to`
+ * window (a week) — without it the API returns the officer's ENTIRE route
+ * history, which grows unbounded. The window is part of the query key so callers
+ * with different ranges don't share one cache entry.
+ */
+export function useMyRoutes(inspectorId: string, from?: string, to?: string) {
   return useQuery({
-    queryKey: ['my-routes', inspectorId],
+    queryKey: ['my-routes', inspectorId, from ?? null, to ?? null],
     queryFn: async (): Promise<MyRoutesResult> => {
-      const res = await fetch(`/api/routing/my-routes?inspectorId=${inspectorId}`)
+      const qs = new URLSearchParams({ inspectorId })
+      if (from) qs.set('from', from)
+      if (to) qs.set('to', to)
+      const res = await fetch(`/api/routing/my-routes?${qs.toString()}`)
       if (!res.ok) throw new Error('Failed to load routes')
       const data = await res.json()
       return { routes: (data.routes ?? []) as OfficerRoute[], start: data.start ?? null }
@@ -102,9 +110,11 @@ export function useUpdateStopStatus(inspectorId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-routes', inspectorId] })
       // A deferral also shows in the deviation sections (officer-week), the
+      // planner's execution panels (week-execution, drives missedPlanned), the
       // admin deferred tab (admin-week) and the change history — refresh them so
       // the UI updates without a page refresh.
       queryClient.invalidateQueries({ queryKey: ['officer-week'] })
+      queryClient.invalidateQueries({ queryKey: ['week-execution'] })
       queryClient.invalidateQueries({ queryKey: ['admin-week'] })
       queryClient.invalidateQueries({ queryKey: ['routing-audit'] })
     },
