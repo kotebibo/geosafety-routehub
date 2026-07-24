@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { georgiaMondayOfDate } from '@/lib/time'
 
 function weekDates(weekStart: string): string[] {
   const [y, m, d] = weekStart.split('-').map(Number)
@@ -76,6 +77,15 @@ export async function GET(request: NextRequest) {
       )
       .eq('inspector_id', inspectorId)
       .lte('date', weekEnd)
+    // "failed" only counts objects from an APPROVED (fuel-bought) prior week —
+    // mirrors the prepaid carry-over rule so the two features agree.
+    const { data: approvedPlans } = await svc
+      .from('week_plans')
+      .select('week_start')
+      .eq('inspector_id', inspectorId)
+      .eq('status', 'approved')
+      .lt('week_start', weekStart)
+    const approvedWeeks = new Set<string>((approvedPlans || []).map((p: any) => p.week_start))
     const deviation: any[] = []
     // Failed = objects whose LATEST prior stop was an unresolved skip (paid but
     // not visited, not canceled+confirmed). Tracking only the latest prior stop
@@ -100,7 +110,12 @@ export async function GET(request: NextRequest) {
       }
     }
     const failed = Array.from(priorLatest.values())
-      .filter(s => s.status === 'skipped' && !(s.skip_reason === 'canceled' && s.skip_confirmed))
+      .filter(
+        s =>
+          s.status === 'skipped' &&
+          !(s.skip_reason === 'canceled' && s.skip_confirmed) &&
+          approvedWeeks.has(georgiaMondayOfDate(s.date))
+      )
       .map(s => ({
         stopId: s.id,
         boardItemId: s.board_item_id,

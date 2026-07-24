@@ -43,14 +43,6 @@ export function MyWeekPage() {
   const t = useTranslations()
   const { user } = useAuth()
   const { board, isLoading: boardLoading } = useOfficerBoard()
-  const { data, isLoading } = useMyRoutes(user?.id || '')
-  const { data: items = [] } = useBoardItems(board?.id || '')
-  const { data: columns = [] } = useBoardColumns(board?.board_type || 'custom', board?.id || '')
-
-  const checkinColumn = useMemo(
-    () => (columns as BoardColumn[]).find(c => c.column_type === 'checkin') ?? null,
-    [columns]
-  )
 
   // Current week/day come from the SERVER (Georgia time), so a wrong device
   // clock or a tab left open across midnight can't shift the day. Falls back to
@@ -59,6 +51,17 @@ export function MyWeekPage() {
   const weekStart = serverDate.data?.weekStart ?? dayKey(mondayOf(0))
   const weekEnd = addDays(weekStart, 6)
   const todayKey = serverDate.data?.georgiaDate ?? dayKey(new Date())
+
+  // Only this week's routes — the API is bounded so it doesn't return all history.
+  const { data, isLoading } = useMyRoutes(user?.id || '', weekStart, weekEnd)
+  const { data: items = [] } = useBoardItems(board?.id || '')
+  const { data: columns = [] } = useBoardColumns(board?.board_type || 'custom', board?.id || '')
+
+  const checkinColumn = useMemo(
+    () => (columns as BoardColumn[]).find(c => c.column_type === 'checkin') ?? null,
+    [columns]
+  )
+
   // env: true → check in on a planned stop any day; false → only its planned day.
   const anyDay = process.env.NEXT_PUBLIC_CHECKIN_ANY_DAY === 'true'
   const days = useMemo(

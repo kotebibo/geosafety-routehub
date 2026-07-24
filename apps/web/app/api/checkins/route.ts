@@ -165,6 +165,24 @@ export async function POST(request: NextRequest) {
         .eq('id', validated.board_item_id)
         .single()
 
+      // Board ownership: the check-in's officer must be that board's assigned
+      // officer (managers may check in on any board). The UI never exposes other
+      // teams' items — this blocks hand-crafted requests that would otherwise
+      // mutate another board's item stage via the service client below.
+      if (item && !isAdminOrDispatcher) {
+        const { data: board } = await serviceClient
+          .from('boards')
+          .select('settings')
+          .eq('id', item.board_id)
+          .maybeSingle()
+        const assignedOfficer = (board?.settings as any)?.assigned_officer_id ?? null
+        if (assignedOfficer !== validated.inspector_id)
+          return NextResponse.json(
+            { error: 'Cannot check in on an object outside your board' },
+            { status: 403 }
+          )
+      }
+
       if (item) {
         // Config comes from the checkin column the sheet was opened from;
         // fall back to the board's first checkin column for older clients.

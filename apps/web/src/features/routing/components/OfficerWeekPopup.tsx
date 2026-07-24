@@ -32,7 +32,7 @@ export function OfficerWeekPopup({
 }: OfficerWeekPopupProps) {
   const t = useTranslations()
   const { showToast } = useToast()
-  const { data, isLoading } = useMyRoutes(summary.officerId)
+  const { data, isLoading } = useMyRoutes(summary.officerId, weekStart, addDays(weekStart, 6))
   const officerWeek = useOfficerWeek(summary.officerId, weekStart)
   const confirm = useConfirmCancel()
   const routes = data?.routes ?? []
