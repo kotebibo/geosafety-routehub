@@ -18,7 +18,6 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
-import * as XLSX from 'xlsx'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/components/ui-monday/Toast'
@@ -190,6 +189,9 @@ export default function RouteAnalyticsPage() {
         sum('minutes'),
         sum('unplanned'),
       ]
+      // Load xlsx lazily — it's a heavy lib and only needed on export click,
+      // not on every page visit.
+      const XLSX = await import('xlsx')
       const ws = XLSX.utils.aoa_to_sheet([header, ...body, [], totals])
       const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, 'Routing')
@@ -252,6 +254,7 @@ export default function RouteAnalyticsPage() {
                   onClick={() =>
                     period === 'week' ? setWeekOffset(w => w - 1) : setMonthOffset(w => w - 1)
                   }
+                  aria-label={t('common.previous')}
                   className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -264,6 +267,7 @@ export default function RouteAnalyticsPage() {
                   onClick={() =>
                     period === 'week' ? setWeekOffset(w => w + 1) : setMonthOffset(w => w + 1)
                   }
+                  aria-label={t('common.next')}
                   className="p-1.5 rounded-full text-white hover:bg-white/20 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />

@@ -2,12 +2,13 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireAuth } from '@/middleware/auth'
+import { requireAuth, getRole } from '@/middleware/auth'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { notifyUser } from '@/lib/notify'
 import { notifyManagers } from '@/features/routing/lib/routing-notify'
 import { logRoutingAudit } from '@/features/routing/lib/routing-audit'
-import { georgiaMonday } from '@/lib/time'
+import { georgiaMonday, georgiaMondayOfDate, weekDatesFrom } from '@/lib/time'
+import { FUEL_KEYS } from '@/features/routing/lib/fuel-pricing'
 
 const stopSchema = z.object({
   itemId: z.string().uuid(),
@@ -29,38 +30,16 @@ const saveSchema = z.object({
     .max(7),
 })
 
-function weekDates(weekStart: string): string[] {
-  const [y, m, d] = weekStart.split('-').map(Number)
-  return Array.from({ length: 7 }, (_, i) => {
-    const dt = new Date(Date.UTC(y, m - 1, d + i))
-    return dt.toISOString().slice(0, 10)
-  })
-}
-
-// Monday (YYYY-MM-DD) of the week containing a given date — used to map a prior
-// stop back to its week_plan (Monday-start, Georgian convention).
-function mondayOfDate(dateStr: string): string {
-  const [y, m, d] = dateStr.split('-').map(Number)
-  const dt = new Date(Date.UTC(y, m - 1, d))
-  const dow = (dt.getUTCDay() + 6) % 7 // Mon=0 … Sun=6
-  return new Date(dt.getTime() - dow * 86400000).toISOString().slice(0, 10)
-}
-
 // Monday (YYYY-MM-DD) of next week in Georgia time. Officers may only plan next
 // week; the UI pins them there, this is the server guard.
 function nextWeekMondayGeorgia(): string {
   return georgiaMonday(1)
 }
 
-async function roleOf(supabase: any, userId: string): Promise<string | null> {
-  const { data } = await supabase.from('user_roles').select('role').eq('user_id', userId).single()
-  return data?.role ?? null
-}
-
 // Fuel snapshot for a week: sum planned km (excluding prepaid carry-over stops),
 // × the officer's consumption → liters, × their fuel-type price → cost (₾).
 async function computeWeekFuel(svc: any, inspectorId: string, weekStart: string) {
-  const dates = weekDates(weekStart)
+  const dates = weekDatesFrom(weekStart)
   const { data: routes } = await svc
     .from('routes')
     .select('total_distance_km, route_stops(prepaid)')
@@ -82,17 +61,13 @@ async function computeWeekFuel(svc: any, inspectorId: string, weekStart: string)
   const consumption = t?.consumption_l_per_100km ?? null
   const liters = consumption != null && totalKm > 0 ? (totalKm * consumption) / 100 : null
 
-  const FUEL_KEYS: Record<string, string> = {
-    petrol: 'fuel_price_petrol',
-    diesel: 'fuel_price_diesel',
-    gas: 'fuel_price_gas',
-  }
   let typePrice: number | null = null
-  if (t?.fuel_type && FUEL_KEYS[t.fuel_type]) {
+  const fuelKey = t?.fuel_type ? FUEL_KEYS[t.fuel_type as keyof typeof FUEL_KEYS] : undefined
+  if (fuelKey) {
     const { data: p } = await svc
       .from('app_settings')
       .select('value')
-      .eq('key', FUEL_KEYS[t.fuel_type])
+      .eq('key', fuelKey)
       .maybeSingle()
     const n = p?.value != null && p.value !== '' ? Number(p.value) : null
     typePrice = n != null && !isNaN(n) ? n : null
@@ -115,12 +90,12 @@ export async function GET(request: NextRequest) {
 
     const supabase = createServerClient() as any
     // Officers may only read their own plan; managers may read anyone's.
-    const role = await roleOf(supabase, session.user.id)
+    const role = await getRole(session.user.id)
     const isManager = role === 'admin' || role === 'dispatcher'
     if (!isManager && inspectorId !== session.user.id)
       return NextResponse.json({ error: 'Cannot view another officer’s plan' }, { status: 403 })
 
-    const dates = weekDates(weekStart)
+    const dates = weekDatesFrom(weekStart)
     const { data: routes, error } = await supabase
       .from('routes')
       .select(
@@ -195,7 +170,7 @@ export async function POST(request: NextRequest) {
       )
 
     const svc = createServiceClient() as any
-    const dates = weekDates(v.weekStart)
+    const dates = weekDatesFrom(v.weekStart)
 
     // A submitted/approved plan is locked for the officer — only an admin may
     // edit it on their behalf (officer must ask the admin).
@@ -279,7 +254,11 @@ export async function POST(request: NextRequest) {
         }
       }
       for (const [itemId, s] of latest)
-        if (s.status === 'skipped' && !s.canceledOk && approvedWeeks.has(mondayOfDate(s.date)))
+        if (
+          s.status === 'skipped' &&
+          !s.canceledOk &&
+          approvedWeeks.has(georgiaMondayOfDate(s.date))
+        )
           prepaidItems.add(itemId)
     }
 
@@ -368,9 +347,15 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// weekStart must be a real Monday (YYYY-MM-DD) — the same convention the plan is
+// keyed on; a stray date would upsert a phantom week_plans row.
+const mondayStr = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine(s => georgiaMondayOfDate(s) === s, { message: 'weekStart must be a Monday' })
 const patchSchema = z.object({
   inspectorId: z.string().uuid(),
-  weekStart: z.string(),
+  weekStart: mondayStr,
   action: z.enum(['submit', 'approve', 'reopen']),
 })
 
@@ -384,7 +369,7 @@ export async function PATCH(request: NextRequest) {
     const session = await requireAuth()
     const { inspectorId, weekStart, action } = patchSchema.parse(await request.json())
 
-    const role = await roleOf(supabase, session.user.id)
+    const role = await getRole(session.user.id)
     const isAdmin = role === 'admin'
     const isManager = isAdmin || role === 'dispatcher'
     const isOwner = inspectorId === session.user.id
@@ -402,7 +387,15 @@ export async function PATCH(request: NextRequest) {
       patch.status = 'submitted'
       patch.submitted_at = now
     } else if (action === 'reopen') {
+      // Drop the purchase snapshot — a re-opened draft must not report the old
+      // approved km/fuel/timestamps, or GET would show "draft" with stale money.
       patch.status = 'draft'
+      patch.submitted_at = null
+      patch.approved_at = null
+      patch.approved_by = null
+      patch.total_km = null
+      patch.fuel_liters = null
+      patch.fuel_cost = null
     } else if (action === 'approve') {
       const fuel = await computeWeekFuel(svc, inspectorId, weekStart)
       patch.status = 'approved'

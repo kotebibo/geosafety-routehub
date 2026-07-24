@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
 import { createServiceClient } from '@/lib/supabase/server'
 import { georgiaDateOf, georgiaDayRange } from '@/lib/time'
+import { FUEL_KEYS, toPrice } from '@/features/routing/lib/fuel-pricing'
 
 const DAY = 86400000
 
@@ -25,12 +26,6 @@ function monthWeeks(month: string): { weekStarts: string[]; rangeStart: string; 
   const rangeEnd = iso(firstMonday + (weekStarts.length * 7 - 1) * DAY)
   return { weekStarts, rangeStart, rangeEnd }
 }
-
-const FUEL_KEYS = {
-  petrol: 'fuel_price_petrol',
-  diesel: 'fuel_price_diesel',
-  gas: 'fuel_price_gas',
-} as const
 
 interface Agg {
   totalKm: number
@@ -80,10 +75,42 @@ export async function GET(request: NextRequest) {
         globalPrices: emptyPrices(),
       })
 
-    const { data: transport } = await svc
-      .from('officer_transport')
-      .select('user_id, consumption_l_per_100km, fuel_price_per_liter, fuel_type')
-      .in('user_id', activeIds)
+    // All five reads depend only on activeIds/range — run them together.
+    const ciRange = georgiaDayRange(rangeStart, rangeEnd)
+    const [
+      { data: transport },
+      { data: priceRows },
+      { data: routes },
+      { data: approvedPlans },
+      { data: checkins },
+    ] = await Promise.all([
+      svc
+        .from('officer_transport')
+        .select('user_id, consumption_l_per_100km, fuel_price_per_liter, fuel_type')
+        .in('user_id', activeIds),
+      svc.from('app_settings').select('key, value').in('key', Object.values(FUEL_KEYS)),
+      svc
+        .from('routes')
+        .select(
+          'inspector_id, date, total_distance_km, route_stops(status, prepaid, distance_from_previous_km)'
+        )
+        .in('inspector_id', activeIds)
+        .gte('date', rangeStart)
+        .lte('date', rangeEnd),
+      // Approved (fuel-bought) weeks — only these carry a wasted-fuel debt.
+      svc
+        .from('week_plans')
+        .select('inspector_id, week_start')
+        .eq('status', 'approved')
+        .in('inspector_id', activeIds)
+        .in('week_start', weekStarts),
+      svc
+        .from('location_checkins')
+        .select('inspector_id, duration_minutes, created_at')
+        .in('inspector_id', activeIds)
+        .gte('created_at', ciRange.gte)
+        .lte('created_at', ciRange.lte),
+    ])
     const consumptionOf = new Map<string, number | null>(
       (transport || []).map((t: any) => [t.user_id, t.consumption_l_per_100km])
     )
@@ -94,16 +121,7 @@ export async function GET(request: NextRequest) {
       (transport || []).map((t: any) => [t.user_id, t.fuel_type])
     )
 
-    const { data: priceRows } = await svc
-      .from('app_settings')
-      .select('key, value')
-      .in('key', Object.values(FUEL_KEYS))
     const priceByKey = new Map<string, string>((priceRows || []).map((r: any) => [r.key, r.value]))
-    const toPrice = (v: unknown): number | null => {
-      if (v == null || v === '') return null
-      const n = Number(v)
-      return isNaN(n) ? null : n
-    }
     const globalPrices = {
       petrol: toPrice(priceByKey.get(FUEL_KEYS.petrol)),
       diesel: toPrice(priceByKey.get(FUEL_KEYS.diesel)),
@@ -115,31 +133,9 @@ export async function GET(request: NextRequest) {
     const weekIndexOf = (dateStr: string): number =>
       Math.floor((Date.parse(`${dateStr}T00:00:00Z`) - firstMondayMs) / (7 * DAY))
 
-    const { data: routes } = await svc
-      .from('routes')
-      .select(
-        'inspector_id, date, total_distance_km, route_stops(status, prepaid, distance_from_previous_km)'
-      )
-      .in('inspector_id', activeIds)
-      .gte('date', rangeStart)
-      .lte('date', rangeEnd)
-    // Approved (fuel-bought) weeks — only these carry a wasted-fuel debt.
-    const { data: approvedPlans } = await svc
-      .from('week_plans')
-      .select('inspector_id, week_start')
-      .eq('status', 'approved')
-      .in('inspector_id', activeIds)
-      .in('week_start', weekStarts)
     const approvedSet = new Set<string>(
       (approvedPlans || []).map((p: any) => `${p.inspector_id}|${p.week_start}`)
     )
-    const ciRange = georgiaDayRange(rangeStart, rangeEnd)
-    const { data: checkins } = await svc
-      .from('location_checkins')
-      .select('inspector_id, duration_minutes, created_at')
-      .in('inspector_id', activeIds)
-      .gte('created_at', ciRange.gte)
-      .lte('created_at', ciRange.lte)
 
     // aggByWeek[weekIndex] = Map(officerId → Agg)
     const aggByWeek: Map<string, Agg>[] = weekStarts.map(

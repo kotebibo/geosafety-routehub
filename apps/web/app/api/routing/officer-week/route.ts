@@ -1,16 +1,9 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/middleware/auth'
-import { createServerClient, createServiceClient } from '@/lib/supabase/server'
-import { georgiaMondayOfDate } from '@/lib/time'
-
-function weekDates(weekStart: string): string[] {
-  const [y, m, d] = weekStart.split('-').map(Number)
-  return Array.from({ length: 7 }, (_, i) =>
-    new Date(Date.UTC(y, m - 1, d + i)).toISOString().slice(0, 10)
-  )
-}
+import { requireSelfOrManager } from '@/middleware/auth'
+import { createServiceClient } from '@/lib/supabase/server'
+import { georgiaMondayOfDate, weekDatesFrom } from '@/lib/time'
 
 // GET ?inspectorId=&weekStart= — one officer's routing extras for a week:
 //   unplanned — extra-visit requests (with reason)
@@ -19,25 +12,17 @@ function weekDates(weekStart: string): string[] {
 //               (paid but wasted → excluded from cost). Officers see own; managers any.
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireAuth()
     const url = new URL(request.url)
     const inspectorId = url.searchParams.get('inspectorId')
     const weekStart = url.searchParams.get('weekStart')
     if (!inspectorId || !weekStart)
       return NextResponse.json({ error: 'inspectorId and weekStart required' }, { status: 400 })
 
-    const supabase = createServerClient() as any
-    const { data: roleRow } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', session.user.id)
-      .single()
-    const isManager = roleRow?.role === 'admin' || roleRow?.role === 'dispatcher'
-    if (inspectorId !== session.user.id && !isManager)
-      return NextResponse.json({ error: 'Cannot view another officer’s data' }, { status: 403 })
+    // Officers see their own week; managers may view anyone's.
+    await requireSelfOrManager(inspectorId)
 
     const svc = createServiceClient() as any
-    const dates = weekDates(weekStart)
+    const dates = weekDatesFrom(weekStart)
     const weekEnd = dates[6]
 
     const nameOfItem = new Map<string, string>()
@@ -132,6 +117,8 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     if (error.name === 'UnauthorizedError')
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    if (error.name === 'ForbiddenError')
+      return NextResponse.json({ error: 'Cannot view another officer’s data' }, { status: 403 })
     console.error('officer-week GET error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

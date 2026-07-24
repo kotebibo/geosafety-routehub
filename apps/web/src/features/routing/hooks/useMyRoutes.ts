@@ -110,9 +110,11 @@ export function useUpdateStopStatus(inspectorId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-routes', inspectorId] })
       // A deferral also shows in the deviation sections (officer-week), the
+      // planner's execution panels (week-execution, drives missedPlanned), the
       // admin deferred tab (admin-week) and the change history — refresh them so
       // the UI updates without a page refresh.
       queryClient.invalidateQueries({ queryKey: ['officer-week'] })
+      queryClient.invalidateQueries({ queryKey: ['week-execution'] })
       queryClient.invalidateQueries({ queryKey: ['admin-week'] })
       queryClient.invalidateQueries({ queryKey: ['routing-audit'] })
     },

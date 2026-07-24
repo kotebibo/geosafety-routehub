@@ -56,9 +56,11 @@ export async function requireAuth() {
 }
 
 /**
- * Get user role from database
+ * Get a user's role from the database (null if none). Exposed so routes that
+ * branch on the role value (self-vs-manager, admin-vs-dispatcher) don't each
+ * hand-roll the `user_roles` read.
  */
-async function getUserRole(userId: string): Promise<string | null> {
+export async function getRole(userId: string): Promise<string | null> {
   const supabase = createServerSupabase()
 
   const { data, error } = await supabase
@@ -72,6 +74,27 @@ async function getUserRole(userId: string): Promise<string | null> {
   }
 
   return data.role
+}
+
+// Back-compat alias for existing internal callers.
+const getUserRole = getRole
+
+/**
+ * Require the caller to be the target officer OR a manager (admin/dispatcher).
+ * Returns the session plus the resolved flags. Throws UnauthorizedError when
+ * unauthenticated and ForbiddenError when a non-manager targets someone else —
+ * the shared version of the self-or-manager 403 that ~8 routing routes repeat.
+ */
+export async function requireSelfOrManager(inspectorId: string) {
+  const session = await requireAuth()
+  const role = await getRole(session.user.id)
+  const isAdmin = role === 'admin'
+  const isManager = isAdmin || role === 'dispatcher'
+  const isOwner = inspectorId === session.user.id
+  if (!isManager && !isOwner) {
+    throw new ForbiddenError('Cannot access another officer’s data')
+  }
+  return { session, role, isAdmin, isManager, isOwner }
 }
 
 /**

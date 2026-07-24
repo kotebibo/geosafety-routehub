@@ -16,6 +16,7 @@ import { DEFAULT_GEOCODE_CITY } from '../lib/geocode'
 import { resolveLocationColumns } from '../lib/location-columns'
 import { LocationSearchField, type PickedLocation } from './LocationSearchField'
 import { UrgencyBadge } from './UrgencyBadge'
+import { GROUP_DOT_COLORS } from '../lib/group-colors'
 import type { RoutingItem } from '../hooks/useRoutingData'
 import type { Board, BoardColumn } from '@/types/board'
 
@@ -29,17 +30,6 @@ function hasValue(value: any): boolean {
     return Object.values(value).some(v => v !== null && v !== undefined && v !== '')
   }
   return true
-}
-
-const GROUP_DOT_COLORS: Record<string, string> = {
-  blue: 'bg-blue-500',
-  green: 'bg-green-500',
-  red: 'bg-red-500',
-  orange: 'bg-orange-500',
-  purple: 'bg-purple-500',
-  yellow: 'bg-yellow-500',
-  pink: 'bg-pink-500',
-  teal: 'bg-teal-500',
 }
 
 interface ItemDetailPopupProps {

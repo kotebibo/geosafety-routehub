@@ -13,6 +13,7 @@ import { WeeklyPlanner } from './weekly-planner'
 import { RoutePlanningPopup } from './RoutePlanningPopup'
 import { useRoutingItems, useBoardWeekPlan, type RoutingItem } from '../hooks/useRoutingData'
 import { dayLabelOf, shortDate } from '../lib/week'
+import { GROUP_DOT_COLORS } from '../lib/group-colors'
 import type { Board } from '@/types/board'
 
 // Same palette the sidebar uses for board avatars
@@ -24,17 +25,6 @@ const BOARD_COLORS: Record<string, string> = {
   purple: 'bg-purple-500',
   orange: 'bg-orange-500',
   primary: 'bg-monday-primary',
-}
-
-const GROUP_DOT_COLORS: Record<string, string> = {
-  blue: 'bg-blue-500',
-  green: 'bg-green-500',
-  red: 'bg-red-500',
-  orange: 'bg-orange-500',
-  purple: 'bg-purple-500',
-  yellow: 'bg-yellow-500',
-  pink: 'bg-pink-500',
-  teal: 'bg-teal-500',
 }
 
 interface RoutingBoardSectionProps {
@@ -60,11 +50,23 @@ export function RoutingBoardSection({ board }: RoutingBoardSectionProps) {
           A div (not a button) so the location control can nest without invalid
           nested-button markup; the row area itself toggles expand. */}
       <div
+        role="button"
+        tabIndex={0}
+        aria-expanded={expanded}
         className={cn(
           'w-full flex items-center gap-2.5 px-3 py-3 transition-colors hover:bg-bg-hover cursor-pointer',
           expanded && 'bg-bg-selected'
         )}
         onClick={() => setExpanded(v => !v)}
+        onKeyDown={e => {
+          // The row carries nested buttons, so it can't be a <button>; give it
+          // keyboard-toggle behaviour manually (Enter/Space), ignoring keys that
+          // bubble up from those inner controls.
+          if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault()
+            setExpanded(v => !v)
+          }
+        }}
       >
         <div
           className={cn(

@@ -43,6 +43,14 @@ export function georgiaMonday(offsetWeeks = 0): string {
   return new Date(mondayMs).toISOString().slice(0, 10)
 }
 
+/** The 7 dates (YYYY-MM-DD) of the week starting at `weekStart` (a Monday). */
+export function weekDatesFrom(weekStart: string): string[] {
+  const [y, m, d] = weekStart.split('-').map(Number)
+  return Array.from({ length: 7 }, (_, i) =>
+    new Date(Date.UTC(y, m - 1, d + i)).toISOString().slice(0, 10)
+  )
+}
+
 /** Monday (YYYY-MM-DD) of the Georgia week containing an arbitrary date. */
 export function georgiaMondayOfDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)

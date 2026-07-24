@@ -94,6 +94,7 @@ export function OfficerWeekPopup({
           <button
             type="button"
             onClick={onClose}
+            aria-label={t('common.close')}
             className="p-1.5 rounded-lg hover:bg-bg-hover transition-colors flex-shrink-0"
           >
             <X className="w-5 h-5 text-text-secondary" />
