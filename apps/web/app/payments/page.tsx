@@ -5,19 +5,21 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 
 import { useAuth } from '@/contexts/AuthContext'
-import { AlertCircle, Download } from 'lucide-react'
+import { AlertCircle, Download, Users } from 'lucide-react'
 
 import {
   PaymentStatsCards,
   PaymentFilters,
   PaymentMonthTabs,
   PaymentTable,
+  PlanVsActualStrip,
 } from '@/features/payments/components'
 import {
   usePaymentFilters,
   usePaymentData,
   usePaymentStats,
   useGroupedTransactions,
+  usePlanVsActual,
 } from '@/features/payments/hooks'
 import { exportTransactionsCSV } from '@/features/payments/helpers'
 import { PaymentsListSkeleton } from '@/features/payments/components/PaymentsListSkeleton'
@@ -49,6 +51,12 @@ export default function PaymentsPage() {
     monthsInRange: filters.monthsInRange,
     effectiveDateRange: filters.effectiveDateRange,
     matchSourceFilter: filters.matchSourceFilter,
+  })
+
+  const planVsActual = usePlanVsActual({
+    year: filters.selectedYear,
+    isAuthorized: isAdmin || isDispatcher,
+    authLoading,
   })
 
   const { grouped } = useGroupedTransactions({
@@ -120,6 +128,13 @@ export default function PaymentsPage() {
             <AlertCircle className="w-4 h-4" />
             {t('payments.unmatchedButton', { count: data.stats?.unmatched_count || 0 })}
           </button>
+          <button
+            onClick={() => router.push('/payments/debtors')}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/10 text-red-500 border border-red-500/30 hover:bg-red-500/20 transition-colors text-sm font-medium"
+          >
+            <Users className="w-4 h-4" />
+            {t('payments.debtorsButton')}
+          </button>
         </div>
       </div>
 
@@ -141,6 +156,14 @@ export default function PaymentsPage() {
         monthStats={monthStats}
         loading={data.loading}
         contractsLoading={data.contractsLoading}
+      />
+
+      {/* Plan vs actual (contracts vs bank) */}
+      <PlanVsActualStrip
+        data={planVsActual.data}
+        loading={planVsActual.loading}
+        selectedMonth={filters.selectedMonth}
+        selectedYear={filters.selectedYear}
       />
 
       {/* Filters Bar */}

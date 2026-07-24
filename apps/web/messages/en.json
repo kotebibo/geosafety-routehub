@@ -822,6 +822,66 @@
     "subtitle": "Track and analyze transactions",
     "exportCsv": "CSV",
     "unmatchedButton": "Unmatched ({count})",
+    "debtorsButton": "Debtors",
+    "planVsActual": {
+      "title": "Plan vs actual",
+      "planned": "Planned",
+      "actual": "Actual",
+      "difference": "Difference"
+    },
+    "debtors": {
+      "title": "Debtors",
+      "subtitle": "Receivables, overdue days and payer categories",
+      "back": "Back",
+      "periodLabel": "Period:",
+      "months_3": "3 months",
+      "months_6": "6 months",
+      "months_12": "12 months",
+      "summary": {
+        "expected": "Planned income",
+        "received": "Actual income",
+        "difference": "Difference",
+        "outstanding": "Receivables",
+        "debtorCount": "{count} debtors"
+      },
+      "category": {
+        "all": "All",
+        "good": "Good",
+        "average": "Average",
+        "bad": "Bad"
+      },
+      "table": {
+        "company": "Company",
+        "taxId": "Tax ID",
+        "board": "Board",
+        "outstanding": "Outstanding",
+        "unpaidMonths": "Unpaid months",
+        "daysOverdue": "Overdue",
+        "lastPayment": "Last payment",
+        "responsible": "Responsible",
+        "category": "Category",
+        "empty": "No debtors found",
+        "daysUnit": "{count} days"
+      },
+      "buckets": {
+        "title": "Unpaid months",
+        "expected": "Planned",
+        "paid": "Paid",
+        "outstanding": "Outstanding"
+      },
+      "criteria": {
+        "title": "Categorization criteria",
+        "graceDays": "Grace days",
+        "graceDaysHint": "Good — if the delay does not exceed this many days past month end",
+        "badMonths": "Bad threshold (months)",
+        "badMonthsHint": "Bad — if the debt is older than this many months",
+        "badRatio": "Bad threshold (%)",
+        "badRatioHint": "Bad — if the debt exceeds this percent of the monthly amount",
+        "save": "Save",
+        "saved": "Criteria saved",
+        "saveError": "Failed to save"
+      }
+    },
     "unmatched": {
       "title": "Unmatched transactions",
       "countLabel": "{count} transactions require manual matching",

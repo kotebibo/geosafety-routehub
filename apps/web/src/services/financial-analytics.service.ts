@@ -6,18 +6,30 @@
  * column ids, they differ per instance). Actual payments live in
  * bank_transactions (BOG), keyed by sender_inn. This service joins the two
  * into a per-tax-id ledger that powers debtors / unpaid-invoice / revenue
- * queries (AI assistant today, UI pages later).
+ * queries (AI assistant + the /payments/debtors UI).
  *
  * Expectation semantics (MVP, documented so answers can be caveated):
  * - active contracts owe monthly_amount (fallback invoice_amount) for every
  *   month in the period, clipped to [start_date, end_date]
  * - one_time contracts owe their amount once, in the month of start_date
  * - paused/ended contracts accrue no new expectations
- * - frequency is reported but NOT applied (amounts are treated as monthly)
+ * - frequency is reported but NOT applied (amounts are treated as monthly;
+ *   note features/payments/helpers.ts applies frequency client-side — known
+ *   semantic difference, this service is the source of truth for debtors)
  *
  * All DB access goes through a caller-supplied SELECT-only function so the
  * assistant's read-only guarantee holds.
  */
+
+import {
+  COLUMN_PATTERNS,
+  NUMERIC_TYPES,
+  classifyBoardName,
+  coerceDisplayValue,
+  findColumnId,
+  resolveStatusLabel,
+  type ContractSource,
+} from '@/lib/contracts/board-columns'
 
 // Chainable PostgREST select — matches roSelect() from lib/chat/readonly-db
 // and any thin adapter over a Supabase client.
@@ -27,7 +39,9 @@ export type SelectFn = (
   opts?: { count?: 'exact'; head?: boolean }
 ) => any
 
-export type ContractSource = 'active' | 'one_time' | 'paused' | 'ended'
+// Re-exported for existing consumers/tests that import from this module.
+export { classifyBoardName, findColumnId }
+export type { ContractSource }
 
 export interface ContractRecord {
   item_id: string
@@ -42,6 +56,7 @@ export interface ContractRecord {
   status: string | null
   start_date: string | null
   end_date: string | null
+  responsible: string | null
 }
 
 export interface PaymentRecord {
@@ -65,84 +80,8 @@ export interface LedgerRow {
   last_payment_date: string | null
 }
 
-interface ColumnRow {
-  column_id: string
-  column_name: string
-  column_name_ka: string | null
-  column_type: string
-  config: any
-}
-
-// Column name patterns (Georgian) to discover column IDs dynamically —
-// mirrors app/api/payments/contracts/route.ts
-const COLUMN_PATTERNS = {
-  tax_id: ['ს/კ', 'საიდენტიფიკაციო', 'tax', 'inn'],
-  monthly_amount: ['ყოველთვიური', 'თვიური', 'monthly'],
-  frequency: ['სიხშირე', 'პერიოდულობა', 'frequency'],
-  invoice_amount: ['ინვოისი', 'invoice'],
-  status: ['სტატუსი', 'status'],
-  start_date: ['გაფორმ', 'დაწყ', 'start'],
-  end_date: ['დასრულ', 'ვადა', 'end'],
-}
-
-const NUMERIC_TYPES = ['numeric', 'number']
-
 // Paid-in-full tolerance: ignore sub-lari rounding differences.
 const PAID_TOLERANCE = 1
-
-export function findColumnId(
-  columns: ColumnRow[],
-  patterns: string[],
-  preferredType?: string | string[]
-): string | null {
-  const types = Array.isArray(preferredType)
-    ? preferredType
-    : preferredType
-      ? [preferredType]
-      : null
-  const candidates = types ? columns.filter(c => types.includes(c.column_type)) : columns
-
-  // Exact name match wins over substring match (near-duplicate columns exist).
-  for (const pattern of patterns) {
-    const p = pattern.toLowerCase()
-    const exact = candidates.find(c => {
-      const nameKa = (c.column_name_ka || '').toLowerCase().trim()
-      const name = (c.column_name || '').toLowerCase().trim()
-      return nameKa === p || name === p
-    })
-    if (exact) return exact.column_id
-  }
-  for (const pattern of patterns) {
-    const p = pattern.toLowerCase()
-    const partial = candidates.find(c => {
-      const nameKa = (c.column_name_ka || '').toLowerCase()
-      const name = (c.column_name || '').toLowerCase()
-      return nameKa.includes(p) || name.includes(p)
-    })
-    if (partial) return partial.column_id
-  }
-  return null
-}
-
-function resolveStatusLabel(
-  value: string | null | undefined,
-  columns: ColumnRow[],
-  columnId: string | null
-): string | null {
-  if (!value || !columnId) return value || null
-  const col = columns.find(c => c.column_id === columnId)
-  if (!col || !col.config?.options) return value
-  const option = col.config.options.find((o: any) => o.key === value)
-  return option?.label || value
-}
-
-export function classifyBoardName(boardName: string): ContractSource {
-  const name = boardName.toLowerCase()
-  if (name.includes('ერთჯერადი')) return 'one_time'
-  if (name.includes('შეჩერებული')) return 'paused'
-  if (name.includes('შეწყვეტილ') || name.includes('დასრულებულ')) return 'ended'
-  return 'active'
-}
 
 /** First day of each month intersecting [from, to] (inclusive). */
 export function monthsInPeriod(from: string, to: string): string[] {
@@ -252,6 +191,125 @@ export function buildLedger(
   return rows
 }
 
+export interface MonthBucket {
+  month: string // 'YYYY-MM'
+  expected: number
+  paid: number // FIFO-allocated
+  outstanding: number
+}
+
+export type PayerCategory = 'good' | 'average' | 'bad'
+
+export interface PayerCriteria {
+  /** N — still "good" if the only debt is ≤ N days past month end. */
+  good_grace_days: number
+  /** X — debt older than X calendar months → bad. */
+  bad_months_overdue: number
+  /** Y (%) — outstanding above Y% of the monthly amount → bad. */
+  bad_debt_ratio: number
+}
+
+export const DEFAULT_PAYER_CRITERIA: PayerCriteria = {
+  good_grace_days: 10,
+  bad_months_overdue: 2,
+  bad_debt_ratio: 100,
+}
+
+/** Per-month expected amounts for a set of contracts over [from, to]. */
+export function expectedByMonth(
+  contracts: ContractRecord[],
+  from: string,
+  to: string
+): Array<{ month: string; expected: number }> {
+  return monthsInPeriod(from, to).map(monthStart => {
+    const monthEnd = lastDayOfMonth(monthStart)
+    const expected = contracts.reduce(
+      (sum, c) => sum + computeExpectedForContract(c, monthStart, monthEnd),
+      0
+    )
+    return { month: monthStart.slice(0, 7), expected: Math.round(expected * 100) / 100 }
+  })
+}
+
+export interface AgingResult {
+  buckets: MonthBucket[]
+  unpaid_months: number
+  earliest_unpaid_month: string | null // 'YYYY-MM'
+  months_overdue: number
+  days_overdue: number
+  outstanding: number
+}
+
+/**
+ * FIFO aging: allocate the total paid to expected months oldest-first (no
+ * invoice due dates exist, so a month's charge is due at that month's end).
+ */
+export function computeAging(
+  monthly: Array<{ month: string; expected: number }>,
+  totalPaid: number,
+  todayDate?: string
+): AgingResult {
+  const now = todayDate || today()
+  let remaining = totalPaid
+  const buckets: MonthBucket[] = monthly.map(({ month, expected }) => {
+    const paid = Math.min(remaining, expected)
+    remaining -= paid
+    return {
+      month,
+      expected: Math.round(expected * 100) / 100,
+      paid: Math.round(paid * 100) / 100,
+      outstanding: Math.round(Math.max(0, expected - paid) * 100) / 100,
+    }
+  })
+
+  const unpaid = buckets.filter(b => b.outstanding > PAID_TOLERANCE)
+  const earliest = unpaid[0]?.month ?? null
+  let daysOverdue = 0
+  let monthsOverdue = 0
+  if (earliest) {
+    const due = lastDayOfMonth(`${earliest}-01`)
+    daysOverdue = Math.max(
+      0,
+      Math.round((Date.parse(`${now}T00:00:00Z`) - Date.parse(`${due}T00:00:00Z`)) / 86400000)
+    )
+    const [ey, em] = earliest.split('-').map(Number)
+    const [ny, nm] = now.slice(0, 7).split('-').map(Number)
+    monthsOverdue = Math.max(0, (ny - ey) * 12 + (nm - em))
+  }
+
+  return {
+    buckets,
+    unpaid_months: unpaid.length,
+    earliest_unpaid_month: earliest,
+    months_overdue: monthsOverdue,
+    days_overdue: daysOverdue,
+    outstanding: Math.round(unpaid.reduce((s, b) => s + b.outstanding, 0) * 100) / 100,
+  }
+}
+
+/** Debt + delay combined categorization; thresholds come from app_settings. */
+export function categorizePayer(
+  input: {
+    outstanding: number
+    days_overdue: number
+    months_overdue: number
+    monthly_amount: number
+  },
+  criteria: PayerCriteria
+): PayerCategory {
+  if (input.outstanding <= PAID_TOLERANCE || input.days_overdue <= criteria.good_grace_days) {
+    return 'good'
+  }
+  if (
+    input.months_overdue >= criteria.bad_months_overdue ||
+    (input.monthly_amount > 0 &&
+      input.outstanding > (input.monthly_amount * criteria.bad_debt_ratio) / 100)
+  ) {
+    return 'bad'
+  }
+  return 'average'
+}
+
 /** Load all contract records from the ხელშეკრულებები workspace boards. */
 export async function loadContracts(select: SelectFn): Promise<ContractRecord[]> {
   const { data: workspace } = await select('workspaces', 'id')
@@ -288,6 +346,9 @@ export async function loadContracts(select: SelectFn): Promise<ContractRecord[]>
     const statusCol = findColumnId(columns, COLUMN_PATTERNS.status, 'status')
     const startDateCol = findColumnId(columns, COLUMN_PATTERNS.start_date, 'date')
     const endDateCol = findColumnId(columns, COLUMN_PATTERNS.end_date, 'date')
+    const responsibleCol =
+      findColumnId(columns, COLUMN_PATTERNS.responsible, ['person', 'people', 'text']) ||
+      findColumnId(columns, COLUMN_PATTERNS.responsible)
 
     // Paginate all items (contract boards can exceed one page).
     let items: any[] = []
@@ -322,6 +383,7 @@ export async function loadContracts(select: SelectFn): Promise<ContractRecord[]>
         status: resolveStatusLabel(d[statusCol!], columns, statusCol),
         start_date: startDateCol ? d[startDateCol] || null : null,
         end_date: endDateCol ? d[endDateCol] || null : null,
+        responsible: responsibleCol ? coerceDisplayValue(d[responsibleCol]) : null,
       })
     }
   }
@@ -348,6 +410,63 @@ async function loadPayments(select: SelectFn, from: string, to: string): Promise
     fromIdx += 1000
   }
   return payments
+}
+
+export interface DebtorRow extends LedgerRow {
+  outstanding: number
+  unpaid_months: number
+  earliest_unpaid_month: string | null
+  days_overdue: number
+  months_overdue: number
+  responsible: string | null
+  category: PayerCategory
+  buckets: MonthBucket[]
+  contracts: Array<{
+    item_id: string
+    board_id: string
+    board_name: string
+    contract_source: ContractSource
+  }>
+}
+
+export interface PlanVsActualMonth {
+  month: string // 'YYYY-MM'
+  expected: number
+  received: number
+  difference: number
+}
+
+export interface DebtorsSummary {
+  total_expected: number
+  total_paid: number
+  difference: number
+  total_outstanding: number
+  debtor_count: number
+  by_category: { good: number; average: number; bad: number }
+}
+
+function planVsActualByMonth(
+  contracts: ContractRecord[],
+  payments: PaymentRecord[],
+  from: string,
+  to: string
+): PlanVsActualMonth[] {
+  const receivedByMonth: Record<string, number> = {}
+  for (const p of payments) {
+    if (p.status === 'ignored') continue
+    if (p.entry_date < from || p.entry_date > to) continue
+    const month = p.entry_date.slice(0, 7)
+    receivedByMonth[month] = (receivedByMonth[month] || 0) + (p.amount || 0)
+  }
+  return expectedByMonth(contracts, from, to).map(({ month, expected }) => {
+    const received = Math.round((receivedByMonth[month] || 0) * 100) / 100
+    return {
+      month,
+      expected,
+      received,
+      difference: Math.round((received - expected) * 100) / 100,
+    }
+  })
 }
 
 function today(): string {
@@ -511,6 +630,152 @@ export const financialAnalyticsService = {
         monthly_amount: c.monthly_amount,
         url: `/boards/${c.board_id}?item=${c.item_id}`,
       })),
+    }
+  },
+
+  /**
+   * Debtor list with FIFO aging, responsible person and payer category,
+   * plus a plan-vs-actual monthly breakdown for the same period.
+   */
+  async getDebtorsDetailed(
+    select: SelectFn,
+    opts: { from: string; to: string; criteria: PayerCriteria; today?: string }
+  ): Promise<{
+    period: { from: string; to: string }
+    criteria: PayerCriteria
+    summary: DebtorsSummary
+    by_month: PlanVsActualMonth[]
+    debtors: DebtorRow[]
+  }> {
+    const [contracts, payments] = await Promise.all([
+      loadContracts(select),
+      loadPayments(select, opts.from, opts.to),
+    ])
+    const ledger = buildLedger(contracts, payments, opts.from, opts.to)
+
+    const contractsByTaxId = new Map<string, ContractRecord[]>()
+    for (const c of contracts) {
+      const list = contractsByTaxId.get(c.tax_id) || []
+      list.push(c)
+      contractsByTaxId.set(c.tax_id, list)
+    }
+
+    const byCategory = { good: 0, average: 0, bad: 0 }
+    const debtors: DebtorRow[] = []
+    let totalOutstanding = 0
+
+    for (const row of ledger) {
+      const taxContracts = contractsByTaxId.get(row.tax_id) || []
+      const monthly = expectedByMonth(taxContracts, opts.from, opts.to)
+      const aging = computeAging(monthly, row.paid, opts.today)
+      const category = categorizePayer(
+        {
+          outstanding: aging.outstanding,
+          days_overdue: aging.days_overdue,
+          months_overdue: aging.months_overdue,
+          monthly_amount: row.monthly_amount,
+        },
+        opts.criteria
+      )
+      if (row.expected > 0) byCategory[category]++
+
+      if (aging.outstanding > PAID_TOLERANCE) {
+        totalOutstanding += aging.outstanding
+        debtors.push({
+          ...row,
+          outstanding: aging.outstanding,
+          unpaid_months: aging.unpaid_months,
+          earliest_unpaid_month: aging.earliest_unpaid_month,
+          days_overdue: aging.days_overdue,
+          months_overdue: aging.months_overdue,
+          responsible: taxContracts.find(c => c.responsible)?.responsible ?? null,
+          category,
+          buckets: aging.buckets,
+          contracts: taxContracts.map(c => ({
+            item_id: c.item_id,
+            board_id: c.board_id,
+            board_name: c.board_name,
+            contract_source: c.contract_source,
+          })),
+        })
+      }
+    }
+
+    debtors.sort((a, b) => b.outstanding - a.outstanding)
+
+    // Boards without a responsible column fall back to companies.sales_manager.
+    const missing = [...new Set(debtors.filter(d => !d.responsible).map(d => d.tax_id))]
+    if (missing.length) {
+      const { data: companies } = await select('companies', 'tax_id, sales_manager').in(
+        'tax_id',
+        missing
+      )
+      const managerByTaxId = new Map<string, string>()
+      for (const c of companies || []) {
+        if (c.tax_id && c.sales_manager) managerByTaxId.set(c.tax_id, c.sales_manager)
+      }
+      for (const d of debtors) {
+        if (!d.responsible) d.responsible = managerByTaxId.get(d.tax_id) ?? null
+      }
+    }
+
+    // Person-type board columns may store auth.users ids, not names — resolve
+    // display names from public.users (auth.users has no grant).
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const idRefs = [
+      ...new Set(
+        debtors.map(d => d.responsible).filter((v): v is string => !!v && UUID_RE.test(v))
+      ),
+    ]
+    if (idRefs.length) {
+      const { data: users } = await select('users', 'id, full_name').in('id', idRefs)
+      const nameById = new Map<string, string>()
+      for (const u of users || []) {
+        if (u.id && u.full_name) nameById.set(u.id, u.full_name)
+      }
+      for (const d of debtors) {
+        if (d.responsible && nameById.has(d.responsible)) {
+          d.responsible = nameById.get(d.responsible)!
+        }
+      }
+    }
+
+    const totalExpected = ledger.reduce((s, r) => s + r.expected, 0)
+    const totalPaid = ledger.reduce((s, r) => s + r.paid, 0)
+
+    return {
+      period: { from: opts.from, to: opts.to },
+      criteria: opts.criteria,
+      summary: {
+        total_expected: Math.round(totalExpected * 100) / 100,
+        total_paid: Math.round(totalPaid * 100) / 100,
+        difference: Math.round((totalPaid - totalExpected) * 100) / 100,
+        total_outstanding: Math.round(totalOutstanding * 100) / 100,
+        debtor_count: debtors.length,
+        by_category: byCategory,
+      },
+      by_month: planVsActualByMonth(contracts, payments, opts.from, opts.to),
+      debtors,
+    }
+  },
+
+  /** Planned (contracts) vs actual (bank) income by month. */
+  async getPlanVsActual(select: SelectFn, opts: { from: string; to: string }) {
+    const [contracts, payments] = await Promise.all([
+      loadContracts(select),
+      loadPayments(select, opts.from, opts.to),
+    ])
+    const byMonth = planVsActualByMonth(contracts, payments, opts.from, opts.to)
+    const expected = Math.round(byMonth.reduce((s, m) => s + m.expected, 0) * 100) / 100
+    const received = Math.round(byMonth.reduce((s, m) => s + m.received, 0) * 100) / 100
+    return {
+      period: { from: opts.from, to: opts.to },
+      totals: {
+        expected,
+        received,
+        difference: Math.round((received - expected) * 100) / 100,
+      },
+      by_month: byMonth,
     }
   },
 }

@@ -5,6 +5,10 @@ import {
   findColumnId,
   computeExpectedForContract,
   buildLedger,
+  expectedByMonth,
+  computeAging,
+  categorizePayer,
+  DEFAULT_PAYER_CRITERIA,
   type ContractRecord,
   type PaymentRecord,
 } from '@/services/financial-analytics.service'
@@ -23,6 +27,7 @@ function contract(overrides: Partial<ContractRecord> = {}): ContractRecord {
     status: null,
     start_date: null,
     end_date: null,
+    responsible: null,
     ...overrides,
   }
 }
@@ -248,5 +253,160 @@ describe('buildLedger', () => {
     )
     expect(rows[0].monthly_amount).toBe(500)
     expect(rows[0].contract_sources).toEqual(['active', 'paused'])
+  })
+})
+
+describe('expectedByMonth', () => {
+  it('spreads an active contract across every month in the period', () => {
+    expect(expectedByMonth([contract()], '2026-05-01', '2026-07-31')).toEqual([
+      { month: '2026-05', expected: 500 },
+      { month: '2026-06', expected: 500 },
+      { month: '2026-07', expected: 500 },
+    ])
+  })
+
+  it('places a one_time contract only in its start month', () => {
+    const oneTime = contract({
+      contract_source: 'one_time',
+      monthly_amount: null,
+      invoice_amount: 900,
+      start_date: '2026-06-10',
+    })
+    expect(expectedByMonth([oneTime], '2026-05-01', '2026-07-31')).toEqual([
+      { month: '2026-05', expected: 0 },
+      { month: '2026-06', expected: 900 },
+      { month: '2026-07', expected: 0 },
+    ])
+  })
+
+  it('clips a mid-period contract start to its first month', () => {
+    const midStart = contract({ start_date: '2026-06-15' })
+    expect(expectedByMonth([midStart], '2026-05-01', '2026-07-31')).toEqual([
+      { month: '2026-05', expected: 0 },
+      { month: '2026-06', expected: 500 },
+      { month: '2026-07', expected: 500 },
+    ])
+  })
+
+  it('sums multiple contracts per month', () => {
+    const contracts = [contract(), contract({ item_id: 'item-2', monthly_amount: 300 })]
+    expect(expectedByMonth(contracts, '2026-07-01', '2026-07-31')).toEqual([
+      { month: '2026-07', expected: 800 },
+    ])
+  })
+})
+
+describe('computeAging', () => {
+  const monthly = [
+    { month: '2026-05', expected: 500 },
+    { month: '2026-06', expected: 500 },
+    { month: '2026-07', expected: 500 },
+  ]
+
+  it('reports no overdue when fully paid', () => {
+    const aging = computeAging(monthly, 1500, '2026-07-24')
+    expect(aging.outstanding).toBe(0)
+    expect(aging.unpaid_months).toBe(0)
+    expect(aging.earliest_unpaid_month).toBeNull()
+    expect(aging.days_overdue).toBe(0)
+    expect(aging.months_overdue).toBe(0)
+  })
+
+  it('allocates payments to the oldest months first (FIFO)', () => {
+    const aging = computeAging(monthly, 600, '2026-07-24')
+    expect(aging.buckets).toEqual([
+      { month: '2026-05', expected: 500, paid: 500, outstanding: 0 },
+      { month: '2026-06', expected: 500, paid: 100, outstanding: 400 },
+      { month: '2026-07', expected: 500, paid: 0, outstanding: 500 },
+    ])
+    expect(aging.earliest_unpaid_month).toBe('2026-06')
+    // 2026-06-30 → 2026-07-24
+    expect(aging.days_overdue).toBe(24)
+    expect(aging.months_overdue).toBe(1)
+    expect(aging.outstanding).toBe(900)
+  })
+
+  it('clamps overpayment to zero outstanding', () => {
+    const aging = computeAging(monthly, 2000, '2026-07-24')
+    expect(aging.outstanding).toBe(0)
+    expect(aging.unpaid_months).toBe(0)
+  })
+
+  it('ignores sub-tolerance residue', () => {
+    const aging = computeAging([{ month: '2026-06', expected: 500 }], 499.5, '2026-07-24')
+    expect(aging.unpaid_months).toBe(0)
+    expect(aging.outstanding).toBe(0)
+  })
+
+  it('never reports negative overdue for the current month', () => {
+    const aging = computeAging([{ month: '2026-07', expected: 500 }], 0, '2026-07-24')
+    expect(aging.earliest_unpaid_month).toBe('2026-07')
+    expect(aging.days_overdue).toBe(0)
+    expect(aging.months_overdue).toBe(0)
+  })
+})
+
+describe('categorizePayer', () => {
+  const base = { outstanding: 0, days_overdue: 0, months_overdue: 0, monthly_amount: 500 }
+
+  it('is good with no outstanding debt', () => {
+    expect(categorizePayer(base, DEFAULT_PAYER_CRITERIA)).toBe('good')
+  })
+
+  it('is good within the tolerance', () => {
+    expect(
+      categorizePayer({ ...base, outstanding: 1, days_overdue: 40 }, DEFAULT_PAYER_CRITERIA)
+    ).toBe('good')
+  })
+
+  it('is good within the grace period', () => {
+    expect(
+      categorizePayer({ ...base, outstanding: 500, days_overdue: 10 }, DEFAULT_PAYER_CRITERIA)
+    ).toBe('good')
+  })
+
+  it('is average past grace but under the bad thresholds', () => {
+    expect(
+      categorizePayer(
+        { outstanding: 400, days_overdue: 20, months_overdue: 1, monthly_amount: 500 },
+        DEFAULT_PAYER_CRITERIA
+      )
+    ).toBe('average')
+  })
+
+  it('is bad when debt is old enough', () => {
+    expect(
+      categorizePayer(
+        { outstanding: 400, days_overdue: 62, months_overdue: 2, monthly_amount: 500 },
+        DEFAULT_PAYER_CRITERIA
+      )
+    ).toBe('bad')
+  })
+
+  it('is bad when debt exceeds the monthly ratio', () => {
+    expect(
+      categorizePayer(
+        { outstanding: 600, days_overdue: 20, months_overdue: 1, monthly_amount: 500 },
+        DEFAULT_PAYER_CRITERIA
+      )
+    ).toBe('bad')
+  })
+
+  it('skips the ratio rule when monthly amount is zero', () => {
+    expect(
+      categorizePayer(
+        { outstanding: 600, days_overdue: 20, months_overdue: 1, monthly_amount: 0 },
+        DEFAULT_PAYER_CRITERIA
+      )
+    ).toBe('average')
+  })
+
+  it('respects custom thresholds', () => {
+    expect(
+      categorizePayer(
+        { outstanding: 400, days_overdue: 20, months_overdue: 1, monthly_amount: 500 },
+        { good_grace_days: 25, bad_months_overdue: 2, bad_debt_ratio: 100 }
+      )
+    ).toBe('good')
   })
 })

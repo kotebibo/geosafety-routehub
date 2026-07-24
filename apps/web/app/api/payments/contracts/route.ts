@@ -81,21 +81,12 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { requireAdminOrDispatcher } from '@/middleware/auth'
-
-// Column name patterns (Georgian) to discover column IDs dynamically
-const COLUMN_PATTERNS = {
-  tax_id: ['ს/კ', 'საიდენტიფიკაციო', 'tax', 'inn'],
-  monthly_amount: ['ყოველთვიური', 'თვიური', 'monthly'],
-  frequency: ['სიხშირე', 'პერიოდულობა', 'frequency'],
-  invoice_amount: ['ინვოისი', 'invoice'],
-  status: ['სტატუსი', 'status'],
-  start_date: ['გაფორმ', 'დაწყ', 'start'],
-  end_date: ['დასრულ', 'ვადა', 'end'],
-  payment_method: ['გადახდ', 'payment'],
-}
-
-// Column types vary across instances (e.g. 'number' vs 'numeric')
-const NUMERIC_TYPES = ['numeric', 'number']
+import {
+  COLUMN_PATTERNS,
+  NUMERIC_TYPES,
+  findColumnId,
+  resolveStatusLabel,
+} from '@/lib/contracts/board-columns'
 
 interface ContractInfo {
   item_id: string
@@ -111,61 +102,6 @@ interface ContractInfo {
   end_date: string | null
   payment_method: string | null
   first_payment_date: string | null
-}
-
-function findColumnId(
-  columns: Array<{
-    column_id: string
-    column_name: string
-    column_name_ka: string | null
-    column_type: string
-  }>,
-  patterns: string[],
-  preferredType?: string | string[]
-): string | null {
-  const types = Array.isArray(preferredType)
-    ? preferredType
-    : preferredType
-      ? [preferredType]
-      : null
-  const candidates = types ? columns.filter(c => types.includes(c.column_type)) : columns
-
-  // Some boards have near-duplicate columns (e.g. "ყოველთვიური" and
-  // "ყოველთვიური (ანგარიშ-ფაქტურისთვის)") that both match the same loose
-  // pattern. An exact name match must win over a substring match, otherwise
-  // which column gets picked depends on column position and differs per
-  // board — silently pulling amounts from the wrong column.
-  for (const pattern of patterns) {
-    const p = pattern.toLowerCase()
-    const exact = candidates.find(c => {
-      const nameKa = (c.column_name_ka || '').toLowerCase().trim()
-      const name = (c.column_name || '').toLowerCase().trim()
-      return nameKa === p || name === p
-    })
-    if (exact) return exact.column_id
-  }
-  for (const pattern of patterns) {
-    const p = pattern.toLowerCase()
-    const partial = candidates.find(c => {
-      const nameKa = (c.column_name_ka || '').toLowerCase()
-      const name = (c.column_name || '').toLowerCase()
-      return nameKa.includes(p) || name.includes(p)
-    })
-    if (partial) return partial.column_id
-  }
-  return null
-}
-
-function resolveStatusLabel(
-  value: string | null | undefined,
-  columns: Array<{ column_id: string; column_type: string; config: any }>,
-  columnId: string | null
-): string | null {
-  if (!value || !columnId) return value || null
-  const col = columns.find(c => c.column_id === columnId)
-  if (!col || !col.config?.options) return value
-  const option = col.config.options.find((o: any) => o.key === value)
-  return option?.label || value
 }
 
 export async function GET() {
