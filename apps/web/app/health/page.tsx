@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase/client'
+import { HealthAiAnalysis } from '@/features/health/components/HealthAiAnalysis'
 import {
   Activity,
   RefreshCw,
@@ -374,6 +375,9 @@ export default function HealthPage() {
             </div>
           </div>
         )}
+
+        {/* AI Analysis */}
+        <HealthAiAnalysis current={current} />
 
         {/* Grouped Check Cards */}
         {groups && (

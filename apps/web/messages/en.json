@@ -2412,5 +2412,18 @@
     "noComments": "No comments yet",
     "addComment": "Write a comment…",
     "openInGoogleMaps": "Open in Google Maps"
+  },
+  "health": {
+    "ai": {
+      "title": "AI Analysis",
+      "description": "Fast AI diagnosis — current checks compared against the last 24h baseline",
+      "analyze": "Analyze",
+      "reanalyze": "Re-analyze",
+      "stop": "Stop",
+      "analyzing": "Analyzing…",
+      "error": "Analysis failed. Please try again.",
+      "empty": "Run the health checks first (Refresh), then request an analysis.",
+      "disclaimer": "AI-generated response — verify before acting."
+    }
   }
 }

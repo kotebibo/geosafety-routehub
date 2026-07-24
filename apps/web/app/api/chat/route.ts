@@ -41,8 +41,6 @@
  *         description: Admin access required
  */
 
-import { anthropic } from '@ai-sdk/anthropic'
-import { groq } from '@ai-sdk/groq'
 import {
   streamText,
   generateText,
@@ -56,24 +54,12 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { requireAdmin } from '@/middleware/auth'
 import { createServerClient } from '@/lib/supabase/server'
 import { roSelect } from '@/lib/chat/readonly-db'
+import { getChatModel, getTitleModel } from '@/lib/chat/model'
 import { financialAnalyticsService } from '@/services/financial-analytics.service'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
-
-/**
- * Provider switch: CHATBOT_PROVIDER=groq|anthropic (defaults to groq while a
- * GROQ_API_KEY is configured — free-tier testing). The Claude path is kept
- * ("archived") so switching back is a one-env-var change.
- */
-function getModel() {
-  const provider = process.env.CHATBOT_PROVIDER || (process.env.GROQ_API_KEY ? 'groq' : 'anthropic')
-  if (provider === 'groq') {
-    return groq(process.env.CHATBOT_MODEL || 'openai/gpt-oss-120b')
-  }
-  return anthropic(process.env.CHATBOT_MODEL || 'claude-haiku-4-5-20251001')
-}
 
 /**
  * Static part of the system prompt. The dates block is appended per request
@@ -323,12 +309,6 @@ async function buildAttachmentContext(
   )
 }
 
-/** Small/fast model for auxiliary jobs like naming conversations. */
-function getTitleModel() {
-  const provider = process.env.CHATBOT_PROVIDER || (process.env.GROQ_API_KEY ? 'groq' : 'anthropic')
-  return provider === 'groq' ? groq('llama-3.1-8b-instant') : anthropic('claude-haiku-4-5-20251001')
-}
-
 function messageText(message: UIMessage | undefined): string {
   return (
     message?.parts
@@ -447,7 +427,7 @@ export async function POST(req: Request) {
   const attachmentContext = attachments?.length ? await buildAttachmentContext(db, attachments) : ''
 
   const result = streamText({
-    model: getModel(),
+    model: getChatModel(),
     messages: [
       {
         role: 'system' as const,
